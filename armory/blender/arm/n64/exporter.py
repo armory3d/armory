@@ -9,6 +9,7 @@ import arm.log as log
 
 from arm.n64.input_mapping import GAMEPAD_TO_N64_MAP, INPUT_STATE_MAP
 from arm.n64 import bridge_scanner
+from arm.n64 import trait_generator
 from arm.n64.utils import copy_src, get_clear_color, deselect_from_all_viewlayers, to_uint8
 
 if arm.is_reload(__name__):
@@ -25,27 +26,7 @@ class N64Exporter:
         self.scene_data = {}
         self.exported_meshes = {}
         self.trait_list = {}
-
-        # trait_list = {
-        #     "TraitName" : {
-        #         "on_ready": [
-        #             {
-        #                 "action": { }
-        #             }
-        #         ],
-        #         "on_update": [
-        #             {
-        #                 "condition": { "type": "button", "button": "a", "state": "started" },
-        #                 "action": { "type": "scene_switch", "target": "Level_02" }
-        #             }
-        #         ],
-        #         "on_remove": [
-        #             {
-        #                 "action": { }
-        #             }
-        #         ]
-        #     }
-        # }
+        self.all_traits = set()  # Collect all unique trait class names across all scenes
 
 
     @classmethod
@@ -144,6 +125,16 @@ class N64Exporter:
     def build_scene_data(self, scene):
         scene_name = arm.utils.safesrc(scene.name).lower()
 
+        # Extract scene-level traits
+        scene_traits = []
+        if hasattr(scene, 'arm_traitlist'):
+            for trait in scene.arm_traitlist:
+                if trait.enabled_prop and trait.class_name_prop:
+                    scene_traits.append({
+                        "class_name": trait.class_name_prop,
+                        "type": trait.type_prop
+                    })
+
         self.scene_data[scene_name] = {
             "world": {
                 "clear_color": get_clear_color(scene),
@@ -151,7 +142,8 @@ class N64Exporter:
             },
             "cameras": [],
             "lights": [],
-            "objects": []
+            "objects": [],
+            "traits": scene_traits
         }
 
         for obj in scene.objects:
@@ -191,13 +183,24 @@ class N64Exporter:
                 obj_rot = (-e.x, -e.z, e.y)
                 obj_scale = (obj.scale[0] * 0.015, obj.scale[2] * 0.015, obj.scale[1] * 0.015)
 
+                # Extract traits from object
+                obj_traits = []
+                if hasattr(obj, 'arm_traitlist'):
+                    for trait in obj.arm_traitlist:
+                        if trait.enabled_prop and trait.class_name_prop:
+                            obj_traits.append({
+                                "class_name": trait.class_name_prop,
+                                "type": trait.type_prop
+                            })
+
                 self.scene_data[scene_name]["objects"].append({
                     "name": arm.utils.safesrc(obj.name),
                     "mesh": f'MODEL_{mesh_name.upper()}',
                     "pos": list(obj_pos),
                     "rot": list(obj_rot),
                     "scale": list(obj_scale),
-                    "visible": not obj.hide_render
+                    "visible": not obj.hide_render,
+                    "traits": obj_traits
                 })
 
 
@@ -245,6 +248,10 @@ class N64Exporter:
     def write_input(self):
         copy_src('input.c', 'src')
         copy_src('input.h', 'src')
+
+
+    def write_traits(self):
+        trait_generator.write_traits_files(self.all_traits, self.trait_list)
 
 
     def write_engine(self):
@@ -382,8 +389,37 @@ class N64Exporter:
             object_block_lines.append(f'    objects[{i}].dpl = models_get_dpl({object["mesh"]});')
             object_block_lines.append(f'    objects[{i}].model_mat = malloc_uncached(sizeof(T3DMat4FP) * FB_COUNT);')
             object_block_lines.append(f'    objects[{i}].visible = {str(object["visible"]).lower()};')
-            object_block_lines.append(f'    objects[{i}].trait_count = 0;')
+
+            # Trait assignments
+            traits = object.get("traits", [])
+            object_block_lines.append(f'    objects[{i}].trait_count = {len(traits)};')
+            for t_idx, trait in enumerate(traits):
+                trait_func_name = arm.utils.safesrc(trait["class_name"]).lower()
+                object_block_lines.append(f'    objects[{i}].traits[{t_idx}].on_ready = {trait_func_name}_on_ready;')
+                object_block_lines.append(f'    objects[{i}].traits[{t_idx}].on_update = {trait_func_name}_on_update;')
+                object_block_lines.append(f'    objects[{i}].traits[{t_idx}].on_remove = {trait_func_name}_on_remove;')
+                object_block_lines.append(f'    objects[{i}].traits[{t_idx}].data = NULL;')
         objects_block = '\n'.join(object_block_lines)
+
+        # Collect unique trait class names for this scene and add to global set
+        # Object traits
+        for obj in self.scene_data[scene_name]['objects']:
+            for trait in obj.get('traits', []):
+                self.all_traits.add(trait['class_name'])
+        # Scene traits
+        for trait in self.scene_data[scene_name].get('traits', []):
+            self.all_traits.add(trait['class_name'])
+
+        # Generate scene trait assignments
+        scene_traits = self.scene_data[scene_name].get('traits', [])
+        scene_traits_block_lines = []
+        for t_idx, trait in enumerate(scene_traits):
+            trait_func_name = arm.utils.safesrc(trait["class_name"]).lower()
+            scene_traits_block_lines.append(f'    scene->traits[{t_idx}].on_ready = {trait_func_name}_on_ready;')
+            scene_traits_block_lines.append(f'    scene->traits[{t_idx}].on_update = {trait_func_name}_on_update;')
+            scene_traits_block_lines.append(f'    scene->traits[{t_idx}].on_remove = {trait_func_name}_on_remove;')
+            scene_traits_block_lines.append(f'    scene->traits[{t_idx}].data = NULL;')
+        scene_traits_block = '\n'.join(scene_traits_block_lines)
 
         output = tmpl_content.format(
             scene_name=scene_name,
@@ -399,8 +435,8 @@ class N64Exporter:
             lights_block=lights_block,
             object_count=len(self.scene_data[scene_name]['objects']),
             objects_block=objects_block,
-            scene_trait_count=0,
-            scene_traits_block=''
+            scene_trait_count=len(scene_traits),
+            scene_traits_block=scene_traits_block
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
@@ -552,6 +588,7 @@ class N64Exporter:
         self.write_renderer()
 
         self.write_scenes()
+        self.write_traits()  # Generate after scenes so all_traits is populated
         self.write_cameras()
         self.write_lights()
         self.write_objects()
