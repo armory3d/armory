@@ -3,6 +3,7 @@
 #include "compiled.inc"
 #include "std/math.glsl"
 #include "std/gbuffer.glsl"
+#include "std/brdf.glsl"
 
 uniform sampler2D tex;
 uniform sampler2D gbufferD;
@@ -16,6 +17,12 @@ uniform vec2 cameraProj;
 uniform vec3 PPComp9;
 uniform vec3 PPComp10;
 #endif
+
+#ifdef _Brdf
+uniform sampler2D senvmapBrdf;
+#endif
+
+uniform vec3 eye;
 
 in vec3 viewRay;
 in vec2 texCoord;
@@ -75,7 +82,10 @@ vec4 rayCast(vec3 dir) {
 
 void main() {
 	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
-	float roughness = unpackFloat(g0.b).y;
+	float roughness = g0.b;
+	float metallic;
+	uint matid;
+	unpackFloatInt16(g0.a, metallic, matid);
 	if (roughness == 1.0) { fragColor.rgb = vec3(0.0); return; }
 
 	float spec = fract(textureLod(gbuffer1, texCoord, 0.0).a);
@@ -101,6 +111,18 @@ void main() {
 		vec3 dir = reflected * (1.0 - rand(texCoord) * ssrJitter * roughness) * 2.0;
 	#endif
 
+	vec4 g1 = textureLod(gbuffer1, texCoord, 0.0); // Basecolor.rgb, spec/occ
+	vec3 f0 = surfaceF0(g1.rgb, metallic);
+	vec3 v = normalize(eye - viewPos);
+	float dotNV = max(dot(n, v), 0.0);
+
+	#ifdef _Brdf
+	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
+	vec3 F = f0 * envBRDF.x + envBRDF.y;
+	#else
+	vec3 F = f0;
+	#endif
+
 	// * max(ssrMinRayStep, -viewPos.z)
 	vec4 coords = rayCast(dir);
 
@@ -117,5 +139,5 @@ void main() {
 	intensity = clamp(intensity, 0.0, 1.0);
 	vec3 reflCol = textureLod(tex, coords.xy, 0.0).rgb;
 	reflCol = clamp(reflCol, 0.0, 1.0);
-	fragColor.rgb = reflCol * intensity * 0.5;
+	fragColor.rgb = reflCol * intensity * F;
 }

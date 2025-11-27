@@ -933,6 +933,7 @@ class RenderPathDeferred {
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbufferD1", "gbufferD1");
 				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("gbuffer1", "gbuffer1");
 				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 
 				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
