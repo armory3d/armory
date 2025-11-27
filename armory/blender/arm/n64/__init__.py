@@ -1,30 +1,27 @@
 # N64 export module for Armory3D
 #
 # Package structure:
-#   config/     - Configuration files and loader
-#   parser/     - HLC parsing (AST definitions, parser)
-#   codegen/    - N64 C code generation
-#   utils/      - Shared utilities (traits, blender helpers)
-#   exporter.py - Main export orchestration
+#   config/                - JSON configuration files
+#   config.py              - Configuration loader
+#   utils.py               - Shared utilities (traits, blender helpers)
+#   traits_generator.py    - N64 C code generation from macro JSON
+#   exporter.py            - Main export orchestration
 
 import arm
 
 if arm.is_reload(__name__):
-    # Reload subpackages
+    # Reload submodules
     from arm.n64 import config
-    from arm.n64 import parser
-    from arm.n64 import codegen
     from arm.n64 import utils
+    from arm.n64 import traits_generator
     from arm.n64 import exporter
     config = arm.reload_module(config)
-    parser = arm.reload_module(parser)
-    codegen = arm.reload_module(codegen)
     utils = arm.reload_module(utils)
+    traits_generator = arm.reload_module(traits_generator)
     exporter = arm.reload_module(exporter)
 else:
     arm.enable_reload(__name__)
     from arm.n64 import config
-    from arm.n64 import parser
-    from arm.n64 import codegen
     from arm.n64 import utils
+    from arm.n64 import traits_generator
     from arm.n64 import exporter

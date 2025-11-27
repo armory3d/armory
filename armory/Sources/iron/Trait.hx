@@ -2,6 +2,9 @@ package iron;
 
 import iron.object.Object;
 
+#if arm_target_n64
+@:autoBuild(armory.n64.N64TraitMacro.build())
+#end
 class Trait {
 
 	public var name: String = "";

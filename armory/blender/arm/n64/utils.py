@@ -1,13 +1,17 @@
 """
-Blender Utilities
+N64 Utilities
 
-Helper functions for interacting with Blender and the build system.
+Helper functions for Blender operations and trait data extraction.
 """
 
 import os
 import shutil
 import arm.utils
 
+
+# =============================================================================
+# Blender Utilities
+# =============================================================================
 
 def copy_src(name, path=''):
     """Copy a source file from the N64 deployment templates to the build directory."""
@@ -52,3 +56,25 @@ def deselect_from_all_viewlayers():
 def to_uint8(value):
     """Convert a 0.0-1.0 float value to 0-255 integer."""
     return int(max(0, min(1, value)) * 255)
+
+
+# =============================================================================
+# Trait Utilities
+# =============================================================================
+
+def extract_blender_trait_props(trait) -> dict:
+    """Extract per-instance property values from a Blender trait.
+
+    This pulls values set in Blender UI that override the Haxe defaults.
+    Required because macros cannot read Blender scene instances.
+    """
+    props = {}
+    if hasattr(trait, 'arm_traitpropslist'):
+        for prop in trait.arm_traitpropslist:
+            if prop.type == 'Float':
+                props[prop.name] = prop.value_float
+            elif prop.type == 'Int':
+                props[prop.name] = prop.value_int
+            elif prop.type == 'Bool':
+                props[prop.name] = prop.value_bool
+    return props

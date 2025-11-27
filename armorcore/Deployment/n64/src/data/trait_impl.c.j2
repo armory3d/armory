@@ -1,16 +1,19 @@
 // Trait: {trait_class}
-void {func_name}_on_ready(void *entity) {{
+void {func_name}_on_ready(void *entity, void *data) {{
     (void)entity;
+    (void)data;
 {on_ready_code}
 }}
 
-void {func_name}_on_update(void *entity, float dt) {{
+void {func_name}_on_update(void *entity, float dt, void *data) {{
     (void)entity;
     (void)dt;
+    (void)data;
 {on_update_code}
 }}
 
-void {func_name}_on_remove(void *entity) {{
+void {func_name}_on_remove(void *entity, void *data) {{
     (void)entity;
+    (void)data;
 {on_remove_code}
 }}

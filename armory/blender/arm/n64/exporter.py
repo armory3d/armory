@@ -7,16 +7,14 @@ import arm
 import arm.utils
 import arm.log as log
 
-from arm.n64.codegen import generator as code_generator
-from arm.n64.utils import (
-    copy_src, get_clear_color, deselect_from_all_viewlayers, to_uint8,
-    is_supported_member, filter_trait_members, extract_blender_trait_props
-)
+from arm.n64 import traits_generator
+from arm.n64 import utils as n64_utils
 
 if arm.is_reload(__name__):
     arm.utils = arm.reload_module(arm.utils)
     log = arm.reload_module(log)
-    code_generator = arm.reload_module(code_generator)
+    traits_generator = arm.reload_module(traits_generator)
+    n64_utils = arm.reload_module(n64_utils)
 else:
     arm.enable_reload(__name__)
 
@@ -25,8 +23,7 @@ class N64Exporter:
     def __init__(self):
         self.scene_data = {}
         self.exported_meshes = {}
-        self.trait_info = {}        # Trait metadata from HLC parsing
-        self.trait_asts = {}        # Parsed TraitAST objects
+        self.trait_info = {}        # Trait metadata from macro JSON
         self.all_traits = set()
         self.trait_data_instances = []
 
@@ -89,26 +86,26 @@ class N64Exporter:
         """
         Get the target scene for a trait's scene switching.
 
-        Uses the scene name extracted from HLC (what the Haxe code specifies).
-        Falls back to next sequential scene if HLC scene is unknown/invalid.
+        Uses the scene name from macro metadata (what the Haxe code specifies).
+        Falls back to next sequential scene if scene is unknown/invalid.
         """
         trait_info = self.get_trait_info(trait_class)
         scene_calls = trait_info.get('scene_calls', [])
 
         if scene_calls:
             # Use the first scene call's target (most traits only have one)
-            hlc_scene = scene_calls[0].get('scene_name', 'unknown')
+            target_scene_name = scene_calls[0].get('scene_name', 'unknown')
 
             # Normalize to lowercase for comparison
-            hlc_scene_lower = hlc_scene.lower()
+            target_scene_lower = target_scene_name.lower()
 
             # Check if it's a valid scene
-            if hlc_scene_lower in self.blender_scenes:
-                return hlc_scene_lower
+            if target_scene_lower in self.blender_scenes:
+                return target_scene_lower
 
             # Check without "level_" or "scene_" prefix
             for scene in self.blender_scenes:
-                if scene == hlc_scene_lower or scene.endswith(hlc_scene_lower):
+                if scene == target_scene_lower or scene.endswith(target_scene_lower):
                     return scene
 
         # Fallback: next sequential scene
@@ -121,7 +118,7 @@ class N64Exporter:
 
 
     def get_trait_info(self, trait_class: str) -> dict:
-        """Get HLC trait info for a specific trait class."""
+        """Get trait info for a specific trait class."""
         if not hasattr(self, 'trait_info') or not self.trait_info:
             return {}
         traits_data = self.trait_info.get('traits', {})
@@ -129,19 +126,21 @@ class N64Exporter:
 
 
     def trait_needs_data(self, trait_class: str) -> bool:
-        """Check if a trait needs per-instance data based on HLC analysis."""
+        """Check if a trait needs per-instance data."""
         trait_info = self.get_trait_info(trait_class)
         if trait_info.get('scene_calls'):
             return True
         members = trait_info.get('members', {})
-        return bool(filter_trait_members(members))
+        return bool(members)
 
 
     def get_trait_members(self, trait_class: str) -> dict:
-        """Get all user-defined members for a trait (name -> type), filtered to supported types."""
+        """Get all user-defined members for a trait (name -> type).
+
+        Members are already filtered by the macro to only include supported types.
+        """
         trait_info = self.get_trait_info(trait_class)
-        members = trait_info.get('members', {})
-        return filter_trait_members(members)
+        return trait_info.get('members', {})
 
 
     def get_trait_member_values(self, trait_class: str) -> dict:
@@ -163,9 +162,9 @@ class N64Exporter:
         Args:
             trait_class: The trait class name
             current_scene: Current scene name (for fallback scene calculation)
-            instance_props: Per-instance property values from Blender (overrides HLC defaults)
+            instance_props: Per-instance property values from Blender (overrides defaults)
 
-        Uses per-instance values from Blender when available, falls back to HLC defaults.
+        Uses per-instance values from Blender when available, falls back to Haxe defaults.
         """
         init_fields = []
         instance_props = instance_props or {}
@@ -176,16 +175,16 @@ class N64Exporter:
             target_scene_enum = f'SCENE_{target_scene.upper()}'
             init_fields.append(f'.target_scene = {target_scene_enum}')
 
-        # Get HLC defaults and struct members
-        hlc_defaults = self.get_trait_member_values(trait_class)
+        # Get defaults and struct members
+        trait_defaults = self.get_trait_member_values(trait_class)
         members = self.get_trait_members(trait_class)
 
         for member_name, member_type in members.items():
-            # Priority: instance_props (Blender) > hlc_defaults (Haxe code)
+            # Priority: instance_props (Blender) > trait_defaults (Haxe code)
             if member_name in instance_props:
                 value = instance_props[member_name]
-            elif member_name in hlc_defaults:
-                value = hlc_defaults[member_name]
+            elif member_name in trait_defaults:
+                value = trait_defaults[member_name]
             else:
                 continue
 
@@ -205,7 +204,7 @@ class N64Exporter:
         assets_dir = f'{build_dir}/n64/assets'
 
         self.exported_meshes = {}
-        deselect_from_all_viewlayers()
+        n64_utils.deselect_from_all_viewlayers()
 
         for scene in bpy.data.scenes:
             if scene.library:
@@ -271,7 +270,7 @@ class N64Exporter:
         if hasattr(scene, 'arm_traitlist'):
             for trait in scene.arm_traitlist:
                 if trait.enabled_prop and trait.class_name_prop:
-                    props = extract_blender_trait_props(trait)
+                    props = n64_utils.extract_blender_trait_props(trait)
                     scene_traits.append({
                         "class_name": trait.class_name_prop,
                         "type": trait.type_prop,
@@ -280,7 +279,7 @@ class N64Exporter:
 
         self.scene_data[scene_name] = {
             "world": {
-                "clear_color": get_clear_color(scene),
+                "clear_color": n64_utils.get_clear_color(scene),
                 "ambient_color": list(scene.fast64.renderSettings.ambientColor)
             },
             "cameras": [],
@@ -331,7 +330,7 @@ class N64Exporter:
                 if hasattr(obj, 'arm_traitlist'):
                     for trait in obj.arm_traitlist:
                         if trait.enabled_prop and trait.class_name_prop:
-                            props = extract_blender_trait_props(trait)
+                            props = n64_utils.extract_blender_trait_props(trait)
                             obj_traits.append({
                                 "class_name": trait.class_name_prop,
                                 "type": trait.type_prop,
@@ -389,17 +388,17 @@ class N64Exporter:
 
 
     def write_input(self):
-        copy_src('iron/system/input.c', 'src')
-        copy_src('iron/system/input.h', 'src')
+        n64_utils.copy_src('iron/system/input.c', 'src')
+        n64_utils.copy_src('iron/system/input.h', 'src')
 
 
     def write_traits(self):
-        code_generator.write_traits_files(self.all_traits, self.trait_asts, self.trait_data_instances)
+        traits_generator.write_traits_files(self.all_traits, self.trait_data_instances)
 
 
     def write_engine(self):
-        copy_src('engine.c', 'src')
-        copy_src('engine.h', 'src')
+        n64_utils.copy_src('engine.c', 'src')
+        n64_utils.copy_src('engine.h', 'src')
 
 
     def write_main(self):
@@ -466,8 +465,8 @@ class N64Exporter:
 
 
     def write_renderer(self):
-        copy_src('renderer.c', 'src')
-        copy_src('renderer.h', 'src')
+        n64_utils.copy_src('renderer.c', 'src')
+        n64_utils.copy_src('renderer.h', 'src')
 
 
     def write_scenes(self):
@@ -485,13 +484,13 @@ class N64Exporter:
         scene_name = arm.utils.safesrc(scene.name).lower()
 
         clear_color = self.scene_data[scene_name]['world']['clear_color']
-        cr = to_uint8(clear_color[0])
-        cg = to_uint8(clear_color[1])
-        cb = to_uint8(clear_color[2])
+        cr = n64_utils.to_uint8(clear_color[0])
+        cg = n64_utils.to_uint8(clear_color[1])
+        cb = n64_utils.to_uint8(clear_color[2])
         ambient_color = self.scene_data[scene_name]['world']['ambient_color']
-        ar = to_uint8(ambient_color[0])
-        ag = to_uint8(ambient_color[1])
-        ab = to_uint8(ambient_color[2])
+        ar = n64_utils.to_uint8(ambient_color[0])
+        ag = n64_utils.to_uint8(ambient_color[1])
+        ab = n64_utils.to_uint8(ambient_color[2])
 
         tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'scenes', 'scene.c.j2')
         out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'scenes', f'{arm.utils.safesrc(scene_name).lower()}.c')
@@ -513,9 +512,9 @@ class N64Exporter:
 
         light_block_lines = []
         for i, light in enumerate(self.scene_data[scene_name]['lights']):
-            light_block_lines.append(f'    lights[{i}].color[0] = {to_uint8(light["color"][0])};')
-            light_block_lines.append(f'    lights[{i}].color[1] = {to_uint8(light["color"][1])};')
-            light_block_lines.append(f'    lights[{i}].color[2] = {to_uint8(light["color"][2])};')
+            light_block_lines.append(f'    lights[{i}].color[0] = {n64_utils.to_uint8(light["color"][0])};')
+            light_block_lines.append(f'    lights[{i}].color[1] = {n64_utils.to_uint8(light["color"][1])};')
+            light_block_lines.append(f'    lights[{i}].color[2] = {n64_utils.to_uint8(light["color"][2])};')
             light_block_lines.append(f'    lights[{i}].dir = (T3DVec3){{{{{light["dir"][0]:.6f}f, {light["dir"][1]:.6f}f, {light["dir"][2]:.6f}f}}}};')
             light_block_lines.append(f'    lights[{i}].trait_count = 0;')
             light_block_lines.append(f'    lights[{i}].traits = NULL;')
@@ -551,7 +550,7 @@ class N64Exporter:
                     object_block_lines.append(f'    objects[{i}].traits[{t_idx}].on_update = {trait_func_name}_on_update;')
                     object_block_lines.append(f'    objects[{i}].traits[{t_idx}].on_remove = {trait_func_name}_on_remove;')
 
-                    # Generate trait data if needed (uses Blender values with HLC defaults as fallback)
+                    # Generate trait data if needed
                     if self.trait_needs_data(trait_class):
                         data_var = f'td_{scene_name}_o{i}_t{t_idx}'
                         init_str = self.build_trait_initializer(trait_class, scene_name, instance_props)
@@ -584,7 +583,7 @@ class N64Exporter:
                 scene_traits_block_lines.append(f'    scene->traits[{t_idx}].on_update = {trait_func_name}_on_update;')
                 scene_traits_block_lines.append(f'    scene->traits[{t_idx}].on_remove = {trait_func_name}_on_remove;')
 
-                # Generate trait data for scene traits if needed (uses Blender values with HLC defaults as fallback)
+                # Generate trait data for scene traits if needed
                 if self.trait_needs_data(trait_class):
                     data_var = f'td_{scene_name}_s_t{t_idx}'
                     init_str = self.build_trait_initializer(trait_class, scene_name, instance_props)
@@ -681,8 +680,8 @@ class N64Exporter:
 
 
     def write_iron(self):
-        copy_src('iron/object/transform.h', 'src')
-        copy_src('iron/object/transform.c', 'src')
+        n64_utils.copy_src('iron/object/transform.h', 'src')
+        n64_utils.copy_src('iron/object/transform.c', 'src')
 
 
     def run_make(self):
@@ -752,12 +751,12 @@ class N64Exporter:
         # Create scene index map for determining "next scene"
         self.scene_index = {name: idx for idx, name in enumerate(self.blender_scenes)}
 
-        # Step 1: Parse HashLink C output using AST-based parser
-        log.info('Parsing HashLink C build for traits (AST-based)...')
-        self.trait_asts, self.trait_info = code_generator.scan_and_summarize()
+        # Step 1: Load trait metadata from macro-generated JSON
+        log.info('Loading trait metadata from Haxe macro...')
+        self.trait_info = traits_generator.scan_and_summarize()
 
         if not self.trait_info.get('traits'):
-            log.warn("No traits found in HLC build. Make sure to compile for HL/C target first.")
+            log.warn("No traits found in macro JSON. Make sure to compile with arm_target_n64 defined.")
         else:
             log.info(f"Found traits: {list(self.trait_info['traits'].keys())}")
             log.info(f"Input buttons used: {self.trait_info.get('input_buttons', [])}")
@@ -765,7 +764,7 @@ class N64Exporter:
                 log.info("Transform operations detected")
             if self.trait_info.get('has_scene'):
                 scene_names = self.trait_info.get('scene_names', [])
-                log.info(f"Scene names detected (from HLC): {scene_names}")
+                log.info(f"Scene names detected: {scene_names}")
 
                 # Validate detected scene names against Blender scenes
                 literal_scenes = [s for s in scene_names if not s.startswith('member:')]

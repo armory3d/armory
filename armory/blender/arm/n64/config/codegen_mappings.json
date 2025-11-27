@@ -25,9 +25,10 @@
     },
 
     "transform.rotate": {
-      "output": "it_rotate(&obj->transform, {x}, {y}, {z})",
-      "args": ["x", "y", "z"],
-      "flags": {"needs_obj": true}
+      "output": "it_rotate_axis(&obj->transform, -{x}, -{z}, {y}, {arg1})",
+      "args": ["axis", "angle"],
+      "flags": {"needs_obj": true},
+      "_comment": "axis is Vec3 which expands to x,y,z; angle is the second arg (arg1). Coordinate swap: Blender XYZ -> N64 -X,Z,Y"
     },
     "transform.translate": {
       "output": "it_translate(&obj->transform, {x}, {y}, {z})",
