@@ -10,6 +10,60 @@ import arm.utils
 
 
 # =============================================================================
+# Coordinate Conversion (Blender Z-up → N64/T3D Y-up)
+# =============================================================================
+
+def blender_to_n64_position(loc):
+    """Convert Blender position (Z-up) to N64 (Y-up).
+
+    Blender: X=right, Y=forward, Z=up
+    N64/T3D: X=right, Y=up, Z=back
+    """
+    return (loc[0], loc[2], -loc[1])
+
+
+def blender_to_n64_scale(scale, factor=0.015):
+    """Convert Blender scale to N64 scale with optional scaling factor.
+
+    Swaps Y and Z to match coordinate system change.
+    """
+    return (scale[0] * factor, scale[2] * factor, scale[1] * factor)
+
+
+def blender_to_n64_euler(matrix_world):
+    """Convert Blender world matrix rotation to N64 Euler angles.
+
+    Returns tuple of (rx, ry, rz) in radians for T3D's euler system.
+    """
+    e = matrix_world.to_quaternion().to_euler('YZX')
+    return (-e.x, -e.z, e.y)
+
+
+def blender_to_n64_direction(dir_vec):
+    """Convert Blender direction vector to N64 coordinate system."""
+    return (dir_vec[0], dir_vec[2], -dir_vec[1])
+
+
+def normalize_direction(dir_vec):
+    """Normalize a direction vector."""
+    import math
+    length = math.sqrt(dir_vec[0]**2 + dir_vec[1]**2 + dir_vec[2]**2)
+    if length > 0:
+        return (dir_vec[0]/length, dir_vec[1]/length, dir_vec[2]/length)
+    return dir_vec
+
+
+# Axis mapping for runtime rotation (used by traits_generator.py)
+# Maps Blender axis to (N64 rot[] index, needs_negate)
+# Based on exporter's euler conversion: (-e.x, -e.z, e.y)
+N64_AXIS_ROTATION_MAP = {
+    'x': (0, True),   # Blender X -> N64 rot[0], negated
+    'y': (2, False),  # Blender Y -> N64 rot[2], same sign
+    'z': (1, True),   # Blender Z -> N64 rot[1], negated
+}
+
+
+# =============================================================================
 # Blender Utilities
 # =============================================================================
 

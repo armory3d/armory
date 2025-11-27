@@ -20,6 +20,7 @@ try:
     import arm.utils
     import arm.log as log
     from arm.n64.config import get_config
+    from arm.n64 import utils as n64_utils
     HAS_ARM = True
 except ImportError:
     HAS_ARM = False
@@ -30,11 +31,13 @@ except ImportError:
         def info(msg): print(f'INFO: {msg}')
     log = LogStub()
     from config import get_config
+    import utils as n64_utils
 
 if HAS_ARM:
     if arm.is_reload(__name__):
         arm.utils = arm.reload_module(arm.utils)
         log = arm.reload_module(log)
+        n64_utils = arm.reload_module(n64_utils)
     else:
         arm.enable_reload(__name__)
 
@@ -138,6 +141,8 @@ class ExpressionGenerator:
             return self._gen_field(node)
         elif node_type == 'binop':
             return self._gen_binop(node)
+        elif node_type == 'unop':
+            return self._gen_unop(node)
         elif node_type == 'call':
             return self._gen_call(node)
         elif node_type == 'new':
@@ -196,6 +201,19 @@ class ExpressionGenerator:
         right = self.generate(node.get('right'))
         op = node.get('op', '?')
         return f'({left} {op} {right})'
+
+    def _gen_unop(self, node: Dict) -> str:
+        """Generate C code for unary operators like !, -, ~"""
+        op = node.get('op', '')
+        expr = self.generate(node.get('expr'))
+        if op == '!':
+            return f'!{expr}'
+        elif op == '-':
+            return f'-{expr}'
+        elif op == '~':
+            return f'~{expr}'
+        else:
+            return f'{op}{expr}'
 
     def _gen_call(self, node: Dict) -> str:
         path = node.get('path', '')
@@ -297,32 +315,36 @@ class ExpressionGenerator:
                     subs['z'] = self.generate(vec_args[2])
 
                     # For rotation: compute axis index at compile-time
-                    # Blender Z-up to N64 Y-up coordinate conversion.
-                    # Must match exporter.py which does: obj_rot = (-e.x, -e.z, e.y)
-                    # - Blender X -> N64 X (rot[0]), negated
-                    # - Blender Z -> N64 Y (rot[1]), negated
-                    # - Blender Y -> N64 Z (rot[2]), same sign
+                    # Uses centralized Blender Z-up to N64 Y-up coordinate conversion
                     if x_val is not None and y_val is not None and z_val is not None:
+                        # Determine dominant axis and use centralized mapping
+                        axis_map = n64_utils.N64_AXIS_ROTATION_MAP
+
                         if abs(z_val) > abs(x_val) and abs(z_val) > abs(y_val):
-                            # Blender Z axis -> N64 Y axis (index 1), NEGATED per exporter
-                            subs['axis_index'] = '1'
-                            subs['angle_sign'] = '-' if z_val > 0 else ''
+                            # Blender Z axis
+                            idx, negate = axis_map['z']
+                            subs['axis_index'] = str(idx)
+                            subs['angle_sign'] = '-' if (z_val > 0) == negate else ''
                         elif abs(y_val) > abs(x_val) and abs(y_val) > abs(z_val):
-                            # Blender Y axis -> N64 Z axis (index 2), same sign per exporter
-                            subs['axis_index'] = '2'
-                            subs['angle_sign'] = '' if y_val > 0 else '-'
+                            # Blender Y axis
+                            idx, negate = axis_map['y']
+                            subs['axis_index'] = str(idx)
+                            subs['angle_sign'] = '-' if (y_val > 0) == negate else ''
                         elif abs(x_val) > abs(y_val) and abs(x_val) > abs(z_val):
-                            # Blender X axis -> N64 X axis (index 0), NEGATED per exporter
-                            subs['axis_index'] = '0'
-                            subs['angle_sign'] = '-' if x_val > 0 else ''
+                            # Blender X axis
+                            idx, negate = axis_map['x']
+                            subs['axis_index'] = str(idx)
+                            subs['angle_sign'] = '-' if (x_val > 0) == negate else ''
                         else:
-                            # Default to Y (up) if can't determine
-                            subs['axis_index'] = '1'
-                            subs['angle_sign'] = '-'
+                            # Default to Blender Z (N64 Y up) if can't determine
+                            idx, negate = axis_map['z']
+                            subs['axis_index'] = str(idx)
+                            subs['angle_sign'] = '-' if negate else ''
                     else:
-                        # Non-constant axis - default to Y rotation (Blender Z-up), negated
-                        subs['axis_index'] = '1'
-                        subs['angle_sign'] = '-'
+                        # Non-constant axis - default to Blender Z (N64 Y rotation)
+                        idx, negate = n64_utils.N64_AXIS_ROTATION_MAP['z']
+                        subs['axis_index'] = str(idx)
+                        subs['angle_sign'] = '-' if negate else ''
             else:
                 subs[arg_name] = self.generate(arg)
 
@@ -378,6 +400,16 @@ class StatementGenerator:
 
         if node_type == 'if':
             return self._gen_if(node)
+        elif node_type == 'while':
+            return self._gen_while(node)
+        elif node_type == 'do_while':
+            return self._gen_do_while(node)
+        elif node_type == 'for':
+            return self._gen_for(node)
+        elif node_type == 'break':
+            return [f'{self.ctx.indent_str()}break;']
+        elif node_type == 'continue':
+            return [f'{self.ctx.indent_str()}continue;']
         elif node_type == 'binop' and node.get('op') == '=':
             return self._gen_assignment(node)
         elif node_type == 'call':
@@ -408,6 +440,65 @@ class StatementGenerator:
             for stmt in else_stmts:
                 lines.extend(self.generate(stmt))
             self.ctx.indent -= 1
+
+        lines.append(f'{indent}}}')
+        return lines
+
+    def _gen_while(self, node: Dict) -> List[str]:
+        """Generate C while loop."""
+        indent = self.ctx.indent_str()
+        lines = []
+
+        cond = self.expr_gen.generate(node.get('condition'))
+        lines.append(f'{indent}while ({cond}) {{')
+
+        self.ctx.indent += 1
+        for stmt in (node.get('body') or []):
+            lines.extend(self.generate(stmt))
+        self.ctx.indent -= 1
+
+        lines.append(f'{indent}}}')
+        return lines
+
+    def _gen_do_while(self, node: Dict) -> List[str]:
+        """Generate C do-while loop."""
+        indent = self.ctx.indent_str()
+        lines = []
+
+        lines.append(f'{indent}do {{')
+
+        self.ctx.indent += 1
+        for stmt in (node.get('body') or []):
+            lines.extend(self.generate(stmt))
+        self.ctx.indent -= 1
+
+        cond = self.expr_gen.generate(node.get('condition'))
+        lines.append(f'{indent}}} while ({cond});')
+        return lines
+
+    def _gen_for(self, node: Dict) -> List[str]:
+        """Generate C for loop from Haxe for-in loop."""
+        indent = self.ctx.indent_str()
+        lines = []
+
+        iterator = node.get('iterator', {})
+        iter_type = iterator.get('type', '')
+        var_name = iterator.get('varName', 'i')
+
+        if iter_type == 'range':
+            # for (i in 0...n) -> for (int i = start; i < end; i++)
+            start = self.expr_gen.generate(iterator.get('start'))
+            end = self.expr_gen.generate(iterator.get('end'))
+            lines.append(f'{indent}for (int {var_name} = {start}; {var_name} < {end}; {var_name}++) {{')
+        else:
+            # General iterator - not fully supported, emit warning
+            log.warn(f'General iterators not fully supported, using placeholder')
+            lines.append(f'{indent}/* TODO: iterator loop */ {{')
+
+        self.ctx.indent += 1
+        for stmt in (node.get('body') or []):
+            lines.extend(self.generate(stmt))
+        self.ctx.indent -= 1
 
         lines.append(f'{indent}}}')
         return lines

@@ -561,8 +561,78 @@ class N64TraitMacro {
                     vars: varDecls
                 };
 
+            case EWhile(econd, e, normalWhile):
+                var bodyStmts:Array<Dynamic> = [];
+                extractStatements(e, bodyStmts, traitInfo);
+                return {
+                    type: normalWhile ? "while" : "do_while",
+                    condition: exprToStatement(econd, traitInfo),
+                    body: bodyStmts
+                };
+
+            case EFor(it, e):
+                // Haxe for loops: for (v in iterable) { ... }
+                // 'it' is the iterator expression (e.g., 0...10 or array)
+                var bodyStmts:Array<Dynamic> = [];
+                extractStatements(e, bodyStmts, traitInfo);
+
+                // Parse the iterator - handle IntIter (0...n) specially
+                var iterInfo = parseForIterator(it, traitInfo);
+                return {
+                    type: "for",
+                    iterator: iterInfo,
+                    body: bodyStmts
+                };
+
+            case EBreak:
+                return {type: "break"};
+
+            case EContinue:
+                return {type: "continue"};
+
             default:
                 return null;
+        }
+    }
+
+    /**
+     * Parse for loop iterator expression.
+     * Haxe for loops: for (v in iterable)
+     * The 'it' expression is: EBinop(OpIn, varExpr, iterableExpr)
+     */
+    static function parseForIterator(it:Expr, traitInfo:Dynamic):Dynamic {
+        switch (it.expr) {
+            case EBinop(OpIn, varExpr, iterExpr):
+                // Extract variable name
+                var varName = switch (varExpr.expr) {
+                    case EConst(CIdent(name)): name;
+                    default: "i";
+                };
+
+                // Check if iterable is a range (0...n)
+                switch (iterExpr.expr) {
+                    case EBinop(OpInterval, e1, e2):
+                        return {
+                            type: "range",
+                            varName: varName,
+                            start: exprToStatement(e1, traitInfo),
+                            end: exprToStatement(e2, traitInfo)
+                        };
+                    default:
+                        // General iterator (arrays, etc.)
+                        return {
+                            type: "iterator",
+                            varName: varName,
+                            iterable: exprToStatement(iterExpr, traitInfo)
+                        };
+                }
+            default:
+                // Fallback for unexpected structure
+                return {
+                    type: "iterator",
+                    varName: "i",
+                    iterable: exprToStatement(it, traitInfo)
+                };
         }
     }
 

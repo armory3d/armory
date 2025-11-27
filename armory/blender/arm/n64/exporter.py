@@ -290,9 +290,14 @@ class N64Exporter:
 
         for obj in scene.objects:
             if obj.type == 'CAMERA':
-                cam_pos = (obj.location[0], obj.location[2], -obj.location[1])
+                cam_pos = n64_utils.blender_to_n64_position(obj.location)
                 cam_dir = obj.rotation_euler.to_matrix().col[2]
-                cam_target = (obj.location[0] - cam_dir[0], obj.location[2] - cam_dir[2], -obj.location[1] + cam_dir[1])
+                # Camera target is position minus forward direction (converted to N64 coords)
+                cam_target = (
+                    obj.location[0] - cam_dir[0],
+                    obj.location[2] - cam_dir[2],
+                    -obj.location[1] + cam_dir[1]
+                )
                 sensor = max(obj.data.sensor_width, obj.data.sensor_height)
                 cam_fov = math.degrees(2 * math.atan((sensor * 0.5) / obj.data.lens))
 
@@ -304,12 +309,10 @@ class N64Exporter:
                     "near": obj.data.clip_start,
                     "far": obj.data.clip_end
                 })
-            elif obj.type == 'LIGHT': #TODO: support multiple light types [Point and Sun]
+            elif obj.type == 'LIGHT':  # TODO: support multiple light types [Point and Sun]
                 light_dir = obj.rotation_euler.to_matrix().col[2]
-                dir_vec = (light_dir[0], light_dir[2], -light_dir[1])
-                length = math.sqrt(dir_vec[0]**2 + dir_vec[1]**2 + dir_vec[2]**2)
-                if length > 0:
-                    dir_vec = (dir_vec[0]/length, dir_vec[1]/length, dir_vec[2]/length)
+                dir_vec = n64_utils.blender_to_n64_direction(light_dir)
+                dir_vec = n64_utils.normalize_direction(dir_vec)
 
                 self.scene_data[scene_name]["lights"].append({
                     "name": arm.utils.safesrc(obj.name),
@@ -320,10 +323,9 @@ class N64Exporter:
                 mesh = obj.data
                 mesh_name = self.exported_meshes[mesh]
 
-                obj_pos = (obj.location[0], obj.location[2], -obj.location[1])
-                e = obj.matrix_world.to_quaternion().to_euler('YZX')
-                obj_rot = (-e.x, -e.z, e.y)
-                obj_scale = (obj.scale[0] * 0.015, obj.scale[2] * 0.015, obj.scale[1] * 0.015)
+                obj_pos = n64_utils.blender_to_n64_position(obj.location)
+                obj_rot = n64_utils.blender_to_n64_euler(obj.matrix_world)
+                obj_scale = n64_utils.blender_to_n64_scale(obj.scale)
 
                 # Extract traits from object with their per-instance property values
                 obj_traits = []

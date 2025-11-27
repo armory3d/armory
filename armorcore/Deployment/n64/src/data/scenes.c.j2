@@ -166,17 +166,49 @@ void scene_clear(SceneId id)
 
     ArmScene *s = &g_scenes[id];
 
-    if (s->objects != NULL) {{
-        scene_on_remove(id);
+    // Call on_remove for all traits first
+    scene_on_remove(id);
 
-		for (uint16_t i = 0; i < s->object_count; i++) {{
-			if (s->objects[i].model_mat) {{
-				free_uncached(s->objects[i].model_mat);
-				s->objects[i].model_mat = NULL;
-			}}
-			s->objects[i].dpl = NULL;
-		}}
-	}}
+    // Free object resources
+    if (s->objects != NULL) {{
+        for (uint16_t i = 0; i < s->object_count; i++) {{
+            if (s->objects[i].model_mat) {{
+                free_uncached(s->objects[i].model_mat);
+                s->objects[i].model_mat = NULL;
+            }}
+            if (s->objects[i].traits) {{
+                free(s->objects[i].traits);
+                s->objects[i].traits = NULL;
+            }}
+            s->objects[i].dpl = NULL;
+        }}
+    }}
+
+    // Free camera trait arrays
+    if (s->cameras != NULL) {{
+        for (uint8_t i = 0; i < s->camera_count; i++) {{
+            if (s->cameras[i].traits) {{
+                free(s->cameras[i].traits);
+                s->cameras[i].traits = NULL;
+            }}
+        }}
+    }}
+
+    // Free light trait arrays
+    if (s->lights != NULL) {{
+        for (uint8_t i = 0; i < s->light_count; i++) {{
+            if (s->lights[i].traits) {{
+                free(s->lights[i].traits);
+                s->lights[i].traits = NULL;
+            }}
+        }}
+    }}
+
+    // Free scene-level traits
+    if (s->traits) {{
+        free(s->traits);
+        s->traits = NULL;
+    }}
 
 	s->world.clear_color[0] = s->world.clear_color[1] = s->world.clear_color[2] = 0;
 	s->world.clear_color[3] = 0xFF;
@@ -191,6 +223,7 @@ void scene_clear(SceneId id)
 	s->light_count = 0;
 	s->objects = NULL;
 	s->object_count = 0;
+    s->trait_count = 0;
 }}
 
 ArmScene *scene_get(SceneId id)
