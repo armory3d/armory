@@ -70,7 +70,20 @@ class N64TraitMacro {
             }
         };
 
-        // Process each field
+        // Build a map of field name -> function for method reference lookups
+        var methodMap:Map<String, Function> = new Map();
+        for (field in fields) {
+            switch (field.kind) {
+                case FFun(func):
+                    methodMap.set(field.name, func);
+                default:
+            }
+        }
+
+        // Track which methods are registered to which lifecycle
+        var lifecycleRegistrations:Map<String, String> = new Map();
+
+        // PASS 1: Process fields - extract members and find lifecycle registrations
         for (field in fields) {
             switch (field.kind) {
                 case FVar(t, e):
@@ -81,10 +94,9 @@ class N64TraitMacro {
                     }
 
                 case FFun(func):
-                    // Function - check if it's new() constructor
+                    // Analyze constructor for notifyOn* calls (both inline and method refs)
                     if (field.name == "new") {
-                        // Analyze constructor for notifyOn* calls
-                        analyzeConstructor(func, traitInfo);
+                        analyzeForRegistrations(func.expr, traitInfo, lifecycleRegistrations, methodMap);
                     }
 
                 case FProp(_, _, _, _):
@@ -92,7 +104,65 @@ class N64TraitMacro {
             }
         }
 
-        // Store trait data
+        // PASS 2: Process registered method bodies
+        // This handles both method references AND finds chained registrations
+        var processedMethods:Map<String, Bool> = new Map();
+        var methodsToProcess:Array<String> = [];
+
+        // Collect initial methods to process
+        for (methodName in lifecycleRegistrations.keys()) {
+            if (!processedMethods.exists(methodName)) {
+                methodsToProcess.push(methodName);
+            }
+        }
+
+        // Process methods (may discover more via chained registrations)
+        while (methodsToProcess.length > 0) {
+            var methodName = methodsToProcess.shift();
+            if (processedMethods.exists(methodName)) continue;
+            processedMethods.set(methodName, true);
+
+            var func = methodMap.get(methodName);
+            if (func == null || func.expr == null) continue;
+
+            var lifecycle = lifecycleRegistrations.get(methodName);
+            if (lifecycle != null) {
+                // Extract method body as statements
+                var statements:Array<Dynamic> = [];
+                extractStatements(func.expr, statements, traitInfo);
+
+                // Store in the appropriate lifecycle slot
+                switch (lifecycle) {
+                    case "init":
+                        if (traitInfo.functions.init == null) {
+                            traitInfo.functions.init = statements;
+                        }
+                    case "update":
+                        if (traitInfo.functions.update == null) {
+                            traitInfo.functions.update = statements;
+                        }
+                    case "remove":
+                        if (traitInfo.functions.remove == null) {
+                            traitInfo.functions.remove = statements;
+                        }
+                }
+            }
+
+            // Look for chained registrations inside this method
+            var newRegistrations:Map<String, String> = new Map();
+            analyzeForRegistrations(func.expr, traitInfo, newRegistrations, methodMap);
+
+            // Add newly discovered methods to process queue
+            for (newMethod in newRegistrations.keys()) {
+                if (!processedMethods.exists(newMethod) && !lifecycleRegistrations.exists(newMethod)) {
+                    lifecycleRegistrations.set(newMethod, newRegistrations.get(newMethod));
+                    methodsToProcess.push(newMethod);
+                }
+            }
+        }
+
+        // Store trait data by class name (Blender looks up by class name)
+        // Module path is stored inside traitInfo for disambiguation if needed
         traitData.set(className, traitInfo);
 
         // Return null = don't modify fields
@@ -186,82 +256,151 @@ class N64TraitMacro {
     }
 
     /**
-     * Analyze constructor for notifyOn* calls and extract function bodies.
+     * Analyze expression tree for notifyOn* registrations.
+     * Handles both inline functions and method references.
+     * Inline functions are extracted immediately; method references are recorded for later processing.
      */
-    static function analyzeConstructor(func:Function, traitInfo:Dynamic):Void {
-        if (func.expr == null) return;
-
-        // Walk the expression tree looking for notifyOn* calls
-        walkExpr(func.expr, traitInfo);
-    }
-
-    /**
-     * Recursively walk expression tree.
-     */
-    static function walkExpr(expr:Expr, traitInfo:Dynamic):Void {
+    static function analyzeForRegistrations(expr:Expr, traitInfo:Dynamic, registrations:Map<String, String>, methodMap:Map<String, Function>):Void {
         if (expr == null) return;
 
         switch (expr.expr) {
             case ECall(e, params):
-                // Check if this is a notifyOn* call
-                analyzeCall(e, params, traitInfo);
-                // Also walk params
+                var callName = getCallName(e);
+
+                // Check for notifyOn* registration calls
+                var lifecycle:String = null;
+                switch (callName) {
+                    case "notifyOnInit": lifecycle = "init";
+                    case "notifyOnUpdate": lifecycle = "update";
+                    case "notifyOnRemove": lifecycle = "remove";
+                    default:
+                }
+
+                if (lifecycle != null && params.length > 0) {
+                    var param = params[0];
+                    switch (param.expr) {
+                        case EFunction(_, f):
+                            // Inline function - extract immediately
+                            if (f.expr != null) {
+                                var statements:Array<Dynamic> = [];
+                                extractStatements(f.expr, statements, traitInfo);
+
+                                // Store in the appropriate lifecycle slot
+                                switch (lifecycle) {
+                                    case "init":
+                                        if (traitInfo.functions.init == null) {
+                                            traitInfo.functions.init = statements;
+                                        }
+                                    case "update":
+                                        if (traitInfo.functions.update == null) {
+                                            traitInfo.functions.update = statements;
+                                        }
+                                    case "remove":
+                                        if (traitInfo.functions.remove == null) {
+                                            traitInfo.functions.remove = statements;
+                                        }
+                                }
+
+                                // Also scan the inline function for chained registrations
+                                analyzeForRegistrations(f.expr, traitInfo, registrations, methodMap);
+                            }
+
+                        case EConst(CIdent(methodName)):
+                            // Method reference like: notifyOnUpdate(update)
+                            registrations.set(methodName, lifecycle);
+
+                        case EField(_, methodName):
+                            // Method reference like: notifyOnUpdate(this.update)
+                            registrations.set(methodName, lifecycle);
+
+                        default:
+                    }
+                }
+
+                // Continue walking params
                 for (p in params) {
-                    walkExpr(p, traitInfo);
+                    analyzeForRegistrations(p, traitInfo, registrations, methodMap);
                 }
 
             case EBlock(exprs):
                 for (e in exprs) {
-                    walkExpr(e, traitInfo);
+                    analyzeForRegistrations(e, traitInfo, registrations, methodMap);
                 }
 
             case EIf(econd, eif, eelse):
-                walkExpr(econd, traitInfo);
-                walkExpr(eif, traitInfo);
-                if (eelse != null) walkExpr(eelse, traitInfo);
+                analyzeForRegistrations(econd, traitInfo, registrations, methodMap);
+                analyzeForRegistrations(eif, traitInfo, registrations, methodMap);
+                if (eelse != null) analyzeForRegistrations(eelse, traitInfo, registrations, methodMap);
 
             case EWhile(econd, e, _):
-                walkExpr(econd, traitInfo);
-                walkExpr(e, traitInfo);
+                analyzeForRegistrations(econd, traitInfo, registrations, methodMap);
+                analyzeForRegistrations(e, traitInfo, registrations, methodMap);
 
             case EFor(it, e):
-                walkExpr(it, traitInfo);
-                walkExpr(e, traitInfo);
+                analyzeForRegistrations(it, traitInfo, registrations, methodMap);
+                analyzeForRegistrations(e, traitInfo, registrations, methodMap);
 
             case EFunction(_, f):
-                // Inline function - analyze its body
+                // Inline function inside expression
                 if (f.expr != null) {
-                    walkExpr(f.expr, traitInfo);
+                    analyzeForRegistrations(f.expr, traitInfo, registrations, methodMap);
+                }
+
+            case EParenthesis(e):
+                analyzeForRegistrations(e, traitInfo, registrations, methodMap);
+
+            case ETernary(econd, eif, eelse):
+                analyzeForRegistrations(econd, traitInfo, registrations, methodMap);
+                analyzeForRegistrations(eif, traitInfo, registrations, methodMap);
+                analyzeForRegistrations(eelse, traitInfo, registrations, methodMap);
+
+            case EBinop(_, e1, e2):
+                analyzeForRegistrations(e1, traitInfo, registrations, methodMap);
+                analyzeForRegistrations(e2, traitInfo, registrations, methodMap);
+
+            case EUnop(_, _, e):
+                analyzeForRegistrations(e, traitInfo, registrations, methodMap);
+
+            case EField(e, _):
+                analyzeForRegistrations(e, traitInfo, registrations, methodMap);
+
+            case EArray(e1, e2):
+                analyzeForRegistrations(e1, traitInfo, registrations, methodMap);
+                analyzeForRegistrations(e2, traitInfo, registrations, methodMap);
+
+            case EArrayDecl(values):
+                for (v in values) {
+                    analyzeForRegistrations(v, traitInfo, registrations, methodMap);
+                }
+
+            case ENew(_, params):
+                for (p in params) {
+                    analyzeForRegistrations(p, traitInfo, registrations, methodMap);
+                }
+
+            case EReturn(e):
+                if (e != null) analyzeForRegistrations(e, traitInfo, registrations, methodMap);
+
+            case ESwitch(e, cases, edef):
+                analyzeForRegistrations(e, traitInfo, registrations, methodMap);
+                for (c in cases) {
+                    if (c.expr != null) analyzeForRegistrations(c.expr, traitInfo, registrations, methodMap);
+                }
+                if (edef != null) analyzeForRegistrations(edef, traitInfo, registrations, methodMap);
+
+            case ETry(e, catches):
+                analyzeForRegistrations(e, traitInfo, registrations, methodMap);
+                for (c in catches) {
+                    analyzeForRegistrations(c.expr, traitInfo, registrations, methodMap);
+                }
+
+            case EVars(vars):
+                for (v in vars) {
+                    if (v.expr != null) analyzeForRegistrations(v.expr, traitInfo, registrations, methodMap);
                 }
 
             default:
-                // Continue walking
-        }
-    }
-
-    /**
-     * Analyze a function call expression.
-     */
-    static function analyzeCall(callExpr:Expr, params:Array<Expr>, traitInfo:Dynamic):Void {
-        // Get the function name being called
-        var callName = getCallName(callExpr);
-
-        switch (callName) {
-            case "notifyOnInit":
-                if (params.length > 0) {
-                    traitInfo.functions.init = extractFunctionBody(params[0], traitInfo);
-                }
-            case "notifyOnUpdate":
-                if (params.length > 0) {
-                    traitInfo.functions.update = extractFunctionBody(params[0], traitInfo);
-                }
-            case "notifyOnRemove":
-                if (params.length > 0) {
-                    traitInfo.functions.remove = extractFunctionBody(params[0], traitInfo);
-                }
-            default:
-                // API call tracking now happens in extractStatements/exprToStatement
-                // to avoid duplicate tracking
+                // No sub-expressions to walk
         }
     }
 
@@ -277,23 +416,6 @@ class N64TraitMacro {
             default:
                 return "";
         }
-    }
-
-    /**
-     * Extract function body as statement list.
-     */
-    static function extractFunctionBody(expr:Expr, traitInfo:Dynamic):Array<Dynamic> {
-        var statements:Array<Dynamic> = [];
-
-        switch (expr.expr) {
-            case EFunction(_, f):
-                if (f.expr != null) {
-                    extractStatements(f.expr, statements, traitInfo);
-                }
-            default:
-        }
-
-        return statements;
     }
 
     /**
@@ -386,6 +508,59 @@ class N64TraitMacro {
                     args: args
                 };
 
+            case EParenthesis(e):
+                // Unwrap parenthesized expression - e.g., (object.getChild("x")).transform
+                return exprToStatement(e, traitInfo);
+
+            case EUnop(op, postFix, e):
+                var operand = exprToStatement(e, traitInfo);
+                return {
+                    type: "unop",
+                    op: unopToString(op),
+                    postFix: postFix,
+                    expr: operand
+                };
+
+            case EArray(e1, e2):
+                // Array access like arr[i]
+                return {
+                    type: "array_access",
+                    array: exprToStatement(e1, traitInfo),
+                    index: exprToStatement(e2, traitInfo)
+                };
+
+            case EArrayDecl(values):
+                var elements:Array<Dynamic> = [];
+                for (v in values) {
+                    elements.push(exprToStatement(v, traitInfo));
+                }
+                return {
+                    type: "array",
+                    elements: elements
+                };
+
+            case ETernary(econd, eif, eelse):
+                return {
+                    type: "ternary",
+                    condition: exprToStatement(econd, traitInfo),
+                    then: exprToStatement(eif, traitInfo),
+                    else_: exprToStatement(eelse, traitInfo)
+                };
+
+            case EVars(vars):
+                // Variable declarations
+                var varDecls:Array<Dynamic> = [];
+                for (v in vars) {
+                    varDecls.push({
+                        name: v.name,
+                        expr: v.expr != null ? exprToStatement(v.expr, traitInfo) : null
+                    });
+                }
+                return {
+                    type: "vars",
+                    vars: varDecls
+                };
+
             default:
                 return null;
         }
@@ -434,6 +609,7 @@ class N64TraitMacro {
 
     /**
      * Get full dot-separated call path.
+     * Handles parenthesized expressions like (object.getChild("x")).transform.rotate()
      */
     static function getFullCallPath(expr:Expr):String {
         switch (expr.expr) {
@@ -441,7 +617,15 @@ class N64TraitMacro {
                 return name;
             case EField(e, field):
                 var parent = getFullCallPath(e);
-                return parent + "." + field;
+                if (parent.length > 0) {
+                    return parent + "." + field;
+                }
+                return field;
+            case EParenthesis(e):
+                return getFullCallPath(e);
+            case ECall(e, _):
+                // For chained calls like obj.getChild("x").transform
+                return getFullCallPath(e);
             default:
                 return "";
         }
@@ -449,6 +633,7 @@ class N64TraitMacro {
 
     /**
      * Get full dot-separated field access path.
+     * Handles parenthesized expressions.
      */
     static function getFieldAccessPath(expr:Expr):String {
         switch (expr.expr) {
@@ -460,6 +645,8 @@ class N64TraitMacro {
                     return parent + "." + field;
                 }
                 return field;
+            case EParenthesis(e):
+                return getFieldAccessPath(e);
             default:
                 return "";
         }
@@ -486,6 +673,20 @@ class N64TraitMacro {
             case OpAssign: "=";
             case OpAssignOp(subOp): binopToString(subOp) + "=";
             default: "?";
+        };
+    }
+
+    /**
+     * Convert unary operator to string.
+     */
+    static function unopToString(op:Unop):String {
+        return switch (op) {
+            case OpNot: "!";
+            case OpNeg: "-";
+            case OpNegBits: "~";
+            case OpIncrement: "++";
+            case OpDecrement: "--";
+            case OpSpread: "...";
         };
     }
 

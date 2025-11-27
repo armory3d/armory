@@ -727,11 +727,12 @@ def json_to_summary(macro_data: Dict) -> Dict:
             'scene_calls': [],
         }
 
-        # Process functions
+        # Process functions - use class name from trait data
+        class_name = trait_data.get('name', name)
         func_data = trait_data.get('functions', {})
         for lifecycle in ['init', 'update', 'remove']:
             if func_data.get(lifecycle):
-                trait_summary['functions'][lifecycle] = {'name': f'{safesrc(name).lower()}_on_{lifecycle}'}
+                trait_summary['functions'][lifecycle] = {'name': f'{safesrc(class_name).lower()}_on_{lifecycle}'}
 
         # Process input calls
         for input_call in (api_calls.get('input') or []):
