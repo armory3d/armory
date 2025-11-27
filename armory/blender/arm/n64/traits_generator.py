@@ -434,9 +434,6 @@ class StatementGenerator:
 
         node_type = node.get('type')
 
-        # Debug logging for statement types
-        log.info(f'StatementGenerator processing node type: {node_type}')
-
         if node_type == 'if':
             return self._gen_if(node)
         elif node_type == 'while':
@@ -566,12 +563,9 @@ class StatementGenerator:
             # Track this as a local variable
             self.ctx.local_vars.add(var_name)
 
-            log.info(f'Generating variable: {var_name}')
-
             if var_expr is not None:
                 # Check if this is a Vec4 type assignment
                 is_vec4 = self._is_vec4_expr(var_expr)
-                log.info(f'Variable {var_name} is_vec4: {is_vec4}, expr type: {var_expr.get("type")}')
 
                 if is_vec4:
                     # Track as Vec4 variable
