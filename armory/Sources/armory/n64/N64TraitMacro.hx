@@ -4,34 +4,54 @@ package armory.n64;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
+import haxe.Json;
 import sys.io.File;
 import sys.FileSystem;
-import haxe.Json;
+
+using haxe.macro.ExprTools;
+using haxe.macro.TypeTools;
+using StringTools;
+using Lambda;
 
 /**
- * Build macro that extracts trait metadata for N64 code generation.
+ * N64 Smart Trait Macro
  *
- * This macro runs at compile-time on all classes extending iron.Trait
- * when the arm_target_n64 flag is defined. It extracts:
- * - Member variables (name, type, default value)
- * - Lifecycle functions (init, update, remove)
- * - API calls (Transform, Input, Scene, Time)
+ * This macro outputs RESOLVED C CODE directly.
+ * The output JSON contains ready-to-emit C strings.
  *
- * Output is written to the build directory as JSON for the Python exporter.
+ * Architecture:
+ * - N64Config: Button/type/API mappings (internal dictionaries)
+ * - N64CEmitter: Converts Haxe AST to C strings
+ * - N64TraitMacro: Orchestrates extraction and JSON output
+ *
+ * Output format (n64_traits.json):
+ * {
+ *   "version": 3,
+ *   "traits": [{
+ *     "name": "MyTrait",
+ *     "members": [{"name": "speed", "type": "float", "default": "1.0f"}],
+ *     "init": ["tdata->speed = 1.0f;"],
+ *     "update": ["if (input_down(N64_BTN_B)) { obj->transform.rot[1] += tdata->speed * dt; }"],
+ *     "remove": [],
+ *     "flags": {"needs_obj": true, "needs_dt": true}
+ *   }]
+ * }
  */
 class N64TraitMacro {
-    // Accumulated trait data across all processed traits
-    static var traitData:Map<String, Dynamic> = new Map();
+    static var traitData:Map<String, TraitIR> = new Map();
     static var initialized:Bool = false;
 
     /**
-     * Build macro entry point - called for each class extending Trait.
+     * Build macro entry point
      */
     macro public static function build():Array<Field> {
-        // Initialize on first call
+        var defines = Context.getDefines();
+        if (!defines.exists("arm_target_n64")) {
+            return null;
+        }
+
         if (!initialized) {
             initialized = true;
-            // Register callback to write JSON after all types are processed
             Context.onAfterTyping(function(_) {
                 writeTraitJson();
             });
@@ -44,792 +64,519 @@ class N64TraitMacro {
         var className = cls.name;
         var modulePath = cls.module;
 
-        // Skip Iron/Armory internal traits
+        // Skip internal traits
         if (modulePath.indexOf("iron.") == 0 || modulePath.indexOf("armory.trait.internal") == 0) {
             return null;
         }
 
-        // Get build fields
         var fields = Context.getBuildFields();
 
-        // Extract trait info
-        var traitInfo:Dynamic = {
-            name: className,
-            module: modulePath,
-            members: [],
-            functions: {
-                init: null,
-                update: null,
-                remove: null
-            },
-            apiCalls: {
-                input: [],
-                transform: [],
-                scene: [],
-                time: false
+        // Extract trait IR
+        var extractor = new TraitExtractor(className, fields);
+        var traitIR = extractor.extract();
+
+        if (traitIR != null) {
+            traitData.set(className, traitIR);
+        }
+
+        return null;
+    }
+
+    /**
+     * Write the final JSON with resolved C code
+     */
+    static function writeTraitJson():Void {
+        if (traitData.keys().hasNext() == false) return;
+
+        var traits:Array<Dynamic> = [];
+        var allButtons:Array<String> = [];
+        var anyTransform = false;
+        var anyScene = false;
+        var sceneNames:Array<String> = [];
+
+        for (name in traitData.keys()) {
+            var ir = traitData.get(name);
+
+            // Convert members map to object for JSON
+            var membersObj:Dynamic = {};
+            for (memberName in ir.members.keys()) {
+                var m = ir.members.get(memberName);
+                Reflect.setField(membersObj, memberName, {
+                    type: m.type,
+                    default_value: m.default_value
+                });
+            }
+
+            traits.push({
+                name: ir.name,
+                needs_data: ir.needs_data,
+                members: membersObj,
+                target_scene: ir.target_scene,
+                init: ir.initCode,
+                update: ir.updateCode,
+                remove: ir.removeCode,
+                flags: {
+                    needs_obj: ir.needsObj,
+                    needs_dt: ir.needsDt
+                },
+                input_buttons: ir.inputButtons
+            });
+
+            // Aggregate summary info
+            for (btn in ir.inputButtons) {
+                if (!Lambda.has(allButtons, btn)) allButtons.push(btn);
+            }
+            anyTransform = anyTransform || ir.hasTransform;
+            anyScene = anyScene || ir.hasScene;
+            if (ir.target_scene != null && !Lambda.has(sceneNames, ir.target_scene)) {
+                sceneNames.push(ir.target_scene);
+            }
+        }
+
+        var output:Dynamic = {
+            version: 5,
+            generated: "N64TraitMacro",
+            coordinate_system: N64CoordinateSystem.getConfigForJson(),
+            traits: traits,
+            summary: {
+                input_buttons: allButtons,
+                has_transform: anyTransform,
+                has_scene: anyScene,
+                scene_names: sceneNames
             }
         };
 
-        // Build a map of field name -> function for method reference lookups
-        var methodMap:Map<String, Function> = new Map();
+        var json = Json.stringify(output, null, "  ");
+
+        // Write to build directory
+        var defines = Context.getDefines();
+        var buildDir = defines.get("arm_build_dir");
+        if (buildDir == null) buildDir = "build";
+
+        var outPath = buildDir + "/n64_traits.json";
+        try {
+            // Ensure directory exists
+            var dir = haxe.io.Path.directory(outPath);
+            if (dir != "" && !FileSystem.exists(dir)) {
+                FileSystem.createDirectory(dir);
+            }
+            File.saveContent(outPath, json);
+        } catch (e:Dynamic) {
+            Context.warning('Failed to write n64_traits.json: $e', Context.currentPos());
+        }
+    }
+}
+
+/**
+ * Trait IR - the resolved output
+ */
+typedef TraitIR = {
+    name:String,
+    needs_data:Bool,
+    members:Map<String, MemberIR>,       // name -> {type, default}
+    target_scene:String,                  // Resolved scene name or null
+    initCode:Array<String>,
+    updateCode:Array<String>,
+    removeCode:Array<String>,
+    needsObj:Bool,
+    needsDt:Bool,
+    inputButtons:Array<String>,          // Buttons used (e.g., ["N64_BTN_A", "N64_BTN_B"])
+    hasTransform:Bool,
+    hasScene:Bool
+}
+
+typedef MemberIR = {
+    type:String,
+    default_value:String
+}
+
+/**
+ * Extracts trait information and converts to C code
+ */
+class TraitExtractor {
+    var className:String;
+    var fields:Array<Field>;
+    var members:Map<String, MemberIR>;
+    var memberNames:Array<String>;
+    var methodMap:Map<String, Function>;
+
+    public function new(className:String, fields:Array<Field>) {
+        this.className = className;
+        this.fields = fields;
+        this.members = new Map();
+        this.memberNames = [];
+        this.methodMap = new Map();
+    }
+
+    public function extract():TraitIR {
+        // Pass 1: Extract members and build method map
         for (field in fields) {
             switch (field.kind) {
+                case FVar(t, e):
+                    var member = extractMember(field.name, t, e);
+                    if (member != null) {
+                        members.set(field.name, member);
+                        memberNames.push(field.name);
+                    }
                 case FFun(func):
                     methodMap.set(field.name, func);
                 default:
             }
         }
 
-        // Track which methods are registered to which lifecycle
-        var lifecycleRegistrations:Map<String, String> = new Map();
+        // Pass 2: Find lifecycle registrations in constructor
+        var lifecycles = findLifecycles();
 
-        // PASS 1: Process fields - extract members and find lifecycle registrations
-        for (field in fields) {
-            switch (field.kind) {
-                case FVar(t, e):
-                    // Member variable
-                    var memberInfo = extractMember(field.name, t, e);
-                    if (memberInfo != null) {
-                        traitInfo.members.push(memberInfo);
-                    }
+        // Pass 3: Convert lifecycle functions to C code
+        var initCode:Array<String> = [];
+        var updateCode:Array<String> = [];
+        var removeCode:Array<String> = [];
+        var needsObj = false;
+        var needsDt = false;
+        var inputButtons:Array<String> = [];
+        var hasTransform = false;
+        var hasScene = false;
+        var targetScene:String = null;
 
-                case FFun(func):
-                    // Analyze constructor for notifyOn* calls (both inline and method refs)
-                    if (field.name == "new") {
-                        analyzeForRegistrations(func.expr, traitInfo, lifecycleRegistrations, methodMap);
-                    }
-
-                case FProp(_, _, _, _):
-                    // Property - skip for now
-            }
+        if (lifecycles.init != null) {
+            var result = emitFunction(lifecycles.init);
+            initCode = result.code;
+            needsObj = needsObj || result.needsObj;
+            needsDt = needsDt || result.needsDt;
+            for (btn in result.inputButtons) if (!Lambda.has(inputButtons, btn)) inputButtons.push(btn);
+            hasTransform = hasTransform || result.hasTransform;
+            hasScene = hasScene || result.hasScene;
+            if (result.targetScene != null) targetScene = result.targetScene;
         }
 
-        // PASS 2: Process registered method bodies
-        // This handles both method references AND finds chained registrations
-        var processedMethods:Map<String, Bool> = new Map();
-        var methodsToProcess:Array<String> = [];
-
-        // Collect initial methods to process
-        for (methodName in lifecycleRegistrations.keys()) {
-            if (!processedMethods.exists(methodName)) {
-                methodsToProcess.push(methodName);
-            }
+        if (lifecycles.update != null) {
+            var result = emitFunction(lifecycles.update);
+            updateCode = result.code;
+            needsObj = needsObj || result.needsObj;
+            needsDt = needsDt || result.needsDt;
+            for (btn in result.inputButtons) if (!Lambda.has(inputButtons, btn)) inputButtons.push(btn);
+            hasTransform = hasTransform || result.hasTransform;
+            hasScene = hasScene || result.hasScene;
+            if (result.targetScene != null) targetScene = result.targetScene;
         }
 
-        // Process methods (may discover more via chained registrations)
-        while (methodsToProcess.length > 0) {
-            var methodName = methodsToProcess.shift();
-            if (processedMethods.exists(methodName)) continue;
-            processedMethods.set(methodName, true);
-
-            var func = methodMap.get(methodName);
-            if (func == null || func.expr == null) continue;
-
-            var lifecycle = lifecycleRegistrations.get(methodName);
-            if (lifecycle != null) {
-                // Extract method body as statements
-                var statements:Array<Dynamic> = [];
-                extractStatements(func.expr, statements, traitInfo);
-
-                // Store in the appropriate lifecycle slot
-                switch (lifecycle) {
-                    case "init":
-                        if (traitInfo.functions.init == null) {
-                            traitInfo.functions.init = statements;
-                        }
-                    case "update":
-                        if (traitInfo.functions.update == null) {
-                            traitInfo.functions.update = statements;
-                        }
-                    case "remove":
-                        if (traitInfo.functions.remove == null) {
-                            traitInfo.functions.remove = statements;
-                        }
-                }
-            }
-
-            // Look for chained registrations inside this method
-            var newRegistrations:Map<String, String> = new Map();
-            analyzeForRegistrations(func.expr, traitInfo, newRegistrations, methodMap);
-
-            // Add newly discovered methods to process queue
-            for (newMethod in newRegistrations.keys()) {
-                if (!processedMethods.exists(newMethod) && !lifecycleRegistrations.exists(newMethod)) {
-                    lifecycleRegistrations.set(newMethod, newRegistrations.get(newMethod));
-                    methodsToProcess.push(newMethod);
-                }
-            }
+        if (lifecycles.remove != null) {
+            var result = emitFunction(lifecycles.remove);
+            removeCode = result.code;
+            needsObj = needsObj || result.needsObj;
+            needsDt = needsDt || result.needsDt;
+            for (btn in result.inputButtons) if (!Lambda.has(inputButtons, btn)) inputButtons.push(btn);
+            hasTransform = hasTransform || result.hasTransform;
+            hasScene = hasScene || result.hasScene;
+            if (result.targetScene != null) targetScene = result.targetScene;
         }
 
-        // Store trait data by class name (Blender looks up by class name)
-        // Module path is stored inside traitInfo for disambiguation if needed
-        traitData.set(className, traitInfo);
-
-        // Return null = don't modify fields
-        return null;
-    }
-
-    /**
-     * Extract member variable info.
-     */
-    static function extractMember(name:String, type:Null<ComplexType>, expr:Null<Expr>):Dynamic {
-        // Skip private/internal members
-        if (name.charAt(0) == "_" || name.charAt(0) == "$") {
-            return null;
-        }
-
-        // Skip inherited members from Trait
-        var skipMembers = ["object", "name", "_add", "_init", "_remove", "_update", "_lateUpdate", "_fixedUpdate", "_render", "_render2D"];
-        if (skipMembers.indexOf(name) >= 0) {
-            return null;
-        }
-
-        // Skip gamepad member (handled specially)
-        if (name == "gamepad") {
-            return null;
-        }
-
-        var typeStr = complexTypeToString(type);
-
-        // Map Haxe types to C types
-        var ctypeMap:Map<String, String> = [
-            "Float" => "float",
-            "Int" => "int32_t",
-            "Bool" => "bool",
-            "Vec4" => "Vec3"  // Vec4 maps to Vec3 struct in C
-        ];
-
-        var ctype = ctypeMap.get(typeStr);
-        if (ctype == null) {
-            return null;  // Unsupported type
-        }
-
-        var defaultValue:Dynamic = null;
-        if (expr != null) {
-            if (typeStr == "Vec4") {
-                // Extract Vec4 components from new Vec4(x, y, z)
-                defaultValue = extractVec4Value(expr);
-            } else {
-                defaultValue = extractConstValue(expr);
-            }
-        }
+        // Determine if trait needs per-instance data
+        var needsData = memberNames.length > 0 || targetScene != null;
 
         return {
-            name: name,
-            type: typeStr,
-            ctype: ctype,
-            defaultValue: defaultValue
+            name: className,
+            needs_data: needsData,
+            members: members,
+            target_scene: targetScene,
+            initCode: initCode,
+            updateCode: updateCode,
+            removeCode: removeCode,
+            needsObj: needsObj,
+            needsDt: needsDt,
+            inputButtons: inputButtons,
+            hasTransform: hasTransform,
+            hasScene: hasScene
         };
     }
 
     /**
-     * Extract Vec4 default value from expression.
+     * Extract a member variable
      */
-    static function extractVec4Value(expr:Expr):Dynamic {
-        if (expr == null) return null;
+    function extractMember(name:String, t:ComplexType, e:Expr):MemberIR {
+        // Skip API objects
+        if (N64Config.shouldSkipMember(name)) return null;
 
-        switch (expr.expr) {
-            case ENew(t, params):
-                if (t.name == "Vec4" && params.length >= 3) {
-                    var x = extractConstValue(params[0]);
-                    var y = extractConstValue(params[1]);
-                    var z = extractConstValue(params[2]);
-                    if (x != null && y != null && z != null) {
-                        return {x: x, y: y, z: z};
+        var typeName = t != null ? complexTypeToString(t) : "Dynamic";
+
+        // Skip unsupported types
+        if (!N64Config.isSupportedType(typeName)) return null;
+
+        var cType = N64Config.mapType(typeName);
+        var defaultVal = e != null ? exprToDefault(e, cType) : defaultForType(cType);
+
+        // Detect scene-related string members and convert to SceneId
+        if (cType == "const char*" && isSceneMemberName(name)) {
+            cType = "SceneId";
+            // Convert string default to scene enum
+            if (e != null) {
+                var sceneName = extractStringValue(e);
+                if (sceneName != null) {
+                    defaultVal = 'SCENE_${sceneName.toUpperCase()}';
+                } else {
+                    defaultVal = "SCENE_COUNT";  // Invalid/no scene
+                }
+            } else {
+                defaultVal = "SCENE_COUNT";
+            }
+        }
+
+        return {
+            type: cType,
+            default_value: defaultVal
+        };
+    }
+
+    /**
+     * Check if member name suggests it's used for scene switching
+     */
+    function isSceneMemberName(name:String):Bool {
+        var lower = name.toLowerCase();
+        return lower.indexOf("scene") >= 0 ||
+               lower.indexOf("level") >= 0 ||
+               lower == "nextscene" ||
+               lower == "targetscene";
+    }
+
+    /**
+     * Extract string value from expression
+     */
+    function extractStringValue(e:Expr):String {
+        return switch (e.expr) {
+            case EConst(CString(s)): s;
+            default: null;
+        };
+    }
+
+    function complexTypeToString(ct:ComplexType):String {
+        return switch (ct) {
+            case TPath(p): p.name;
+            default: "Dynamic";
+        }
+    }
+
+    function exprToDefault(e:Expr, cType:String):String {
+        return switch (e.expr) {
+            case EConst(CInt(v)):
+                // For Vec3, convert single int to {v, v, v}
+                if (cType == "Vec3") '{$v, $v, $v}' else v;
+            case EConst(CFloat(f)):
+                // For Vec3, convert single float to {f, f, f}
+                if (cType == "Vec3") '{${f}f, ${f}f, ${f}f}' else '${f}f';
+            case EConst(CString(s)): '"$s"';
+            case EConst(CIdent("true")): "true";
+            case EConst(CIdent("false")): "false";
+            case EConst(CIdent("null")): "NULL";
+            case EUnop(OpNeg, false, inner): '-${exprToDefault(inner, cType)}';
+            case ENew(_, params), ECall(_, params):
+                // Vec4/Vec3 constructor: new Vec4(x, y, z)
+                if (cType == "Vec3" && params.length >= 3) {
+                    var x = exprToDefault(params[0], "float");
+                    var y = exprToDefault(params[1], "float");
+                    var z = exprToDefault(params[2], "float");
+                    '{$x, $y, $z}';
+                } else {
+                    defaultForType(cType);
+                }
+            default: defaultForType(cType);
+        }
+    }
+
+    function defaultForType(cType:String):String {
+        return switch (cType) {
+            case "float": "0.0f";
+            case "int32_t": "0";
+            case "bool": "false";
+            case "Vec3": "{0, 0, 0}";
+            case "const char*": "NULL";
+            case "SceneId": "SCENE_COUNT";
+            default: "0";
+        }
+    }
+
+    /**
+     * Find lifecycle method registrations in constructor
+     */
+    function findLifecycles():{init:Expr, update:Expr, remove:Expr} {
+        var result = {init: null, update: null, remove: null};
+
+        var constructor = methodMap.get("new");
+        if (constructor == null || constructor.expr == null) return result;
+
+        scanForLifecycles(constructor.expr, result);
+        return result;
+    }
+
+    function scanForLifecycles(e:Expr, result:{init:Expr, update:Expr, remove:Expr}):Void {
+        if (e == null) return;
+
+        switch (e.expr) {
+            case ECall(func, params):
+                // Look for notifyOnInit, notifyOnUpdate, notifyOnRemove
+                var funcName = getFuncName(func);
+                if (funcName != null && params.length > 0) {
+                    var callback = params[0];
+                    var body = resolveCallback(callback);
+
+                    switch (funcName) {
+                        case "notifyOnInit", "notifyOnReady":
+                            result.init = body;
+                        case "notifyOnUpdate":
+                            result.update = body;
+                        case "notifyOnRemove":
+                            result.remove = body;
                     }
                 }
-            default:
-        }
-        return null;
-    }
-
-    /**
-     * Convert ComplexType to string representation.
-     */
-    static function complexTypeToString(type:Null<ComplexType>):String {
-        if (type == null) return "Dynamic";
-
-        switch (type) {
-            case TPath(p):
-                return p.name;
-            default:
-                return "Dynamic";
-        }
-    }
-
-    /**
-     * Extract constant value from expression.
-     */
-    static function extractConstValue(expr:Expr):Dynamic {
-        if (expr == null) return null;
-
-        switch (expr.expr) {
-            case EConst(c):
-                switch (c) {
-                    case CInt(v): return Std.parseInt(v);
-                    case CFloat(v): return Std.parseFloat(v);
-                    case CString(v, _): return v;
-                    case CIdent(v):
-                        if (v == "true") return true;
-                        if (v == "false") return false;
-                        return null;
-                    default: return null;
-                }
-            case EUnop(OpNeg, false, e):
-                // Handle negative numbers
-                var val = extractConstValue(e);
-                if (val != null && Std.isOfType(val, Float)) {
-                    return -cast(val, Float);
-                }
-                return null;
-            default:
-                return null;
-        }
-    }
-
-    /**
-     * Analyze expression tree for notifyOn* registrations.
-     * Handles both inline functions and method references.
-     * Inline functions are extracted immediately; method references are recorded for later processing.
-     */
-    static function analyzeForRegistrations(expr:Expr, traitInfo:Dynamic, registrations:Map<String, String>, methodMap:Map<String, Function>):Void {
-        if (expr == null) return;
-
-        switch (expr.expr) {
-            case ECall(e, params):
-                var callName = getCallName(e);
-
-                // Check for notifyOn* registration calls
-                var lifecycle:String = null;
-                switch (callName) {
-                    case "notifyOnInit": lifecycle = "init";
-                    case "notifyOnUpdate": lifecycle = "update";
-                    case "notifyOnRemove": lifecycle = "remove";
-                    default:
-                }
-
-                if (lifecycle != null && params.length > 0) {
-                    var param = params[0];
-                    switch (param.expr) {
-                        case EFunction(_, f):
-                            // Inline function - extract immediately
-                            if (f.expr != null) {
-                                var statements:Array<Dynamic> = [];
-                                extractStatements(f.expr, statements, traitInfo);
-
-                                // Store in the appropriate lifecycle slot
-                                switch (lifecycle) {
-                                    case "init":
-                                        if (traitInfo.functions.init == null) {
-                                            traitInfo.functions.init = statements;
-                                        }
-                                    case "update":
-                                        if (traitInfo.functions.update == null) {
-                                            traitInfo.functions.update = statements;
-                                        }
-                                    case "remove":
-                                        if (traitInfo.functions.remove == null) {
-                                            traitInfo.functions.remove = statements;
-                                        }
-                                }
-
-                                // Also scan the inline function for chained registrations
-                                analyzeForRegistrations(f.expr, traitInfo, registrations, methodMap);
-                            }
-
-                        case EConst(CIdent(methodName)):
-                            // Method reference like: notifyOnUpdate(update)
-                            registrations.set(methodName, lifecycle);
-
-                        case EField(_, methodName):
-                            // Method reference like: notifyOnUpdate(this.update)
-                            registrations.set(methodName, lifecycle);
-
-                        default:
-                    }
-                }
-
-                // Continue walking params
-                for (p in params) {
-                    analyzeForRegistrations(p, traitInfo, registrations, methodMap);
-                }
+                // Recurse into call arguments
+                for (p in params) scanForLifecycles(p, result);
 
             case EBlock(exprs):
-                for (e in exprs) {
-                    analyzeForRegistrations(e, traitInfo, registrations, methodMap);
-                }
+                for (expr in exprs) scanForLifecycles(expr, result);
 
-            case EIf(econd, eif, eelse):
-                analyzeForRegistrations(econd, traitInfo, registrations, methodMap);
-                analyzeForRegistrations(eif, traitInfo, registrations, methodMap);
-                if (eelse != null) analyzeForRegistrations(eelse, traitInfo, registrations, methodMap);
-
-            case EWhile(econd, e, _):
-                analyzeForRegistrations(econd, traitInfo, registrations, methodMap);
-                analyzeForRegistrations(e, traitInfo, registrations, methodMap);
-
-            case EFor(it, e):
-                analyzeForRegistrations(it, traitInfo, registrations, methodMap);
-                analyzeForRegistrations(e, traitInfo, registrations, methodMap);
+            case EIf(_, eif, eelse):
+                scanForLifecycles(eif, result);
+                if (eelse != null) scanForLifecycles(eelse, result);
 
             case EFunction(_, f):
-                // Inline function inside expression
-                if (f.expr != null) {
-                    analyzeForRegistrations(f.expr, traitInfo, registrations, methodMap);
-                }
-
-            case EParenthesis(e):
-                analyzeForRegistrations(e, traitInfo, registrations, methodMap);
-
-            case ETernary(econd, eif, eelse):
-                analyzeForRegistrations(econd, traitInfo, registrations, methodMap);
-                analyzeForRegistrations(eif, traitInfo, registrations, methodMap);
-                analyzeForRegistrations(eelse, traitInfo, registrations, methodMap);
-
-            case EBinop(_, e1, e2):
-                analyzeForRegistrations(e1, traitInfo, registrations, methodMap);
-                analyzeForRegistrations(e2, traitInfo, registrations, methodMap);
-
-            case EUnop(_, _, e):
-                analyzeForRegistrations(e, traitInfo, registrations, methodMap);
-
-            case EField(e, _):
-                analyzeForRegistrations(e, traitInfo, registrations, methodMap);
-
-            case EArray(e1, e2):
-                analyzeForRegistrations(e1, traitInfo, registrations, methodMap);
-                analyzeForRegistrations(e2, traitInfo, registrations, methodMap);
-
-            case EArrayDecl(values):
-                for (v in values) {
-                    analyzeForRegistrations(v, traitInfo, registrations, methodMap);
-                }
-
-            case ENew(_, params):
-                for (p in params) {
-                    analyzeForRegistrations(p, traitInfo, registrations, methodMap);
-                }
-
-            case EReturn(e):
-                if (e != null) analyzeForRegistrations(e, traitInfo, registrations, methodMap);
-
-            case ESwitch(e, cases, edef):
-                analyzeForRegistrations(e, traitInfo, registrations, methodMap);
-                for (c in cases) {
-                    if (c.expr != null) analyzeForRegistrations(c.expr, traitInfo, registrations, methodMap);
-                }
-                if (edef != null) analyzeForRegistrations(edef, traitInfo, registrations, methodMap);
-
-            case ETry(e, catches):
-                analyzeForRegistrations(e, traitInfo, registrations, methodMap);
-                for (c in catches) {
-                    analyzeForRegistrations(c.expr, traitInfo, registrations, methodMap);
-                }
-
-            case EVars(vars):
-                for (v in vars) {
-                    if (v.expr != null) analyzeForRegistrations(v.expr, traitInfo, registrations, methodMap);
-                }
+                // Don't recurse into nested functions here
+                return;
 
             default:
-                // No sub-expressions to walk
+                e.iter(function(sub) scanForLifecycles(sub, result));
+        }
+    }
+
+    function getFuncName(e:Expr):String {
+        return switch (e.expr) {
+            case EConst(CIdent(s)): s;
+            case EField(_, field): field;
+            default: null;
         }
     }
 
     /**
-     * Get the name of a function being called.
+     * Resolve a callback to its body expression
      */
-    static function getCallName(expr:Expr):String {
-        switch (expr.expr) {
-            case EConst(CIdent(name)):
-                return name;
-            case EField(_, field):
-                return field;
-            default:
-                return "";
+    function resolveCallback(e:Expr):Expr {
+        return switch (e.expr) {
+            // Inline function: function() { ... }
+            case EFunction(_, f):
+                f.expr;
+
+            // Method reference: this.onUpdate or onUpdate
+            case EField(_, methodName):
+                var method = methodMap.get(methodName);
+                method != null ? method.expr : null;
+
+            case EConst(CIdent(methodName)):
+                var method = methodMap.get(methodName);
+                method != null ? method.expr : null;
+
+            default: null;
         }
     }
 
     /**
-     * Extract statements from expression block.
+     * Emit a function body as C code
      */
-    static function extractStatements(expr:Expr, statements:Array<Dynamic>, traitInfo:Dynamic):Void {
-        switch (expr.expr) {
+    function emitFunction(body:Expr):{code:Array<String>, needsObj:Bool, needsDt:Bool, inputButtons:Array<String>, hasTransform:Bool, hasScene:Bool, targetScene:String} {
+        var emitter = new N64CEmitter(memberNames);
+        var code:Array<String> = [];
+
+        // Process statements
+        switch (body.expr) {
             case EBlock(exprs):
-                for (e in exprs) {
-                    var stmt = exprToStatement(e, traitInfo);
-                    if (stmt != null) {
-                        statements.push(stmt);
+                for (expr in exprs) {
+                    var stmt = emitStatement(emitter, expr);
+                    if (stmt != null && stmt != "") {
+                        code.push(stmt);
                     }
                 }
             default:
-                var stmt = exprToStatement(expr, traitInfo);
-                if (stmt != null) {
-                    statements.push(stmt);
+                var stmt = emitStatement(emitter, body);
+                if (stmt != null && stmt != "") {
+                    code.push(stmt);
                 }
         }
+
+        return {
+            code: code,
+            needsObj: emitter.requiresObj(),
+            needsDt: emitter.requiresDt(),
+            inputButtons: emitter.getInputButtons(),
+            hasTransform: emitter.hasTransformOps(),
+            hasScene: emitter.hasSceneOps(),
+            targetScene: emitter.getTargetScene()
+        };
     }
 
     /**
-     * Convert an expression to a statement representation.
+     * Emit a single statement as C code
      */
-    static function exprToStatement(expr:Expr, traitInfo:Dynamic):Dynamic {
-        switch (expr.expr) {
-            case ECall(e, params):
-                return analyzeStatementCall(e, params, traitInfo);
+    function emitStatement(emitter:N64CEmitter, e:Expr):String {
+        if (e == null) return null;
 
+        // Handle control flow specially for proper formatting
+        switch (e.expr) {
             case EIf(econd, eif, eelse):
-                var condStmt = exprToStatement(econd, traitInfo);
-                var thenStmts:Array<Dynamic> = [];
-                extractStatements(eif, thenStmts, traitInfo);
-                var elseStmts:Array<Dynamic> = null;
-                if (eelse != null) {
-                    elseStmts = [];
-                    extractStatements(eelse, elseStmts, traitInfo);
+                return emitIfStatement(emitter, econd, eif, eelse);
+
+            case EWhile(econd, body, normalWhile):
+                return emitWhileStatement(emitter, econd, body, normalWhile);
+
+            case EFor(it, body):
+                return emitForStatement(emitter, it, body);
+
+            case EBlock(exprs):
+                var stmts:Array<String> = [];
+                for (expr in exprs) {
+                    var s = emitStatement(emitter, expr);
+                    if (s != null && s != "") stmts.push(s);
                 }
-                return {
-                    type: "if",
-                    condition: condStmt,
-                    then: thenStmts,
-                    else_: elseStmts
-                };
-
-            case EBinop(op, e1, e2):
-                return {
-                    type: "binop",
-                    op: binopToString(op),
-                    left: exprToStatement(e1, traitInfo),
-                    right: exprToStatement(e2, traitInfo)
-                };
-
-            case EField(e, field):
-                var obj = exprToStatement(e, traitInfo);
-                // Check for Time API field access (e.g., Time.delta)
-                var fullPath = getFieldAccessPath(expr);
-                if (fullPath.indexOf("Time.") == 0) {
-                    traitInfo.apiCalls.time = true;
-                }
-                return {
-                    type: "field",
-                    object: obj,
-                    field: field
-                };
-
-            case EConst(c):
-                switch (c) {
-                    case CIdent(name):
-                        return {type: "ident", name: name};
-                    case CInt(v):
-                        return {type: "int", value: Std.parseInt(v)};
-                    case CFloat(v):
-                        return {type: "float", value: Std.parseFloat(v)};
-                    case CString(v, _):
-                        return {type: "string", value: v};
-                    default:
-                        return null;
-                }
-
-            case ENew(t, params):
-                var args:Array<Dynamic> = [];
-                for (p in params) {
-                    args.push(exprToStatement(p, traitInfo));
-                }
-                return {
-                    type: "new",
-                    typeName: t.name,
-                    args: args
-                };
-
-            case EParenthesis(e):
-                // Unwrap parenthesized expression - e.g., (object.getChild("x")).transform
-                return exprToStatement(e, traitInfo);
-
-            case EUnop(op, postFix, e):
-                var operand = exprToStatement(e, traitInfo);
-                return {
-                    type: "unop",
-                    op: unopToString(op),
-                    postFix: postFix,
-                    expr: operand
-                };
-
-            case EArray(e1, e2):
-                // Array access like arr[i]
-                return {
-                    type: "array_access",
-                    array: exprToStatement(e1, traitInfo),
-                    index: exprToStatement(e2, traitInfo)
-                };
-
-            case EArrayDecl(values):
-                var elements:Array<Dynamic> = [];
-                for (v in values) {
-                    elements.push(exprToStatement(v, traitInfo));
-                }
-                return {
-                    type: "array",
-                    elements: elements
-                };
-
-            case ETernary(econd, eif, eelse):
-                return {
-                    type: "ternary",
-                    condition: exprToStatement(econd, traitInfo),
-                    then: exprToStatement(eif, traitInfo),
-                    else_: exprToStatement(eelse, traitInfo)
-                };
-
-            case EVars(vars):
-                // Variable declarations
-                var varDecls:Array<Dynamic> = [];
-                for (v in vars) {
-                    varDecls.push({
-                        name: v.name,
-                        expr: v.expr != null ? exprToStatement(v.expr, traitInfo) : null
-                    });
-                }
-                return {
-                    type: "vars",
-                    vars: varDecls
-                };
-
-            case EWhile(econd, e, normalWhile):
-                var bodyStmts:Array<Dynamic> = [];
-                extractStatements(e, bodyStmts, traitInfo);
-                return {
-                    type: normalWhile ? "while" : "do_while",
-                    condition: exprToStatement(econd, traitInfo),
-                    body: bodyStmts
-                };
-
-            case EFor(it, e):
-                // Haxe for loops: for (v in iterable) { ... }
-                // 'it' is the iterator expression (e.g., 0...10 or array)
-                var bodyStmts:Array<Dynamic> = [];
-                extractStatements(e, bodyStmts, traitInfo);
-
-                // Parse the iterator - handle IntIter (0...n) specially
-                var iterInfo = parseForIterator(it, traitInfo);
-                return {
-                    type: "for",
-                    iterator: iterInfo,
-                    body: bodyStmts
-                };
-
-            case EBreak:
-                return {type: "break"};
-
-            case EContinue:
-                return {type: "continue"};
+                return stmts.join(" ");
 
             default:
+                var code = emitter.emitExpr(e);
+                if (code != "" && code != "/* unsupported expr */") {
+                    // Add semicolon if not already a block statement
+                    if (!code.endsWith("}") && !code.endsWith(";")) {
+                        code += ";";
+                    }
+                    return code;
+                }
                 return null;
         }
     }
 
-    /**
-     * Parse for loop iterator expression.
-     * Haxe for loops: for (v in iterable)
-     * The 'it' expression is: EBinop(OpIn, varExpr, iterableExpr)
-     */
-    static function parseForIterator(it:Expr, traitInfo:Dynamic):Dynamic {
-        switch (it.expr) {
-            case EBinop(OpIn, varExpr, iterExpr):
-                // Extract variable name
-                var varName = switch (varExpr.expr) {
-                    case EConst(CIdent(name)): name;
-                    default: "i";
-                };
+    function emitIfStatement(emitter:N64CEmitter, econd:Expr, eif:Expr, eelse:Expr):String {
+        var cond = emitter.emitExpr(econd);
+        var thenCode = emitStatement(emitter, eif);
 
-                // Check if iterable is a range (0...n)
-                switch (iterExpr.expr) {
-                    case EBinop(OpInterval, e1, e2):
-                        return {
-                            type: "range",
-                            varName: varName,
-                            start: exprToStatement(e1, traitInfo),
-                            end: exprToStatement(e2, traitInfo)
-                        };
-                    default:
-                        // General iterator (arrays, etc.)
-                        return {
-                            type: "iterator",
-                            varName: varName,
-                            iterable: exprToStatement(iterExpr, traitInfo)
-                        };
-                }
-            default:
-                // Fallback for unexpected structure
-                return {
-                    type: "iterator",
-                    varName: "i",
-                    iterable: exprToStatement(it, traitInfo)
-                };
+        var result = 'if ($cond) { ${thenCode != null ? thenCode : ""} }';
+
+        if (eelse != null) {
+            var elseCode = emitStatement(emitter, eelse);
+            result += ' else { ${elseCode != null ? elseCode : ""} }';
+        }
+
+        return result;
+    }
+
+    function emitWhileStatement(emitter:N64CEmitter, econd:Expr, body:Expr, normalWhile:Bool):String {
+        var cond = emitter.emitExpr(econd);
+        var bodyCode = emitStatement(emitter, body);
+
+        if (normalWhile) {
+            return 'while ($cond) { ${bodyCode != null ? bodyCode : ""} }';
+        } else {
+            return 'do { ${bodyCode != null ? bodyCode : ""} } while ($cond);';
         }
     }
 
-    /**
-     * Analyze a statement-level call (not notifyOn*).
-     */
-    static function analyzeStatementCall(callExpr:Expr, params:Array<Expr>, traitInfo:Dynamic):Dynamic {
-        // Build full call path
-        var path = getFullCallPath(callExpr);
-        var args:Array<Dynamic> = [];
-        for (p in params) {
-            args.push(exprToStatement(p, traitInfo));
-        }
-
-        // Track API calls for the summary
-        if (path.indexOf("Gamepad") >= 0 || path.indexOf("Keyboard") >= 0 || path.indexOf("Mouse") >= 0) {
-            var inputCall = {
-                type: getCallName(callExpr),
-                args: args
-            };
-            traitInfo.apiCalls.input.push(inputCall);
-        } else if (path.indexOf("transform") >= 0 || path.indexOf("Transform") >= 0) {
-            var transformCall = {
-                method: getCallName(callExpr),
-                args: args
-            };
-            traitInfo.apiCalls.transform.push(transformCall);
-        } else if (path.indexOf("Scene") >= 0) {
-            var sceneCall = {
-                method: getCallName(callExpr),
-                args: args
-            };
-            traitInfo.apiCalls.scene.push(sceneCall);
-        } else if (path.indexOf("Time") >= 0) {
-            traitInfo.apiCalls.time = true;
-        }
-
-        return {
-            type: "call",
-            path: path,
-            args: args
-        };
-    }
-
-    /**
-     * Get full dot-separated call path.
-     * Handles parenthesized expressions like (object.getChild("x")).transform.rotate()
-     */
-    static function getFullCallPath(expr:Expr):String {
-        switch (expr.expr) {
-            case EConst(CIdent(name)):
-                return name;
-            case EField(e, field):
-                var parent = getFullCallPath(e);
-                if (parent.length > 0) {
-                    return parent + "." + field;
-                }
-                return field;
-            case EParenthesis(e):
-                return getFullCallPath(e);
-            case ECall(e, _):
-                // For chained calls like obj.getChild("x").transform
-                return getFullCallPath(e);
-            default:
-                return "";
-        }
-    }
-
-    /**
-     * Get full dot-separated field access path.
-     * Handles parenthesized expressions.
-     */
-    static function getFieldAccessPath(expr:Expr):String {
-        switch (expr.expr) {
-            case EConst(CIdent(name)):
-                return name;
-            case EField(e, field):
-                var parent = getFieldAccessPath(e);
-                if (parent.length > 0) {
-                    return parent + "." + field;
-                }
-                return field;
-            case EParenthesis(e):
-                return getFieldAccessPath(e);
-            default:
-                return "";
-        }
-    }
-
-    /**
-     * Convert binary operator to string.
-     */
-    static function binopToString(op:Binop):String {
-        return switch (op) {
-            case OpAdd: "+";
-            case OpSub: "-";
-            case OpMult: "*";
-            case OpDiv: "/";
-            case OpMod: "%";
-            case OpEq: "==";
-            case OpNotEq: "!=";
-            case OpGt: ">";
-            case OpGte: ">=";
-            case OpLt: "<";
-            case OpLte: "<=";
-            case OpAnd: "&&";
-            case OpOr: "||";
-            case OpAssign: "=";
-            case OpAssignOp(subOp): binopToString(subOp) + "=";
-            default: "?";
-        };
-    }
-
-    /**
-     * Convert unary operator to string.
-     */
-    static function unopToString(op:Unop):String {
-        return switch (op) {
-            case OpNot: "!";
-            case OpNeg: "-";
-            case OpNegBits: "~";
-            case OpIncrement: "++";
-            case OpDecrement: "--";
-            case OpSpread: "...";
-        };
-    }
-
-    /**
-     * Write collected trait data to JSON file.
-     */
-    static function writeTraitJson():Void {
-        if (traitData.keys().hasNext() == false) {
-            return;
-        }
-
-        // Convert map to object for JSON
-        var output:Dynamic = {
-            version: 1,
-            traits: {}
-        };
-
-        for (name in traitData.keys()) {
-            Reflect.setField(output.traits, name, traitData.get(name));
-        }
-
-        // Get output path from compiler defines or use default
-        var outputDir = ".";
-        var defines = Context.getDefines();
-        if (defines.exists("arm_build_dir")) {
-            outputDir = defines.get("arm_build_dir");
-        }
-
-        var outputPath = outputDir + "/n64_traits.json";
-
-        // Ensure directory exists
-        var dir = haxe.io.Path.directory(outputPath);
-        if (dir != "" && !FileSystem.exists(dir)) {
-            FileSystem.createDirectory(dir);
-        }
-
-        // Write JSON
-        var jsonStr = Json.stringify(output, null, "  ");
-        File.saveContent(outputPath, jsonStr);
-
-        Context.info("N64 trait metadata written to: " + outputPath, Context.currentPos());
+    function emitForStatement(emitter:N64CEmitter, it:Expr, body:Expr):String {
+        // Haxe for loops are complex - emit as comment + body for now
+        var bodyCode = emitStatement(emitter, body);
+        return '/* for loop */ { ${bodyCode != null ? bodyCode : ""} }';
     }
 }
 #end

@@ -7,25 +7,34 @@ import arm
 import arm.utils
 import arm.log as log
 
-from arm.n64 import traits_generator
+from arm.n64 import codegen
+from arm.n64 import converter as n64_converter
 from arm.n64 import utils as n64_utils
 
 if arm.is_reload(__name__):
     arm.utils = arm.reload_module(arm.utils)
     log = arm.reload_module(log)
-    traits_generator = arm.reload_module(traits_generator)
+    codegen = arm.reload_module(codegen)
+    n64_converter = arm.reload_module(n64_converter)
     n64_utils = arm.reload_module(n64_utils)
 else:
     arm.enable_reload(__name__)
 
 
 class N64Exporter:
+    """
+    N64 Exporter - Exports Armory scenes to N64 C code.
+
+    Architecture:
+    - Haxe macro does ALL trait analysis (members, buttons, scenes, C code)
+    - codegen.py reads macro JSON and generates traits.h/c
+    - This exporter handles mesh/scene/camera export and wires up trait pointers
+    """
+
     def __init__(self):
         self.scene_data = {}
         self.exported_meshes = {}
         self.trait_info = {}        # Trait metadata from macro JSON
-        self.all_traits = set()
-        self.trait_data_instances = []
 
 
     @classmethod
@@ -82,142 +91,63 @@ class N64Exporter:
         os.makedirs(f'{build_dir}/n64/src/scenes', exist_ok=True)
 
 
-    def get_target_scene(self, trait_class: str, current_scene_name: str) -> str:
-        """
-        Get the target scene for a trait's scene switching.
+    # =========================================================================
+    # Trait Helpers - Simple lookups into macro JSON (no inference!)
+    # =========================================================================
 
-        Uses the scene name from macro metadata (what the Haxe code specifies).
-        Falls back to next sequential scene if scene is unknown/invalid.
-        """
-        trait_info = self.get_trait_info(trait_class)
-        scene_calls = trait_info.get('scene_calls', [])
-
-        if scene_calls:
-            # Use the first scene call's target (most traits only have one)
-            target_scene_name = scene_calls[0].get('scene_name', 'unknown')
-
-            # Normalize to lowercase for comparison
-            target_scene_lower = target_scene_name.lower()
-
-            # Check if it's a valid scene
-            if target_scene_lower in self.blender_scenes:
-                return target_scene_lower
-
-            # Check without "level_" or "scene_" prefix
-            for scene in self.blender_scenes:
-                if scene == target_scene_lower or scene.endswith(target_scene_lower):
-                    return scene
-
-        # Fallback: next sequential scene
-        if not hasattr(self, 'blender_scenes') or not self.blender_scenes:
-            return current_scene_name
-
-        current_idx = self.scene_index.get(current_scene_name, 0)
-        next_idx = (current_idx + 1) % len(self.blender_scenes)
-        return self.blender_scenes[next_idx]
-
-
-    def get_trait_info(self, trait_class: str) -> dict:
-        """Get trait info for a specific trait class."""
-        if not hasattr(self, 'trait_info') or not self.trait_info:
-            return {}
-        traits_data = self.trait_info.get('traits', {})
-        return traits_data.get(trait_class, {})
-
+    def get_trait(self, trait_class: str) -> dict:
+        """Get trait data from macro JSON."""
+        return self.trait_info.get("traits", {}).get(trait_class, {})
 
     def trait_needs_data(self, trait_class: str) -> bool:
-        """Check if a trait needs per-instance data."""
-        trait_info = self.get_trait_info(trait_class)
-        if trait_info.get('scene_calls'):
-            return True
-        members = trait_info.get('members', {})
-        return bool(members)
-
-
-    def get_trait_members(self, trait_class: str) -> dict:
-        """Get all user-defined members for a trait (name -> type).
-
-        Members are already filtered by the macro to only include supported types.
-        """
-        trait_info = self.get_trait_info(trait_class)
-        return trait_info.get('members', {})
-
-
-    def get_trait_member_values(self, trait_class: str) -> dict:
-        """Get all member initial values for a trait (name -> value)."""
-        trait_info = self.get_trait_info(trait_class)
-        return trait_info.get('member_values', {})
-
-
-    def trait_has_scene_switching(self, trait_class: str) -> bool:
-        """Check if a trait uses scene switching."""
-        trait_info = self.get_trait_info(trait_class)
-        return bool(trait_info.get('scene_calls'))
-
+        """Check if trait needs per-instance data. Macro provides this directly."""
+        return self.get_trait(trait_class).get("needs_data", False)
 
     def build_trait_initializer(self, trait_class: str, current_scene: str, instance_props: dict = None) -> str:
         """
-        Build the C initializer string for a trait's data struct.
+        Build C initializer string for trait data.
 
-        Args:
-            trait_class: The trait class name
-            current_scene: Current scene name (for fallback scene calculation)
-            instance_props: Per-instance property values from Blender (overrides defaults)
-
-        Uses per-instance values from Blender when available, falls back to Haxe defaults.
+        The macro provides default values as C literals.
+        Blender per-instance props override defaults.
         """
+        trait = self.get_trait(trait_class)
+        members = trait.get("members", {})
+        target_scene = trait.get("target_scene")
+
         init_fields = []
         instance_props = instance_props or {}
 
-        # Add scene target if trait uses scene switching
-        if self.trait_has_scene_switching(trait_class):
-            target_scene = self.get_target_scene(trait_class, current_scene)
-            target_scene_enum = f'SCENE_{target_scene.upper()}'
-            init_fields.append(f'.target_scene = {target_scene_enum}')
+        # Add target_scene if trait uses scene switching
+        if target_scene is not None:
+            # Use instance prop if provided, otherwise macro's resolved scene
+            scene_name = instance_props.get("target_scene", target_scene)
+            init_fields.append(f'.target_scene = SCENE_{scene_name.upper()}')
 
-        # Get defaults and struct members
-        trait_defaults = self.get_trait_member_values(trait_class)
-        members = self.get_trait_members(trait_class)
-
-        for member_name, member_type in members.items():
-            # Priority: instance_props (Blender) > trait_defaults (Haxe code)
+        # Add member initializers
+        for member_name, member_info in members.items():
             if member_name in instance_props:
+                # Per-instance value from Blender - format as C literal
                 value = instance_props[member_name]
-            elif member_name in trait_defaults:
-                value = trait_defaults[member_name]
+                c_value = self._to_c_literal(value, member_info["type"])
             else:
-                continue
+                # Use macro's default (already a C literal)
+                c_value = member_info["default_value"]
 
-            # Format value based on type
-            if member_type in ('double', 'float'):
-                # Ensure proper C float literal format (e.g., 5.0f not 5f)
-                float_val = float(value)
-                if float_val == int(float_val):
-                    init_fields.append(f'.{member_name} = {int(float_val)}.0f')
-                else:
-                    init_fields.append(f'.{member_name} = {float_val}f')
-            elif member_type == 'bool':
-                init_fields.append(f'.{member_name} = {str(bool(value)).lower()}')
-            elif member_type == 'int':
-                init_fields.append(f'.{member_name} = {int(value)}')
-            elif member_type == 'Vec3':
-                # Vec3/Vec4 member - value should be dict with x, y, z
-                if isinstance(value, dict):
-                    x = self._format_float(value.get('x', 0))
-                    y = self._format_float(value.get('y', 0))
-                    z = self._format_float(value.get('z', 0))
-                    init_fields.append(f'.{member_name} = {{{x}, {y}, {z}}}')
-                else:
-                    init_fields.append(f'.{member_name} = {{1.0f, 1.0f, 1.0f}}')
+            init_fields.append(f'.{member_name} = {c_value}')
 
         return ', '.join(init_fields)
 
-    def _format_float(self, value) -> str:
-        """Format a value as a C float literal."""
-        float_val = float(value) if value is not None else 0.0
-        if float_val == int(float_val):
-            return f'{int(float_val)}.0f'
-        return f'{float_val}f'
+    def _to_c_literal(self, value, c_type: str) -> str:
+        """Convert a Python value to C literal string."""
+        if c_type == "float":
+            f = float(value)
+            return f"{f}f" if '.' in str(f) else f"{int(f)}.0f"
+        elif c_type == "int32_t":
+            return str(int(value))
+        elif c_type == "bool":
+            return "true" if value else "false"
+        else:
+            return str(value)
 
 
     def export_meshes(self):
@@ -311,42 +241,40 @@ class N64Exporter:
 
         for obj in scene.objects:
             if obj.type == 'CAMERA':
-                cam_pos = n64_utils.blender_to_n64_position(obj.location)
+                # Raw Blender coordinates - converter.py will transform later
                 cam_dir = obj.rotation_euler.to_matrix().col[2]
-                # Camera target is position minus forward direction (converted to N64 coords)
-                cam_target = (
+                cam_target = [
                     obj.location[0] - cam_dir[0],
-                    obj.location[2] - cam_dir[2],
-                    -obj.location[1] + cam_dir[1]
-                )
+                    obj.location[1] - cam_dir[1],
+                    obj.location[2] - cam_dir[2]
+                ]
                 sensor = max(obj.data.sensor_width, obj.data.sensor_height)
                 cam_fov = math.degrees(2 * math.atan((sensor * 0.5) / obj.data.lens))
 
                 self.scene_data[scene_name]["cameras"].append({
                     "name": arm.utils.safesrc(obj.name),
-                    "pos": list(cam_pos),
-                    "target": list(cam_target),
+                    "pos": list(obj.location),
+                    "target": cam_target,
                     "fov": cam_fov,
                     "near": obj.data.clip_start,
                     "far": obj.data.clip_end
                 })
             elif obj.type == 'LIGHT':  # TODO: support multiple light types [Point and Sun]
+                # Raw Blender direction - converter.py will transform and normalize
                 light_dir = obj.rotation_euler.to_matrix().col[2]
-                dir_vec = n64_utils.blender_to_n64_direction(light_dir)
-                dir_vec = n64_utils.normalize_direction(dir_vec)
 
                 self.scene_data[scene_name]["lights"].append({
                     "name": arm.utils.safesrc(obj.name),
                     "color": list(obj.data.color),
-                    "dir": list(dir_vec)
+                    "dir": list(light_dir)
                 })
             elif obj.type == 'MESH':
                 mesh = obj.data
                 mesh_name = self.exported_meshes[mesh]
 
-                obj_pos = n64_utils.blender_to_n64_position(obj.location)
-                obj_rot = n64_utils.blender_to_n64_euler(obj.matrix_world)
-                obj_scale = n64_utils.blender_to_n64_scale(obj.scale)
+                # Raw Blender coordinates - converter.py will transform later
+                # Euler from matrix for consistent rotation handling
+                euler = obj.matrix_world.to_quaternion().to_euler('YZX')
 
                 # Extract traits from object with their per-instance property values
                 obj_traits = []
@@ -363,9 +291,9 @@ class N64Exporter:
                 self.scene_data[scene_name]["objects"].append({
                     "name": arm.utils.safesrc(obj.name),
                     "mesh": f'MODEL_{mesh_name.upper()}',
-                    "pos": list(obj_pos),
-                    "rot": list(obj_rot),
-                    "scale": list(obj_scale),
+                    "pos": list(obj.location),
+                    "rot": [euler.x, euler.y, euler.z],
+                    "scale": list(obj.scale),
                     "visible": not obj.hide_render,
                     "traits": obj_traits
                 })
@@ -416,7 +344,7 @@ class N64Exporter:
 
 
     def write_traits(self):
-        traits_generator.write_traits_files(self.all_traits, self.trait_data_instances)
+        codegen.write_traits_files()
 
 
     def write_engine(self):
@@ -496,10 +424,19 @@ class N64Exporter:
         self.write_scenes_c()
         self.write_scenes_h()
 
+        # Build raw scene data from Blender
         for scene in bpy.data.scenes:
             if scene.library:
                 continue
             self.build_scene_data(scene)
+
+        # Apply coordinate conversion using rules from macro JSON
+        n64_converter.convert_scene_data(self.scene_data)
+
+        # Write converted scene data to C files
+        for scene in bpy.data.scenes:
+            if scene.library:
+                continue
             self.write_scene_c(scene)
 
 
@@ -568,32 +505,18 @@ class N64Exporter:
                 for t_idx, trait in enumerate(traits):
                     trait_class = trait["class_name"]
                     trait_func_name = arm.utils.safesrc(trait_class).lower()
-                    instance_props = trait.get("props", {})  # Per-instance values from Blender
                     object_block_lines.append(f'    objects[{i}].traits[{t_idx}].on_ready = {trait_func_name}_on_ready;')
                     object_block_lines.append(f'    objects[{i}].traits[{t_idx}].on_update = {trait_func_name}_on_update;')
                     object_block_lines.append(f'    objects[{i}].traits[{t_idx}].on_remove = {trait_func_name}_on_remove;')
 
-                    # Generate trait data if needed
+                    # Use centralized trait data from traits.c
                     if self.trait_needs_data(trait_class):
-                        data_var = f'td_{scene_name}_o{i}_t{t_idx}'
-                        init_str = self.build_trait_initializer(trait_class, scene_name, instance_props)
-                        self.trait_data_instances.append((data_var, f'{trait_class}Data', init_str))
-                        object_block_lines.append(f'    objects[{i}].traits[{t_idx}].data = &{data_var};')
-                        # Reset trait data to initial values using compound literal
-                        object_block_lines.append(f'    {data_var} = ({trait_class}Data){{{init_str}}};')
+                        object_block_lines.append(f'    objects[{i}].traits[{t_idx}].data = &{trait_func_name}_data;')
                     else:
                         object_block_lines.append(f'    objects[{i}].traits[{t_idx}].data = NULL;')
             else:
                 object_block_lines.append(f'    objects[{i}].traits = NULL;')
         objects_block = '\n'.join(object_block_lines)
-
-        # Object traits
-        for obj in self.scene_data[scene_name]['objects']:
-            for trait in obj.get('traits', []):
-                self.all_traits.add(trait['class_name'])
-        # Scene traits
-        for trait in self.scene_data[scene_name].get('traits', []):
-            self.all_traits.add(trait['class_name'])
 
         # Generate scene trait assignments
         scene_traits = self.scene_data[scene_name].get('traits', [])
@@ -603,19 +526,13 @@ class N64Exporter:
             for t_idx, trait in enumerate(scene_traits):
                 trait_class = trait["class_name"]
                 trait_func_name = arm.utils.safesrc(trait_class).lower()
-                instance_props = trait.get("props", {})  # Per-instance values from Blender
                 scene_traits_block_lines.append(f'    scene->traits[{t_idx}].on_ready = {trait_func_name}_on_ready;')
                 scene_traits_block_lines.append(f'    scene->traits[{t_idx}].on_update = {trait_func_name}_on_update;')
                 scene_traits_block_lines.append(f'    scene->traits[{t_idx}].on_remove = {trait_func_name}_on_remove;')
 
-                # Generate trait data for scene traits if needed
+                # Use centralized trait data from traits.c
                 if self.trait_needs_data(trait_class):
-                    data_var = f'td_{scene_name}_s_t{t_idx}'
-                    init_str = self.build_trait_initializer(trait_class, scene_name, instance_props)
-                    self.trait_data_instances.append((data_var, f'{trait_class}Data', init_str))
-                    scene_traits_block_lines.append(f'    scene->traits[{t_idx}].data = &{data_var};')
-                    # Reset trait data to initial values using compound literal
-                    scene_traits_block_lines.append(f'    {data_var} = ({trait_class}Data){{{init_str}}};')
+                    scene_traits_block_lines.append(f'    scene->traits[{t_idx}].data = &{trait_func_name}_data;')
                 else:
                     scene_traits_block_lines.append(f'    scene->traits[{t_idx}].data = NULL;')
         else:
@@ -780,7 +697,7 @@ class N64Exporter:
 
         # Step 1: Load trait metadata from macro-generated JSON
         log.info('Loading trait metadata from Haxe macro...')
-        self.trait_info = traits_generator.scan_and_summarize()
+        self.trait_info = codegen.get_trait_info()
 
         if not self.trait_info.get('traits'):
             log.warn("No traits found in macro JSON. Make sure to compile with arm_target_n64 defined.")
@@ -818,7 +735,7 @@ class N64Exporter:
         self.write_renderer()
 
         self.write_scenes()
-        self.write_traits()  # Generate after scenes so all_traits is populated
+        self.write_traits()  # Reads from macro JSON via codegen
         self.write_iron()
 
         self.reset_materials_to_bsdf()
