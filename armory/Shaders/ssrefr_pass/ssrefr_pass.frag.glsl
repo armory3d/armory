@@ -103,23 +103,18 @@ void main() {
 	vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter * roughness) * 2.0;
 
     vec4 coords = rayCast(dir);
+
 	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
-	float viewDot = clamp(dot(normalize(viewPos), viewNormal), 0.0, 1.0);
-	float fresnel = pow(1.0 - viewDot, 3.0) * 0.9 + 0.1; // bias to keep some refraction at grazing angles
+	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
 
-	// Distance attenuation (so rays that travel far contribute less)
-	float dist = length(viewPos - hitCoord);
-	float distFalloff = exp(-dist); // tweak 4.0 as needed, higher = shorter falloff
-
-	// Edge fade (smoothstep for stability)
-	float screenEdgeFactor = smoothstep(0.1, 0.6, 1.0 - (deltaCoords.x + deltaCoords.y));
-
-	// Combine terms safely
 	float refractivity = 1.0 - roughness;
-	float intensity = refractivity * fresnel * screenEdgeFactor * coords.w;
+	#ifdef _CPostprocess
+		float intensity = pow(refractivity, PPComp10.x) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
+	#else
+		float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * coords.w;
+	#endif
 
-	// Clamp and slightly bias to avoid hard cutoff
-	intensity = clamp(intensity, 0.0, 0.95);
+	intensity = clamp(intensity, 0.0, 1.0);
 
 	vec4 g1 = textureLod(gbuffer1, texCoord, 0.0); // Basecolor.rgb, spec/occ
 	vec3 f0 = surfaceF0(g1.rgb, metallic);
