@@ -287,15 +287,62 @@ class ExpressionGenerator:
             elif arg_type == 'new' and arg.get('typeName') == 'Vec4':
                 vec_args = arg.get('args') or []
                 if len(vec_args) >= 3:
+                    # Extract Vec4 components
+                    x_val = self._get_const_value(vec_args[0])
+                    y_val = self._get_const_value(vec_args[1])
+                    z_val = self._get_const_value(vec_args[2])
+
                     subs['x'] = self.generate(vec_args[0])
                     subs['y'] = self.generate(vec_args[1])
                     subs['z'] = self.generate(vec_args[2])
+
+                    # For rotation: compute axis index at compile-time
+                    # Blender Z-up to N64 Y-up coordinate conversion.
+                    # Must match exporter.py which does: obj_rot = (-e.x, -e.z, e.y)
+                    # - Blender X -> N64 X (rot[0]), negated
+                    # - Blender Z -> N64 Y (rot[1]), negated
+                    # - Blender Y -> N64 Z (rot[2]), same sign
+                    if x_val is not None and y_val is not None and z_val is not None:
+                        if abs(z_val) > abs(x_val) and abs(z_val) > abs(y_val):
+                            # Blender Z axis -> N64 Y axis (index 1), NEGATED per exporter
+                            subs['axis_index'] = '1'
+                            subs['angle_sign'] = '-' if z_val > 0 else ''
+                        elif abs(y_val) > abs(x_val) and abs(y_val) > abs(z_val):
+                            # Blender Y axis -> N64 Z axis (index 2), same sign per exporter
+                            subs['axis_index'] = '2'
+                            subs['angle_sign'] = '' if y_val > 0 else '-'
+                        elif abs(x_val) > abs(y_val) and abs(x_val) > abs(z_val):
+                            # Blender X axis -> N64 X axis (index 0), NEGATED per exporter
+                            subs['axis_index'] = '0'
+                            subs['angle_sign'] = '-' if x_val > 0 else ''
+                        else:
+                            # Default to Y (up) if can't determine
+                            subs['axis_index'] = '1'
+                            subs['angle_sign'] = '-'
+                    else:
+                        # Non-constant axis - default to Y rotation (Blender Z-up), negated
+                        subs['axis_index'] = '1'
+                        subs['angle_sign'] = '-'
             else:
                 subs[arg_name] = self.generate(arg)
 
             subs[f'arg{i}'] = subs.get(arg_name, self.generate(arg))
 
         return subs
+
+    def _get_const_value(self, node: Dict) -> float:
+        """Extract constant numeric value from AST node, or None if not constant."""
+        if node is None:
+            return None
+        node_type = node.get('type')
+        if node_type == 'int':
+            return float(node.get('value', 0))
+        elif node_type == 'float':
+            return float(node.get('value', 0.0))
+        elif node_type == 'unop' and node.get('op') == '-':
+            inner = self._get_const_value(node.get('expr'))
+            return -inner if inner is not None else None
+        return None
 
     def _gen_new(self, node: Dict) -> str:
         type_name = node.get('typeName', '')

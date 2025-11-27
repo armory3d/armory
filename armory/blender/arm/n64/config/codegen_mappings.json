@@ -25,10 +25,10 @@
     },
 
     "transform.rotate": {
-      "output": "it_rotate_axis(&obj->transform, -{x}, -{z}, {y}, {arg1})",
+      "output": "obj->transform.rot[{axis_index}] += {angle_sign}{arg1}; obj->transform.dirty = 3",
       "args": ["axis", "angle"],
       "flags": {"needs_obj": true},
-      "_comment": "axis is Vec3 which expands to x,y,z; angle is the second arg (arg1). Coordinate swap: Blender XYZ -> N64 -X,Z,Y"
+      "_comment": "Optimized: axis is resolved at compile-time to axis_index (0=X, 1=Y, 2=Z). Only works for cardinal axes."
     },
     "transform.translate": {
       "output": "it_translate(&obj->transform, {x}, {y}, {z})",
