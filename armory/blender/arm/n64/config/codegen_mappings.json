@@ -31,17 +31,25 @@
       "_comment": "Optimized: axis is resolved at compile-time to axis_index (0=X, 1=Y, 2=Z). Only works for cardinal axes."
     },
     "transform.translate": {
-      "output": "it_translate(&obj->transform, {x}, {y}, {z})",
+      "output": "it_translate(&obj->transform, {x}, {z}, -({y}))",
       "args": ["x", "y", "z"],
       "flags": {"needs_obj": true},
+      "_comment": "Coordinate conversion: Blender Z-up to N64 Y-up. Blender (x,y,z) -> N64 (x,z,-y)",
       "variants": {
-        "1_arg": "it_translate(&obj->transform, 0.0f, 0.0f, {x})"
+        "1_arg": "it_translate(&obj->transform, 0.0f, {x}, 0.0f)"
       }
     },
     "transform.move": {
-      "output": "it_translate(&obj->transform, {x}, {y}, {z})",
+      "output": "it_translate(&obj->transform, {x}, {z}, -({y}))",
       "args": ["x", "y", "z"],
-      "flags": {"needs_obj": true}
+      "flags": {"needs_obj": true},
+      "_comment": "Coordinate conversion: Blender Z-up to N64 Y-up"
+    },
+    "transform.buildmatrix": {
+      "output": "obj->transform.dirty = FB_COUNT",
+      "args": [],
+      "flags": {"needs_obj": true},
+      "_comment": "Mark transform as dirty to rebuild matrix on next frame"
     },
 
     "scene.setactive": {

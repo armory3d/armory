@@ -190,13 +190,34 @@ class N64Exporter:
 
             # Format value based on type
             if member_type in ('double', 'float'):
-                init_fields.append(f'.{member_name} = {value}f')
+                # Ensure proper C float literal format (e.g., 5.0f not 5f)
+                float_val = float(value)
+                if float_val == int(float_val):
+                    init_fields.append(f'.{member_name} = {int(float_val)}.0f')
+                else:
+                    init_fields.append(f'.{member_name} = {float_val}f')
             elif member_type == 'bool':
                 init_fields.append(f'.{member_name} = {str(bool(value)).lower()}')
             elif member_type == 'int':
                 init_fields.append(f'.{member_name} = {int(value)}')
+            elif member_type == 'Vec3':
+                # Vec3/Vec4 member - value should be dict with x, y, z
+                if isinstance(value, dict):
+                    x = self._format_float(value.get('x', 0))
+                    y = self._format_float(value.get('y', 0))
+                    z = self._format_float(value.get('z', 0))
+                    init_fields.append(f'.{member_name} = {{{x}, {y}, {z}}}')
+                else:
+                    init_fields.append(f'.{member_name} = {{1.0f, 1.0f, 1.0f}}')
 
         return ', '.join(init_fields)
+
+    def _format_float(self, value) -> str:
+        """Format a value as a C float literal."""
+        float_val = float(value) if value is not None else 0.0
+        if float_val == int(float_val):
+            return f'{int(float_val)}.0f'
+        return f'{float_val}f'
 
 
     def export_meshes(self):
@@ -558,6 +579,8 @@ class N64Exporter:
                         init_str = self.build_trait_initializer(trait_class, scene_name, instance_props)
                         self.trait_data_instances.append((data_var, f'{trait_class}Data', init_str))
                         object_block_lines.append(f'    objects[{i}].traits[{t_idx}].data = &{data_var};')
+                        # Reset trait data to initial values using compound literal
+                        object_block_lines.append(f'    {data_var} = ({trait_class}Data){{{init_str}}};')
                     else:
                         object_block_lines.append(f'    objects[{i}].traits[{t_idx}].data = NULL;')
             else:
@@ -591,6 +614,8 @@ class N64Exporter:
                     init_str = self.build_trait_initializer(trait_class, scene_name, instance_props)
                     self.trait_data_instances.append((data_var, f'{trait_class}Data', init_str))
                     scene_traits_block_lines.append(f'    scene->traits[{t_idx}].data = &{data_var};')
+                    # Reset trait data to initial values using compound literal
+                    scene_traits_block_lines.append(f'    {data_var} = ({trait_class}Data){{{init_str}}};')
                 else:
                     scene_traits_block_lines.append(f'    scene->traits[{t_idx}].data = NULL;')
         else:

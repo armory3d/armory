@@ -184,13 +184,19 @@ class N64TraitMacro {
             return null;
         }
 
+        // Skip gamepad member (handled specially)
+        if (name == "gamepad") {
+            return null;
+        }
+
         var typeStr = complexTypeToString(type);
 
-        // Map Haxe types to C types - only support simple primitives for N64
+        // Map Haxe types to C types
         var ctypeMap:Map<String, String> = [
             "Float" => "float",
             "Int" => "int32_t",
-            "Bool" => "bool"
+            "Bool" => "bool",
+            "Vec4" => "Vec3"  // Vec4 maps to Vec3 struct in C
         ];
 
         var ctype = ctypeMap.get(typeStr);
@@ -200,7 +206,12 @@ class N64TraitMacro {
 
         var defaultValue:Dynamic = null;
         if (expr != null) {
-            defaultValue = extractConstValue(expr);
+            if (typeStr == "Vec4") {
+                // Extract Vec4 components from new Vec4(x, y, z)
+                defaultValue = extractVec4Value(expr);
+            } else {
+                defaultValue = extractConstValue(expr);
+            }
         }
 
         return {
@@ -209,6 +220,27 @@ class N64TraitMacro {
             ctype: ctype,
             defaultValue: defaultValue
         };
+    }
+
+    /**
+     * Extract Vec4 default value from expression.
+     */
+    static function extractVec4Value(expr:Expr):Dynamic {
+        if (expr == null) return null;
+
+        switch (expr.expr) {
+            case ENew(t, params):
+                if (t.name == "Vec4" && params.length >= 3) {
+                    var x = extractConstValue(params[0]);
+                    var y = extractConstValue(params[1]);
+                    var z = extractConstValue(params[2]);
+                    if (x != null && y != null && z != null) {
+                        return {x: x, y: y, z: z};
+                    }
+                }
+            default:
+        }
+        return null;
     }
 
     /**

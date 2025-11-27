@@ -95,6 +95,8 @@ class GeneratorContext:
     trait_name: str
     func_name: str
     member_names: Set[str] = None
+    local_vars: Set[str] = None  # Track local variable names declared in current scope
+    vec4_vars: Set[str] = None   # Track Vec4 local variable names
     indent: int = 1
     needs_obj: bool = False
     needs_data: bool = False
@@ -103,6 +105,10 @@ class GeneratorContext:
     def __post_init__(self):
         if self.member_names is None:
             self.member_names = set()
+        if self.local_vars is None:
+            self.local_vars = set()
+        if self.vec4_vars is None:
+            self.vec4_vars = set()
 
     def indent_str(self) -> str:
         return '    ' * self.indent
@@ -177,6 +183,31 @@ class ExpressionGenerator:
                 return 'dt'
             return f'/* Time.{field} */'
 
+        # Handle gamepad.leftStick.x/y -> input_stick_x()/input_stick_y()
+        if obj and obj.get('type') == 'field':
+            parent_obj = obj.get('object')
+            parent_field = obj.get('field', '')
+            if parent_obj and parent_obj.get('type') == 'ident':
+                parent_name = parent_obj.get('name', '')
+                # gamepad.leftStick.x or gamepad.leftStick.y
+                if parent_name == 'gamepad' and parent_field == 'leftStick':
+                    if field == 'x':
+                        return 'input_stick_x()'
+                    elif field == 'y':
+                        return 'input_stick_y()'
+                # Also handle rightStick if needed in the future
+                elif parent_name == 'gamepad' and parent_field == 'rightStick':
+                    if field == 'x':
+                        return 'input_stick_x()'  # N64 only has one stick
+                    elif field == 'y':
+                        return 'input_stick_y()'
+
+        # Handle gamepad access that isn't stick (skip it)
+        if obj and obj.get('type') == 'ident' and obj.get('name') == 'gamepad':
+            # Direct gamepad field access like gamepad.leftStick - return placeholder
+            # This will be handled by parent field access
+            return f'/* gamepad.{field} */'
+
         # Handle object.transform etc
         if obj and obj.get('type') == 'ident' and obj.get('name') == 'object':
             self.ctx.needs_obj = True
@@ -194,6 +225,9 @@ class ExpressionGenerator:
 
         # Default: generate parent.field
         parent = self.generate(obj) if obj else ''
+        # Skip generating field access if parent is a comment/no-op
+        if parent.startswith('/*'):
+            return f'/* {parent}.{field} */'
         return f'{parent}.{field}' if parent else field
 
     def _gen_binop(self, node: Dict) -> str:
@@ -374,7 +408,9 @@ class ExpressionGenerator:
             x = self.generate(args[0])
             y = self.generate(args[1])
             z = self.generate(args[2])
-            return f'({x}, {y}, {z})'
+            # Return a C99 compound literal for Vec4
+            # This can be used in expressions but assignments are handled specially
+            return f'(Vec3){{{x}, {y}, {z}}}'
 
         arg_strs = [self.generate(a) for a in args if a]
         return f'{type_name}({", ".join(arg_strs)})'
@@ -398,6 +434,9 @@ class StatementGenerator:
 
         node_type = node.get('type')
 
+        # Debug logging for statement types
+        log.info(f'StatementGenerator processing node type: {node_type}')
+
         if node_type == 'if':
             return self._gen_if(node)
         elif node_type == 'while':
@@ -406,6 +445,8 @@ class StatementGenerator:
             return self._gen_do_while(node)
         elif node_type == 'for':
             return self._gen_for(node)
+        elif node_type == 'vars':
+            return self._gen_vars(node)
         elif node_type == 'break':
             return [f'{self.ctx.indent_str()}break;']
         elif node_type == 'continue':
@@ -503,16 +544,295 @@ class StatementGenerator:
         lines.append(f'{indent}}}')
         return lines
 
+    def _gen_vars(self, node: Dict) -> List[str]:
+        """Generate C local variable declarations from Haxe var statements."""
+        indent = self.ctx.indent_str()
+        lines = []
+
+        vars_list = node.get('vars', [])
+
+        # Debug: log vars being processed
+        if not vars_list:
+            log.warn(f'_gen_vars called but no vars list in node: {node}')
+
+        for var_info in vars_list:
+            var_name = var_info.get('name', '')
+            var_expr = var_info.get('expr')
+
+            if not var_name:
+                log.warn(f'Variable declaration with empty name: {var_info}')
+                continue
+
+            # Track this as a local variable
+            self.ctx.local_vars.add(var_name)
+
+            log.info(f'Generating variable: {var_name}')
+
+            if var_expr is not None:
+                # Check if this is a Vec4 type assignment
+                is_vec4 = self._is_vec4_expr(var_expr)
+                log.info(f'Variable {var_name} is_vec4: {is_vec4}, expr type: {var_expr.get("type")}')
+
+                if is_vec4:
+                    # Track as Vec4 variable
+                    self.ctx.vec4_vars.add(var_name)
+                    vec_init = self._gen_vec4_var_init(var_name, var_expr, indent)
+                    lines.extend(vec_init)
+                else:
+                    # Infer C type from the expression
+                    c_type = self._infer_c_type(var_expr)
+                    value = self.expr_gen.generate(var_expr)
+                    lines.append(f'{indent}{c_type} {var_name} = {value};')
+            else:
+                # Uninitialized variable - default to float
+                lines.append(f'{indent}float {var_name};')
+
+        return lines
+
+    def _is_vec4_expr(self, expr: Dict) -> bool:
+        """Check if expression results in a Vec4 type."""
+        if not expr:
+            return False
+
+        expr_type = expr.get('type')
+
+        # new Vec4(...)
+        if expr_type == 'new' and expr.get('typeName') == 'Vec4':
+            return True
+
+        # Field access to transform.scale, transform.loc, etc.
+        if expr_type == 'field':
+            field = expr.get('field', '')
+            if field in ('scale', 'loc', 'location', 'dim'):
+                return True
+            # Check for nested field like object.transform.scale
+            obj = expr.get('object')
+            if obj and obj.get('type') == 'field':
+                parent_field = obj.get('field', '')
+                if parent_field == 'transform' and field in ('scale', 'loc', 'location', 'dim'):
+                    return True
+
+        return False
+
+    def _gen_vec4_var_init(self, var_name: str, expr: Dict, indent: str) -> List[str]:
+        """Generate initialization for a Vec4 local variable."""
+        lines = []
+
+        # Declare as a simple struct with x, y, z
+        lines.append(f'{indent}struct {{ float x, y, z; }} {var_name};')
+
+        expr_type = expr.get('type')
+
+        # new Vec4(x, y, z)
+        if expr_type == 'new' and expr.get('typeName') == 'Vec4':
+            args = expr.get('args') or []
+            if len(args) >= 3:
+                x = self.expr_gen.generate(args[0])
+                y = self.expr_gen.generate(args[1])
+                z = self.expr_gen.generate(args[2])
+                lines.append(f'{indent}{var_name}.x = {x};')
+                lines.append(f'{indent}{var_name}.y = {y};')
+                lines.append(f'{indent}{var_name}.z = {z};')
+
+        # Field access like object.transform.scale
+        elif expr_type == 'field':
+            field = expr.get('field', '')
+            obj = expr.get('object')
+
+            # Determine source array
+            if obj and obj.get('type') == 'field' and obj.get('field') == 'transform':
+                self.ctx.needs_obj = True
+                if field == 'scale':
+                    lines.append(f'{indent}{var_name}.x = obj->transform.scale[0];')
+                    lines.append(f'{indent}{var_name}.y = obj->transform.scale[1];')
+                    lines.append(f'{indent}{var_name}.z = obj->transform.scale[2];')
+                elif field in ('loc', 'location'):
+                    lines.append(f'{indent}{var_name}.x = obj->transform.loc[0];')
+                    lines.append(f'{indent}{var_name}.y = obj->transform.loc[1];')
+                    lines.append(f'{indent}{var_name}.z = obj->transform.loc[2];')
+                else:
+                    # Generic field
+                    src = self.expr_gen.generate(expr)
+                    lines.append(f'{indent}{var_name}.x = {src}[0];')
+                    lines.append(f'{indent}{var_name}.y = {src}[1];')
+                    lines.append(f'{indent}{var_name}.z = {src}[2];')
+
+        return lines
+
+    def _infer_c_type(self, expr: Dict) -> str:
+        """Infer C type from expression node."""
+        if expr is None:
+            return 'float'
+
+        expr_type = expr.get('type')
+
+        if expr_type == 'int':
+            return 'int'
+        elif expr_type == 'float':
+            return 'float'
+        elif expr_type == 'string':
+            return 'const char*'
+        elif expr_type == 'binop':
+            # For binary operations, check operands
+            left_type = self._infer_c_type(expr.get('left'))
+            right_type = self._infer_c_type(expr.get('right'))
+            # Float takes precedence
+            if left_type == 'float' or right_type == 'float':
+                return 'float'
+            return 'int'
+        elif expr_type == 'field':
+            # Field access - check for known types
+            field = expr.get('field', '')
+            obj = expr.get('object', {})
+
+            # Time.delta is float
+            if obj.get('type') == 'ident' and obj.get('name') == 'Time' and field == 'delta':
+                return 'float'
+
+            # transform.x/y/z are float
+            if field in ('x', 'y', 'z', 'w'):
+                return 'float'
+
+            # Default to float for unknown fields
+            return 'float'
+        elif expr_type == 'ident':
+            # Check if it's a known member
+            name = expr.get('name', '')
+            if name in self.ctx.member_names:
+                # Would need type info from member definitions
+                return 'float'
+            if name in self.ctx.local_vars:
+                return 'float'  # Already declared, use same type
+            return 'float'
+        elif expr_type == 'unop':
+            return self._infer_c_type(expr.get('expr'))
+        else:
+            return 'float'
+
     def _gen_assignment(self, node: Dict) -> List[str]:
         indent = self.ctx.indent_str()
-        target = self.expr_gen.generate(node.get('left'))
-        value = self.expr_gen.generate(node.get('right'))
+        left = node.get('left')
+        right = node.get('right')
+
+        target = self.expr_gen.generate(left)
 
         # Skip no-op assignments
-        if target.startswith('/*') or value.startswith('/*'):
+        if target.startswith('/*'):
+            return []
+
+        # Handle Vec4/Vec3 assignment to transform.scale, transform.loc, etc.
+        # Check if target is obj->transform.scale or similar
+        if self._is_transform_vec_property(left):
+            return self._gen_transform_vec_assignment(indent, left, right)
+
+        # Handle assignment of Vec4 variable to another Vec4 property
+        if right and right.get('type') == 'new' and right.get('typeName') == 'Vec4':
+            # new Vec4(x, y, z) assignment
+            args = right.get('args') or []
+            if len(args) >= 3:
+                x = self.expr_gen.generate(args[0])
+                y = self.expr_gen.generate(args[1])
+                z = self.expr_gen.generate(args[2])
+                # If assigning to a simple identifier (local var), create struct
+                if left and left.get('type') == 'ident':
+                    var_name = left.get('name', '')
+                    return [
+                        f'{indent}{var_name}.x = {x};',
+                        f'{indent}{var_name}.y = {y};',
+                        f'{indent}{var_name}.z = {z};',
+                    ]
+
+        # Handle assignment of Vec4 identifier to transform property
+        if right and right.get('type') == 'ident' and self._is_transform_vec_property(left):
+            return self._gen_transform_vec_assignment(indent, left, right)
+
+        value = self.expr_gen.generate(right)
+
+        # Skip no-op values
+        if value.startswith('/*'):
             return []
 
         return [f'{indent}{target} = {value};']
+
+    def _is_transform_vec_property(self, node: Dict) -> bool:
+        """Check if node is a transform vector property like obj->transform.scale"""
+        if not node or node.get('type') != 'field':
+            return False
+        field = node.get('field', '')
+        if field not in ('scale', 'loc', 'location'):
+            return False
+        obj = node.get('object')
+        if obj and obj.get('type') == 'field' and obj.get('field') == 'transform':
+            return True
+        return False
+
+    def _gen_transform_vec_assignment(self, indent: str, left: Dict, right: Dict) -> List[str]:
+        """Generate assignment to transform vector property (scale, loc)."""
+        field = left.get('field', '')
+
+        # Determine the C array name and if scale factor is needed
+        # Scale factor converts Blender units (1.0 = normal) to N64 units (0.015 = normal)
+        is_scale = field == 'scale'
+        scale_factor = '0.015f' if is_scale else ''
+
+        if is_scale:
+            arr_name = 'obj->transform.scale'
+        elif field in ('loc', 'location'):
+            arr_name = 'obj->transform.loc'
+        else:
+            arr_name = f'obj->transform.{field}'
+
+        self.ctx.needs_obj = True
+        lines = []
+
+        def format_component(expr: str) -> str:
+            """Apply scale factor if this is a scale assignment."""
+            if scale_factor:
+                return f'({expr}) * {scale_factor}'
+            return expr
+
+        # Handle new Vec4(x, y, z)
+        if right and right.get('type') == 'new' and right.get('typeName') == 'Vec4':
+            args = right.get('args') or []
+            if len(args) >= 3:
+                x = self.expr_gen.generate(args[0])
+                y = self.expr_gen.generate(args[1])
+                z = self.expr_gen.generate(args[2])
+                lines.append(f'{indent}{arr_name}[0] = {format_component(x)};')
+                lines.append(f'{indent}{arr_name}[1] = {format_component(y)};')
+                lines.append(f'{indent}{arr_name}[2] = {format_component(z)};')
+                # Note: dirty flag should be set by buildMatrix() call
+                return lines
+
+        # Handle identifier (local Vec4 variable or member)
+        if right and right.get('type') == 'ident':
+            var_name = right.get('name', '')
+            # Check if it's a member variable
+            if var_name in self.ctx.member_names:
+                self.ctx.needs_data = True
+                lines.append(f'{indent}{arr_name}[0] = {format_component(f"tdata->{var_name}.x")};')
+                lines.append(f'{indent}{arr_name}[1] = {format_component(f"tdata->{var_name}.y")};')
+                lines.append(f'{indent}{arr_name}[2] = {format_component(f"tdata->{var_name}.z")};')
+            else:
+                # Local variable
+                lines.append(f'{indent}{arr_name}[0] = {format_component(f"{var_name}.x")};')
+                lines.append(f'{indent}{arr_name}[1] = {format_component(f"{var_name}.y")};')
+                lines.append(f'{indent}{arr_name}[2] = {format_component(f"{var_name}.z")};')
+            # Note: dirty flag should be set by buildMatrix() call
+            return lines
+
+        # Handle field access (e.g., someObject.scale)
+        if right and right.get('type') == 'field':
+            src = self.expr_gen.generate(right)
+            lines.append(f'{indent}{arr_name}[0] = {format_component(f"{src}.x")};')
+            lines.append(f'{indent}{arr_name}[1] = {format_component(f"{src}.y")};')
+            lines.append(f'{indent}{arr_name}[2] = {format_component(f"{src}.z")};')
+            # Note: dirty flag should be set by buildMatrix() call
+            return lines
+
+        # Fallback - shouldn't normally reach here
+        value = self.expr_gen.generate(right)
+        return [f'{indent}/* TODO: vec assignment */ {arr_name} = {value};']
 
     def _gen_call_stmt(self, node: Dict) -> List[str]:
         indent = self.ctx.indent_str()
@@ -740,9 +1060,12 @@ class TraitsGenerator:
         if data_instances:
             for var_name, type_name, init_str in data_instances:
                 if init_str:
-                    definitions.append(f'{type_name} {var_name} = {{{init_str}}};')
+                    # Escape braces for apply_template: {{ becomes { after processing
+                    escaped_init = init_str.replace('{', '{{').replace('}', '}}')
+                    # Generate mutable instance only (reset happens inline in scene_init)
+                    definitions.append(f'{type_name} {var_name} = {{{{{escaped_init}}}}};')
                 else:
-                    definitions.append(f'{type_name} {var_name} = {{0}};')
+                    definitions.append(f'{type_name} {var_name} = {{{{0}}}};')
 
         # Collect all implementations
         implementations = []
@@ -788,6 +1111,7 @@ class TraitsGenerator:
         if data_instances:
             for var_name, type_name, init_str in data_instances:
                 if init_str:
+                    # Generate mutable instance only (reset happens inline in scene_init)
                     lines.append(f'{type_name} {var_name} = {{{init_str}}};')
                 else:
                     lines.append(f'{type_name} {var_name} = {{0}};')

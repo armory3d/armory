@@ -12,6 +12,11 @@ extern "C" {{
 
 #define FB_COUNT 3
 
+// Simple Vec3 type for trait data
+typedef struct {{
+    float x, y, z;
+}} Vec3;
+
 typedef void (*ArmTraitReadyFn)(void *entity, void *data);
 typedef void (*ArmTraitUpdateFn)(void *entity, float dt, void *data);
 typedef void (*ArmTraitRemoveFn)(void *entity, void *data);
