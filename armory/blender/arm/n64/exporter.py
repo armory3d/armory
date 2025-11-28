@@ -91,65 +91,6 @@ class N64Exporter:
         os.makedirs(f'{build_dir}/n64/src/scenes', exist_ok=True)
 
 
-    # =========================================================================
-    # Trait Helpers - Simple lookups into macro JSON (no inference!)
-    # =========================================================================
-
-    def get_trait(self, trait_class: str) -> dict:
-        """Get trait data from macro JSON."""
-        return self.trait_info.get("traits", {}).get(trait_class, {})
-
-    def trait_needs_data(self, trait_class: str) -> bool:
-        """Check if trait needs per-instance data. Macro provides this directly."""
-        return self.get_trait(trait_class).get("needs_data", False)
-
-    def build_trait_initializer(self, trait_class: str, current_scene: str, instance_props: dict = None) -> str:
-        """
-        Build C initializer string for trait data.
-
-        The macro provides default values as C literals.
-        Blender per-instance props override defaults.
-        """
-        trait = self.get_trait(trait_class)
-        members = trait.get("members", {})
-        target_scene = trait.get("target_scene")
-
-        init_fields = []
-        instance_props = instance_props or {}
-
-        # Add target_scene if trait uses scene switching
-        if target_scene is not None:
-            # Use instance prop if provided, otherwise macro's resolved scene
-            scene_name = instance_props.get("target_scene", target_scene)
-            init_fields.append(f'.target_scene = SCENE_{scene_name.upper()}')
-
-        # Add member initializers
-        for member_name, member_info in members.items():
-            if member_name in instance_props:
-                # Per-instance value from Blender - format as C literal
-                value = instance_props[member_name]
-                c_value = self._to_c_literal(value, member_info["type"])
-            else:
-                # Use macro's default (already a C literal)
-                c_value = member_info["default_value"]
-
-            init_fields.append(f'.{member_name} = {c_value}')
-
-        return ', '.join(init_fields)
-
-    def _to_c_literal(self, value, c_type: str) -> str:
-        """Convert a Python value to C literal string."""
-        if c_type == "float":
-            f = float(value)
-            return f"{f}f" if '.' in str(f) else f"{int(f)}.0f"
-        elif c_type == "int32_t":
-            return str(int(value))
-        elif c_type == "bool":
-            return "true" if value else "false"
-        else:
-            return str(value)
-
-
     def export_meshes(self):
         build_dir = arm.utils.build_dir()
         assets_dir = f'{build_dir}/n64/assets'
@@ -509,9 +450,13 @@ class N64Exporter:
                     object_block_lines.append(f'    objects[{i}].traits[{t_idx}].on_update = {trait_func_name}_on_update;')
                     object_block_lines.append(f'    objects[{i}].traits[{t_idx}].on_remove = {trait_func_name}_on_remove;')
 
-                    # Use centralized trait data from traits.c
-                    if self.trait_needs_data(trait_class):
-                        object_block_lines.append(f'    objects[{i}].traits[{t_idx}].data = &{trait_func_name}_data;')
+                    # Object traits need per-instance data (malloc + initialize with instance props)
+                    if n64_utils.trait_needs_data(self.trait_info, trait_class):
+                        struct_name = f'{trait_class}Data'
+                        instance_props = trait.get("props", {})
+                        initializer = n64_utils.build_trait_initializer(self.trait_info, trait_class, scene_name, instance_props)
+                        object_block_lines.append(f'    objects[{i}].traits[{t_idx}].data = malloc(sizeof({struct_name}));')
+                        object_block_lines.append(f'    *({struct_name}*)objects[{i}].traits[{t_idx}].data = ({struct_name}){{{initializer}}};')
                     else:
                         object_block_lines.append(f'    objects[{i}].traits[{t_idx}].data = NULL;')
             else:
@@ -521,6 +466,7 @@ class N64Exporter:
         # Generate scene trait assignments
         scene_traits = self.scene_data[scene_name].get('traits', [])
         scene_traits_block_lines = []
+
         if len(scene_traits) > 0:
             scene_traits_block_lines.append(f'    scene->traits = malloc(sizeof(ArmTrait) * {len(scene_traits)});')
             for t_idx, trait in enumerate(scene_traits):
@@ -530,13 +476,19 @@ class N64Exporter:
                 scene_traits_block_lines.append(f'    scene->traits[{t_idx}].on_update = {trait_func_name}_on_update;')
                 scene_traits_block_lines.append(f'    scene->traits[{t_idx}].on_remove = {trait_func_name}_on_remove;')
 
-                # Use centralized trait data from traits.c
-                if self.trait_needs_data(trait_class):
-                    scene_traits_block_lines.append(f'    scene->traits[{t_idx}].data = &{trait_func_name}_data;')
+                # Scene traits need per-scene data (malloc + initialize)
+                if n64_utils.trait_needs_data(self.trait_info, trait_class):
+                    struct_name = f'{trait_class}Data'
+                    instance_props = trait.get("props", {})
+                    initializer = n64_utils.build_trait_initializer(self.trait_info, trait_class, scene_name, instance_props)
+                    # Allocate and initialize per-scene trait data
+                    scene_traits_block_lines.append(f'    scene->traits[{t_idx}].data = malloc(sizeof({struct_name}));')
+                    scene_traits_block_lines.append(f'    *({struct_name}*)scene->traits[{t_idx}].data = ({struct_name}){{{initializer}}};')
                 else:
                     scene_traits_block_lines.append(f'    scene->traits[{t_idx}].data = NULL;')
         else:
             scene_traits_block_lines.append(f'    scene->traits = NULL;')
+
         scene_traits_block = '\n'.join(scene_traits_block_lines)
 
         output = tmpl_content.format(

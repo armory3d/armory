@@ -39,7 +39,7 @@ def _load_coord_config():
             "position": {"out_x": "x", "out_y": "z", "out_z": "-y"},
             "scale": {"out_x": "x", "out_y": "z", "out_z": "y", "factor": 0.015},
             "direction": {"out_x": "x", "out_y": "z", "out_z": "-y"},
-            "euler": {"out_x": "-x", "out_y": "y", "out_z": "-z"}
+            "euler": {"out_x": "-x", "out_y": "-z", "out_z": "y"}
         }
 
     return _coord_config

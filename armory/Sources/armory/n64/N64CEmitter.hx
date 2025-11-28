@@ -147,6 +147,27 @@ class N64CEmitter {
             }
         }
 
+        // Simplify input function comparisons: `input_down(x) != 0.0f` -> `input_down(x)`
+        // N64's input functions return bool, so comparison to 0 is redundant
+        if ((op == OpNotEq || op == OpGt || op == OpGte) && isZeroLiteral(right)) {
+            if (isInputCall(left)) {
+                return left;  // Just return the bool-returning function call
+            }
+        }
+        // Handle reversed: `0.0f != input_down(x)` -> `input_down(x)`
+        if ((op == OpNotEq || op == OpLt || op == OpLte) && isZeroLiteral(left)) {
+            if (isInputCall(right)) {
+                return right;
+            }
+        }
+        // Handle equality: `input_down(x) == 0.0f` -> `!input_down(x)`
+        if (op == OpEq && isZeroLiteral(right) && isInputCall(left)) {
+            return '!$left';
+        }
+        if (op == OpEq && isZeroLiteral(left) && isInputCall(right)) {
+            return '!$right';
+        }
+
         // Skip operations where either side is empty (skipped variable)
         if (left == "" || right == "") {
             return "";
@@ -184,6 +205,22 @@ class N64CEmitter {
             case OpIn: "/* in */";
         }
         return '$left $opStr $right';
+    }
+
+    /**
+     * Check if a string is a zero literal (0, 0.0, 0.0f)
+     */
+    function isZeroLiteral(s:String):Bool {
+        return s == "0" || s == "0.0" || s == "0.0f";
+    }
+
+    /**
+     * Check if a string is an input function call (input_down, input_started, input_released)
+     */
+    function isInputCall(s:String):Bool {
+        return StringTools.startsWith(s, "input_down(") ||
+               StringTools.startsWith(s, "input_started(") ||
+               StringTools.startsWith(s, "input_released(");
     }
 
     function emitAssignOp(op:Binop):String {
@@ -731,22 +768,22 @@ class N64CEmitter {
         var cond = emitExpr(econd);
 
         // If condition emits empty (skipped variable), skip the whole if
-        if (cond == "" || StringTools.trim(cond) == "" || cond.indexOf("/* unsupported") >= 0) {
+        if (cond == null || cond == "" || StringTools.trim(cond) == "" || cond.indexOf("/* unsupported") >= 0) {
             return "";
         }
 
         var thenCode = emitExpr(eif);
 
         // If then block is empty, skip the whole if
-        if (thenCode == "" || StringTools.trim(thenCode) == "") {
+        if (thenCode == null || thenCode == "" || StringTools.trim(thenCode) == "") {
             return "";
         }
 
-        var result = 'if ($cond) { $thenCode; }';
+        var result = 'if ($cond) { $thenCode }';
         if (eelse != null) {
             var elseCode = emitExpr(eelse);
-            if (elseCode != "" && StringTools.trim(elseCode) != "") {
-                result += ' else { $elseCode; }';
+            if (elseCode != null && elseCode != "" && StringTools.trim(elseCode) != "") {
+                result += ' else { $elseCode }';
             }
         }
         return result;

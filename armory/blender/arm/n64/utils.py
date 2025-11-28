@@ -48,10 +48,15 @@ def get_clear_color(scene):
 def deselect_from_all_viewlayers():
     """Deselect all objects in all view layers across all scenes."""
     import bpy
+    bpy.context.view_layer.objects.active = None
+    bpy.ops.object.select_all(action='DESELECT')
     for scene in bpy.data.scenes:
         for view_layer in scene.view_layers:
+            view_layer.objects.active = None
             for obj in scene.objects:
                 obj.select_set(False, view_layer=view_layer)
+            view_layer.update()
+    bpy.context.view_layer.update()
 
 
 def to_uint8(value):
@@ -78,4 +83,72 @@ def extract_blender_trait_props(trait) -> dict:
                 props[prop.name] = prop.value_int
             elif prop.type == 'Bool':
                 props[prop.name] = prop.value_bool
+            elif prop.type == 'String':
+                props[prop.name] = prop.value_string
+            elif prop.type == 'TSceneFormat':
+                # Scene property - extract scene name
+                if prop.value_scene is not None:
+                    props[prop.name] = prop.value_scene.name
     return props
+
+
+def get_trait(trait_info: dict, trait_class: str) -> dict:
+    """Get trait data from macro JSON."""
+    return trait_info.get("traits", {}).get(trait_class, {})
+
+
+def trait_needs_data(trait_info: dict, trait_class: str) -> bool:
+    """Check if trait needs per-instance data. Macro provides this directly."""
+    return get_trait(trait_info, trait_class).get("needs_data", False)
+
+
+def build_trait_initializer(trait_info: dict, trait_class: str, current_scene: str, instance_props: dict = None) -> str:
+    """
+    Build C initializer string for trait data.
+
+    The macro provides default values as C literals.
+    Blender per-instance props override defaults.
+    """
+    trait = get_trait(trait_info, trait_class)
+    members = trait.get("members", {})
+    target_scene = trait.get("target_scene")
+
+    init_fields = []
+    instance_props = instance_props or {}
+
+    # Add target_scene if trait uses scene switching
+    if target_scene is not None:
+        # Use instance prop if provided, otherwise macro's resolved scene
+        scene_name = instance_props.get("target_scene", target_scene)
+        init_fields.append(f'.target_scene = SCENE_{scene_name.upper()}')
+
+    # Add member initializers
+    for member_name, member_info in members.items():
+        if member_name in instance_props:
+            # Per-instance value from Blender - format as C literal
+            value = instance_props[member_name]
+            c_value = _to_c_literal(value, member_info["type"])
+        else:
+            # Use macro's default (already a C literal)
+            c_value = member_info["default_value"]
+
+        init_fields.append(f'.{member_name} = {c_value}')
+
+    return ', '.join(init_fields)
+
+
+def _to_c_literal(value, c_type: str) -> str:
+    """Convert a Python value to C literal string."""
+    if c_type == "float":
+        f = float(value)
+        return f"{f}f" if '.' in str(f) else f"{int(f)}.0f"
+    elif c_type == "int32_t":
+        return str(int(value))
+    elif c_type == "bool":
+        return "true" if value else "false"
+    elif c_type == "SceneId":
+        # Convert scene name string to SCENE_XXX enum
+        scene_name = arm.utils.safesrc(str(value)).upper()
+        return f"SCENE_{scene_name}"
+    else:
+        return str(value)

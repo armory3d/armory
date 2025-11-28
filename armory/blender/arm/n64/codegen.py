@@ -163,6 +163,19 @@ def generate_trait_data_definitions(traits: list) -> str:
     return "\n".join(lines)
 
 
+def _is_valid_statement(stmt: str) -> bool:
+    """Check if a statement is valid C code (not empty or malformed)."""
+    if not stmt or not stmt.strip():
+        return False
+    # Filter out malformed if statements with empty conditions
+    if stmt.strip().startswith("if ()") or stmt.strip().startswith("if ( )"):
+        return False
+    # Filter out empty blocks
+    if stmt.strip() in ["{}", "{ }", ";", ""]:
+        return False
+    return True
+
+
 def generate_trait_implementations(traits: list) -> str:
     """Generate function implementations for {trait_implementations} placeholder.
 
@@ -189,7 +202,7 @@ def generate_trait_implementations(traits: list) -> str:
         lines.append(f"    {name}Data* tdata = ({name}Data*)_data;")
         lines.append(f"    (void)obj; (void)tdata;  // Suppress unused warnings")
         for stmt in init_code:
-            if stmt:  # Skip empty strings
+            if _is_valid_statement(stmt):
                 lines.append(f"    {stmt}")
         lines.append("}")
         lines.append("")
@@ -200,7 +213,7 @@ def generate_trait_implementations(traits: list) -> str:
         lines.append(f"    {name}Data* tdata = ({name}Data*)_data;")
         lines.append(f"    (void)obj; (void)tdata; (void)dt;  // Suppress unused warnings")
         for stmt in update_code:
-            if stmt:  # Skip empty strings
+            if _is_valid_statement(stmt):
                 lines.append(f"    {stmt}")
         lines.append("}")
         lines.append("")
@@ -211,7 +224,7 @@ def generate_trait_implementations(traits: list) -> str:
         lines.append(f"    {name}Data* tdata = ({name}Data*)_data;")
         lines.append(f"    (void)obj; (void)tdata;  // Suppress unused warnings")
         for stmt in remove_code:
-            if stmt:  # Skip empty strings
+            if _is_valid_statement(stmt):
                 lines.append(f"    {stmt}")
         lines.append("}")
         lines.append("")
