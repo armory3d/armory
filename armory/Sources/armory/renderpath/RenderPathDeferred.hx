@@ -436,7 +436,6 @@ class RenderPathDeferred {
 			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
 			path.loadShader("shader_datas/copy_pass/copy_pass");
 
-			// holds background depth
 			var t = new RenderTargetRaw();
 			t.name = "gbufferD1";
 			t.width = 0;
@@ -900,15 +899,27 @@ class RenderPathDeferred {
 			if (armory.data.Config.raw.rp_ssrefr != false)
 			{
 				//save depth
+				#if (!kha_opengl)
+				path.setDepthFrom("gbuffer0", "gbuffer1"); // Unbind depth so we can read it
+				path.depthToRenderTarget.set("main", path.renderTargets.get("tex")); // tex and gbuffer0 share a depth buffer
+				#end
+
+				// Copy the depth buffer to the depth texture
 				path.setTarget("gbufferD1");
 				path.bindTarget("_main", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
+
+				#if (!kha_opengl)
+				path.setDepthFrom("gbuffer0", "tex"); // Re-bind depth
+				path.depthToRenderTarget.set("main", path.renderTargets.get("gbuffer0"));
+				#end
+
 				//save color
 				path.setTarget("refr");
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
-				path.setTarget("gbuffer0", ["tex", "gbuffer_refraction"]);
+				path.setTarget("gbuffer0", ["gbuffer1", "gbuffer_refraction"]);
 
 				#if (rp_voxels != "Off")
 				path.bindTarget("voxelsOut", "voxels");
@@ -928,12 +939,11 @@ class RenderPathDeferred {
 				path.drawMeshes("refraction");
 
 				path.setTarget("tex");
-				path.bindTarget("tex", "tex");
-				path.bindTarget("refr", "tex1");
-				path.bindTarget("_main", "gbufferD");
+				path.bindTarget("refr", "tex");
 				path.bindTarget("gbufferD1", "gbufferD1");
 				path.bindTarget("gbuffer0", "gbuffer0");
-				path.bindTarget("gbuffer1", "gbuffer1");
+				path.bindTarget("gbuffer1", "tex1");
+				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 
 				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");

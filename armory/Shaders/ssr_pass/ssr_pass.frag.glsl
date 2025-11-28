@@ -68,13 +68,12 @@ vec4 binarySearch(vec3 dir) {
 }
 
 vec4 rayCast(vec3 dir) {
-	#ifdef _CPostprocess
-		dir *= PPComp9.x;
-	#else
-		dir *= ssrRayStep;
-	#endif
 	for (int i = 0; i < maxSteps; i++) {
-		hitCoord += dir;
+		#ifdef _CPostprocess
+			hitCoord += dir * PPComp9.x;
+		#else
+			hitCoord += dir * ssrRayStep;
+		#endif
 		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 	}
 	return vec4(0.0);
@@ -113,8 +112,7 @@ void main() {
 
 	vec4 g1 = textureLod(gbuffer1, texCoord, 0.0); // Basecolor.rgb, spec/occ
 	vec3 f0 = surfaceF0(g1.rgb, metallic);
-	vec3 v = normalize(eye - viewPos);
-	float dotNV = max(dot(n, v), 0.0);
+	float dotNV = max(dot(viewNormal, viewPos), 0.0);
 
 	#ifdef _Brdf
 	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
@@ -139,5 +137,5 @@ void main() {
 	intensity = clamp(intensity, 0.0, 1.0);
 	vec3 reflCol = textureLod(tex, coords.xy, 0.0).rgb;
 	reflCol = clamp(reflCol, 0.0, 1.0);
-	fragColor.rgb = reflCol * intensity * F;
+	fragColor.rgb = reflCol * intensity;// * F;
 }

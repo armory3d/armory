@@ -64,9 +64,8 @@ vec4 binarySearch(vec3 dir) {
 
 vec4 rayCast(vec3 dir) {
 	float ddepth;
-	dir *= ss_refractionRayStep;
 	for (int i = 0; i < maxSteps; i++) {
-		hitCoord += dir;
+		hitCoord += dir * ss_refractionRayStep;
 		ddepth = getDeltaDepth(hitCoord);
 		if (ddepth > 0.0) return binarySearch(dir);
 	}
@@ -84,8 +83,8 @@ void main() {
     float opac = gr.y;
     float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
-    if (d == 0.0) {
-        fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
+    if (d == 0.0 || opac == 1.0) {
+        fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb;
         return;
     }
 
@@ -116,10 +115,10 @@ void main() {
 
 	intensity = clamp(intensity, 0.0, 1.0);
 
+    vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb;
 	vec4 g1 = textureLod(gbuffer1, texCoord, 0.0); // Basecolor.rgb, spec/occ
-	vec3 f0 = surfaceF0(g1.rgb, metallic);
-	vec3 v = normalize(eye - viewPos);
-	float dotNV = max(dot(n, v), 0.0);
+	vec3 f0 = surfaceF0(refractionCol.rgb, metallic);
+	float dotNV = max(dot(viewNormal, viewPos), 0.0);
 
 	#ifdef _Brdf
 	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
@@ -128,9 +127,8 @@ void main() {
 	vec3 F = f0;
 	#endif
 
-    vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
 	refractionCol *= intensity * (1.0 - F);
-	vec3 color = textureLod(tex, texCoord.xy, 0.0).rgb;
+	vec3 color = textureLod(tex1, texCoord.xy, 0.0).rgb;
 
     fragColor.rgb = mix(refractionCol, color, opac);
 
