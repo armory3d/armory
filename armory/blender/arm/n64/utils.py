@@ -111,23 +111,20 @@ def build_trait_initializer(trait_info: dict, trait_class: str, current_scene: s
     """
     trait = get_trait(trait_info, trait_class)
     members = trait.get("members", {})
-    target_scene = trait.get("target_scene")
 
     init_fields = []
     instance_props = instance_props or {}
-
-    # Add target_scene if trait uses scene switching
-    if target_scene is not None:
-        # Use instance prop if provided, otherwise macro's resolved scene
-        scene_name = instance_props.get("target_scene", target_scene)
-        init_fields.append(f'.target_scene = SCENE_{scene_name.upper()}')
 
     # Add member initializers
     for member_name, member_info in members.items():
         if member_name in instance_props:
             # Per-instance value from Blender - format as C literal
             value = instance_props[member_name]
-            c_value = _to_c_literal(value, member_info["type"])
+            # Special handling for SceneId type
+            if member_info["type"] == "SceneId" and isinstance(value, str):
+                c_value = f'SCENE_{value.upper()}'
+            else:
+                c_value = _to_c_literal(value, member_info["type"])
         else:
             # Use macro's default (already a C literal)
             c_value = member_info["default_value"]

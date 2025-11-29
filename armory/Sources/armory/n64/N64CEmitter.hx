@@ -13,15 +13,20 @@ using Lambda;
  * This is the "smart" part - all resolution happens here.
  *
  * Key responsibilities:
- * - Resolve member access to tdata-> or obj->
+ * - Resolve member access with inline casts: ((TraitData*)data)->member
+ * - Resolve object access with inline casts: ((ArmObject*)obj)->field
  * - Resolve button names to N64 constants
  * - Resolve Vec4 axes to indices
  * - Apply coordinate system conversion (Blender Z-up → N64 Y-up)
  * - Generate final C code strings
  * - Track what features are used (buttons, transform, scene)
+ *
+ * Note: Inline casts are used instead of local typed pointers to save
+ * stack space and avoid unnecessary pointer copies on the N64's limited hardware.
  */
 class N64CEmitter {
     // Context for the current trait
+    var traitName:String;
     var memberNames:Map<String, Bool>;
     var localVars:Map<String, Bool>;
     var needsObj:Bool = false;
@@ -33,7 +38,8 @@ class N64CEmitter {
     var hasScene:Bool = false;
     var targetScene:String = null;
 
-    public function new(members:Array<String>) {
+    public function new(traitName:String, members:Array<String>) {
+        this.traitName = traitName;
         memberNames = new Map();
         localVars = new Map();
         inputButtons = [];
@@ -89,7 +95,7 @@ class N64CEmitter {
     function resolveIdent(name:String):String {
         // Check if it's a member variable
         if (memberNames.exists(name)) {
-            return 'tdata->$name';
+            return '((${traitName}Data*)data)->$name';
         }
         // Skip Armory-internal variables that have no N64 equivalent
         if (isSkippedVariable(name)) {
@@ -102,8 +108,8 @@ class N64CEmitter {
         }
         // Check special identifiers
         return switch (name) {
-            case "this": "obj";
-            case "object": "obj";
+            case "this": "((ArmObject*)obj)";
+            case "object": "((ArmObject*)obj)";
             case "true": "true";
             case "false": "false";
             case "null": "NULL";
@@ -282,7 +288,7 @@ class N64CEmitter {
         if (base == "object" && field == "transform") {
             needsObj = true;
             hasTransform = true;
-            return "obj->transform";  // This returns pointer-style, but we need to handle method calls specially
+            return "((ArmObject*)obj)->transform";
         }
 
         // General field access
@@ -290,14 +296,14 @@ class N64CEmitter {
 
         // Detect if we need -> or .
         // Rules:
-        // - obj-> (obj is pointer to ArmObject)
-        // - tdata-> (tdata is pointer to trait data)
-        // - obj->transform. (transform is embedded struct, not pointer)
-        // - After any struct access, use .
-        if (baseCode == "obj" || baseCode == "tdata") {
+        // - Use -> only directly after a pointer cast: ((Type*)ptr)->field
+        // - After any struct member access (contains ->field or .field), use .
+        // - Struct members like currentScale, transform are accessed with .
+        var isDirectPointerCast = (baseCode == "((ArmObject*)obj)" || baseCode == '((${traitName}Data*)data)');
+        if (isDirectPointerCast) {
             return '$baseCode->$field';
         }
-        // Everything else uses . (including obj->transform.field)
+        // Everything else uses . (including chained access like data->currentScale.y)
         return '$baseCode.$field';
     }
 
@@ -339,9 +345,9 @@ class N64CEmitter {
         // Get the sub-field chain
         var chain = getFieldChain(e);
 
-        // transform.loc -> obj->transform.pos
-        // transform.rot -> obj->transform.rot
-        // transform.scale -> obj->transform.scale
+        // transform.loc -> ((ArmObject*)obj)->transform.pos
+        // transform.rot -> ((ArmObject*)obj)->transform.rot
+        // transform.scale -> ((ArmObject*)obj)->transform.scale
         if (chain.length >= 1) {
             var prop = chain[chain.length - 1];
             var cProp = switch (prop) {
@@ -359,10 +365,10 @@ class N64CEmitter {
                 default: '.$field';
             };
 
-            return 'obj->transform.$cProp$axis';
+            return '((ArmObject*)obj)->transform.$cProp$axis';
         }
 
-        return 'obj->transform.$field';
+        return '((ArmObject*)obj)->transform.$field';
     }
 
     /**
@@ -544,7 +550,7 @@ class N64CEmitter {
             case "translate", "move":
                 return emitTranslate(params);
             case "buildMatrix":
-                return "obj->transform.dirty = 3";
+                return "((ArmObject*)obj)->transform.dirty = 3";
             default:
                 return '/* transform.$method unsupported */';
         }
@@ -567,7 +573,7 @@ class N64CEmitter {
         var axisIndex = axisInfo.index;
         var sign = axisInfo.negative ? "-" : "";
 
-        return 'obj->transform.rot[$axisIndex] += $sign($angleCode); obj->transform.dirty = 3';
+        return '((ArmObject*)obj)->transform.rot[$axisIndex] += $sign($angleCode); ((ArmObject*)obj)->transform.dirty = 3';
     }
 
     /**
@@ -636,12 +642,12 @@ class N64CEmitter {
                         var y = emitExpr(args[1]);
                         var z = emitExpr(args[2]);
                         // Blender (x,y,z) -> N64 (x,z,-y)
-                        return 'it_translate(&obj->transform, $x, $z, -($y))';
+                        return 'it_translate(&((ArmObject*)obj)->transform, $x, $z, -($y))';
                     }
                 default:
             }
             var v = emitExpr(vec);
-            return 'it_translate(&obj->transform, $v.x, $v.z, -($v.y))';
+            return 'it_translate(&((ArmObject*)obj)->transform, $v.x, $v.z, -($v.y))';
         }
 
         // Three separate arguments (already x, y, z)
@@ -650,7 +656,7 @@ class N64CEmitter {
             var y = emitExpr(params[1]);
             var z = emitExpr(params[2]);
             // Blender (x,y,z) -> N64 (x,z,-y)
-            return 'it_translate(&obj->transform, $x, $z, -($y))';
+            return 'it_translate(&((ArmObject*)obj)->transform, $x, $z, -($y))';
         }
 
         return "/* translate: unsupported params */";
@@ -666,18 +672,18 @@ class N64CEmitter {
             case "setActive":
                 if (params.length > 0) {
                     var sceneExpr = params[0];
-                    // Extract scene name and generate enum
+                    // Extract scene name - if hardcoded, use target_scene member
                     var sceneName = extractSceneName(sceneExpr);
                     if (sceneName != null) {
                         targetScene = sceneName;
-                        var sceneEnum = 'SCENE_${sceneName.toUpperCase()}';
-                        return 'scene_switch_to($sceneEnum)';
+                        // Use target_scene member (will be added by macro)
+                        return 'scene_switch_to(((${traitName}Data*)data)->target_scene)';
                     }
                     // Check if it's a member variable (stored as SceneId)
                     var memberName = getMemberName(sceneExpr);
                     if (memberName != null && memberNames.exists(memberName)) {
                         // Member variable - should be SceneId type
-                        return 'scene_switch_to(tdata->$memberName)';
+                        return 'scene_switch_to(((${traitName}Data*)data)->$memberName)';
                     }
                     // Fallback: emit the expression
                     var sceneId = emitExpr(sceneExpr);

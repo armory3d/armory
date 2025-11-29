@@ -111,7 +111,6 @@ class N64TraitMacro {
                 name: ir.name,
                 needs_data: ir.needs_data,
                 members: membersObj,
-                target_scene: ir.target_scene,
                 init: ir.initCode,
                 update: ir.updateCode,
                 remove: ir.removeCode,
@@ -128,9 +127,6 @@ class N64TraitMacro {
             }
             anyTransform = anyTransform || ir.hasTransform;
             anyScene = anyScene || ir.hasScene;
-            if (ir.target_scene != null && !Lambda.has(sceneNames, ir.target_scene)) {
-                sceneNames.push(ir.target_scene);
-            }
         }
 
         var output:Dynamic = {
@@ -174,7 +170,6 @@ typedef TraitIR = {
     name:String,
     needs_data:Bool,
     members:Map<String, MemberIR>,       // name -> {type, default}
-    target_scene:String,                  // Resolved scene name or null
     initCode:Array<String>,
     updateCode:Array<String>,
     removeCode:Array<String>,
@@ -236,7 +231,6 @@ class TraitExtractor {
         var inputButtons:Array<String> = [];
         var hasTransform = false;
         var hasScene = false;
-        var targetScene:String = null;
 
         if (lifecycles.init != null) {
             var result = emitFunction(lifecycles.init);
@@ -246,7 +240,12 @@ class TraitExtractor {
             for (btn in result.inputButtons) if (!Lambda.has(inputButtons, btn)) inputButtons.push(btn);
             hasTransform = hasTransform || result.hasTransform;
             hasScene = hasScene || result.hasScene;
-            if (result.targetScene != null) targetScene = result.targetScene;
+            // Add hardcoded scene as a member
+            if (result.targetScene != null) {
+                var sceneEnum = 'SCENE_${result.targetScene.toUpperCase()}';
+                members.set("target_scene", {type: "SceneId", default_value: sceneEnum});
+                if (!Lambda.has(memberNames, "target_scene")) memberNames.push("target_scene");
+            }
         }
 
         if (lifecycles.update != null) {
@@ -257,7 +256,12 @@ class TraitExtractor {
             for (btn in result.inputButtons) if (!Lambda.has(inputButtons, btn)) inputButtons.push(btn);
             hasTransform = hasTransform || result.hasTransform;
             hasScene = hasScene || result.hasScene;
-            if (result.targetScene != null) targetScene = result.targetScene;
+            // Add hardcoded scene as a member
+            if (result.targetScene != null) {
+                var sceneEnum = 'SCENE_${result.targetScene.toUpperCase()}';
+                members.set("target_scene", {type: "SceneId", default_value: sceneEnum});
+                if (!Lambda.has(memberNames, "target_scene")) memberNames.push("target_scene");
+            }
         }
 
         if (lifecycles.remove != null) {
@@ -268,17 +272,21 @@ class TraitExtractor {
             for (btn in result.inputButtons) if (!Lambda.has(inputButtons, btn)) inputButtons.push(btn);
             hasTransform = hasTransform || result.hasTransform;
             hasScene = hasScene || result.hasScene;
-            if (result.targetScene != null) targetScene = result.targetScene;
+            // Add hardcoded scene as a member
+            if (result.targetScene != null) {
+                var sceneEnum = 'SCENE_${result.targetScene.toUpperCase()}';
+                members.set("target_scene", {type: "SceneId", default_value: sceneEnum});
+                if (!Lambda.has(memberNames, "target_scene")) memberNames.push("target_scene");
+            }
         }
 
         // Determine if trait needs per-instance data
-        var needsData = memberNames.length > 0 || targetScene != null;
+        var needsData = memberNames.length > 0;
 
         return {
             name: className,
             needs_data: needsData,
             members: members,
-            target_scene: targetScene,
             initCode: initCode,
             updateCode: updateCode,
             removeCode: removeCode,
@@ -480,7 +488,7 @@ class TraitExtractor {
      * Emit a function body as C code
      */
     function emitFunction(body:Expr):{code:Array<String>, needsObj:Bool, needsDt:Bool, inputButtons:Array<String>, hasTransform:Bool, hasScene:Bool, targetScene:String} {
-        var emitter = new N64CEmitter(memberNames);
+        var emitter = new N64CEmitter(className, memberNames);
         var code:Array<String> = [];
 
         // Process statements
