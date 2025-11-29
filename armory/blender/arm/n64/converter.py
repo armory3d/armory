@@ -93,5 +93,10 @@ def convert_scene_data(scene_data: dict) -> dict:
             # Scale includes factor
             raw_scale = _apply_swizzle(obj['scale'], scale_cfg)
             obj['scale'] = [s * scale_factor for s in raw_scale]
+            # Convert bounding sphere center (local space offset)
+            if 'bounds_center' in obj:
+                obj['bounds_center'] = _apply_swizzle(obj['bounds_center'], pos_cfg)
+                # Radius is scalar but needs scale factor applied
+                obj['bounds_radius'] = obj['bounds_radius'] * scale_factor
 
     return scene_data

@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <libdragon.h>
 #include <t3d/t3d.h>
+#include <t3d/t3dmath.h>
 #include <t3d/t3dmodel.h>
 
 #include "types.h"
@@ -71,15 +72,37 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
         t3d_light_set_directional(i, l->color, &l->dir);
     }
 
-    // TODO: Frustum culling - skip objects outside camera view
+    // Frustum culling - get camera's view frustum
+    const T3DFrustum *frustum = &viewport->viewFrustum;
+
     // TODO: Sectors/portals - for indoor environments, only render visible rooms
-    // These optimizations are essential for larger N64 games
+    int visible_count = 0;
     t3d_matrix_push_pos(1);
     for (uint16_t i = 0; i < scene->object_count; i++) {
         ArmObject *obj = &scene->objects[i];
         if (!obj->visible) {
             continue;
         }
+
+        // Frustum culling: compute world-space bounding sphere center
+        T3DVec3 world_center = {{
+            obj->transform.loc[0] + obj->bounds_center.v[0],
+            obj->transform.loc[1] + obj->bounds_center.v[1],
+            obj->transform.loc[2] + obj->bounds_center.v[2]
+        }};
+
+        // Scale radius by max object scale
+        float max_scale = obj->transform.scale[0];
+        if (obj->transform.scale[1] > max_scale) max_scale = obj->transform.scale[1];
+        if (obj->transform.scale[2] > max_scale) max_scale = obj->transform.scale[2];
+        float world_radius = obj->bounds_radius * max_scale;
+
+        // Skip objects outside camera frustum
+        if (!t3d_frustum_vs_sphere(frustum, &world_center, world_radius)) {
+            continue;
+        }
+
+        visible_count++;
         t3d_matrix_set(&obj->model_mat[frameIdx], true);
         rspq_block_run(obj->dpl);
     }
@@ -87,8 +110,10 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
 
     // ======== Draw (2D) ======== //
     rdpq_sync_pipe();
-	// TODO: set to `renderer.c.j2` and enable/disable FPS debug via Blender
+
+#ifdef ARM_DEBUG_HUD
     rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 200, 220, "FPS: %.2f", display_get_fps());
+    rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 200, 230, "Obj: %d/%d", visible_count, scene->object_count);
 
     // Input debug
     rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 10, 10, "Stick: %.2f, %.2f", input_stick_x(), input_stick_y());
@@ -100,6 +125,7 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
         input_down(N64_BTN_DUP), input_down(N64_BTN_DDOWN), input_down(N64_BTN_DLEFT), input_down(N64_BTN_DRIGHT),
         input_down(N64_BTN_CUP), input_down(N64_BTN_CDOWN), input_down(N64_BTN_CLEFT), input_down(N64_BTN_CRIGHT));
     rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 10, 40, "L:%d R:%d", input_down(N64_BTN_L), input_down(N64_BTN_R));
+#endif
 
     rdpq_detach_show();
 }

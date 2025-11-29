@@ -10,7 +10,7 @@
 extern "C" {{
 #endif
 
-#define FB_COUNT 3
+#define FB_COUNT 3 {debug_hud_define}
 
 // Simple Vec3 type for trait data
 typedef struct {{
@@ -43,6 +43,10 @@ typedef struct ArmObject {{
     T3DMat4FP *model_mat;
 
     bool visible;
+
+    // Bounding sphere for frustum culling (local space, pre-scaled)
+    T3DVec3 bounds_center;  // Center offset from origin
+    float bounds_radius;    // Radius (already multiplied by max scale)
 
     uint8_t trait_count;
     ArmTrait *traits;

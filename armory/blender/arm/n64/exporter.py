@@ -217,6 +217,26 @@ class N64Exporter:
                 # Euler from matrix for consistent rotation handling
                 euler = obj.matrix_world.to_quaternion().to_euler('YZX')
 
+                # Compute bounding sphere from mesh's bounding box (local space)
+                # bound_box is 8 corners of the AABB in local coordinates
+                bb = obj.bound_box
+                min_corner = [min(v[i] for v in bb) for i in range(3)]
+                max_corner = [max(v[i] for v in bb) for i in range(3)]
+                bounds_center = [
+                    (min_corner[0] + max_corner[0]) * 0.5,
+                    (min_corner[1] + max_corner[1]) * 0.5,
+                    (min_corner[2] + max_corner[2]) * 0.5
+                ]
+                # Radius is distance from center to corner
+                half_extents = [
+                    (max_corner[0] - min_corner[0]) * 0.5,
+                    (max_corner[1] - min_corner[1]) * 0.5,
+                    (max_corner[2] - min_corner[2]) * 0.5
+                ]
+                bounds_radius = math.sqrt(
+                    half_extents[0]**2 + half_extents[1]**2 + half_extents[2]**2
+                )
+
                 # Extract traits from object with their per-instance property values
                 obj_traits = []
                 if hasattr(obj, 'arm_traitlist'):
@@ -236,6 +256,8 @@ class N64Exporter:
                     "rot": [euler.x, euler.y, euler.z],
                     "scale": list(obj.scale),
                     "visible": not obj.hide_render,
+                    "bounds_center": bounds_center,
+                    "bounds_radius": bounds_radius,
                     "traits": obj_traits
                 })
 
@@ -267,13 +289,15 @@ class N64Exporter:
 
 
     def write_types(self):
+        wrd = bpy.data.worlds['Arm']
         tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'types.h.j2')
         out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'types.h')
 
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
 
-        output = tmpl_content.format()
+        debug_hud_define = '\n#define ARM_DEBUG_HUD' if wrd.arm_debug_console else ''
+        output = tmpl_content.format(debug_hud_define=debug_hud_define)
 
         with open(out_path, 'w', encoding='utf-8') as f:
             f.write(output)
@@ -437,6 +461,11 @@ class N64Exporter:
             object_block_lines.append(f'    objects[{i}].dpl = models_get_dpl({object["mesh"]});')
             object_block_lines.append(f'    objects[{i}].model_mat = malloc_uncached(sizeof(T3DMat4FP) * FB_COUNT);')
             object_block_lines.append(f'    objects[{i}].visible = {str(object["visible"]).lower()};')
+            # Bounding sphere for frustum culling
+            bc = object.get("bounds_center", [0, 0, 0])
+            br = object.get("bounds_radius", 1.0)
+            object_block_lines.append(f'    objects[{i}].bounds_center = (T3DVec3){{{{ {bc[0]:.6f}f, {bc[1]:.6f}f, {bc[2]:.6f}f }}}};')
+            object_block_lines.append(f'    objects[{i}].bounds_radius = {br:.6f}f;')
 
             # Trait assignments
             traits = object.get("traits", [])
