@@ -142,6 +142,13 @@ class N64CEmitter {
      * Emit binary operation
      */
     function emitBinop(op:Binop, e1:Expr, e2:Expr):String {
+        // Check for transform.scale/loc/rot = new Vec4(...) pattern BEFORE emitExpr
+        // because ENew falls through to "unsupported expr"
+        if (op == OpAssign) {
+            var scaleAssign = tryEmitScaleAssign(e1, e2);
+            if (scaleAssign != null) return scaleAssign;
+        }
+
         var left = emitExpr(e1);
         var right = emitExpr(e2);
 
@@ -214,12 +221,60 @@ class N64CEmitter {
     }
 
     /**
+     * Handle: object.transform.scale = new Vec4(x, y, z)
+     * Converts to: it_set_scale(&transform, x * SCALE_FACTOR, y * SCALE_FACTOR, z * SCALE_FACTOR)
+     * The scale factor (0.015) is applied because Blender Vec4 values are in Blender units
+     * but N64 transform scale is already in N64 units (pre-multiplied by 0.015)
+     */
+    function tryEmitScaleAssign(lhs:Expr, rhs:Expr):Null<String> {
+        // LHS must end with .scale, .loc, or .rot on a transform
+        var chain = getFieldChain(lhs);
+        if (chain.length < 3) return null;
+
+        // Look for ["object"|"this", "transform", "scale"|"loc"|"rot"]
+        var lastTwo = [chain[chain.length - 2], chain[chain.length - 1]];
+        if (lastTwo[0] != "transform") return null;
+
+        var prop = lastTwo[1];
+        if (prop != "scale" && prop != "loc" && prop != "rot") return null;
+
+        // RHS must be new Vec4(x, y, z)
+        switch (rhs.expr) {
+            case ENew(tp, params):
+                if (tp.name != "Vec4" || params.length < 3) return null;
+
+                var x = emitExpr(params[0]);
+                var y = emitExpr(params[1]);
+                var z = emitExpr(params[2]);
+
+                if (x == "" || y == "" || z == "") return null;
+
+                needsObj = true;
+                hasTransform = true;
+
+                var fn = 'it_set_$prop';
+
+                if (prop == "scale") {
+                    // Scale values from Haxe are in Blender units (1.0 = normal size)
+                    // N64 transform scale is already multiplied by 0.015 during export
+                    // So we need to apply the same factor here
+                    return '$fn(&((ArmObject*)obj)->transform, ($x) * 0.015f, ($y) * 0.015f, ($z) * 0.015f)';
+                } else {
+                    // loc/rot don't need scale factor (handled elsewhere)
+                    return '$fn(&((ArmObject*)obj)->transform, $x, $y, $z)';
+                }
+
+            default:
+                return null;
+        }
+    }
+
+    /**
      * Check if a string is a zero literal (0, 0.0, 0.0f)
      */
     function isZeroLiteral(s:String):Bool {
         return s == "0" || s == "0.0" || s == "0.0f";
     }
-
     /**
      * Check if a string is an input function call (input_down, input_started, input_released)
      */
@@ -494,7 +549,6 @@ class N64CEmitter {
         // Fallback
         return '/* unsupported API: $apiKey */';
     }
-
     /**
      * Emit gamepad input call
      */
@@ -549,11 +603,38 @@ class N64CEmitter {
                 return emitRotate(params);
             case "translate", "move":
                 return emitTranslate(params);
+            case "scale":
+                return emitScale(params);
             case "buildMatrix":
                 return "((ArmObject*)obj)->transform.dirty = 3";
             default:
                 return '/* transform.$method unsupported */';
         }
+    }
+
+    /**
+     * Emit scale call with coordinate conversion
+     */
+    function emitScale(params:Array<Expr>):String {
+        if (params.length == 0) return "/* scale needs args */";
+
+        var first = params[0];
+        switch (first.expr) {
+            case EConst(CFloat(_)), EConst(CInt(_)):
+                // scale(x, y, z)
+                if (params.length >= 3) {
+                    var x = emitExpr(params[0]);
+                    var y = emitExpr(params[1]);
+                    var z = emitExpr(params[2]);
+                    // Scale: swap Y and Z (no negation needed for scale)
+                    return 'it_set_scale(&((ArmObject*)obj)->transform, $x, $z, $y)';
+                }
+            default:
+                // scale(vec) - assume Vec4-like with x, y, z fields
+                var v = emitExpr(first);
+                return 'it_set_scale(&((ArmObject*)obj)->transform, $v.x, $v.z, $v.y)';
+        }
+        return "/* scale: unsupported params */";
     }
 
     /**
