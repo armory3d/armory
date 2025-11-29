@@ -424,100 +424,44 @@ class N64Exporter:
 
         camera_block_lines = []
         for i, camera in enumerate(self.scene_data[scene_name]['cameras']):
-            camera_block_lines.append(f'    cameras[{i}].transform.loc[0] = {camera["pos"][0]:.6f}f;')
-            camera_block_lines.append(f'    cameras[{i}].transform.loc[1] = {camera["pos"][1]:.6f}f;')
-            camera_block_lines.append(f'    cameras[{i}].transform.loc[2] = {camera["pos"][2]:.6f}f;')
-            camera_block_lines.append(f'    cameras[{i}].target = (T3DVec3){{{{{camera["target"][0]:.6f}f, {camera["target"][1]:.6f}f, {camera["target"][2]:.6f}f}}}};')
-            camera_block_lines.append(f'    cameras[{i}].fov = {camera["fov"]:.6f}f;')
-            camera_block_lines.append(f'    cameras[{i}].near = {camera["near"]:.6f}f;')
-            camera_block_lines.append(f'    cameras[{i}].far = {camera["far"]:.6f}f;')
-            camera_block_lines.append(f'    cameras[{i}].trait_count = 0;')
-            camera_block_lines.append(f'    cameras[{i}].traits = NULL;')
+            prefix = f'cameras[{i}]'
+            camera_block_lines.extend(codegen.generate_transform_block(prefix, camera["pos"]))
+            camera_block_lines.append(f'    {prefix}.target = (T3DVec3){{{{{camera["target"][0]:.6f}f, {camera["target"][1]:.6f}f, {camera["target"][2]:.6f}f}}}};')
+            camera_block_lines.append(f'    {prefix}.fov = {camera["fov"]:.6f}f;')
+            camera_block_lines.append(f'    {prefix}.near = {camera["near"]:.6f}f;')
+            camera_block_lines.append(f'    {prefix}.far = {camera["far"]:.6f}f;')
+            camera_block_lines.extend(codegen.generate_trait_block(prefix, camera.get("traits", []), self.trait_info, scene_name))
         cameras_block = '\n'.join(camera_block_lines)
 
         light_block_lines = []
         for i, light in enumerate(self.scene_data[scene_name]['lights']):
-            light_block_lines.append(f'    lights[{i}].color[0] = {n64_utils.to_uint8(light["color"][0])};')
-            light_block_lines.append(f'    lights[{i}].color[1] = {n64_utils.to_uint8(light["color"][1])};')
-            light_block_lines.append(f'    lights[{i}].color[2] = {n64_utils.to_uint8(light["color"][2])};')
-            light_block_lines.append(f'    lights[{i}].dir = (T3DVec3){{{{{light["dir"][0]:.6f}f, {light["dir"][1]:.6f}f, {light["dir"][2]:.6f}f}}}};')
-            light_block_lines.append(f'    lights[{i}].trait_count = 0;')
-            light_block_lines.append(f'    lights[{i}].traits = NULL;')
+            prefix = f'lights[{i}]'
+            light_block_lines.append(f'    {prefix}.color[0] = {n64_utils.to_uint8(light["color"][0])};')
+            light_block_lines.append(f'    {prefix}.color[1] = {n64_utils.to_uint8(light["color"][1])};')
+            light_block_lines.append(f'    {prefix}.color[2] = {n64_utils.to_uint8(light["color"][2])};')
+            light_block_lines.append(f'    {prefix}.dir = (T3DVec3){{{{{light["dir"][0]:.6f}f, {light["dir"][1]:.6f}f, {light["dir"][2]:.6f}f}}}};')
+            light_block_lines.extend(codegen.generate_trait_block(prefix, light.get("traits", []), self.trait_info, scene_name))
         lights_block = '\n'.join(light_block_lines)
 
         object_block_lines = []
-        for i, object in enumerate(self.scene_data[scene_name]['objects']):
-            object_block_lines.append(f'    objects[{i}].transform.loc[0] = {object["pos"][0]:.6f}f;')
-            object_block_lines.append(f'    objects[{i}].transform.loc[1] = { object["pos"][1]:.6f}f;')
-            object_block_lines.append(f'    objects[{i}].transform.loc[2] = {object["pos"][2]:.6f}f;')
-            object_block_lines.append(f'    objects[{i}].transform.rot[0] = {object["rot"][0]:.6f}f;')
-            object_block_lines.append(f'    objects[{i}].transform.rot[1] = {object["rot"][1]:.6f}f;')
-            object_block_lines.append(f'    objects[{i}].transform.rot[2] = {object["rot"][2]:.6f}f;')
-            object_block_lines.append(f'    objects[{i}].transform.scale[0] = {object["scale"][0]:.6f}f;')
-            object_block_lines.append(f'    objects[{i}].transform.scale[1] = {object["scale"][1]:.6f}f;')
-            object_block_lines.append(f'    objects[{i}].transform.scale[2] = {object["scale"][2]:.6f}f;')
-            object_block_lines.append(f'    objects[{i}].transform.dirty = FB_COUNT;')
-            object_block_lines.append(f'    models_get({object["mesh"]});')
-            object_block_lines.append(f'    objects[{i}].dpl = models_get_dpl({object["mesh"]});')
-            object_block_lines.append(f'    objects[{i}].model_mat = malloc_uncached(sizeof(T3DMat4FP) * FB_COUNT);')
-            object_block_lines.append(f'    objects[{i}].visible = {str(object["visible"]).lower()};')
+        for i, obj in enumerate(self.scene_data[scene_name]['objects']):
+            prefix = f'objects[{i}]'
+            object_block_lines.extend(codegen.generate_transform_block(prefix, obj["pos"], obj["rot"], obj["scale"]))
+            object_block_lines.append(f'    models_get({obj["mesh"]});')
+            object_block_lines.append(f'    {prefix}.dpl = models_get_dpl({obj["mesh"]});')
+            object_block_lines.append(f'    {prefix}.model_mat = malloc_uncached(sizeof(T3DMat4FP) * FB_COUNT);')
+            object_block_lines.append(f'    {prefix}.visible = {str(obj["visible"]).lower()};')
             # Bounding sphere for frustum culling
-            bc = object.get("bounds_center", [0, 0, 0])
-            br = object.get("bounds_radius", 1.0)
-            object_block_lines.append(f'    objects[{i}].bounds_center = (T3DVec3){{{{ {bc[0]:.6f}f, {bc[1]:.6f}f, {bc[2]:.6f}f }}}};')
-            object_block_lines.append(f'    objects[{i}].bounds_radius = {br:.6f}f;')
-
-            # Trait assignments
-            traits = object.get("traits", [])
-            object_block_lines.append(f'    objects[{i}].trait_count = {len(traits)};')
-            if len(traits) > 0:
-                object_block_lines.append(f'    objects[{i}].traits = malloc(sizeof(ArmTrait) * {len(traits)});')
-                for t_idx, trait in enumerate(traits):
-                    trait_class = trait["class_name"]
-                    trait_func_name = arm.utils.safesrc(trait_class).lower()
-                    object_block_lines.append(f'    objects[{i}].traits[{t_idx}].on_ready = {trait_func_name}_on_ready;')
-                    object_block_lines.append(f'    objects[{i}].traits[{t_idx}].on_update = {trait_func_name}_on_update;')
-                    object_block_lines.append(f'    objects[{i}].traits[{t_idx}].on_remove = {trait_func_name}_on_remove;')
-
-                    # Object traits need per-instance data (malloc + initialize with instance props)
-                    if n64_utils.trait_needs_data(self.trait_info, trait_class):
-                        struct_name = f'{trait_class}Data'
-                        instance_props = trait.get("props", {})
-                        initializer = n64_utils.build_trait_initializer(self.trait_info, trait_class, scene_name, instance_props)
-                        object_block_lines.append(f'    objects[{i}].traits[{t_idx}].data = malloc(sizeof({struct_name}));')
-                        object_block_lines.append(f'    *({struct_name}*)objects[{i}].traits[{t_idx}].data = ({struct_name}){{{initializer}}};')
-                    else:
-                        object_block_lines.append(f'    objects[{i}].traits[{t_idx}].data = NULL;')
-            else:
-                object_block_lines.append(f'    objects[{i}].traits = NULL;')
+            bc = obj.get("bounds_center", [0, 0, 0])
+            br = obj.get("bounds_radius", 1.0)
+            object_block_lines.append(f'    {prefix}.bounds_center = (T3DVec3){{{{ {bc[0]:.6f}f, {bc[1]:.6f}f, {bc[2]:.6f}f }}}};')
+            object_block_lines.append(f'    {prefix}.bounds_radius = {br:.6f}f;')
+            object_block_lines.extend(codegen.generate_trait_block(prefix, obj.get("traits", []), self.trait_info, scene_name))
         objects_block = '\n'.join(object_block_lines)
 
         # Generate scene trait assignments
         scene_traits = self.scene_data[scene_name].get('traits', [])
-        scene_traits_block_lines = []
-
-        if len(scene_traits) > 0:
-            scene_traits_block_lines.append(f'    scene->traits = malloc(sizeof(ArmTrait) * {len(scene_traits)});')
-            for t_idx, trait in enumerate(scene_traits):
-                trait_class = trait["class_name"]
-                trait_func_name = arm.utils.safesrc(trait_class).lower()
-                scene_traits_block_lines.append(f'    scene->traits[{t_idx}].on_ready = {trait_func_name}_on_ready;')
-                scene_traits_block_lines.append(f'    scene->traits[{t_idx}].on_update = {trait_func_name}_on_update;')
-                scene_traits_block_lines.append(f'    scene->traits[{t_idx}].on_remove = {trait_func_name}_on_remove;')
-
-                # Scene traits need per-scene data (malloc + initialize)
-                if n64_utils.trait_needs_data(self.trait_info, trait_class):
-                    struct_name = f'{trait_class}Data'
-                    instance_props = trait.get("props", {})
-                    initializer = n64_utils.build_trait_initializer(self.trait_info, trait_class, scene_name, instance_props)
-                    # Allocate and initialize per-scene trait data
-                    scene_traits_block_lines.append(f'    scene->traits[{t_idx}].data = malloc(sizeof({struct_name}));')
-                    scene_traits_block_lines.append(f'    *({struct_name}*)scene->traits[{t_idx}].data = ({struct_name}){{{initializer}}};')
-                else:
-                    scene_traits_block_lines.append(f'    scene->traits[{t_idx}].data = NULL;')
-        else:
-            scene_traits_block_lines.append(f'    scene->traits = NULL;')
-
+        scene_traits_block_lines = codegen.generate_trait_block('(*scene)', scene_traits, self.trait_info, scene_name)
         scene_traits_block = '\n'.join(scene_traits_block_lines)
 
         output = tmpl_content.format(
@@ -669,16 +613,13 @@ class N64Exporter:
 
 
     def build(self):
-        # Get list of valid Blender scene names first (in order)
-        self.blender_scenes = [arm.utils.safesrc(s.name).lower() for s in bpy.data.scenes if not s.library]
-        log.info(f"Blender scenes: {self.blender_scenes}")
-
-        # Create scene index map for determining "next scene"
-        self.scene_index = {name: idx for idx, name in enumerate(self.blender_scenes)}
-
         # Step 1: Load trait metadata from macro-generated JSON
         log.info('Loading trait metadata from Haxe macro...')
         self.trait_info = codegen.get_trait_info()
+
+        # Get list of valid Blender scene names for validation
+        blender_scenes = [arm.utils.safesrc(s.name).lower() for s in bpy.data.scenes if not s.library]
+        log.info(f"Blender scenes: {blender_scenes}")
 
         if not self.trait_info.get('traits'):
             log.warn("No traits found in macro JSON. Make sure to compile with arm_target_n64 defined.")
@@ -693,10 +634,10 @@ class N64Exporter:
 
                 # Validate detected scene names against Blender scenes
                 literal_scenes = [s for s in scene_names if not s.startswith('member:')]
-                invalid_scenes = [s for s in literal_scenes if s not in self.blender_scenes and s != 'unknown']
+                invalid_scenes = [s for s in literal_scenes if s not in blender_scenes and s != 'unknown']
                 if invalid_scenes:
                     log.warn(f"Invalid scene names detected: {invalid_scenes}")
-                    log.warn(f"Valid scene names are: {self.blender_scenes}")
+                    log.warn(f"Valid scene names are: {blender_scenes}")
                     log.warn("Scene switching may use wrong scene IDs. Check your Haxe trait code.")
 
         # Step 2: Convert materials for N64

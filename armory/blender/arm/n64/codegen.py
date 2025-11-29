@@ -238,3 +238,53 @@ def write_traits_files():
     c_path = os.path.join(data_dir, "traits.c")
     with open(c_path, 'w') as f:
         f.write(fill_traits_c_template(traits))
+
+
+# ============================================
+# Scene initialization code generators
+# ============================================
+
+def generate_transform_block(prefix: str, pos: list, rot: list = None, scale: list = None) -> list:
+    """Generate C code lines for transform initialization."""
+    lines = []
+    lines.append(f'    {prefix}.transform.loc[0] = {pos[0]:.6f}f;')
+    lines.append(f'    {prefix}.transform.loc[1] = {pos[1]:.6f}f;')
+    lines.append(f'    {prefix}.transform.loc[2] = {pos[2]:.6f}f;')
+    if rot is not None:
+        lines.append(f'    {prefix}.transform.rot[0] = {rot[0]:.6f}f;')
+        lines.append(f'    {prefix}.transform.rot[1] = {rot[1]:.6f}f;')
+        lines.append(f'    {prefix}.transform.rot[2] = {rot[2]:.6f}f;')
+    if scale is not None:
+        lines.append(f'    {prefix}.transform.scale[0] = {scale[0]:.6f}f;')
+        lines.append(f'    {prefix}.transform.scale[1] = {scale[1]:.6f}f;')
+        lines.append(f'    {prefix}.transform.scale[2] = {scale[2]:.6f}f;')
+        lines.append(f'    {prefix}.transform.dirty = FB_COUNT;')
+    return lines
+
+
+def generate_trait_block(prefix: str, traits: list, trait_info: dict, scene_name: str) -> list:
+    """Generate C code lines for trait initialization."""
+    from arm.n64 import utils as n64_utils
+
+    lines = []
+    lines.append(f'    {prefix}.trait_count = {len(traits)};')
+    if len(traits) > 0:
+        lines.append(f'    {prefix}.traits = malloc(sizeof(ArmTrait) * {len(traits)});')
+        for t_idx, trait in enumerate(traits):
+            trait_class = trait["class_name"]
+            trait_func_name = arm.utils.safesrc(trait_class).lower()
+            lines.append(f'    {prefix}.traits[{t_idx}].on_ready = {trait_func_name}_on_ready;')
+            lines.append(f'    {prefix}.traits[{t_idx}].on_update = {trait_func_name}_on_update;')
+            lines.append(f'    {prefix}.traits[{t_idx}].on_remove = {trait_func_name}_on_remove;')
+
+            if n64_utils.trait_needs_data(trait_info, trait_class):
+                struct_name = f'{trait_class}Data'
+                instance_props = trait.get("props", {})
+                initializer = n64_utils.build_trait_initializer(trait_info, trait_class, scene_name, instance_props)
+                lines.append(f'    {prefix}.traits[{t_idx}].data = malloc(sizeof({struct_name}));')
+                lines.append(f'    *({struct_name}*){prefix}.traits[{t_idx}].data = ({struct_name}){{{initializer}}};')
+            else:
+                lines.append(f'    {prefix}.traits[{t_idx}].data = NULL;')
+    else:
+        lines.append(f'    {prefix}.traits = NULL;')
+    return lines
