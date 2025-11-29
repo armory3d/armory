@@ -233,6 +233,7 @@ class TraitExtractor {
         var inputButtons:Array<String> = [];
         var hasTransform = false;
         var hasScene = false;
+        var needsInitialScale = false;
 
         if (lifecycles.init != null) {
             var result = emitFunction(lifecycles.init);
@@ -242,6 +243,7 @@ class TraitExtractor {
             for (btn in result.inputButtons) if (!Lambda.has(inputButtons, btn)) inputButtons.push(btn);
             hasTransform = hasTransform || result.hasTransform;
             hasScene = hasScene || result.hasScene;
+            needsInitialScale = needsInitialScale || result.needsInitialScale;
             // Add hardcoded scene as a member
             if (result.targetScene != null) {
                 var sceneEnum = 'SCENE_${result.targetScene.toUpperCase()}';
@@ -258,6 +260,7 @@ class TraitExtractor {
             for (btn in result.inputButtons) if (!Lambda.has(inputButtons, btn)) inputButtons.push(btn);
             hasTransform = hasTransform || result.hasTransform;
             hasScene = hasScene || result.hasScene;
+            needsInitialScale = needsInitialScale || result.needsInitialScale;
             // Add hardcoded scene as a member
             if (result.targetScene != null) {
                 var sceneEnum = 'SCENE_${result.targetScene.toUpperCase()}';
@@ -274,12 +277,23 @@ class TraitExtractor {
             for (btn in result.inputButtons) if (!Lambda.has(inputButtons, btn)) inputButtons.push(btn);
             hasTransform = hasTransform || result.hasTransform;
             hasScene = hasScene || result.hasScene;
+            needsInitialScale = needsInitialScale || result.needsInitialScale;
             // Add hardcoded scene as a member
             if (result.targetScene != null) {
                 var sceneEnum = 'SCENE_${result.targetScene.toUpperCase()}';
                 members.set("target_scene", {type: "SceneId", default_value: sceneEnum});
                 if (!Lambda.has(memberNames, "target_scene")) memberNames.push("target_scene");
             }
+        }
+
+        // If scale assignment is used, add _initialScale member and init code
+        if (needsInitialScale) {
+            members.set("_initialScale", {type: "Vec3", default_value: "{1, 1, 1}"});
+            if (!Lambda.has(memberNames, "_initialScale")) memberNames.push("_initialScale");
+            // Add init code to capture object's initial scale (semicolon included)
+            var captureCode = '((' + className + 'Data*)data)->_initialScale = (Vec3){((ArmObject*)obj)->transform.scale[0], ((ArmObject*)obj)->transform.scale[1], ((ArmObject*)obj)->transform.scale[2]};';
+            initCode.insert(0, captureCode);
+            needsObj = true;  // Need obj to read initial scale
         }
 
         // Determine if trait needs per-instance data
@@ -494,7 +508,7 @@ class TraitExtractor {
     /**
      * Emit a function body as C code
      */
-    function emitFunction(body:Expr):{code:Array<String>, needsObj:Bool, needsDt:Bool, inputButtons:Array<String>, hasTransform:Bool, hasScene:Bool, targetScene:String} {
+    function emitFunction(body:Expr):{code:Array<String>, needsObj:Bool, needsDt:Bool, inputButtons:Array<String>, hasTransform:Bool, hasScene:Bool, targetScene:String, needsInitialScale:Bool} {
         var emitter = new N64CEmitter(className, memberNames);
         var code:Array<String> = [];
 
@@ -521,7 +535,8 @@ class TraitExtractor {
             inputButtons: emitter.getInputButtons(),
             hasTransform: emitter.hasTransformOps(),
             hasScene: emitter.hasSceneOps(),
-            targetScene: emitter.getTargetScene()
+            targetScene: emitter.getTargetScene(),
+            needsInitialScale: emitter.requiresInitialScale()
         };
     }
 

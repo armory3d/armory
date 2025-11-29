@@ -37,6 +37,7 @@ class N64CEmitter {
     var hasTransform:Bool = false;
     var hasScene:Bool = false;
     var targetScene:String = null;
+    var needsInitialScale:Bool = false;  // True if trait assigns object.transform.scale
 
     public function new(traitName:String, members:Array<String>) {
         this.traitName = traitName;
@@ -255,12 +256,13 @@ class N64CEmitter {
                 var fn = 'it_set_$prop';
 
                 if (prop == "scale") {
-                    // Scale values from Haxe are in Blender units (1.0 = normal size)
-                    // N64 transform scale is already multiplied by 0.015 during export
-                    // So we need to apply the same factor here
-                    return '$fn(&((ArmObject*)obj)->transform, ($x) * 0.015f, ($y) * 0.015f, ($z) * 0.015f)';
+                    // Scale values are relative to initial scale (1.0 = original size)
+                    // Multiply by _initialScale which is auto-captured in on_ready
+                    // Apply coordinate swizzle: Blender (X,Y,Z) -> N64 (X,Z,Y)
+                    needsInitialScale = true;
+                    var data = '((' + traitName + 'Data*)data)';
+                    return '$fn(&((ArmObject*)obj)->transform, ($x) * $data->_initialScale.x, ($z) * $data->_initialScale.y, ($y) * $data->_initialScale.z)';
                 } else {
-                    // loc/rot don't need scale factor (handled elsewhere)
                     return '$fn(&((ArmObject*)obj)->transform, $x, $y, $z)';
                 }
 
@@ -364,7 +366,8 @@ class N64CEmitter {
 
     /**
      * Emit gamepad field access: gamepad.leftStick.x -> input_stick_x()
-     * Note: N64 only has one analog stick, so leftStick and rightStick both map to main stick
+     * Note: N64 only has one analog stick (the left stick).
+     * rightStick doesn't exist on N64, so we map it to 1.0f as a constant multiplier.
      */
     function emitGamepadFieldAccess(e:Expr, field:String):String {
         var chain = getFieldChain(e);
@@ -375,10 +378,15 @@ class N64CEmitter {
             var stick = chain[chain.length - 2];  // leftStick or rightStick
             var axis = chain[chain.length - 1];   // x or y
 
-            if (stick == "leftStick" || stick == "rightStick") {
-                // N64 only has one stick - map both to input_stick_x/y
+            if (stick == "leftStick") {
+                // N64's main analog stick
                 var axisName = (axis == "x") ? "x" : "y";
                 return 'input_stick_$axisName()';
+            }
+            if (stick == "rightStick") {
+                // N64 has no right stick - return 1.0f as a neutral multiplier
+                // This way expressions like `scaleSpeed * rightStick.y * dt` become `scaleSpeed * 1.0f * dt`
+                return '0.0f';
             }
         }
 
@@ -930,5 +938,6 @@ class N64CEmitter {
     public function hasTransformOps():Bool return hasTransform;
     public function hasSceneOps():Bool return hasScene;
     public function getTargetScene():String return targetScene;
+    public function requiresInitialScale():Bool return needsInitialScale;
 }
 #end
