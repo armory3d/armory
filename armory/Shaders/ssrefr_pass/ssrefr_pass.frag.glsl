@@ -58,7 +58,6 @@ vec4 binarySearch(vec3 dir) {
 		ddepth = getDeltaDepth(hitCoord);
 		if (ddepth < 0.0) hitCoord += dir;
 	}
-	if (abs(ddepth) > ss_refractionSearchDist) return vec4(0.0);
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
@@ -69,7 +68,7 @@ vec4 rayCast(vec3 dir) {
 		ddepth = getDeltaDepth(hitCoord);
 		if (ddepth > 0.0) return binarySearch(dir);
 	}
-	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
+	return vec4(getProjectedCoord(hitCoord), 0.0, 0.0);
 }
 
 void main() {
@@ -83,7 +82,7 @@ void main() {
     float opac = gr.y;
     float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
-    if (d == 0.0 || opac == 1.0) {
+    if (d == 0.0 || d == 1.0 || opac == 1.0) {
         fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb;
         return;
     }
@@ -95,27 +94,16 @@ void main() {
     n = normalize(n);
 
     vec3 viewNormal = V3 * n;
-    vec3 viewPos = getPosView(viewRay, d, cameraProj);
-    vec3 refracted = refract(normalize(viewPos), viewNormal, 1.0 / ior);
+    vec3 viewPos = getPosView(normalize(viewRay), d, cameraProj);
+    vec3 refracted = refract(viewPos, viewNormal, 1.0 / ior);
     hitCoord = viewPos;
 
 	vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter * roughness) * 2.0;
 
     vec4 coords = rayCast(dir);
 
-	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
-	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
-
-	float refractivity = 1.0 - roughness;
-	#ifdef _CPostprocess
-		float intensity = pow(refractivity, PPComp10.x) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * clamp((PPComp9.z - length(viewPos - hitCoord)) * (1.0 / PPComp9.z), 0.0, 1.0) * coords.w;
-	#else
-		float intensity = pow(refractivity, ss_refractionFalloffExp) * screenEdgeFactor * clamp(-refracted.z, 0.0, 1.0) * coords.w;
-	#endif
-
-	intensity = clamp(intensity, 0.0, 1.0);
-
     vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb;
+
 	vec4 g1 = textureLod(gbuffer1, texCoord, 0.0); // Basecolor.rgb, spec/occ
 	vec3 f0 = surfaceF0(refractionCol.rgb, metallic);
 	float dotNV = max(dot(viewNormal, viewPos), 0.0);
@@ -127,7 +115,15 @@ void main() {
 	vec3 F = f0;
 	#endif
 
-	refractionCol *= intensity * (1.0 - F);
+	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
+	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
+
+	float refractivity = 1.0 - opac;
+	vec3 intensity = refractivity * screenEdgeFactor * clamp(abs(refracted.z), 0.0, 1.0) * (1.0 - F);
+
+	intensity = clamp(intensity, 0.0, 1.0);
+
+	refractionCol *= intensity;
 	vec3 color = textureLod(tex1, texCoord.xy, 0.0).rgb;
 
     fragColor.rgb = mix(refractionCol, color, opac);
