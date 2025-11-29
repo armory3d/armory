@@ -109,6 +109,7 @@ class N64TraitMacro {
 
             traits.push({
                 name: ir.name,
+                skip: ir.skip,
                 needs_data: ir.needs_data,
                 members: membersObj,
                 init: ir.initCode,
@@ -168,6 +169,7 @@ class N64TraitMacro {
  */
 typedef TraitIR = {
     name:String,
+    skip:Bool,                            // True if trait has no code or data
     needs_data:Bool,
     members:Map<String, MemberIR>,       // name -> {type, default}
     initCode:Array<String>,
@@ -283,8 +285,13 @@ class TraitExtractor {
         // Determine if trait needs per-instance data
         var needsData = memberNames.length > 0;
 
+        // Determine if trait should be skipped (no code and no data)
+        var hasCode = initCode.length > 0 || updateCode.length > 0 || removeCode.length > 0;
+        var shouldSkip = !hasCode && !needsData;
+
         return {
             name: className,
+            skip: shouldSkip,
             needs_data: needsData,
             members: members,
             initCode: initCode,

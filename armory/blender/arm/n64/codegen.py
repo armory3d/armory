@@ -4,10 +4,6 @@ N64 Code Generator
 Thin emitter that reads n64_traits.json from the macro and fills C templates.
 All heavy lifting (button mapping, type resolution, coordinate conversion)
 is done by the Haxe macro. This script just fills template placeholders.
-
-Usage:
-    As module: from arm.n64 import codegen
-    Standalone: python codegen.py <build_dir>
 """
 
 import json
@@ -64,6 +60,7 @@ def get_trait_info(build_dir: str = None) -> dict:
 # ============================================
 
 def _is_valid_statement(stmt: str) -> bool:
+    """Check if a statement is valid C code (not empty or malformed)."""
     if not stmt or not stmt.strip():
         return False
     # Filter out malformed if statements with empty conditions
@@ -75,20 +72,15 @@ def _is_valid_statement(stmt: str) -> bool:
     return True
 
 
-def _is_trait_used(trait: dict) -> bool:
-    has_code = (
-        any(_is_valid_statement(s) for s in trait.get("init", [])) or
-        any(_is_valid_statement(s) for s in trait.get("update", [])) or
-        any(_is_valid_statement(s) for s in trait.get("remove", []))
-    )
-    has_data = trait.get("needs_data", False)
-    return has_code or has_data
+def _should_skip_trait(trait: dict) -> bool:
+    """Check if trait should be skipped (determined by macro)."""
+    return trait.get("skip", False)
 
 
 def generate_trait_data_structs(traits: list) -> str:
     lines = []
     for trait in traits:
-        if not _is_trait_used(trait):
+        if _should_skip_trait(trait):
             continue
         if not trait.get("needs_data", False):
             continue
@@ -111,7 +103,7 @@ def generate_trait_data_structs(traits: list) -> str:
 def generate_trait_data_externs(traits: list) -> str:
     lines = []
     for trait in traits:
-        if not _is_trait_used(trait):
+        if _should_skip_trait(trait):
             continue
         if not trait.get("needs_data", False):
             continue
@@ -124,7 +116,7 @@ def generate_trait_data_externs(traits: list) -> str:
 def generate_trait_declarations(traits: list) -> str:
     lines = []
     for trait in traits:
-        if not _is_trait_used(trait):
+        if _should_skip_trait(trait):
             continue
 
         name = trait["name"]
@@ -142,7 +134,7 @@ def generate_trait_declarations(traits: list) -> str:
 def generate_trait_data_definitions(traits: list) -> str:
     lines = []
     for trait in traits:
-        if not _is_trait_used(trait):
+        if _should_skip_trait(trait):
             continue
         if not trait.get("needs_data", False):
             continue
@@ -167,7 +159,7 @@ def generate_trait_implementations(traits: list) -> str:
     lines = []
 
     for trait in traits:
-        if not _is_trait_used(trait):
+        if _should_skip_trait(trait):
             continue
         name = trait["name"]
         name_lower = name.lower()

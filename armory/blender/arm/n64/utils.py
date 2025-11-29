@@ -93,22 +93,14 @@ def extract_blender_trait_props(trait) -> dict:
 
 
 def get_trait(trait_info: dict, trait_class: str) -> dict:
-    """Get trait data from macro JSON."""
     return trait_info.get("traits", {}).get(trait_class, {})
 
 
 def trait_needs_data(trait_info: dict, trait_class: str) -> bool:
-    """Check if trait needs per-instance data. Macro provides this directly."""
     return get_trait(trait_info, trait_class).get("needs_data", False)
 
 
 def build_trait_initializer(trait_info: dict, trait_class: str, current_scene: str, instance_props: dict = None) -> str:
-    """
-    Build C initializer string for trait data.
-
-    The macro provides default values as C literals.
-    Blender per-instance props override defaults.
-    """
     trait = get_trait(trait_info, trait_class)
     members = trait.get("members", {})
 
@@ -119,12 +111,7 @@ def build_trait_initializer(trait_info: dict, trait_class: str, current_scene: s
     for member_name, member_info in members.items():
         if member_name in instance_props:
             # Per-instance value from Blender - format as C literal
-            value = instance_props[member_name]
-            # Special handling for SceneId type
-            if member_info["type"] == "SceneId" and isinstance(value, str):
-                c_value = f'SCENE_{value.upper()}'
-            else:
-                c_value = _to_c_literal(value, member_info["type"])
+            c_value = _to_c_literal(instance_props[member_name], member_info["type"])
         else:
             # Use macro's default (already a C literal)
             c_value = member_info["default_value"]
@@ -135,7 +122,6 @@ def build_trait_initializer(trait_info: dict, trait_class: str, current_scene: s
 
 
 def _to_c_literal(value, c_type: str) -> str:
-    """Convert a Python value to C literal string."""
     if c_type == "float":
         f = float(value)
         return f"{f}f" if '.' in str(f) else f"{int(f)}.0f"

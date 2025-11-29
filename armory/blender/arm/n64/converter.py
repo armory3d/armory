@@ -2,8 +2,6 @@
 N64 Coordinate Converter
 
 Applies coordinate system conversion rules from macro-generated JSON.
-This module has NO hardcoded conversion logic - it purely applies
-the swizzle rules defined by the Haxe macro.
 
 Pipeline:
   1. Exporter outputs raw Blender coordinates to scene_data dict
