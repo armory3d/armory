@@ -288,3 +288,63 @@ def generate_trait_block(prefix: str, traits: list, trait_info: dict, scene_name
     else:
         lines.append(f'    {prefix}.traits = NULL;')
     return lines
+
+
+def _fmt_vec3(v: list) -> str:
+    """Format a 3-element list as a T3DVec3 initializer."""
+    return f'(T3DVec3){{{{ {v[0]:.6f}f, {v[1]:.6f}f, {v[2]:.6f}f }}}}'
+
+
+def generate_camera_block(cameras: list, trait_info: dict, scene_name: str) -> str:
+    """Generate C code for all cameras in a scene."""
+    from arm.n64 import utils as n64_utils
+
+    lines = []
+    for i, cam in enumerate(cameras):
+        prefix = f'cameras[{i}]'
+        lines.extend(generate_transform_block(prefix, cam["pos"]))
+        lines.append(f'    {prefix}.target = {_fmt_vec3(cam["target"])};')
+        lines.append(f'    {prefix}.fov = {cam["fov"]:.6f}f;')
+        lines.append(f'    {prefix}.near = {cam["near"]:.6f}f;')
+        lines.append(f'    {prefix}.far = {cam["far"]:.6f}f;')
+        lines.extend(generate_trait_block(prefix, cam.get("traits", []), trait_info, scene_name))
+    return '\n'.join(lines)
+
+
+def generate_light_block(lights: list, trait_info: dict, scene_name: str) -> str:
+    """Generate C code for all lights in a scene."""
+    from arm.n64 import utils as n64_utils
+
+    lines = []
+    for i, light in enumerate(lights):
+        prefix = f'lights[{i}]'
+        lines.append(f'    {prefix}.color[0] = {n64_utils.to_uint8(light["color"][0])};')
+        lines.append(f'    {prefix}.color[1] = {n64_utils.to_uint8(light["color"][1])};')
+        lines.append(f'    {prefix}.color[2] = {n64_utils.to_uint8(light["color"][2])};')
+        lines.append(f'    {prefix}.dir = {_fmt_vec3(light["dir"])};')
+        lines.extend(generate_trait_block(prefix, light.get("traits", []), trait_info, scene_name))
+    return '\n'.join(lines)
+
+
+def generate_object_block(objects: list, trait_info: dict, scene_name: str) -> str:
+    """Generate C code for all objects in a scene."""
+    lines = []
+    for i, obj in enumerate(objects):
+        prefix = f'objects[{i}]'
+        lines.extend(generate_transform_block(prefix, obj["pos"], obj["rot"], obj["scale"]))
+        lines.append(f'    models_get({obj["mesh"]});')
+        lines.append(f'    {prefix}.dpl = models_get_dpl({obj["mesh"]});')
+        lines.append(f'    {prefix}.model_mat = malloc_uncached(sizeof(T3DMat4FP) * FB_COUNT);')
+        lines.append(f'    {prefix}.visible = {str(obj["visible"]).lower()};')
+        bc = obj.get("bounds_center", [0, 0, 0])
+        br = obj.get("bounds_radius", 1.0)
+        lines.append(f'    {prefix}.bounds_center = {_fmt_vec3(bc)};')
+        lines.append(f'    {prefix}.bounds_radius = {br:.6f}f;')
+        lines.extend(generate_trait_block(prefix, obj.get("traits", []), trait_info, scene_name))
+    return '\n'.join(lines)
+
+
+def generate_scene_traits_block(traits: list, trait_info: dict, scene_name: str) -> str:
+    """Generate C code for scene-level traits."""
+    lines = generate_trait_block('(*scene)', traits, trait_info, scene_name)
+    return '\n'.join(lines)

@@ -433,79 +433,34 @@ class N64Exporter:
 
     def write_scene_c(self, scene):
         scene_name = arm.utils.safesrc(scene.name).lower()
+        scene_data = self.scene_data[scene_name]
 
-        clear_color = self.scene_data[scene_name]['world']['clear_color']
-        cr = n64_utils.to_uint8(clear_color[0])
-        cg = n64_utils.to_uint8(clear_color[1])
-        cb = n64_utils.to_uint8(clear_color[2])
-        ambient_color = self.scene_data[scene_name]['world']['ambient_color']
-        ar = n64_utils.to_uint8(ambient_color[0])
-        ag = n64_utils.to_uint8(ambient_color[1])
-        ab = n64_utils.to_uint8(ambient_color[2])
+        clear_color = scene_data['world']['clear_color']
+        ambient_color = scene_data['world']['ambient_color']
 
         tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'scenes', 'scene.c.j2')
-        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'scenes', f'{arm.utils.safesrc(scene_name).lower()}.c')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'scenes', f'{scene_name}.c')
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
 
-        camera_block_lines = []
-        for i, camera in enumerate(self.scene_data[scene_name]['cameras']):
-            prefix = f'cameras[{i}]'
-            camera_block_lines.extend(codegen.generate_transform_block(prefix, camera["pos"]))
-            camera_block_lines.append(f'    {prefix}.target = (T3DVec3){{{{{camera["target"][0]:.6f}f, {camera["target"][1]:.6f}f, {camera["target"][2]:.6f}f}}}};')
-            camera_block_lines.append(f'    {prefix}.fov = {camera["fov"]:.6f}f;')
-            camera_block_lines.append(f'    {prefix}.near = {camera["near"]:.6f}f;')
-            camera_block_lines.append(f'    {prefix}.far = {camera["far"]:.6f}f;')
-            camera_block_lines.extend(codegen.generate_trait_block(prefix, camera.get("traits", []), self.trait_info, scene_name))
-        cameras_block = '\n'.join(camera_block_lines)
-
-        light_block_lines = []
-        for i, light in enumerate(self.scene_data[scene_name]['lights']):
-            prefix = f'lights[{i}]'
-            light_block_lines.append(f'    {prefix}.color[0] = {n64_utils.to_uint8(light["color"][0])};')
-            light_block_lines.append(f'    {prefix}.color[1] = {n64_utils.to_uint8(light["color"][1])};')
-            light_block_lines.append(f'    {prefix}.color[2] = {n64_utils.to_uint8(light["color"][2])};')
-            light_block_lines.append(f'    {prefix}.dir = (T3DVec3){{{{{light["dir"][0]:.6f}f, {light["dir"][1]:.6f}f, {light["dir"][2]:.6f}f}}}};')
-            light_block_lines.extend(codegen.generate_trait_block(prefix, light.get("traits", []), self.trait_info, scene_name))
-        lights_block = '\n'.join(light_block_lines)
-
-        object_block_lines = []
-        for i, obj in enumerate(self.scene_data[scene_name]['objects']):
-            prefix = f'objects[{i}]'
-            object_block_lines.extend(codegen.generate_transform_block(prefix, obj["pos"], obj["rot"], obj["scale"]))
-            object_block_lines.append(f'    models_get({obj["mesh"]});')
-            object_block_lines.append(f'    {prefix}.dpl = models_get_dpl({obj["mesh"]});')
-            object_block_lines.append(f'    {prefix}.model_mat = malloc_uncached(sizeof(T3DMat4FP) * FB_COUNT);')
-            object_block_lines.append(f'    {prefix}.visible = {str(obj["visible"]).lower()};')
-            # Bounding sphere for frustum culling
-            bc = obj.get("bounds_center", [0, 0, 0])
-            br = obj.get("bounds_radius", 1.0)
-            object_block_lines.append(f'    {prefix}.bounds_center = (T3DVec3){{{{ {bc[0]:.6f}f, {bc[1]:.6f}f, {bc[2]:.6f}f }}}};')
-            object_block_lines.append(f'    {prefix}.bounds_radius = {br:.6f}f;')
-            object_block_lines.extend(codegen.generate_trait_block(prefix, obj.get("traits", []), self.trait_info, scene_name))
-        objects_block = '\n'.join(object_block_lines)
-
-        # Generate scene trait assignments
-        scene_traits = self.scene_data[scene_name].get('traits', [])
-        scene_traits_block_lines = codegen.generate_trait_block('(*scene)', scene_traits, self.trait_info, scene_name)
-        scene_traits_block = '\n'.join(scene_traits_block_lines)
+        scene_traits = scene_data.get('traits', [])
 
         output = tmpl_content.format(
             scene_name=scene_name,
-            cr=cr,
-            cg=cg,
-            cb=cb,
-            ar=ar,
-            ag=ag,
-            ab=ab,
-            camera_count=len(self.scene_data[scene_name]['cameras']),
-            cameras_block=cameras_block,
-            light_count=len(self.scene_data[scene_name]['lights']),
-            lights_block=lights_block,
-            object_count=len(self.scene_data[scene_name]['objects']),
-            objects_block=objects_block,
+            cr=n64_utils.to_uint8(clear_color[0]),
+            cg=n64_utils.to_uint8(clear_color[1]),
+            cb=n64_utils.to_uint8(clear_color[2]),
+            ar=n64_utils.to_uint8(ambient_color[0]),
+            ag=n64_utils.to_uint8(ambient_color[1]),
+            ab=n64_utils.to_uint8(ambient_color[2]),
+            camera_count=len(scene_data['cameras']),
+            cameras_block=codegen.generate_camera_block(scene_data['cameras'], self.trait_info, scene_name),
+            light_count=len(scene_data['lights']),
+            lights_block=codegen.generate_light_block(scene_data['lights'], self.trait_info, scene_name),
+            object_count=len(scene_data['objects']),
+            objects_block=codegen.generate_object_block(scene_data['objects'], self.trait_info, scene_name),
             scene_trait_count=len(scene_traits),
-            scene_traits_block=scene_traits_block
+            scene_traits_block=codegen.generate_scene_traits_block(scene_traits, self.trait_info, scene_name)
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
