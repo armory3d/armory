@@ -192,22 +192,48 @@ class N64Exporter:
                 sensor = max(obj.data.sensor_width, obj.data.sensor_height)
                 cam_fov = math.degrees(2 * math.atan((sensor * 0.5) / obj.data.lens))
 
+                # Extract traits from camera
+                cam_traits = []
+                if hasattr(obj, 'arm_traitlist'):
+                    for trait in obj.arm_traitlist:
+                        if trait.enabled_prop and trait.class_name_prop:
+                            props = n64_utils.extract_blender_trait_props(trait)
+                            cam_traits.append({
+                                "class_name": trait.class_name_prop,
+                                "type": trait.type_prop,
+                                "props": props
+                            })
+
                 self.scene_data[scene_name]["cameras"].append({
                     "name": arm.utils.safesrc(obj.name),
                     "pos": list(obj.location),
                     "target": cam_target,
                     "fov": cam_fov,
                     "near": obj.data.clip_start,
-                    "far": obj.data.clip_end
+                    "far": obj.data.clip_end,
+                    "traits": cam_traits
                 })
             elif obj.type == 'LIGHT':  # TODO: support multiple light types [Point and Sun]
                 # Raw Blender direction - converter.py will transform and normalize
                 light_dir = obj.rotation_euler.to_matrix().col[2]
 
+                # Extract traits from light
+                light_traits = []
+                if hasattr(obj, 'arm_traitlist'):
+                    for trait in obj.arm_traitlist:
+                        if trait.enabled_prop and trait.class_name_prop:
+                            props = n64_utils.extract_blender_trait_props(trait)
+                            light_traits.append({
+                                "class_name": trait.class_name_prop,
+                                "type": trait.type_prop,
+                                "props": props
+                            })
+
                 self.scene_data[scene_name]["lights"].append({
                     "name": arm.utils.safesrc(obj.name),
                     "color": list(obj.data.color),
-                    "dir": list(light_dir)
+                    "dir": list(light_dir),
+                    "traits": light_traits
                 })
             elif obj.type == 'MESH':
                 mesh = obj.data
