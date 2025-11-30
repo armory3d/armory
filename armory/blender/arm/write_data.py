@@ -135,6 +135,8 @@ project.addSources('Sources');
 
         if state.is_n64:
             assets.add_khafile_def('arm_target_n64')
+            # Tell the N64 trait macro where to write the traits JSON file
+            assets.add_khafile_def('arm_build_dir=../' + arm.utils.build_dir())
 
         if export_physics:
             assets.add_khafile_def('arm_physics')

@@ -634,7 +634,7 @@ def runtime_to_target():
         case 'Browser':
             return 'html5'
         case 'Ares':
-            return 'windows-hl'  # N64 uses HashLink C build for trait generation
+            return 'custom'  # N64 uses custom target for Haxe macro execution
 
 def get_khajs_path(target):
     if target == 'krom':
