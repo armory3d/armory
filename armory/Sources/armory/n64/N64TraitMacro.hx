@@ -196,6 +196,7 @@ class TraitExtractor {
     var members:Map<String, MemberIR>;
     var memberNames:Array<String>;
     var methodMap:Map<String, Function>;
+    var vec4Exprs:Map<String, Expr>;  // Store Vec4 member init expressions for axis resolution
 
     public function new(className:String, fields:Array<Field>) {
         this.className = className;
@@ -203,6 +204,7 @@ class TraitExtractor {
         this.members = new Map();
         this.memberNames = [];
         this.methodMap = new Map();
+        this.vec4Exprs = new Map();
     }
 
     public function extract():TraitIR {
@@ -214,6 +216,10 @@ class TraitExtractor {
                     if (member != null) {
                         members.set(field.name, member);
                         memberNames.push(field.name);
+                        // Store Vec4 init expressions for axis resolution in rotate()
+                        if (member.type == "Vec3" && e != null) {
+                            vec4Exprs.set(field.name, e);
+                        }
                     }
                 case FFun(func):
                     methodMap.set(field.name, func);
@@ -509,7 +515,7 @@ class TraitExtractor {
      * Emit a function body as C code
      */
     function emitFunction(body:Expr):{code:Array<String>, needsObj:Bool, needsDt:Bool, inputButtons:Array<String>, hasTransform:Bool, hasScene:Bool, targetScene:String, needsInitialScale:Bool} {
-        var emitter = new N64CEmitter(className, memberNames);
+        var emitter = new N64CEmitter(className, memberNames, vec4Exprs);
         var code:Array<String> = [];
 
         // Process statements

@@ -29,6 +29,7 @@ class N64CEmitter {
     var traitName:String;
     var memberNames:Map<String, Bool>;
     var localVars:Map<String, Bool>;
+    var vec4Exprs:Map<String, Expr>;  // Vec4 member init expressions for axis resolution
     var needsObj:Bool = false;
     var needsDt:Bool = false;
 
@@ -39,11 +40,12 @@ class N64CEmitter {
     var targetScene:String = null;
     var needsInitialScale:Bool = false;  // True if trait assigns object.transform.scale
 
-    public function new(traitName:String, members:Array<String>) {
+    public function new(traitName:String, members:Array<String>, ?vec4Exprs:Map<String, Expr>) {
         this.traitName = traitName;
         memberNames = new Map();
         localVars = new Map();
         inputButtons = [];
+        this.vec4Exprs = vec4Exprs != null ? vec4Exprs : new Map();
         for (m in members) {
             memberNames.set(m, true);
         }
@@ -667,6 +669,7 @@ class N64CEmitter {
 
     /**
      * Resolve a Vec4 axis to index and sign
+     * Coordinate conversion: Blender (X,Y,Z) -> N64 (-X, Y, -Z) for euler angles
      */
     function resolveAxis(e:Expr):{index:Int, negative:Bool} {
         // Look for Vec4(x,y,z) or iron.math.Vec4(x,y,z)
@@ -678,25 +681,32 @@ class N64CEmitter {
                     var z = getConstFloat(params[2]);
 
                     // Detect cardinal axis with Blender->N64 conversion
+                    // Euler angles: Blender (X,Y,Z) -> N64 (-X, +Y, -Z)
                     if (Math.abs(x) > 0.5) {
-                        return {index: 0, negative: x < 0};  // X axis
+                        // Blender X -> N64 -X (negate)
+                        return {index: 0, negative: x > 0};  // Invert sign
                     }
                     if (Math.abs(y) > 0.5) {
-                        // Blender Y -> N64 Z
-                        return {index: 2, negative: y < 0};
+                        // Blender Y -> N64 Z, and negate
+                        return {index: 2, negative: y < 0};  // Swap to Z and invert sign
                     }
                     if (Math.abs(z) > 0.5) {
-                        // Blender Z -> N64 Y
-                        return {index: 1, negative: z < 0};
+                        // Blender Z -> N64 Y (no negation)
+                        return {index: 1, negative: z > 0};  // Swap to Y, keep sign
                     }
                 }
             case EField(_, field):
                 // Vec4.yAxis(), etc.
                 return switch (field) {
-                    case "xAxis": {index: 0, negative: false};
-                    case "yAxis": {index: 2, negative: false};  // Blender Y -> N64 Z
-                    case "zAxis": {index: 1, negative: false};  // Blender Z -> N64 Y
+                    case "xAxis": {index: 0, negative: true};   // Blender X -> N64 -X
+                    case "yAxis": {index: 2, negative: false};   // Blender Y -> N64 -Z
+                    case "zAxis": {index: 1, negative: true};  // Blender Z -> N64 +Y
                     default: {index: 1, negative: false};
+                }
+            case EConst(CIdent(name)):
+                // Member variable reference - look up its initialization expression
+                if (vec4Exprs.exists(name)) {
+                    return resolveAxis(vec4Exprs.get(name));
                 }
             default:
         }
