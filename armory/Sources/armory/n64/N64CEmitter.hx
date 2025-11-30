@@ -8,22 +8,8 @@ using StringTools;
 using Lambda;
 
 /**
- * N64 C Code Emitter
- *
- * Converts Haxe expressions directly to C code strings.
- * This is the "smart" part - all resolution happens here.
- *
- * Key responsibilities:
- * - Resolve member access with inline casts: ((TraitData*)data)->member
- * - Resolve object access with inline casts: ((ArmObject*)obj)->field
- * - Resolve button names to N64 constants
- * - Resolve Vec4 axes to indices
- * - Apply coordinate system conversion (Blender Z-up → N64 Y-up)
- * - Generate final C code strings
- * - Track what features are used (buttons, transform, scene)
- *
- * Note: Inline casts are used instead of local typed pointers to save
- * stack space and avoid unnecessary pointer copies on the N64's limited hardware.
+ * Converts Haxe expressions to C code strings for N64.
+ * Handles API mapping, coordinate conversion (Blender Z-up → N64 Y-up), and feature tracking.
  */
 class N64CEmitter {
     // Context for the current trait
@@ -57,18 +43,12 @@ class N64CEmitter {
         }
     }
 
-    /**
-     * Emit a compile-time warning at the current expression position
-     */
     function warn(msg:String):Void {
         if (currentPos != null) {
             Context.warning('N64: $msg', currentPos);
         }
     }
 
-    /**
-     * Main entry: emit C code for an expression
-     */
     public function emitExpr(expr:Expr):String {
         if (expr == null) return "";
 
@@ -103,9 +83,6 @@ class N64CEmitter {
         return result;
     }
 
-    /**
-     * Emit a constant value
-     */
     function emitConst(c:Constant):String {
         return switch (c) {
             case CInt(v): v;
@@ -118,9 +95,6 @@ class N64CEmitter {
         }
     }
 
-    /**
-     * Resolve an identifier to C
-     */
     function resolveIdent(name:String):String {
         // Check if it's a member variable
         if (memberNames.exists(name)) {
@@ -146,9 +120,6 @@ class N64CEmitter {
         }
     }
 
-    /**
-     * Check if this is an Armory-internal variable that should be skipped entirely
-     */
     function isSkippedVariable(name:String):Bool {
         return switch (name) {
             case "camera": true;  // Camera casting not supported
@@ -157,9 +128,6 @@ class N64CEmitter {
         };
     }
 
-    /**
-     * Check if this is an input device variable (always available on N64)
-     */
     function isInputVariable(name:String):Bool {
         return switch (name) {
             case "gamepad", "keyboard", "mouse": true;
@@ -167,9 +135,6 @@ class N64CEmitter {
         };
     }
 
-    /**
-     * Emit binary operation
-     */
     function emitBinop(op:Binop, e1:Expr, e2:Expr):String {
         // Check for transform.scale/loc/rot = new Vec4(...) pattern BEFORE emitExpr
         // because ENew falls through to "unsupported expr"
@@ -233,12 +198,7 @@ class N64CEmitter {
         return '$left $opStr $right';
     }
 
-    /**
-     * Handle: object.transform.scale = new Vec4(x, y, z)
-     * Converts to: it_set_scale(&transform, x * SCALE_FACTOR, y * SCALE_FACTOR, z * SCALE_FACTOR)
-     * The scale factor (0.015) is applied because Blender Vec4 values are in Blender units
-     * but N64 transform scale is already in N64 units (pre-multiplied by 0.015)
-     */
+    /** Handle: object.transform.scale = new Vec4(x, y, z) */
     function tryEmitScaleAssign(lhs:Expr, rhs:Expr):Null<String> {
         // LHS must end with .scale, .loc, or .rot on a transform
         var chain = getFieldChain(lhs);
@@ -303,30 +263,16 @@ class N64CEmitter {
         }
     }
 
-    /**
-     * Check if a string is a zero literal (0, 0.0, 0.0f)
-     */
     function isZeroLiteral(s:String):Bool {
         return s == "0" || s == "0.0" || s == "0.0f";
     }
-    /**
-     * Check if a string is an input function call (input_down, input_started, input_released)
-     */
     function isInputCall(s:String):Bool {
         return StringTools.startsWith(s, "input_down(") ||
                StringTools.startsWith(s, "input_started(") ||
                StringTools.startsWith(s, "input_released(");
     }
 
-    /**
-     * Simplify input function comparisons with zero.
-     * N64's input functions return bool, so comparison to 0 is redundant.
-     * - `input_down(x) != 0` -> `input_down(x)`
-     * - `0 != input_down(x)` -> `input_down(x)`
-     * - `input_down(x) == 0` -> `!input_down(x)`
-     * - `0 == input_down(x)` -> `!input_down(x)`
-     * Returns null if no simplification applies.
-     */
+    /** Simplify input comparisons: `input_down(x) != 0` -> `input_down(x)` */
     function trySimplifyInputComparison(op:Binop, left:String, right:String):Null<String> {
         // Check for "truthy" comparison: != 0, > 0, >= 1
         var isTruthyOp = (op == OpNotEq || op == OpGt || op == OpGte);
@@ -371,9 +317,6 @@ class N64CEmitter {
         }
     }
 
-    /**
-     * Emit unary operation
-     */
     function emitUnop(op:Unop, postFix:Bool, e:Expr):String {
         var inner = emitExpr(e);
         var opStr = switch (op) {
@@ -387,9 +330,6 @@ class N64CEmitter {
         return postFix ? '$inner$opStr' : '$opStr$inner';
     }
 
-    /**
-     * Emit field access - this is where API detection happens
-     */
     function emitField(e:Expr, field:String):String {
         // Check for known API patterns
         var base = getBaseIdent(e);
@@ -460,11 +400,7 @@ class N64CEmitter {
         return '$baseCode.$field';
     }
 
-    /**
-     * Emit gamepad field access: gamepad.leftStick.x -> input_stick_x()
-     * Note: N64 only has one analog stick (the left stick).
-     * rightStick doesn't exist on N64, so we map it to 1.0f as a constant multiplier.
-     */
+    /** Map gamepad.leftStick.x -> input_stick_x(). N64 has no right stick. */
     function emitGamepadFieldAccess(e:Expr, field:String):String {
         var chain = getFieldChain(e);
         chain.push(field);
@@ -496,9 +432,6 @@ class N64CEmitter {
         return '/* N64_UNSUPPORTED: gamepad.$field */';
     }
 
-    /**
-     * Emit transform field access with coordinate conversion
-     */
     function emitTransformField(e:Expr, field:String):String {
         needsObj = true;
 
@@ -531,9 +464,6 @@ class N64CEmitter {
         return '((ArmObject*)obj)->transform.$field';
     }
 
-    /**
-     * Emit function call - main API mapping logic
-     */
     function emitCall(e:Expr, params:Array<Expr>):String {
         // Check for Math.* calls
         var mathCall = tryEmitMathCall(e, params);
@@ -561,10 +491,6 @@ class N64CEmitter {
         return '$emittedName($args)';
     }
 
-    /**
-     * Try to emit Math.* function calls
-     * Returns null if not a Math call
-     */
     function tryEmitMathCall(e:Expr, params:Array<Expr>):String {
         return switch (e.expr) {
             case EField(base, method):
@@ -610,11 +536,6 @@ class N64CEmitter {
         };
     }
 
-    /**
-     * Try to emit Vec2 method calls (length, clone, mult, normalize, etc.)
-     * Handles chained calls like direction.clone().mult(speed)
-     * Returns null if not a Vec2 call
-     */
     function tryEmitVec2Call(e:Expr, params:Array<Expr>):String {
         return switch (e.expr) {
             case EField(base, method):
@@ -631,9 +552,6 @@ class N64CEmitter {
         };
     }
 
-    /**
-     * Emit a Vec2 method call
-     */
     function emitVec2Method(varName:String, method:String, params:Array<Expr>, baseExpr:Expr):String {
         return switch (method) {
             case "length":
@@ -677,10 +595,7 @@ class N64CEmitter {
         };
     }
 
-    /**
-     * Try to emit chained Vec2 calls like direction.clone().mult(speed)
-     * Returns the final x/y expressions or null
-     */
+    /** Handle chained Vec2 calls like direction.clone().mult(speed) */
     function tryEmitVec2Chain(e:Expr, finalParams:Array<Expr>):String {
         // Parse the chain from right to left
         var chain:Array<{method:String, params:Array<Expr>}> = [];
@@ -763,9 +678,6 @@ class N64CEmitter {
         return tempName;
     }
 
-    /**
-     * Get function name from call expression
-     */
     function getFunctionName(e:Expr):String {
         return switch (e.expr) {
             case EConst(CIdent(name)): name;
@@ -774,9 +686,6 @@ class N64CEmitter {
         };
     }
 
-    /**
-     * Check if this is an Armory-internal call that should be skipped
-     */
     function shouldSkipCall(name:String):Bool {
         return switch (name) {
             // Trait lifecycle registration (handled differently on N64)
@@ -792,9 +701,6 @@ class N64CEmitter {
         };
     }
 
-    /**
-     * Detect if this is an API call (gamepad.down, transform.rotate, etc.)
-     */
     function detectApiCall(e:Expr):{category:String, method:String} {
         return switch (e.expr) {
             case EField(base, method):
@@ -830,9 +736,6 @@ class N64CEmitter {
         }
     }
 
-    /**
-     * Emit an API call with full resolution
-     */
     function emitApiCall(category:String, method:String, params:Array<Expr>):String {
         var apiKey = '$category.$method';
 
@@ -870,9 +773,6 @@ class N64CEmitter {
         warn('Unsupported API: $apiKey');
         return '/* N64_UNSUPPORTED: API $apiKey */';
     }
-    /**
-     * Emit gamepad input call
-     */
     function emitGamepadCall(method:String, params:Array<Expr>):String {
         // Get N64 function name
         var n64Func = N64Config.mapInputState(method);
@@ -906,9 +806,6 @@ class N64CEmitter {
         return '$n64Func(${N64Config.getDefaultButton()})';
     }
 
-    /**
-     * Extract button name from expression
-     */
     function extractButtonName(e:Expr):String {
         return switch (e.expr) {
             case EConst(CString(s)): s;
@@ -918,9 +815,6 @@ class N64CEmitter {
         }
     }
 
-    /**
-     * Emit transform call (rotate, translate, etc.)
-     */
     function emitTransformCall(method:String, params:Array<Expr>):String {
         needsObj = true;
         hasTransform = true;
@@ -940,9 +834,6 @@ class N64CEmitter {
         }
     }
 
-    /**
-     * Emit scale call with coordinate conversion
-     */
     function emitScale(params:Array<Expr>):String {
         if (params.length == 0) {
             warn("scale() requires arguments");
@@ -995,10 +886,7 @@ class N64CEmitter {
         return "/* N64_UNSUPPORTED: scale() params */";
     }
 
-    /**
-     * Emit rotate call with axis resolution
-     * Uses quaternion rotation via it_rotate_axis_global for world-space rotation (matches Armory)
-     */
+    /** Emit rotate with axis resolution and coordinate conversion */
     function emitRotate(params:Array<Expr>):String {
         if (params.length < 2) {
             warn("rotate() requires axis and angle arguments");
@@ -1021,9 +909,6 @@ class N64CEmitter {
         return 'it_rotate_axis_global(&((ArmObject*)obj)->transform, $xStr, $yStr, $zStr, $angleCode)';
     }
 
-    /**
-     * Format a float for C code (ensures decimal point)
-     */
     function floatToC(f:Float):String {
         var s = Std.string(f);
         // If no decimal point, add .0
@@ -1033,10 +918,7 @@ class N64CEmitter {
         return s + 'f';
     }
 
-    /**
-     * Resolve a Vec4 axis to N64 coordinate axis vector
-     * Coordinate conversion: Blender (X,Y,Z) -> N64 (X, Z, -Y)
-     */
+    /** Resolve Vec4 axis to N64 coordinates: Blender (X,Y,Z) -> N64 (X, Z, -Y) */
     function resolveAxisVec(e:Expr):{x:Float, y:Float, z:Float} {
         // Look for Vec4(x,y,z) or iron.math.Vec4(x,y,z)
         switch (e.expr) {
@@ -1085,9 +967,6 @@ class N64CEmitter {
         }
     }
 
-    /**
-     * Emit translate call with coordinate conversion
-     */
     function emitTranslate(params:Array<Expr>):String {
         if (params.length == 0) {
             warn("translate() requires arguments");
@@ -1128,9 +1007,6 @@ class N64CEmitter {
         return "/* N64_UNSUPPORTED: translate() params */";
     }
 
-    /**
-     * Emit scene call
-     */
     function emitSceneCall(method:String, params:Array<Expr>):String {
         hasScene = true;
 
@@ -1162,9 +1038,6 @@ class N64CEmitter {
         }
     }
 
-    /**
-     * Get member variable name if expression is a simple identifier
-     */
     function getMemberName(e:Expr):String {
         return switch (e.expr) {
             case EConst(CIdent(name)): name;
@@ -1172,9 +1045,6 @@ class N64CEmitter {
         }
     }
 
-    /**
-     * Extract scene name from expression
-     */
     function extractSceneName(e:Expr):String {
         return switch (e.expr) {
             case EConst(CString(s)):
@@ -1189,9 +1059,6 @@ class N64CEmitter {
         }
     }
 
-    /**
-     * Get the base identifier of a field chain
-     */
     function getBaseIdent(e:Expr):String {
         return switch (e.expr) {
             case EConst(CIdent(s)): s;
@@ -1200,9 +1067,6 @@ class N64CEmitter {
         }
     }
 
-    /**
-     * Get the full field chain
-     */
     function getFieldChain(e:Expr):Array<String> {
         var chain:Array<String> = [];
         var current = e;
@@ -1221,9 +1085,7 @@ class N64CEmitter {
         return chain;
     }
 
-    // =============================================
-    // Block / Control Flow Emission
-    // =============================================
+    // Control flow emission
 
     function emitBlock(exprs:Array<Expr>):String {
         var lines:Array<String> = [];
@@ -1303,10 +1165,7 @@ class N64CEmitter {
         return decls.join("; ");
     }
 
-    /**
-     * Try to extract Vec2 constructor arguments or chained Vec2 operations
-     * Returns {x, y} expressions as C code strings, or null if not a Vec2 constructor/chain
-     */
+    /** Extract Vec2 constructor args as {x, y} C expressions, or null */
     function tryExtractVec2(e:Expr):{x:String, y:String} {
         return switch (e.expr) {
             case ENew(tp, params):
@@ -1366,9 +1225,7 @@ class N64CEmitter {
         }
     }
 
-    // =============================================
-    // Public accessors for trait flags
-    // =============================================
+    // Public accessors
 
     public function requiresObj():Bool return needsObj;
     public function requiresDt():Bool return needsDt;

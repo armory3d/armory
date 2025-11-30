@@ -14,36 +14,13 @@ using StringTools;
 using Lambda;
 
 /**
- * N64 Smart Trait Macro
- *
- * This macro outputs RESOLVED C CODE directly.
- * The output JSON contains ready-to-emit C strings.
- *
- * Architecture:
- * - N64Config: Button/type/API mappings (internal dictionaries)
- * - N64CEmitter: Converts Haxe AST to C strings
- * - N64TraitMacro: Orchestrates extraction and JSON output
- *
- * Output format (n64_traits.json):
- * {
- *   "version": 3,
- *   "traits": [{
- *     "name": "MyTrait",
- *     "members": [{"name": "speed", "type": "float", "default": "1.0f"}],
- *     "init": ["tdata->speed = 1.0f;"],
- *     "update": ["if (input_down(N64_BTN_B)) { obj->transform.rot[1] += tdata->speed * dt; }"],
- *     "remove": [],
- *     "flags": {"needs_obj": true, "needs_dt": true}
- *   }]
- * }
+ * N64 Trait Macro - Extracts trait info and converts to C code.
+ * Outputs resolved C strings to n64_traits.json.
  */
 class N64TraitMacro {
     static var traitData:Map<String, TraitIR> = new Map();
     static var initialized:Bool = false;
 
-    /**
-     * Build macro entry point
-     */
     macro public static function build():Array<Field> {
         var defines = Context.getDefines();
         if (!defines.exists("arm_target_n64")) {
@@ -184,9 +161,6 @@ class N64TraitMacro {
     }
 }
 
-/**
- * Trait IR - the resolved output
- */
 typedef TraitIR = {
     name:String,
     skip:Bool,                            // True if trait has no code or data
@@ -208,9 +182,6 @@ typedef MemberIR = {
     default_value:String
 }
 
-/**
- * Result of emitting a function body to C code
- */
 typedef EmitResult = {
     code:Array<String>,
     needsObj:Bool,
@@ -222,9 +193,6 @@ typedef EmitResult = {
     needsInitialScale:Bool
 }
 
-/**
- * Extracts trait information and converts to C code
- */
 class TraitExtractor {
     var className:String;
     var fields:Array<Field>;
@@ -335,9 +303,6 @@ class TraitExtractor {
         };
     }
 
-    /**
-     * Extract a member variable
-     */
     function extractMember(name:String, t:ComplexType, e:Expr, meta:Metadata):MemberIR {
         // Skip API objects
         if (N64Config.shouldSkipMember(name)) return null;
@@ -384,9 +349,6 @@ class TraitExtractor {
         };
     }
 
-    /**
-     * Check if field has a specific metadata tag
-     */
     function hasMetadata(meta:Metadata, name:String):Bool {
         if (meta == null) return false;
         for (m in meta) {
@@ -395,9 +357,6 @@ class TraitExtractor {
         return false;
     }
 
-    /**
-     * Check if member name suggests it's used for scene switching (fallback heuristic)
-     */
     function isSceneMemberName(name:String):Bool {
         var lower = name.toLowerCase();
         return lower.indexOf("scene") >= 0 ||
@@ -406,9 +365,6 @@ class TraitExtractor {
                lower == "targetscene";
     }
 
-    /**
-     * Extract string value from expression
-     */
     function extractStringValue(e:Expr):String {
         return switch (e.expr) {
             case EConst(CString(s)): s;
@@ -462,9 +418,6 @@ class TraitExtractor {
         }
     }
 
-    /**
-     * Find lifecycle method registrations in constructor
-     */
     function findLifecycles():{init:Expr, update:Expr, remove:Expr} {
         var result = {init: null, update: null, remove: null};
 
@@ -525,9 +478,6 @@ class TraitExtractor {
         }
     }
 
-    /**
-     * Resolve a callback to its body expression
-     */
     function resolveCallback(e:Expr):Expr {
         return switch (e.expr) {
             // Inline function: function() { ... }
@@ -547,9 +497,6 @@ class TraitExtractor {
         }
     }
 
-    /**
-     * Emit a function body as C code
-     */
     function emitFunction(body:Expr):EmitResult {
         var emitter = new N64CEmitter(className, memberNames, vec4Exprs);
         var code:Array<String> = [];
@@ -582,9 +529,6 @@ class TraitExtractor {
         };
     }
 
-    /**
-     * Emit a single statement as C code
-     */
     function emitStatement(emitter:N64CEmitter, e:Expr):String {
         if (e == null) return null;
 
