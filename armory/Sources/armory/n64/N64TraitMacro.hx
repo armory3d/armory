@@ -480,14 +480,14 @@ class TraitExtractor {
                     var body = resolveCallback(callback);
 
                     switch (funcName) {
-                        case "notifyOnInit", "notifyOnReady":
+                        case "notifyOnInit":
                             result.init = body;
                         case "notifyOnUpdate":
                             result.update = body;
                         case "notifyOnRemove":
                             result.remove = body;
-                        case "notifyOnLateUpdate", "notifyOnRender", "notifyOnFrameUpdate":
-                            // These are not supported on N64 - warn the user
+                        case "notifyOnAdd", "notifyOnLateUpdate", "notifyOnFixedUpdate", "notifyOnRender", "notifyOnRender2D":
+                            // These are valid Trait methods but not supported on N64 - warn the user
                             Context.warning('N64: $funcName is not supported, code will be ignored', e.pos);
                     }
                 }

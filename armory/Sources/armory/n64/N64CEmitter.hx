@@ -707,7 +707,10 @@ class N64CEmitter {
     function shouldSkipCall(name:String):Bool {
         return switch (name) {
             // Trait lifecycle registration (handled differently on N64)
-            case "notifyOnInit", "notifyOnUpdate", "notifyOnRemove", "notifyOnLateUpdate": true;
+            // Valid methods from iron.Trait: notifyOnAdd, notifyOnInit, notifyOnRemove, notifyOnUpdate,
+            // notifyOnLateUpdate, notifyOnFixedUpdate, notifyOnRender, notifyOnRender2D
+            case "notifyOnAdd", "notifyOnInit", "notifyOnUpdate", "notifyOnRemove",
+                 "notifyOnLateUpdate", "notifyOnFixedUpdate", "notifyOnRender", "notifyOnRender2D": true;
             // Object casting/creation
             case "cast", "super": true;
             // Debug/logging
