@@ -31,6 +31,7 @@ class N64CEmitter {
     var localVars:Map<String, Bool>;
     var vec4Exprs:Map<String, Expr>;  // Vec4 member init expressions for axis resolution
     var vec2Vars:Map<String, {x:String, y:String}>;  // Vec2 local variables with their x,y expressions
+    var chainCounter:Int = 0;  // Counter for unique Vec2 chain temp names
     var needsObj:Bool = false;
     var needsDt:Bool = false;
     var needsMath:Bool = false;  // True if sqrtf is used
@@ -668,8 +669,8 @@ class N64CEmitter {
         }
 
         // Return a special marker that will be resolved when accessing .x or .y
-        // Store the resolved expressions temporarily
-        var tempName = '__chain_${baseVarName}_${chain.length}';
+        // Store the resolved expressions temporarily with unique counter
+        var tempName = '__chain_${baseVarName}_${chainCounter++}';
         vec2Vars.set(tempName, {x: xExpr, y: yExpr});
         return tempName;
     }

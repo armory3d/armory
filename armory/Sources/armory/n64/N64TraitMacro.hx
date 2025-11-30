@@ -97,6 +97,21 @@ class N64TraitMacro {
         for (name in traitData.keys()) {
             var ir = traitData.get(name);
 
+            // Skip traits that have no useful code (empty init with just "if () { }" etc)
+            var hasUsefulCode = false;
+            for (code in ir.initCode) {
+                if (code != "" && code != "if () {  }" && code != "if () { }") hasUsefulCode = true;
+            }
+            for (code in ir.updateCode) {
+                if (code != "" && code != "if () {  }" && code != "if () { }") hasUsefulCode = true;
+            }
+            for (code in ir.removeCode) {
+                if (code != "" && code != "if () {  }" && code != "if () { }") hasUsefulCode = true;
+            }
+            if (!hasUsefulCode && !ir.needs_data) {
+                continue;  // Skip this trait entirely
+            }
+
             // Convert members map to object for JSON
             var membersObj:Dynamic = {};
             for (memberName in ir.members.keys()) {
@@ -128,6 +143,11 @@ class N64TraitMacro {
             }
             anyTransform = anyTransform || ir.hasTransform;
             anyScene = anyScene || ir.hasScene;
+
+            // Collect scene names
+            if (ir.targetScene != null && !Lambda.has(sceneNames, ir.targetScene)) {
+                sceneNames.push(ir.targetScene);
+            }
         }
 
         var output:Dynamic = {
@@ -179,7 +199,8 @@ typedef TraitIR = {
     needsDt:Bool,
     inputButtons:Array<String>,          // Buttons used (e.g., ["N64_BTN_A", "N64_BTN_B"])
     hasTransform:Bool,
-    hasScene:Bool
+    hasScene:Bool,
+    targetScene:String                   // Scene name if Scene.setActive() is used
 }
 
 typedef MemberIR = {
@@ -240,6 +261,7 @@ class TraitExtractor {
         var hasTransform = false;
         var hasScene = false;
         var needsInitialScale = false;
+        var targetScene:String = null;
 
         if (lifecycles.init != null) {
             var result = emitFunction(lifecycles.init);
@@ -252,6 +274,7 @@ class TraitExtractor {
             needsInitialScale = needsInitialScale || result.needsInitialScale;
             // Add hardcoded scene as a member
             if (result.targetScene != null) {
+                targetScene = result.targetScene;
                 var sceneEnum = 'SCENE_${result.targetScene.toUpperCase()}';
                 members.set("target_scene", {type: "SceneId", default_value: sceneEnum});
                 if (!Lambda.has(memberNames, "target_scene")) memberNames.push("target_scene");
@@ -269,6 +292,7 @@ class TraitExtractor {
             needsInitialScale = needsInitialScale || result.needsInitialScale;
             // Add hardcoded scene as a member
             if (result.targetScene != null) {
+                targetScene = result.targetScene;
                 var sceneEnum = 'SCENE_${result.targetScene.toUpperCase()}';
                 members.set("target_scene", {type: "SceneId", default_value: sceneEnum});
                 if (!Lambda.has(memberNames, "target_scene")) memberNames.push("target_scene");
@@ -286,6 +310,7 @@ class TraitExtractor {
             needsInitialScale = needsInitialScale || result.needsInitialScale;
             // Add hardcoded scene as a member
             if (result.targetScene != null) {
+                targetScene = result.targetScene;
                 var sceneEnum = 'SCENE_${result.targetScene.toUpperCase()}';
                 members.set("target_scene", {type: "SceneId", default_value: sceneEnum});
                 if (!Lambda.has(memberNames, "target_scene")) memberNames.push("target_scene");
@@ -321,7 +346,8 @@ class TraitExtractor {
             needsDt: needsDt,
             inputButtons: inputButtons,
             hasTransform: hasTransform,
-            hasScene: hasScene
+            hasScene: hasScene,
+            targetScene: targetScene
         };
     }
 
