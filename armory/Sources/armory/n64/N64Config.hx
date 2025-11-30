@@ -94,10 +94,17 @@ class N64Config {
 
     /**
      * Map a Haxe button name to N64 constant
+     * Returns null if button is unknown (caller should handle/warn)
      */
     public static function mapButton(button:String):String {
-        var mapped = _buttonMap.get(button.toLowerCase());
-        return mapped != null ? mapped : "N64_BTN_A";
+        return _buttonMap.get(button.toLowerCase());
+    }
+
+    /**
+     * Get default button for fallback
+     */
+    public static function getDefaultButton():String {
+        return "N64_BTN_A";
     }
 
     /**

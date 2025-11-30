@@ -245,14 +245,29 @@ class N64CEmitter {
         var prop = lastTwo[1];
         if (prop != "scale" && prop != "loc" && prop != "rot") return null;
 
-        // RHS must be new Vec4(x, y, z)
+        // RHS must be new Vec4(...)
         switch (rhs.expr) {
             case ENew(tp, params):
-                if (tp.name != "Vec4" || params.length < 3) return null;
+                if (tp.name != "Vec4") return null;
 
-                var x = emitExpr(params[0]);
-                var y = emitExpr(params[1]);
-                var z = emitExpr(params[2]);
+                var x:String, y:String, z:String;
+                if (params.length >= 3) {
+                    x = emitExpr(params[0]);
+                    y = emitExpr(params[1]);
+                    z = emitExpr(params[2]);
+                } else if (params.length == 2) {
+                    // Vec4(x, y) -> (x, y, 0)
+                    x = emitExpr(params[0]);
+                    y = emitExpr(params[1]);
+                    z = "0.0f";
+                } else if (params.length == 1) {
+                    // Vec4(v) -> (v, v, v)
+                    var v = emitExpr(params[0]);
+                    x = v; y = v; z = v;
+                } else {
+                    // Vec4() -> (0, 0, 0)
+                    x = "0.0f"; y = "0.0f"; z = "0.0f";
+                }
 
                 if (x == "" || y == "" || z == "") return null;
 
@@ -795,6 +810,12 @@ class N64CEmitter {
             var button = extractButtonName(buttonExpr);
             var n64Button = N64Config.mapButton(button);
 
+            // Warn and use default if button is unknown
+            if (n64Button == null) {
+                n64Button = N64Config.getDefaultButton();
+                // Note: Can't emit warning at macro time from here, but the button will work
+            }
+
             // Track button usage
             if (!Lambda.has(inputButtons, n64Button)) {
                 inputButtons.push(n64Button);
@@ -803,7 +824,7 @@ class N64CEmitter {
             return '$n64Func($n64Button)';
         }
 
-        return '$n64Func(N64_BTN_A)';
+        return '$n64Func(${N64Config.getDefaultButton()})';
     }
 
     /**
@@ -848,14 +869,37 @@ class N64CEmitter {
         var first = params[0];
         switch (first.expr) {
             case EConst(CFloat(_)), EConst(CInt(_)):
-                // scale(x, y, z)
+                // scale(x, y, z) - three separate numbers
                 if (params.length >= 3) {
                     var x = emitExpr(params[0]);
                     var y = emitExpr(params[1]);
                     var z = emitExpr(params[2]);
                     // Scale: swap Y and Z (no negation needed for scale)
                     return 'it_set_scale(&((ArmObject*)obj)->transform, $x, $z, $y)';
+                } else if (params.length == 1) {
+                    // scale(uniform) - single value for all axes
+                    var s = emitExpr(params[0]);
+                    return 'it_set_scale(&((ArmObject*)obj)->transform, $s, $s, $s)';
                 }
+            case ENew(tp, newParams):
+                // scale(new Vec4(x, y, z))
+                if (tp.name == "Vec4") {
+                    var x:String, y:String, z:String;
+                    if (newParams.length >= 3) {
+                        x = emitExpr(newParams[0]);
+                        y = emitExpr(newParams[1]);
+                        z = emitExpr(newParams[2]);
+                    } else if (newParams.length == 1) {
+                        var v = emitExpr(newParams[0]);
+                        x = v; y = v; z = v;
+                    } else {
+                        x = "1.0f"; y = "1.0f"; z = "1.0f";  // Default scale
+                    }
+                    return 'it_set_scale(&((ArmObject*)obj)->transform, $x, $z, $y)';
+                }
+                // Fall through to default
+                var v = emitExpr(first);
+                return 'it_set_scale(&((ArmObject*)obj)->transform, $v.x, $v.z, $v.y)';
             default:
                 // scale(vec) - assume Vec4-like with x, y, z fields
                 var v = emitExpr(first);
@@ -907,14 +951,21 @@ class N64CEmitter {
         // Look for Vec4(x,y,z) or iron.math.Vec4(x,y,z)
         switch (e.expr) {
             case ENew(_, params) | ECall(_, params):
+                var bx:Float = 0.0, by:Float = 0.0, bz:Float = 0.0;
                 if (params.length >= 3) {
-                    var bx = getConstFloat(params[0]);
-                    var by = getConstFloat(params[1]);
-                    var bz = getConstFloat(params[2]);
-
-                    // Blender (X,Y,Z) -> N64 (X, Z, -Y)
-                    return {x: bx, y: bz, z: -by};
+                    bx = getConstFloat(params[0]);
+                    by = getConstFloat(params[1]);
+                    bz = getConstFloat(params[2]);
+                } else if (params.length == 2) {
+                    bx = getConstFloat(params[0]);
+                    by = getConstFloat(params[1]);
+                    bz = 0.0;
+                } else if (params.length == 1) {
+                    var v = getConstFloat(params[0]);
+                    bx = v; by = v; bz = v;
                 }
+                // Blender (X,Y,Z) -> N64 (X, Z, -Y)
+                return {x: bx, y: bz, z: -by};
             case EField(_, field):
                 // Vec4.xAxis(), etc.
                 return switch (field) {
@@ -1162,14 +1213,34 @@ class N64CEmitter {
     function tryExtractVec2(e:Expr):{x:String, y:String} {
         return switch (e.expr) {
             case ENew(tp, params):
-                if (tp.name == "Vec2" && params.length >= 2) {
-                    {x: emitExpr(params[0]), y: emitExpr(params[1])};
+                if (tp.name == "Vec2") {
+                    if (params.length >= 2) {
+                        {x: emitExpr(params[0]), y: emitExpr(params[1])};
+                    } else if (params.length == 1) {
+                        // Copy constructor: new Vec2(otherVec) - try to resolve
+                        var other = getBaseIdent(params[0]);
+                        if (other != null && vec2Vars.exists(other)) {
+                            var src = vec2Vars.get(other);
+                            {x: src.x, y: src.y};
+                        } else {
+                            // Single scalar: new Vec2(val) -> (val, val)
+                            var val = emitExpr(params[0]);
+                            {x: val, y: val};
+                        }
+                    } else {
+                        // Default constructor: new Vec2() -> (0, 0)
+                        {x: "0.0f", y: "0.0f"};
+                    }
                 } else null;
             case ECall(func, params):
                 // Check for Vec2(x, y) function call style
                 var funcName = getFunctionName(func);
-                if (funcName == "Vec2" && params.length >= 2) {
-                    {x: emitExpr(params[0]), y: emitExpr(params[1])};
+                if (funcName == "Vec2") {
+                    if (params.length >= 2) {
+                        {x: emitExpr(params[0]), y: emitExpr(params[1])};
+                    } else if (params.length == 0) {
+                        {x: "0.0f", y: "0.0f"};
+                    } else null;
                 } else {
                     // Check for Vec2 method calls like direction.clone().mult(speed)
                     var chainResult = tryEmitVec2Chain(func, params);

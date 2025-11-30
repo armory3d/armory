@@ -486,6 +486,9 @@ class TraitExtractor {
                             result.update = body;
                         case "notifyOnRemove":
                             result.remove = body;
+                        case "notifyOnLateUpdate", "notifyOnRender", "notifyOnFrameUpdate":
+                            // These are not supported on N64 - warn the user
+                            Context.warning('N64: $funcName is not supported, code will be ignored', e.pos);
                     }
                 }
                 // Recurse into call arguments
