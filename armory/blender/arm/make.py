@@ -692,7 +692,7 @@ def build_success():
             if arm.utils.get_open_n64_rom_directory():
                 arm.utils.open_folder(os.path.abspath(arm.utils.build_dir() + '/n64'))
         else:
-            N64Exporter.build_project()
+            N64Exporter.export_project()
             if arm.utils.get_open_n64_rom_directory():
                 arm.utils.open_folder(os.path.abspath(arm.utils.build_dir() + '/n64'))
         return

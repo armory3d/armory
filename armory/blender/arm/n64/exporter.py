@@ -31,9 +31,9 @@ class N64Exporter:
 
 
     @classmethod
-    def build_project(cls):
+    def export_project(cls):
         exporter = cls()
-        exporter.build()
+        exporter.export()
 
 
     @classmethod
@@ -527,6 +527,33 @@ class N64Exporter:
         n64_utils.copy_src('iron/object/transform.c', 'src')
 
 
+    def reset_materials_to_bsdf(self):
+        """Reset materials back to BSDF format (requires Fast64 addon)."""
+        try:
+            if not hasattr(bpy.ops.scene, 'f3d_convert_to_bsdf'):
+                return False
+
+            bpy.ops.scene.f3d_convert_to_bsdf(
+                direction='BSDF',
+                converter_type='All',
+                backup=False,
+                put_alpha_into_color=False,
+                use_recommended=True,
+                lights_for_colors=False,
+                default_to_fog=False,
+                set_rendermode_without_fog=False
+            )
+            bpy.ops.outliner.orphans_purge(
+                do_local_ids=True,
+                do_linked_ids=True,
+                do_recursive=True
+            )
+            return True
+        except Exception as e:
+            log.warn(f'BSDF material reset failed: {e}')
+            return False
+
+
     def run_make(self):
         msys2_executable = arm.utils.get_msys2_bash_executable()
         if len(msys2_executable) > 0:
@@ -556,50 +583,20 @@ class N64Exporter:
         else:
             log.error('MSYS2 Bash executable path is not set in Armory preferences.')
             return False
+        log.info('Info: N64 make process completed successfully.')
         return True
 
 
-    def reset_materials_to_bsdf(self):
-        """Reset materials back to BSDF format (requires Fast64 addon)."""
-        try:
-            if not hasattr(bpy.ops.scene, 'f3d_convert_to_bsdf'):
-                return False
-
-            bpy.ops.scene.f3d_convert_to_bsdf(
-                direction='BSDF',
-                converter_type='All',
-                backup=False,
-                put_alpha_into_color=False,
-                use_recommended=True,
-                lights_for_colors=False,
-                default_to_fog=False,
-                set_rendermode_without_fog=False
-            )
-            bpy.ops.outliner.orphans_purge(
-                do_local_ids=True,
-                do_linked_ids=True,
-                do_recursive=True
-            )
-            return True
-        except Exception as e:
-            log.warn(f'BSDF material reset failed: {e}')
-            return False
-
-
-    def build(self):
-        # Step 1: Load trait metadata from macro-generated JSON
+    def export(self):
         self.trait_info = codegen.get_trait_info()
         if not self.trait_info.get('traits'):
             log.warn("No traits found in macro JSON. Make sure to compile with arm_target_n64 defined.")
 
-        # Step 2: Convert materials for N64
         self.convert_materials_to_f3d()
 
-        # Step 3: Export assets
         self.make_directories()
         self.export_meshes()
 
-        # Step 4: Generate C code
         self.write_makefile()
         self.write_types()
         self.write_input()
@@ -609,14 +606,15 @@ class N64Exporter:
         self.write_renderer()
 
         self.write_scenes()
-        self.write_traits()  # Reads from macro JSON via codegen
+        self.write_traits()
         self.write_iron()
 
         self.reset_materials_to_bsdf()
+        log.info('Info: N64 export completed.')
 
 
     def publish(self):
-        self.build()
+        self.export()
         return self.run_make()
 
 
