@@ -588,31 +588,9 @@ class N64Exporter:
 
     def build(self):
         # Step 1: Load trait metadata from macro-generated JSON
-        log.info('Loading trait metadata from Haxe macro...')
         self.trait_info = codegen.get_trait_info()
-
-        # Get list of valid Blender scene names for validation
-        blender_scenes = [arm.utils.safesrc(s.name).lower() for s in bpy.data.scenes if not s.library]
-        log.info(f"Blender scenes: {blender_scenes}")
-
         if not self.trait_info.get('traits'):
             log.warn("No traits found in macro JSON. Make sure to compile with arm_target_n64 defined.")
-        else:
-            log.info(f"Found traits: {list(self.trait_info['traits'].keys())}")
-            log.info(f"Input buttons used: {self.trait_info.get('input_buttons', [])}")
-            if self.trait_info.get('has_transform'):
-                log.info("Transform operations detected")
-            if self.trait_info.get('has_scene'):
-                scene_names = self.trait_info.get('scene_names', [])
-                log.info(f"Scene names detected: {scene_names}")
-
-                # Validate detected scene names against Blender scenes
-                literal_scenes = [s for s in scene_names if not s.startswith('member:')]
-                invalid_scenes = [s for s in literal_scenes if s not in blender_scenes and s != 'unknown']
-                if invalid_scenes:
-                    log.warn(f"Invalid scene names detected: {invalid_scenes}")
-                    log.warn(f"Valid scene names are: {blender_scenes}")
-                    log.warn("Scene switching may use wrong scene IDs. Check your Haxe trait code.")
 
         # Step 2: Convert materials for N64
         self.convert_materials_to_f3d()
