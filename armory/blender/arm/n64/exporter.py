@@ -22,14 +22,7 @@ else:
 
 
 class N64Exporter:
-    """
-    N64 Exporter - Exports Armory scenes to N64 C code.
-
-    Architecture:
-    - Haxe macro does ALL trait analysis (members, buttons, scenes, C code)
-    - codegen.py reads macro JSON and generates traits.h/c
-    - This exporter handles mesh/scene/camera export and wires up trait pointers
-    """
+    """N64 Exporter - Exports Armory scenes to N64 C code."""
 
     def __init__(self):
         self.scene_data = {}
@@ -56,7 +49,7 @@ class N64Exporter:
 
 
     def convert_materials_to_f3d(self):
-        """Convert materials to F3D format. Requires Fast64 addon."""
+        """Convert materials to F3D format (requires Fast64 addon)."""
         try:
             # Check if F3D addon is available
             if not hasattr(bpy.ops.scene, 'f3d_convert_to_bsdf'):
@@ -567,7 +560,7 @@ class N64Exporter:
 
 
     def reset_materials_to_bsdf(self):
-        """Reset materials back to BSDF format. Requires Fast64 addon."""
+        """Reset materials back to BSDF format (requires Fast64 addon)."""
         try:
             if not hasattr(bpy.ops.scene, 'f3d_convert_to_bsdf'):
                 return False

@@ -1,10 +1,4 @@
-"""
-N64 Code Generator
-
-Thin emitter that reads n64_traits.json from the macro and fills C templates.
-All heavy lifting (button mapping, type resolution, coordinate conversion)
-is done by the Haxe macro. This script just fills template placeholders.
-"""
+"""N64 Code Generator - Reads n64_traits.json from macro and fills C templates."""
 
 import json
 import os
@@ -55,12 +49,8 @@ def get_trait_info(build_dir: str = None) -> dict:
     }
 
 
-# ============================================
-# Template placeholder generators
-# ============================================
-
 def _is_valid_statement(stmt: str) -> bool:
-    """Check if a statement is valid C code (not empty or malformed)."""
+    """Check if statement is valid C code."""
     if not stmt or not stmt.strip():
         return False
     # Filter out malformed if statements with empty conditions
@@ -73,7 +63,7 @@ def _is_valid_statement(stmt: str) -> bool:
 
 
 def _should_skip_trait(trait: dict) -> bool:
-    """Check if trait should be skipped (determined by macro)."""
+    """Check if trait should be skipped."""
     return trait.get("skip", False)
 
 
@@ -201,10 +191,6 @@ def generate_trait_implementations(traits: list) -> str:
     return "\n".join(lines)
 
 
-# ============================================
-# Template filling and file writing
-# ============================================
-
 def fill_traits_h_template(traits: list) -> str:
     template = load_template("traits.h.j2")
 
@@ -240,12 +226,8 @@ def write_traits_files():
         f.write(fill_traits_c_template(traits))
 
 
-# ============================================
-# Scene initialization code generators
-# ============================================
-
 def generate_transform_block(prefix: str, pos: list, rot: list = None, scale: list = None) -> list:
-    """Generate C code lines for transform initialization."""
+    """Generate C code for transform initialization."""
     lines = []
     lines.append(f'    {prefix}.transform.loc[0] = {pos[0]:.6f}f;')
     lines.append(f'    {prefix}.transform.loc[1] = {pos[1]:.6f}f;')
@@ -265,7 +247,7 @@ def generate_transform_block(prefix: str, pos: list, rot: list = None, scale: li
 
 
 def generate_trait_block(prefix: str, traits: list, trait_info: dict, scene_name: str) -> list:
-    """Generate C code lines for trait initialization."""
+    """Generate C code for trait initialization."""
     from arm.n64 import utils as n64_utils
 
     lines = []
@@ -293,7 +275,7 @@ def generate_trait_block(prefix: str, traits: list, trait_info: dict, scene_name
 
 
 def _fmt_vec3(v: list) -> str:
-    """Format a 3-element list as a T3DVec3 initializer."""
+    """Format a 3-element list as T3DVec3 initializer."""
     return f'(T3DVec3){{{{ {v[0]:.6f}f, {v[1]:.6f}f, {v[2]:.6f}f }}}}'
 
 

@@ -1,21 +1,12 @@
-"""
-N64 Utilities
-
-Helper functions for Blender operations and trait data extraction.
-NO coordinate conversion here - that's handled by converter.py using macro rules.
-"""
+"""N64 Utilities - Helper functions for Blender operations and trait data."""
 
 import os
 import shutil
 import arm.utils
 
 
-# =============================================================================
-# Blender Utilities
-# =============================================================================
-
 def copy_src(name, path=''):
-    """Copy a source file from the N64 deployment templates to the build directory."""
+    """Copy a source file from N64 deployment templates to build directory."""
     tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), path, name)
     out_path = os.path.join(arm.utils.build_dir(), 'n64', path, name)
 
@@ -24,7 +15,7 @@ def copy_src(name, path=''):
 
 
 def get_clear_color(scene):
-    """Extract the clear/background color from a Blender scene."""
+    """Extract clear/background color from a Blender scene."""
     if scene.world is None:
         return [0.051, 0.051, 0.051, 1.0]
 
@@ -46,7 +37,7 @@ def get_clear_color(scene):
 
 
 def deselect_from_all_viewlayers():
-    """Deselect all objects in all view layers across all scenes."""
+    """Deselect all objects in all view layers."""
     import bpy
     bpy.context.view_layer.objects.active = None
     bpy.ops.object.select_all(action='DESELECT')
@@ -60,20 +51,12 @@ def deselect_from_all_viewlayers():
 
 
 def to_uint8(value):
-    """Convert a 0.0-1.0 float value to 0-255 integer."""
+    """Convert 0.0-1.0 float to 0-255 int."""
     return int(max(0, min(1, value)) * 255)
 
 
-# =============================================================================
-# Trait Utilities
-# =============================================================================
-
 def extract_blender_trait_props(trait) -> dict:
-    """Extract per-instance property values from a Blender trait.
-
-    This pulls values set in Blender UI that override the Haxe defaults.
-    Required because macros cannot read Blender scene instances.
-    """
+    """Extract per-instance property values from a Blender trait."""
     props = {}
     if hasattr(trait, 'arm_traitpropslist'):
         for prop in trait.arm_traitpropslist:

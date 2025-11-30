@@ -1,9 +1,4 @@
 # N64 export module for Armory3D
-#
-# Package structure:
-#   codegen.py    - C code generator (reads macro JSON, emits traits.c/h)
-#   utils.py      - Shared utilities (coordinate conversion, blender helpers)
-#   exporter.py   - Main export orchestration
 
 import arm
 
