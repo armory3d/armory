@@ -649,7 +649,7 @@ class N64CEmitter {
 
     /**
      * Emit rotate call with axis resolution
-     * Uses quaternion rotation via it_rotate_axis(transform, axis_x, axis_y, axis_z, angle)
+     * Uses quaternion rotation via it_rotate_axis_global for world-space rotation (matches Armory)
      */
     function emitRotate(params:Array<Expr>):String {
         if (params.length < 2) return "/* rotate needs axis and angle */";
@@ -666,9 +666,8 @@ class N64CEmitter {
         var yStr = floatToC(axisInfo.y);
         var zStr = floatToC(axisInfo.z);
 
-        // Generate quaternion rotation call
-        // it_rotate_axis handles the quaternion math internally
-        return 'it_rotate_axis(&((ArmObject*)obj)->transform, $xStr, $yStr, $zStr, $angleCode)';
+        // Generate global axis rotation call (matches Armory's world-space rotation)
+        return 'it_rotate_axis_global(&((ArmObject*)obj)->transform, $xStr, $yStr, $zStr, $angleCode)';
     }
 
     /**
