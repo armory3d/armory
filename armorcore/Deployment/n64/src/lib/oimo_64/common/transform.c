@@ -1,9 +1,5 @@
 #include "Transform.h"
 
-// =============================================================================
-// Transform Implementation
-// =============================================================================
-
 Transform transform_new(const Vec3* position, const Mat3* rotation) {
     Transform t;
     t.position = position ? *position : vec3_zero();
@@ -12,10 +8,10 @@ Transform transform_new(const Vec3* position, const Mat3* rotation) {
 }
 
 Transform transform_identity(void) {
-    Transform t;
-    t.position = vec3_zero();
-    t.rotation = mat3_identity();
-    return t;
+    return (Transform){
+        .position = {{ 0, 0, 0 }},
+        .rotation = {{ {1, 0, 0}, {0, 1, 0}, {0, 0, 1} }}
+    };
 }
 
 void transform_get_position(const Transform* t, Vec3* out) {
@@ -74,6 +70,9 @@ void vec3_mul_transform(Vec3* v, const Transform* t) {
 
 void vec3_mul_transform_inv(Vec3* v, const Transform* t) {
     vec3_sub(v, &t->position);
-    Mat3 rotT = mat3_transposed(&t->rotation);
-    vec3_mul_mat3(v, &rotT);
+    const Mat3* m = &t->rotation;
+    float x = v->x, y = v->y, z = v->z;
+    v->x = x * m->m[0][0] + y * m->m[0][1] + z * m->m[0][2];
+    v->y = x * m->m[1][0] + y * m->m[1][1] + z * m->m[1][2];
+    v->z = x * m->m[2][0] + y * m->m[2][1] + z * m->m[2][2];
 }

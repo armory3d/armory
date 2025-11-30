@@ -1,10 +1,6 @@
 #include "Quat.h"
 #include <math.h>
 
-// =============================================================================
-// Quat Implementation - Wraps libdragon's fm_quat_* functions
-// =============================================================================
-
 Quat quat_new(float x, float y, float z, float w) {
     return (Quat){{ x, y, z, w }};
 }

@@ -1,9 +1,5 @@
 #include "Vec3.h"
 
-// =============================================================================
-// Vec3 Implementation - Wraps libdragon's fm_vec3_* functions
-// =============================================================================
-
 Vec3 vec3_new(float x, float y, float z) {
     return (Vec3){{ x, y, z }};
 }

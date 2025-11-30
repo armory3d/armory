@@ -1,10 +1,6 @@
 #include "Mat3.h"
 #include <math.h>
 
-// =============================================================================
-// Mat3 Implementation
-// =============================================================================
-
 Mat3 mat3_new(float e00, float e01, float e02,
               float e10, float e11, float e12,
               float e20, float e21, float e22) {
@@ -24,49 +20,63 @@ void mat3_init(Mat3* m, float e00, float e01, float e02,
 }
 
 Mat3 mat3_identity(void) {
-    return mat3_new(1, 0, 0, 0, 1, 0, 0, 0, 1);
+    return (Mat3){{ {1, 0, 0}, {0, 1, 0}, {0, 0, 1} }};
 }
 
 void mat3_add(Mat3* m1, const Mat3* m2) {
-    for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
-            m1->m[i][j] += m2->m[i][j];
+    m1->m[0][0] += m2->m[0][0]; m1->m[0][1] += m2->m[0][1]; m1->m[0][2] += m2->m[0][2];
+    m1->m[1][0] += m2->m[1][0]; m1->m[1][1] += m2->m[1][1]; m1->m[1][2] += m2->m[1][2];
+    m1->m[2][0] += m2->m[2][0]; m1->m[2][1] += m2->m[2][1]; m1->m[2][2] += m2->m[2][2];
 }
 
 void mat3_sub(Mat3* m1, const Mat3* m2) {
-    for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
-            m1->m[i][j] -= m2->m[i][j];
+    m1->m[0][0] -= m2->m[0][0]; m1->m[0][1] -= m2->m[0][1]; m1->m[0][2] -= m2->m[0][2];
+    m1->m[1][0] -= m2->m[1][0]; m1->m[1][1] -= m2->m[1][1]; m1->m[1][2] -= m2->m[1][2];
+    m1->m[2][0] -= m2->m[2][0]; m1->m[2][1] -= m2->m[2][1]; m1->m[2][2] -= m2->m[2][2];
 }
 
 void mat3_scale(Mat3* m, float s) {
-    for (int i = 0; i < 3; i++)
-        for (int j = 0; j < 3; j++)
-            m->m[i][j] *= s;
+    m->m[0][0] *= s; m->m[0][1] *= s; m->m[0][2] *= s;
+    m->m[1][0] *= s; m->m[1][1] *= s; m->m[1][2] *= s;
+    m->m[2][0] *= s; m->m[2][1] *= s; m->m[2][2] *= s;
 }
 
 void mat3_mul(Mat3* m1, const Mat3* m2) {
-    Mat3 tmp;
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            tmp.m[i][j] = m1->m[i][0] * m2->m[0][j]
-                        + m1->m[i][1] * m2->m[1][j]
-                        + m1->m[i][2] * m2->m[2][j];
-        }
-    }
-    *m1 = tmp;
+    float a00 = m1->m[0][0], a01 = m1->m[0][1], a02 = m1->m[0][2];
+    float a10 = m1->m[1][0], a11 = m1->m[1][1], a12 = m1->m[1][2];
+    float a20 = m1->m[2][0], a21 = m1->m[2][1], a22 = m1->m[2][2];
+    float b00 = m2->m[0][0], b01 = m2->m[0][1], b02 = m2->m[0][2];
+    float b10 = m2->m[1][0], b11 = m2->m[1][1], b12 = m2->m[1][2];
+    float b20 = m2->m[2][0], b21 = m2->m[2][1], b22 = m2->m[2][2];
+
+    m1->m[0][0] = a00*b00 + a01*b10 + a02*b20;
+    m1->m[0][1] = a00*b01 + a01*b11 + a02*b21;
+    m1->m[0][2] = a00*b02 + a01*b12 + a02*b22;
+    m1->m[1][0] = a10*b00 + a11*b10 + a12*b20;
+    m1->m[1][1] = a10*b01 + a11*b11 + a12*b21;
+    m1->m[1][2] = a10*b02 + a11*b12 + a12*b22;
+    m1->m[2][0] = a20*b00 + a21*b10 + a22*b20;
+    m1->m[2][1] = a20*b01 + a21*b11 + a22*b21;
+    m1->m[2][2] = a20*b02 + a21*b12 + a22*b22;
 }
 
 void mat3_mul_out(Mat3* out, const Mat3* a, const Mat3* b) {
-    Mat3 tmp;
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            tmp.m[i][j] = a->m[i][0] * b->m[0][j]
-                        + a->m[i][1] * b->m[1][j]
-                        + a->m[i][2] * b->m[2][j];
-        }
-    }
-    *out = tmp;
+    float a00 = a->m[0][0], a01 = a->m[0][1], a02 = a->m[0][2];
+    float a10 = a->m[1][0], a11 = a->m[1][1], a12 = a->m[1][2];
+    float a20 = a->m[2][0], a21 = a->m[2][1], a22 = a->m[2][2];
+    float b00 = b->m[0][0], b01 = b->m[0][1], b02 = b->m[0][2];
+    float b10 = b->m[1][0], b11 = b->m[1][1], b12 = b->m[1][2];
+    float b20 = b->m[2][0], b21 = b->m[2][1], b22 = b->m[2][2];
+
+    out->m[0][0] = a00*b00 + a01*b10 + a02*b20;
+    out->m[0][1] = a00*b01 + a01*b11 + a02*b21;
+    out->m[0][2] = a00*b02 + a01*b12 + a02*b22;
+    out->m[1][0] = a10*b00 + a11*b10 + a12*b20;
+    out->m[1][1] = a10*b01 + a11*b11 + a12*b21;
+    out->m[1][2] = a10*b02 + a11*b12 + a12*b22;
+    out->m[2][0] = a20*b00 + a21*b10 + a22*b20;
+    out->m[2][1] = a20*b01 + a21*b11 + a22*b21;
+    out->m[2][2] = a20*b02 + a21*b12 + a22*b22;
 }
 
 void mat3_transpose(Mat3* m) {
@@ -145,11 +155,11 @@ Mat3 mat3_from_quat(const Quat* q) {
     float yy = y * y2, yz = y * z2, zz = z * z2;
     float wx = w * x2, wy = w * y2, wz = w * z2;
 
-    return mat3_new(
-        1 - (yy + zz), xy - wz, xz + wy,
-        xy + wz, 1 - (xx + zz), yz - wx,
-        xz - wy, yz + wx, 1 - (xx + yy)
-    );
+    return (Mat3){{
+        { 1 - (yy + zz), xy - wz, xz + wy },
+        { xy + wz, 1 - (xx + zz), yz - wx },
+        { xz - wy, yz + wx, 1 - (xx + yy) }
+    }};
 }
 
 Quat mat3_to_quat(const Mat3* m) {
@@ -190,11 +200,11 @@ Mat3 mat3_from_euler_xyz(const Vec3* euler) {
     fm_sincosf(euler->y, &sy, &cy);
     fm_sincosf(euler->z, &sz, &cz);
 
-    return mat3_new(
-        cy * cz, -cy * sz, sy,
-        sx * sy * cz + cx * sz, -sx * sy * sz + cx * cz, -sx * cy,
-        -cx * sy * cz + sx * sz, cx * sy * sz + sx * cz, cx * cy
-    );
+    return (Mat3){{
+        { cy * cz, -cy * sz, sy },
+        { sx * sy * cz + cx * sz, -sx * sy * sz + cx * cz, -sx * cy },
+        { -cx * sy * cz + sx * sz, cx * sy * sz + sx * cz, cx * cy }
+    }};
 }
 
 Vec3 mat3_to_euler_xyz(const Mat3* m) {
