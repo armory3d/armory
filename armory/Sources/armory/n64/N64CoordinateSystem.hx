@@ -21,32 +21,7 @@ class N64CoordinateSystem {
     //   Position:  (X, Y, Z) -> (X, Z, -Y)
     //   Scale:     (X, Y, Z) -> (X, Z, Y) * factor
     //   Direction: (X, Y, Z) -> (X, Z, -Y)
-    //   Euler:     Quat->Euler(YZX) -> (-X, -Z, Y)
-
-    // =========================================
-    // Axis Swizzle Maps
-    // =========================================
-
-    /** Position swizzle: blender axis -> n64 expression */
-    static var _positionSwizzle:Map<String, String> = [
-        "x" => "x",
-        "y" => "-z",  // Blender Y becomes negative N64 Z
-        "z" => "y"    // Blender Z becomes N64 Y
-    ];
-
-    /** Scale swizzle (no negation needed for scale) */
-    static var _scaleSwizzle:Map<String, String> = [
-        "x" => "x",
-        "y" => "z",
-        "z" => "y"
-    ];
-
-    /** Euler angle swizzle with sign */
-    static var _eulerSwizzle:Map<String, String> = [
-        "x" => "-x",
-        "y" => "y",
-        "z" => "-z"
-    ];
+    //   Euler:     (X, Y, Z) -> (-X, Y, -Z)  [order: YZX]
 
     /** Default scale factor for Blender -> N64 */
     public static inline var DEFAULT_SCALE_FACTOR:Float = 0.015;
@@ -87,6 +62,50 @@ class N64CoordinateSystem {
      */
     public static function emitRuntimePositionConversion(varName:String):String {
         return '(Vec3){${varName}.x, ${varName}.z, -(${varName}.y)}';
+    }
+
+    /**
+     * Generate runtime conversion code for scale from a Vec3 variable.
+     */
+    public static function emitRuntimeScaleConversion(varName:String):String {
+        return '$varName.x, $varName.z, $varName.y';
+    }
+
+    // =========================================
+    // C Code Emission Helpers (for N64CEmitter)
+    // =========================================
+
+    /**
+     * Emit position-swizzled arguments for a C function call.
+     * Blender (X, Y, Z) -> N64 (X, Z, -Y)
+     */
+    public static function emitPositionArgs(x:String, y:String, z:String):String {
+        return '$x, $z, -($y)';
+    }
+
+    /**
+     * Emit scale-swizzled arguments for a C function call.
+     * Blender (X, Y, Z) -> N64 (X, Z, Y) - no negation for scale
+     */
+    public static function emitScaleArgs(x:String, y:String, z:String):String {
+        return '$x, $z, $y';
+    }
+
+    /**
+     * Emit direction-swizzled arguments for a C function call.
+     * Same as position: Blender (X, Y, Z) -> N64 (X, Z, -Y)
+     */
+    public static function emitDirectionArgs(x:String, y:String, z:String):String {
+        return '$x, $z, -($y)';
+    }
+
+    /**
+     * Convert Blender axis values to N64 axis values (for rotation axes).
+     * Returns the converted {x, y, z} floats.
+     */
+    public static function convertAxisValues(bx:Float, by:Float, bz:Float):{x:Float, y:Float, z:Float} {
+        // Blender (X,Y,Z) -> N64 (X, Z, -Y)
+        return {x: bx, y: bz, z: -by};
     }
 
     /**

@@ -1,6 +1,7 @@
 package armory.n64;
 
 #if macro
+import haxe.macro.Context;
 import haxe.macro.Expr;
 
 using StringTools;
@@ -35,6 +36,7 @@ class N64CEmitter {
     var needsObj:Bool = false;
     var needsDt:Bool = false;
     var needsMath:Bool = false;  // True if sqrtf is used
+    var currentPos:haxe.macro.Expr.Position = null;  // Current expression position for warnings
 
     // Feature tracking
     var inputButtons:Array<String>;
@@ -56,12 +58,25 @@ class N64CEmitter {
     }
 
     /**
+     * Emit a compile-time warning at the current expression position
+     */
+    function warn(msg:String):Void {
+        if (currentPos != null) {
+            Context.warning('N64: $msg', currentPos);
+        }
+    }
+
+    /**
      * Main entry: emit C code for an expression
      */
     public function emitExpr(expr:Expr):String {
         if (expr == null) return "";
 
-        return switch (expr.expr) {
+        // Track position for warnings
+        var prevPos = currentPos;
+        currentPos = expr.pos;
+
+        var result = switch (expr.expr) {
             case EConst(c): emitConst(c);
             case EBinop(op, e1, e2): emitBinop(op, e1, e2);
             case EUnop(op, postFix, e): emitUnop(op, postFix, e);
@@ -79,8 +94,13 @@ class N64CEmitter {
             case EBreak: "break";
             case EContinue: "continue";
             case ETernary(econd, eif, eelse): '(${emitExpr(econd)} ? ${emitExpr(eif)} : ${emitExpr(eelse)})';
-            default: "/* unsupported expr */";
+            default:
+                warn("Unsupported expression type");
+                "/* N64_UNSUPPORTED: expr */";
         }
+
+        currentPos = prevPos;
+        return result;
     }
 
     /**
@@ -92,7 +112,9 @@ class N64CEmitter {
             case CFloat(f): '${f}f';
             case CString(s): '"$s"';
             case CIdent(s): resolveIdent(s);
-            case CRegexp(_, _): "/* regex unsupported */";
+            case CRegexp(_, _):
+                warn("Regular expressions not supported");
+                "/* N64_UNSUPPORTED: regex */";
         }
     }
 
@@ -167,26 +189,10 @@ class N64CEmitter {
             }
         }
 
-        // Simplify input function comparisons: `input_down(x) != 0.0f` -> `input_down(x)`
+        // Simplify input function comparisons with zero
         // N64's input functions return bool, so comparison to 0 is redundant
-        if ((op == OpNotEq || op == OpGt || op == OpGte) && isZeroLiteral(right)) {
-            if (isInputCall(left)) {
-                return left;  // Just return the bool-returning function call
-            }
-        }
-        // Handle reversed: `0.0f != input_down(x)` -> `input_down(x)`
-        if ((op == OpNotEq || op == OpLt || op == OpLte) && isZeroLiteral(left)) {
-            if (isInputCall(right)) {
-                return right;
-            }
-        }
-        // Handle equality: `input_down(x) == 0.0f` -> `!input_down(x)`
-        if (op == OpEq && isZeroLiteral(right) && isInputCall(left)) {
-            return '!$left';
-        }
-        if (op == OpEq && isZeroLiteral(left) && isInputCall(right)) {
-            return '!$right';
-        }
+        var simplified = trySimplifyInputComparison(op, left, right);
+        if (simplified != null) return simplified;
 
         // Skip operations where either side is empty (skipped variable)
         if (left == "" || right == "") {
@@ -194,7 +200,7 @@ class N64CEmitter {
         }
 
         // Skip assignments where right side is unsupported
-        if (op == OpAssign && right == "/* unsupported expr */") {
+        if (op == OpAssign && right == "/* N64_UNSUPPORTED: expr */") {
             return "";
         }
 
@@ -279,10 +285,15 @@ class N64CEmitter {
                 if (prop == "scale") {
                     // Scale values are relative to initial scale (1.0 = original size)
                     // Multiply by _initialScale which is auto-captured in on_ready
-                    // Apply coordinate swizzle: Blender (X,Y,Z) -> N64 (X,Z,Y)
+                    // Apply coordinate swizzle via N64CoordinateSystem
                     needsInitialScale = true;
                     var data = '((' + traitName + 'Data*)data)';
+                    // Scale swizzle: (X,Y,Z) -> (X,Z,Y) applied to initial scale components
                     return '$fn(&((ArmObject*)obj)->transform, ($x) * $data->_initialScale.x, ($z) * $data->_initialScale.y, ($y) * $data->_initialScale.z)';
+                } else if (prop == "loc") {
+                    // Position swizzle: (X,Y,Z) -> (X,Z,-Y)
+                    var args = N64CoordinateSystem.emitPositionArgs(x, y, z);
+                    return '$fn(&((ArmObject*)obj)->transform, $args)';
                 } else {
                     return '$fn(&((ArmObject*)obj)->transform, $x, $y, $z)';
                 }
@@ -305,6 +316,43 @@ class N64CEmitter {
         return StringTools.startsWith(s, "input_down(") ||
                StringTools.startsWith(s, "input_started(") ||
                StringTools.startsWith(s, "input_released(");
+    }
+
+    /**
+     * Simplify input function comparisons with zero.
+     * N64's input functions return bool, so comparison to 0 is redundant.
+     * - `input_down(x) != 0` -> `input_down(x)`
+     * - `0 != input_down(x)` -> `input_down(x)`
+     * - `input_down(x) == 0` -> `!input_down(x)`
+     * - `0 == input_down(x)` -> `!input_down(x)`
+     * Returns null if no simplification applies.
+     */
+    function trySimplifyInputComparison(op:Binop, left:String, right:String):Null<String> {
+        // Check for "truthy" comparison: != 0, > 0, >= 1
+        var isTruthyOp = (op == OpNotEq || op == OpGt || op == OpGte);
+        // Check for "falsy" comparison: == 0
+        var isFalsyOp = (op == OpEq);
+        // Reversed truthy: 0 < x, 0 <= x, 0 != x
+        var isReversedTruthyOp = (op == OpNotEq || op == OpLt || op == OpLte);
+
+        // input_call != 0 / > 0 / >= 0 -> input_call
+        if (isTruthyOp && isZeroLiteral(right) && isInputCall(left)) {
+            return left;
+        }
+        // 0 != input_call / 0 < input_call -> input_call
+        if (isReversedTruthyOp && isZeroLiteral(left) && isInputCall(right)) {
+            return right;
+        }
+        // input_call == 0 -> !input_call
+        if (isFalsyOp && isZeroLiteral(right) && isInputCall(left)) {
+            return '!$left';
+        }
+        // 0 == input_call -> !input_call
+        if (isFalsyOp && isZeroLiteral(left) && isInputCall(right)) {
+            return '!$right';
+        }
+
+        return null;
     }
 
     function emitAssignOp(op:Binop):String {
@@ -432,8 +480,8 @@ class N64CEmitter {
                 return 'input_stick_$axisName()';
             }
             if (stick == "rightStick") {
-                // N64 has no right stick - return 1.0f as a neutral multiplier
-                // This way expressions like `scaleSpeed * rightStick.y * dt` become `scaleSpeed * 1.0f * dt`
+                // N64 has no right stick - return 0 as neutral
+                warn("N64 has no right stick, using 0.0f");
                 return '0.0f';
             }
         }
@@ -444,7 +492,8 @@ class N64CEmitter {
             return field;
         }
 
-        return '/* unsupported gamepad field: $field */';
+        warn('Unsupported gamepad field: $field');
+        return '/* N64_UNSUPPORTED: gamepad.$field */';
     }
 
     /**
@@ -524,19 +573,36 @@ class N64CEmitter {
                     needsMath = true;
                     var args = [for (p in params) emitExpr(p)].join(", ");
                     return switch (method) {
+                        // Basic math
                         case "sqrt": 'sqrtf($args)';
                         case "abs": 'fabsf($args)';
+                        case "pow": 'powf($args)';
+                        // Trigonometry
                         case "sin": 'sinf($args)';
                         case "cos": 'cosf($args)';
                         case "tan": 'tanf($args)';
+                        case "asin": 'asinf($args)';
+                        case "acos": 'acosf($args)';
+                        case "atan": 'atanf($args)';
                         case "atan2": 'atan2f($args)';
+                        // Exponential/logarithmic
+                        case "log": 'logf($args)';
+                        case "exp": 'expf($args)';
+                        // Rounding
                         case "floor": 'floorf($args)';
                         case "ceil": 'ceilf($args)';
                         case "round": 'roundf($args)';
-                        case "pow": 'powf($args)';
+                        // Min/max
                         case "min": 'fminf($args)';
                         case "max": 'fmaxf($args)';
-                        default: '/* Math.$method unsupported */';
+                        // Constants (no args needed)
+                        case "PI": 'M_PI';
+                        case "POSITIVE_INFINITY": 'INFINITY';
+                        case "NEGATIVE_INFINITY": '(-INFINITY)';
+                        case "NaN": 'NAN';
+                        default:
+                            warn('Unsupported Math function: $method');
+                            '/* N64_UNSUPPORTED: Math.$method */';
                     };
                 }
                 null;
@@ -584,7 +650,10 @@ class N64CEmitter {
                     var scalar = emitExpr(params[0]);
                     // Create a temporary result - this is typically used inline
                     '__vec2_mult_${varName}_$scalar';  // Marker for chain resolution
-                } else '/* mult needs arg */';
+                } else {
+                    warn("Vec2.mult() needs an argument");
+                    '/* N64_UNSUPPORTED: Vec2.mult needs arg */';
+                }
             case "normalize":
                 needsMath = true;
                 var lenExpr = 'sqrtf(${varName}_x * ${varName}_x + ${varName}_y * ${varName}_y)';
@@ -598,9 +667,13 @@ class N64CEmitter {
                         var otherExpr = emitExpr(params[0]);
                         '(${varName}_x * $otherExpr.x + ${varName}_y * $otherExpr.y)';
                     }
-                } else '/* dot needs arg */';
+                } else {
+                    warn("Vec2.dot() needs an argument");
+                    '/* N64_UNSUPPORTED: Vec2.dot needs arg */';
+                }
             default:
-                '/* Vec2.$method unsupported */';
+                warn('Unsupported Vec2 method: $method');
+                '/* N64_UNSUPPORTED: Vec2.$method */';
         };
     }
 
@@ -767,7 +840,9 @@ class N64CEmitter {
         if (category == "Input") {
             return switch (method) {
                 case "getGamepad", "getKeyboard", "getMouse": "";
-                default: '/* unsupported: Input.$method */';
+                default:
+                    warn('Unsupported Input method: $method');
+                    '/* N64_UNSUPPORTED: Input.$method */';
             };
         }
 
@@ -792,7 +867,8 @@ class N64CEmitter {
         }
 
         // Fallback
-        return '/* unsupported API: $apiKey */';
+        warn('Unsupported API: $apiKey');
+        return '/* N64_UNSUPPORTED: API $apiKey */';
     }
     /**
      * Emit gamepad input call
@@ -815,8 +891,8 @@ class N64CEmitter {
 
             // Warn and use default if button is unknown
             if (n64Button == null) {
+                Context.warning('N64: Unknown button "$button", using default (A button)', buttonExpr.pos);
                 n64Button = N64Config.getDefaultButton();
-                // Note: Can't emit warning at macro time from here, but the button will work
             }
 
             // Track button usage
@@ -859,7 +935,8 @@ class N64CEmitter {
             case "buildMatrix":
                 return "((ArmObject*)obj)->transform.dirty = 3";
             default:
-                return '/* transform.$method unsupported */';
+                warn('Unsupported transform method: $method');
+                return '/* N64_UNSUPPORTED: transform.$method */';
         }
     }
 
@@ -867,7 +944,10 @@ class N64CEmitter {
      * Emit scale call with coordinate conversion
      */
     function emitScale(params:Array<Expr>):String {
-        if (params.length == 0) return "/* scale needs args */";
+        if (params.length == 0) {
+            warn("scale() requires arguments");
+            return "/* N64_UNSUPPORTED: scale() needs args */";
+        }
 
         var first = params[0];
         switch (first.expr) {
@@ -877,10 +957,10 @@ class N64CEmitter {
                     var x = emitExpr(params[0]);
                     var y = emitExpr(params[1]);
                     var z = emitExpr(params[2]);
-                    // Scale: swap Y and Z (no negation needed for scale)
-                    return 'it_set_scale(&((ArmObject*)obj)->transform, $x, $z, $y)';
+                    var args = N64CoordinateSystem.emitScaleArgs(x, y, z);
+                    return 'it_set_scale(&((ArmObject*)obj)->transform, $args)';
                 } else if (params.length == 1) {
-                    // scale(uniform) - single value for all axes
+                    // scale(uniform) - single value for all axes (no swizzle needed)
                     var s = emitExpr(params[0]);
                     return 'it_set_scale(&((ArmObject*)obj)->transform, $s, $s, $s)';
                 }
@@ -898,17 +978,21 @@ class N64CEmitter {
                     } else {
                         x = "1.0f"; y = "1.0f"; z = "1.0f";  // Default scale
                     }
-                    return 'it_set_scale(&((ArmObject*)obj)->transform, $x, $z, $y)';
+                    var args = N64CoordinateSystem.emitScaleArgs(x, y, z);
+                    return 'it_set_scale(&((ArmObject*)obj)->transform, $args)';
                 }
                 // Fall through to default
                 var v = emitExpr(first);
-                return 'it_set_scale(&((ArmObject*)obj)->transform, $v.x, $v.z, $v.y)';
+                var args = N64CoordinateSystem.emitRuntimeScaleConversion(v);
+                return 'it_set_scale(&((ArmObject*)obj)->transform, $args)';
             default:
                 // scale(vec) - assume Vec4-like with x, y, z fields
                 var v = emitExpr(first);
-                return 'it_set_scale(&((ArmObject*)obj)->transform, $v.x, $v.z, $v.y)';
+                var args = N64CoordinateSystem.emitRuntimeScaleConversion(v);
+                return 'it_set_scale(&((ArmObject*)obj)->transform, $args)';
         }
-        return "/* scale: unsupported params */";
+        warn("Unsupported scale() parameter format");
+        return "/* N64_UNSUPPORTED: scale() params */";
     }
 
     /**
@@ -916,7 +1000,10 @@ class N64CEmitter {
      * Uses quaternion rotation via it_rotate_axis_global for world-space rotation (matches Armory)
      */
     function emitRotate(params:Array<Expr>):String {
-        if (params.length < 2) return "/* rotate needs axis and angle */";
+        if (params.length < 2) {
+            warn("rotate() requires axis and angle arguments");
+            return "/* N64_UNSUPPORTED: rotate() needs axis and angle */";
+        }
 
         var axisExpr = params[0];
         var angleExpr = params[1];
@@ -967,15 +1054,15 @@ class N64CEmitter {
                     var v = getConstFloat(params[0]);
                     bx = v; by = v; bz = v;
                 }
-                // Blender (X,Y,Z) -> N64 (X, Z, -Y)
-                return {x: bx, y: bz, z: -by};
+                // Use centralized coordinate conversion
+                return N64CoordinateSystem.convertAxisValues(bx, by, bz);
             case EField(_, field):
-                // Vec4.xAxis(), etc.
+                // Vec4.xAxis(), etc. - convert standard Blender axes to N64
                 return switch (field) {
-                    case "xAxis": {x: 1.0, y: 0.0, z: 0.0};
-                    case "yAxis": {x: 0.0, y: 0.0, z: -1.0};  // Blender Y -> N64 -Z
-                    case "zAxis": {x: 0.0, y: 1.0, z: 0.0};   // Blender Z -> N64 Y
-                    default: {x: 0.0, y: 1.0, z: 0.0};
+                    case "xAxis": N64CoordinateSystem.convertAxisValues(1.0, 0.0, 0.0);
+                    case "yAxis": N64CoordinateSystem.convertAxisValues(0.0, 1.0, 0.0);
+                    case "zAxis": N64CoordinateSystem.convertAxisValues(0.0, 0.0, 1.0);
+                    default: N64CoordinateSystem.convertAxisValues(0.0, 0.0, 1.0);  // Default Z-up in Blender
                 }
             case EConst(CIdent(name)):
                 // Member variable reference - look up its initialization expression
@@ -985,7 +1072,7 @@ class N64CEmitter {
             default:
         }
 
-        return {x: 0.0, y: 1.0, z: 0.0};  // Default Y axis
+        return N64CoordinateSystem.convertAxisValues(0.0, 0.0, 1.0);  // Default Z axis (Blender up)
     }
 
     function getConstFloat(e:Expr):Float {
@@ -1002,7 +1089,10 @@ class N64CEmitter {
      * Emit translate call with coordinate conversion
      */
     function emitTranslate(params:Array<Expr>):String {
-        if (params.length == 0) return "/* translate needs args */";
+        if (params.length == 0) {
+            warn("translate() requires arguments");
+            return "/* N64_UNSUPPORTED: translate() needs args */";
+        }
 
         // Single Vec4 argument
         if (params.length == 1) {
@@ -1014,13 +1104,15 @@ class N64CEmitter {
                         var x = emitExpr(args[0]);
                         var y = emitExpr(args[1]);
                         var z = emitExpr(args[2]);
-                        // Blender (x,y,z) -> N64 (x,z,-y)
-                        return 'it_translate(&((ArmObject*)obj)->transform, $x, $z, -($y))';
+                        var posArgs = N64CoordinateSystem.emitPositionArgs(x, y, z);
+                        return 'it_translate(&((ArmObject*)obj)->transform, $posArgs)';
                     }
                 default:
             }
+            // Runtime variable - need to swizzle at runtime
             var v = emitExpr(vec);
-            return 'it_translate(&((ArmObject*)obj)->transform, $v.x, $v.z, -($v.y))';
+            var posArgs = N64CoordinateSystem.emitPositionArgs('$v.x', '$v.y', '$v.z');
+            return 'it_translate(&((ArmObject*)obj)->transform, $posArgs)';
         }
 
         // Three separate arguments (already x, y, z)
@@ -1028,11 +1120,12 @@ class N64CEmitter {
             var x = emitExpr(params[0]);
             var y = emitExpr(params[1]);
             var z = emitExpr(params[2]);
-            // Blender (x,y,z) -> N64 (x,z,-y)
-            return 'it_translate(&((ArmObject*)obj)->transform, $x, $z, -($y))';
+            var posArgs = N64CoordinateSystem.emitPositionArgs(x, y, z);
+            return 'it_translate(&((ArmObject*)obj)->transform, $posArgs)';
         }
 
-        return "/* translate: unsupported params */";
+        warn("Unsupported translate() parameter format");
+        return "/* N64_UNSUPPORTED: translate() params */";
     }
 
     /**
@@ -1064,7 +1157,8 @@ class N64CEmitter {
                 }
                 return "scene_switch_to(0)";
             default:
-                return '/* scene.$method unsupported */';
+                warn('Unsupported scene method: $method');
+                return '/* N64_UNSUPPORTED: scene.$method */';
         }
     }
 
@@ -1136,7 +1230,7 @@ class N64CEmitter {
         for (e in exprs) {
             var code = emitExpr(e);
             // Skip empty, whitespace-only, and unsupported expressions
-            if (code != "" && StringTools.trim(code) != "" && code != "/* unsupported expr */") {
+            if (code != "" && StringTools.trim(code) != "" && code != "/* N64_UNSUPPORTED: expr */") {
                 lines.push(code);
             }
         }
@@ -1147,7 +1241,7 @@ class N64CEmitter {
         var cond = emitExpr(econd);
 
         // If condition emits empty (skipped variable), skip the whole if
-        if (cond == null || cond == "" || StringTools.trim(cond) == "" || cond.indexOf("/* unsupported") >= 0) {
+        if (cond == null || cond == "" || StringTools.trim(cond) == "" || cond.indexOf("/* N64_UNSUPPORTED") >= 0) {
             return "";
         }
 

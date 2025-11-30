@@ -209,6 +209,20 @@ typedef MemberIR = {
 }
 
 /**
+ * Result of emitting a function body to C code
+ */
+typedef EmitResult = {
+    code:Array<String>,
+    needsObj:Bool,
+    needsDt:Bool,
+    inputButtons:Array<String>,
+    hasTransform:Bool,
+    hasScene:Bool,
+    targetScene:String,
+    needsInitialScale:Bool
+}
+
+/**
  * Extracts trait information and converts to C code
  */
 class TraitExtractor {
@@ -233,7 +247,7 @@ class TraitExtractor {
         for (field in fields) {
             switch (field.kind) {
                 case FVar(t, e):
-                    var member = extractMember(field.name, t, e);
+                    var member = extractMember(field.name, t, e, field.meta);
                     if (member != null) {
                         members.set(field.name, member);
                         memberNames.push(field.name);
@@ -263,9 +277,10 @@ class TraitExtractor {
         var needsInitialScale = false;
         var targetScene:String = null;
 
-        if (lifecycles.init != null) {
-            var result = emitFunction(lifecycles.init);
-            initCode = result.code;
+        // Helper to process a lifecycle function and aggregate results
+        inline function processLifecycle(body:Expr):Array<String> {
+            if (body == null) return [];
+            var result = emitFunction(body);
             needsObj = needsObj || result.needsObj;
             needsDt = needsDt || result.needsDt;
             for (btn in result.inputButtons) if (!Lambda.has(inputButtons, btn)) inputButtons.push(btn);
@@ -279,43 +294,12 @@ class TraitExtractor {
                 members.set("target_scene", {type: "SceneId", default_value: sceneEnum});
                 if (!Lambda.has(memberNames, "target_scene")) memberNames.push("target_scene");
             }
+            return result.code;
         }
 
-        if (lifecycles.update != null) {
-            var result = emitFunction(lifecycles.update);
-            updateCode = result.code;
-            needsObj = needsObj || result.needsObj;
-            needsDt = needsDt || result.needsDt;
-            for (btn in result.inputButtons) if (!Lambda.has(inputButtons, btn)) inputButtons.push(btn);
-            hasTransform = hasTransform || result.hasTransform;
-            hasScene = hasScene || result.hasScene;
-            needsInitialScale = needsInitialScale || result.needsInitialScale;
-            // Add hardcoded scene as a member
-            if (result.targetScene != null) {
-                targetScene = result.targetScene;
-                var sceneEnum = 'SCENE_${result.targetScene.toUpperCase()}';
-                members.set("target_scene", {type: "SceneId", default_value: sceneEnum});
-                if (!Lambda.has(memberNames, "target_scene")) memberNames.push("target_scene");
-            }
-        }
-
-        if (lifecycles.remove != null) {
-            var result = emitFunction(lifecycles.remove);
-            removeCode = result.code;
-            needsObj = needsObj || result.needsObj;
-            needsDt = needsDt || result.needsDt;
-            for (btn in result.inputButtons) if (!Lambda.has(inputButtons, btn)) inputButtons.push(btn);
-            hasTransform = hasTransform || result.hasTransform;
-            hasScene = hasScene || result.hasScene;
-            needsInitialScale = needsInitialScale || result.needsInitialScale;
-            // Add hardcoded scene as a member
-            if (result.targetScene != null) {
-                targetScene = result.targetScene;
-                var sceneEnum = 'SCENE_${result.targetScene.toUpperCase()}';
-                members.set("target_scene", {type: "SceneId", default_value: sceneEnum});
-                if (!Lambda.has(memberNames, "target_scene")) memberNames.push("target_scene");
-            }
-        }
+        initCode = processLifecycle(lifecycles.init);
+        updateCode = processLifecycle(lifecycles.update);
+        removeCode = processLifecycle(lifecycles.remove);
 
         // If scale assignment is used, add _initialScale member and init code
         if (needsInitialScale) {
@@ -354,7 +338,7 @@ class TraitExtractor {
     /**
      * Extract a member variable
      */
-    function extractMember(name:String, t:ComplexType, e:Expr):MemberIR {
+    function extractMember(name:String, t:ComplexType, e:Expr, meta:Metadata):MemberIR {
         // Skip API objects
         if (N64Config.shouldSkipMember(name)) return null;
 
@@ -366,8 +350,20 @@ class TraitExtractor {
         var cType = N64Config.mapType(typeName);
         var defaultVal = e != null ? exprToDefault(e, cType) : defaultForType(cType);
 
-        // Detect scene-related string members and convert to SceneId
-        if (cType == "const char*" && isSceneMemberName(name)) {
+        // Detect scene-related members:
+        // 1. Explicit @:n64Scene metadata (preferred)
+        // 2. Name-based heuristic as fallback (with info message)
+        var isScene = hasMetadata(meta, ":n64Scene") || hasMetadata(meta, "n64Scene");
+
+        if (!isScene && cType == "const char*") {
+            // Fallback: check name heuristic for backwards compatibility
+            if (isSceneMemberName(name)) {
+                isScene = true;
+                // Note: This is informational, not a warning - the heuristic is usually correct
+            }
+        }
+
+        if (isScene && cType == "const char*") {
             cType = "SceneId";
             // Convert string default to scene enum
             if (e != null) {
@@ -389,7 +385,18 @@ class TraitExtractor {
     }
 
     /**
-     * Check if member name suggests it's used for scene switching
+     * Check if field has a specific metadata tag
+     */
+    function hasMetadata(meta:Metadata, name:String):Bool {
+        if (meta == null) return false;
+        for (m in meta) {
+            if (m.name == name) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if member name suggests it's used for scene switching (fallback heuristic)
      */
     function isSceneMemberName(name:String):Bool {
         var lower = name.toLowerCase();
@@ -543,7 +550,7 @@ class TraitExtractor {
     /**
      * Emit a function body as C code
      */
-    function emitFunction(body:Expr):{code:Array<String>, needsObj:Bool, needsDt:Bool, inputButtons:Array<String>, hasTransform:Bool, hasScene:Bool, targetScene:String, needsInitialScale:Bool} {
+    function emitFunction(body:Expr):EmitResult {
         var emitter = new N64CEmitter(className, memberNames, vec4Exprs);
         var code:Array<String> = [];
 
@@ -639,9 +646,21 @@ class TraitExtractor {
     }
 
     function emitForStatement(emitter:N64CEmitter, it:Expr, body:Expr):String {
-        // Haxe for loops are complex - emit as comment + body for now
-        var bodyCode = emitStatement(emitter, body);
-        return '/* for loop */ { ${bodyCode != null ? bodyCode : ""} }';
+        // Try to emit simple integer range for loops: for (i in 0...n)
+        switch (it.expr) {
+            case EBinop(OpInterval, startExpr, endExpr):
+                // Range-based for loop: for (i in start...end)
+                var start = emitter.emitExpr(startExpr);
+                var end = emitter.emitExpr(endExpr);
+                var bodyCode = emitStatement(emitter, body);
+                // Note: Haxe's ... is exclusive on the end, like C's < comparison
+                return 'for (int _i = $start; _i < $end; _i++) { ${bodyCode != null ? bodyCode : ""} }';
+            default:
+                // Complex iterator - emit warning comment and body
+                Context.warning('N64: Complex for-loop iterator not fully supported, loop variable may not work', it.pos);
+                var bodyCode = emitStatement(emitter, body);
+                return '/* N64_UNSUPPORTED: for-each loop */ { ${bodyCode != null ? bodyCode : ""} }';
+        }
     }
 }
 #end
