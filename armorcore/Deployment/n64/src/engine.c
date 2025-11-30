@@ -3,8 +3,12 @@
 #include <t3d/t3dmodel.h>
 
 #include "types.h"
+#include "engine.h"
 #include "data/models.h"
 #include "iron/system/input.h"
+#if ENGINE_ENABLE_PHYSICS
+#include "physics.h"
+#endif
 
 void engine_init(void)
 {
@@ -23,10 +27,17 @@ void engine_init(void)
 
     input_init();
     models_init();
+
+#if ENGINE_ENABLE_PHYSICS
+    physics_init();
+#endif
 }
 
 void engine_shutdown(void)
 {
+#if ENGINE_ENABLE_PHYSICS
+    physics_shutdown();
+#endif
     models_shutdown();
     t3d_destroy();
 }

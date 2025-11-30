@@ -68,6 +68,51 @@ void scene_on_ready(SceneId id)
 	}}
 }}
 
+void scene_on_fixed_update(SceneId id, float dt)
+{{
+	ArmScene *s = &g_scenes[id];
+
+	// Scene-level traits
+	for (uint8_t i = 0; i < s->trait_count; i++) {{
+		if (s->traits[i].on_fixed_update) {{
+			s->traits[i].on_fixed_update(s, dt, s->traits[i].data);
+		}}
+	}}
+
+	// Camera traits
+	if (s->cameras) {{
+		for (uint8_t i = 0; i < s->camera_count; i++) {{
+			for (uint8_t t = 0; t < s->cameras[i].trait_count; t++) {{
+				if (s->cameras[i].traits[t].on_fixed_update) {{
+					s->cameras[i].traits[t].on_fixed_update(&s->cameras[i], dt, s->cameras[i].traits[t].data);
+				}}
+			}}
+		}}
+	}}
+
+	// Light traits
+	if (s->lights) {{
+		for (uint8_t i = 0; i < s->light_count; i++) {{
+			for (uint8_t t = 0; t < s->lights[i].trait_count; t++) {{
+				if (s->lights[i].traits[t].on_fixed_update) {{
+					s->lights[i].traits[t].on_fixed_update(&s->lights[i], dt, s->lights[i].traits[t].data);
+				}}
+			}}
+		}}
+	}}
+
+	// Object traits
+	if (s->objects) {{
+		for (uint16_t i = 0; i < s->object_count; i++) {{
+			for (uint8_t t = 0; t < s->objects[i].trait_count; t++) {{
+				if (s->objects[i].traits[t].on_fixed_update) {{
+					s->objects[i].traits[t].on_fixed_update(&s->objects[i], dt, s->objects[i].traits[t].data);
+				}}
+			}}
+		}}
+	}}
+}}
+
 void scene_on_update(SceneId id, float dt)
 {{
 	ArmScene *s = &g_scenes[id];

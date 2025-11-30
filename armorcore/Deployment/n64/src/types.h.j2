@@ -18,11 +18,13 @@ typedef struct {{
 }} Vec3;
 
 typedef void (*ArmTraitReadyFn)(void *entity, void *data);
+typedef void (*ArmTraitFixedUpdateFn)(void *entity, float dt, void *data);
 typedef void (*ArmTraitUpdateFn)(void *entity, float dt, void *data);
 typedef void (*ArmTraitRemoveFn)(void *entity, void *data);
 
 typedef struct {{
     ArmTraitReadyFn on_ready;
+	ArmTraitFixedUpdateFn on_fixed_update;
     ArmTraitUpdateFn on_update;
     ArmTraitRemoveFn on_remove;
     void *data;

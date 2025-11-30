@@ -7,6 +7,11 @@
 #include "renderer.h"
 #include "data/scenes.h"
 #include "iron/system/input.h"
+#if ENGINE_ENABLE_PHYSICS
+#include "physics.h"
+#endif
+
+#define FIXED_TIMESTEP (1.0f / 30.0f)
 
 static float get_time_s(void)
 {{
@@ -20,9 +25,10 @@ int main(void)
     T3DViewport viewport = t3d_viewport_create_buffered(FB_COUNT);
 
     SceneId current_scene = {initial_scene_id};
-	scene_init(current_scene);
+    scene_init(current_scene);
 
-	float last_time = get_time_s();
+    float last_time = get_time_s();
+    float fixed_time = 0.0f;
 
     for (;;) {{
         float now = get_time_s();
@@ -32,13 +38,26 @@ int main(void)
         input_poll();
 
         ArmScene *scene = scene_get(current_scene);
+
+        fixed_time += dt;
+        while (fixed_time >= FIXED_TIMESTEP) {{
+#if ENGINE_ENABLE_PHYSICS
+            physics_step(FIXED_TIMESTEP);
+#endif
+            scene_on_fixed_update(current_scene, FIXED_TIMESTEP);
+            fixed_time -= FIXED_TIMESTEP;
+        }}
+
         scene_on_update(current_scene, dt);
 
-        // Handle deferred scene switch
         SceneId pending = scene_get_pending();
         if (pending < SCENE_COUNT) {{
             scene_clear_pending();
             scene_clear(current_scene);
+#if ENGINE_ENABLE_PHYSICS
+            physics_reset();
+#endif
+            fixed_time = 0.0f;
             current_scene = pending;
             scene_init(current_scene);
             scene = scene_get(current_scene);
