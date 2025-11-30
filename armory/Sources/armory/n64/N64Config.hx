@@ -29,10 +29,6 @@ class N64Config {
         "l1" => "N64_BTN_Z",
         "l2" => "N64_BTN_L",
         "l3" => "N64_BTN_CUP",
-        "l" => "N64_BTN_L",
-        "r" => "N64_BTN_R",
-        "zl" => "N64_BTN_Z",
-        "zr" => "N64_BTN_Z",
         // System
         "start" => "N64_BTN_START",
         "options" => "N64_BTN_START",
