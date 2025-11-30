@@ -30,8 +30,10 @@ class N64CEmitter {
     var memberNames:Map<String, Bool>;
     var localVars:Map<String, Bool>;
     var vec4Exprs:Map<String, Expr>;  // Vec4 member init expressions for axis resolution
+    var vec2Vars:Map<String, {x:String, y:String}>;  // Vec2 local variables with their x,y expressions
     var needsObj:Bool = false;
     var needsDt:Bool = false;
+    var needsMath:Bool = false;  // True if sqrtf is used
 
     // Feature tracking
     var inputButtons:Array<String>;
@@ -44,6 +46,7 @@ class N64CEmitter {
         this.traitName = traitName;
         memberNames = new Map();
         localVars = new Map();
+        vec2Vars = new Map();
         inputButtons = [];
         this.vec4Exprs = vec4Exprs != null ? vec4Exprs : new Map();
         for (m in members) {
@@ -350,8 +353,35 @@ class N64CEmitter {
             return "((ArmObject*)obj)->transform";
         }
 
+        // Vec2 field access: direction.x, direction.y
+        if (base != null && vec2Vars.exists(base)) {
+            var vec2 = vec2Vars.get(base);
+            if (field == "x") return vec2.x;
+            if (field == "y") return vec2.y;
+        }
+
+        // Check for Vec2 chained call result access: direction.clone().mult(speed).x
+        // The base would be a call expression
+        switch (e.expr) {
+            case ECall(callE, callParams):
+                var chainResult = tryEmitVec2Chain(callE, callParams);
+                if (chainResult != null && vec2Vars.exists(chainResult)) {
+                    var vec2 = vec2Vars.get(chainResult);
+                    if (field == "x") return vec2.x;
+                    if (field == "y") return vec2.y;
+                }
+            default:
+        }
+
         // General field access
         var baseCode = emitExpr(e);
+
+        // Check if baseCode is a chain marker and resolve it
+        if (vec2Vars.exists(baseCode)) {
+            var vec2 = vec2Vars.get(baseCode);
+            if (field == "x") return vec2.x;
+            if (field == "y") return vec2.y;
+        }
 
         // Detect if we need -> or .
         // Rules:
@@ -440,6 +470,14 @@ class N64CEmitter {
      * Emit function call - main API mapping logic
      */
     function emitCall(e:Expr, params:Array<Expr>):String {
+        // Check for Math.* calls
+        var mathCall = tryEmitMathCall(e, params);
+        if (mathCall != null) return mathCall;
+
+        // Check for Vec2 method calls (length, clone, mult, etc.)
+        var vec2Call = tryEmitVec2Call(e, params);
+        if (vec2Call != null) return vec2Call;
+
         // Detect API calls
         var callInfo = detectApiCall(e);
         if (callInfo != null) {
@@ -456,6 +494,184 @@ class N64CEmitter {
         var emittedName = emitExpr(e);
         var args = [for (p in params) emitExpr(p)].join(", ");
         return '$emittedName($args)';
+    }
+
+    /**
+     * Try to emit Math.* function calls
+     * Returns null if not a Math call
+     */
+    function tryEmitMathCall(e:Expr, params:Array<Expr>):String {
+        return switch (e.expr) {
+            case EField(base, method):
+                var baseName = getBaseIdent(base);
+                if (baseName == "Math") {
+                    needsMath = true;
+                    var args = [for (p in params) emitExpr(p)].join(", ");
+                    return switch (method) {
+                        case "sqrt": 'sqrtf($args)';
+                        case "abs": 'fabsf($args)';
+                        case "sin": 'sinf($args)';
+                        case "cos": 'cosf($args)';
+                        case "tan": 'tanf($args)';
+                        case "atan2": 'atan2f($args)';
+                        case "floor": 'floorf($args)';
+                        case "ceil": 'ceilf($args)';
+                        case "round": 'roundf($args)';
+                        case "pow": 'powf($args)';
+                        case "min": 'fminf($args)';
+                        case "max": 'fmaxf($args)';
+                        default: '/* Math.$method unsupported */';
+                    };
+                }
+                null;
+            default: null;
+        };
+    }
+
+    /**
+     * Try to emit Vec2 method calls (length, clone, mult, normalize, etc.)
+     * Handles chained calls like direction.clone().mult(speed)
+     * Returns null if not a Vec2 call
+     */
+    function tryEmitVec2Call(e:Expr, params:Array<Expr>):String {
+        return switch (e.expr) {
+            case EField(base, method):
+                // Check if base is a Vec2 variable
+                var baseName = getBaseIdent(base);
+                if (baseName != null && vec2Vars.exists(baseName)) {
+                    return emitVec2Method(baseName, method, params, base);
+                }
+                // Check for chained calls like direction.clone().mult(speed)
+                var chainResult = tryEmitVec2Chain(e, params);
+                if (chainResult != null) return chainResult;
+                null;
+            default: null;
+        };
+    }
+
+    /**
+     * Emit a Vec2 method call
+     */
+    function emitVec2Method(varName:String, method:String, params:Array<Expr>, baseExpr:Expr):String {
+        return switch (method) {
+            case "length":
+                needsMath = true;
+                'sqrtf(${varName}_x * ${varName}_x + ${varName}_y * ${varName}_y)';
+            case "lengthSq":
+                '(${varName}_x * ${varName}_x + ${varName}_y * ${varName}_y)';
+            case "clone":
+                // clone() returns the same variable reference for chaining
+                // The actual cloning happens at the point of use
+                '__vec2_clone_${varName}';  // Marker for chain resolution
+            case "mult":
+                if (params.length > 0) {
+                    var scalar = emitExpr(params[0]);
+                    // Create a temporary result - this is typically used inline
+                    '__vec2_mult_${varName}_$scalar';  // Marker for chain resolution
+                } else '/* mult needs arg */';
+            case "normalize":
+                needsMath = true;
+                var lenExpr = 'sqrtf(${varName}_x * ${varName}_x + ${varName}_y * ${varName}_y)';
+                '__vec2_norm_${varName}';  // Marker
+            case "dot":
+                if (params.length > 0) {
+                    var other = getBaseIdent(params[0]);
+                    if (other != null && vec2Vars.exists(other)) {
+                        '(${varName}_x * ${other}_x + ${varName}_y * ${other}_y)';
+                    } else {
+                        var otherExpr = emitExpr(params[0]);
+                        '(${varName}_x * $otherExpr.x + ${varName}_y * $otherExpr.y)';
+                    }
+                } else '/* dot needs arg */';
+            default:
+                '/* Vec2.$method unsupported */';
+        };
+    }
+
+    /**
+     * Try to emit chained Vec2 calls like direction.clone().mult(speed)
+     * Returns the final x/y expressions or null
+     */
+    function tryEmitVec2Chain(e:Expr, finalParams:Array<Expr>):String {
+        // Parse the chain from right to left
+        var chain:Array<{method:String, params:Array<Expr>}> = [];
+        var currentExpr = e;
+        var baseVarName:String = null;
+
+        while (true) {
+            switch (currentExpr.expr) {
+                case EField(base, method):
+                    // This could be var.method or (prevCall).method
+                    var baseName = getBaseIdent(base);
+                    if (baseName != null && vec2Vars.exists(baseName)) {
+                        // Found the base Vec2 variable
+                        baseVarName = baseName;
+                        chain.unshift({method: method, params: finalParams});
+                        break;
+                    }
+                    // Check if base is itself a call (chained)
+                    switch (base.expr) {
+                        case ECall(innerE, innerParams):
+                            chain.unshift({method: method, params: finalParams});
+                            finalParams = innerParams;
+                            currentExpr = innerE;
+                        default:
+                            return null;  // Not a chain we can handle
+                    }
+                default:
+                    return null;
+            }
+        }
+
+        if (baseVarName == null || chain.length == 0) return null;
+
+        // Now resolve the chain
+        // Start with base variable's x/y
+        var xExpr = '${baseVarName}_x';
+        var yExpr = '${baseVarName}_y';
+
+        for (link in chain) {
+            switch (link.method) {
+                case "clone":
+                    // clone() just passes through - no change to expressions
+                    continue;
+                case "mult":
+                    if (link.params.length > 0) {
+                        var scalar = emitExpr(link.params[0]);
+                        xExpr = '($xExpr * $scalar)';
+                        yExpr = '($yExpr * $scalar)';
+                    }
+                case "normalize":
+                    needsMath = true;
+                    var lenExpr = 'sqrtf($xExpr * $xExpr + $yExpr * $yExpr)';
+                    xExpr = '($xExpr / $lenExpr)';
+                    yExpr = '($yExpr / $lenExpr)';
+                case "add":
+                    if (link.params.length > 0) {
+                        var other = getBaseIdent(link.params[0]);
+                        if (other != null && vec2Vars.exists(other)) {
+                            xExpr = '($xExpr + ${other}_x)';
+                            yExpr = '($yExpr + ${other}_y)';
+                        }
+                    }
+                case "sub":
+                    if (link.params.length > 0) {
+                        var other = getBaseIdent(link.params[0]);
+                        if (other != null && vec2Vars.exists(other)) {
+                            xExpr = '($xExpr - ${other}_x)';
+                            yExpr = '($yExpr - ${other}_y)';
+                        }
+                    }
+                default:
+                    return null;  // Unsupported method in chain
+            }
+        }
+
+        // Return a special marker that will be resolved when accessing .x or .y
+        // Store the resolved expressions temporarily
+        var tempName = '__chain_${baseVarName}_${chain.length}';
+        vec2Vars.set(tempName, {x: xExpr, y: yExpr});
+        return tempName;
     }
 
     /**
@@ -918,10 +1134,50 @@ class N64CEmitter {
         for (v in vars) {
             localVars.set(v.name, true);
             var typeName = v.type != null ? N64Config.mapType(typeToString(v.type)) : "float";
+
+            // Handle Vec2 variable declarations specially
+            if (typeName == "Vec2" && v.expr != null) {
+                var vec2Init = tryExtractVec2(v.expr);
+                if (vec2Init != null) {
+                    // Store variable name references for later field access (motion.x -> motion_x)
+                    vec2Vars.set(v.name, {x: '${v.name}_x', y: '${v.name}_y'});
+                    // Emit as two separate float variables with init expressions
+                    decls.push('float ${v.name}_x = ${vec2Init.x}');
+                    decls.push('float ${v.name}_y = ${vec2Init.y}');
+                    continue;
+                }
+            }
+
             var init = v.expr != null ? ' = ${emitExpr(v.expr)}' : "";
             decls.push('$typeName ${v.name}$init');
         }
         return decls.join("; ");
+    }
+
+    /**
+     * Try to extract Vec2 constructor arguments or chained Vec2 operations
+     * Returns {x, y} expressions as C code strings, or null if not a Vec2 constructor/chain
+     */
+    function tryExtractVec2(e:Expr):{x:String, y:String} {
+        return switch (e.expr) {
+            case ENew(tp, params):
+                if (tp.name == "Vec2" && params.length >= 2) {
+                    {x: emitExpr(params[0]), y: emitExpr(params[1])};
+                } else null;
+            case ECall(func, params):
+                // Check for Vec2(x, y) function call style
+                var funcName = getFunctionName(func);
+                if (funcName == "Vec2" && params.length >= 2) {
+                    {x: emitExpr(params[0]), y: emitExpr(params[1])};
+                } else {
+                    // Check for Vec2 method calls like direction.clone().mult(speed)
+                    var chainResult = tryEmitVec2Chain(func, params);
+                    if (chainResult != null && vec2Vars.exists(chainResult)) {
+                        vec2Vars.get(chainResult);
+                    } else null;
+                }
+            default: null;
+        };
     }
 
     function emitReturn(e:Expr):String {
@@ -947,6 +1203,7 @@ class N64CEmitter {
 
     public function requiresObj():Bool return needsObj;
     public function requiresDt():Bool return needsDt;
+    public function requiresMath():Bool return needsMath;
     public function getInputButtons():Array<String> return inputButtons;
     public function hasTransformOps():Bool return hasTransform;
     public function hasSceneOps():Bool return hasScene;

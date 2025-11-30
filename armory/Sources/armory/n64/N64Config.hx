@@ -69,6 +69,8 @@ class N64Config {
         "Bool" => "bool",
         "bool" => "bool",
         "String" => "const char*",
+        "Vec2" => "Vec2",
+        "iron.math.Vec2" => "Vec2",
         "Vec4" => "Vec3",
         "iron.math.Vec4" => "Vec3",
         "SceneId" => "SceneId"
