@@ -49,6 +49,12 @@ class N64CEmitter {
         }
     }
 
+    function error(msg:String):Void {
+        if (currentPos != null) {
+            Context.error('N64: $msg', currentPos);
+        }
+    }
+
     public function emitExpr(expr:Expr):String {
         if (expr == null) return "";
 
@@ -60,23 +66,42 @@ class N64CEmitter {
             case EConst(c): emitConst(c);
             case EBinop(op, e1, e2): emitBinop(op, e1, e2);
             case EUnop(op, postFix, e): emitUnop(op, postFix, e);
+            case ETernary(econd, eif, eelse): '(${emitExpr(econd)} ? ${emitExpr(eif)} : ${emitExpr(eelse)})';
             case EField(e, field): emitField(e, field);
-            case ECall(e, params): emitCall(e, params);
-            case EParenthesis(e): '(${emitExpr(e)})';
             case EArray(e1, e2): '${emitExpr(e1)}[${emitExpr(e2)}]';
+            case ECall(e, params): emitCall(e, params);
+            case ENew(tp, params): emitNew(tp, params);
             case EArrayDecl(values): emitArrayDecl(values);
+            case EObjectDecl(fields): emitObjectDecl(fields);
+            case EVars(vars): emitVars(vars);
+            case EFunction(_, func): emitLocalFunction(func);
             case EBlock(exprs): emitBlock(exprs);
             case EIf(econd, eif, eelse): emitIf(econd, eif, eelse);
-            case EWhile(econd, e, normalWhile): emitWhile(econd, e, normalWhile);
+            case EWhile(econd, ebody, normalWhile): emitWhile(econd, ebody, normalWhile);
             case EFor(it, body): emitFor(it, body);
-            case EVars(vars): emitVars(vars);
-            case EReturn(e): emitReturn(e);
+            case ESwitch(esw, cases, edef): emitSwitch(esw, cases, edef);
+            case ETry(etry, catches): emitTry(etry, catches);
+            case EReturn(eret): emitReturn(eret);
             case EBreak: "break";
             case EContinue: "continue";
-            case ETernary(econd, eif, eelse): '(${emitExpr(econd)} ? ${emitExpr(eif)} : ${emitExpr(eelse)})';
+            case EThrow(eth): emitThrow(eth);
+            case ECast(ecast, t): emitCast(ecast, t);
+            case ECheckType(ect, t): emitExpr(ect);
+            case EIs(eis, t): emitIs(eis, t);
+            case EParenthesis(ep): '(${emitExpr(ep)})';
+            case EMeta(_, em): emitExpr(em);
+            case EUntyped(eu):
+                warn("untyped expressions not supported");
+                emitExpr(eu);
+            case EDisplay(_, _):
+                warn("display expressions not supported");
+                "";
+            case EDisplayNew(_):
+                warn("display expressions not supported");
+                "";
             default:
                 warn("Unsupported expression type");
-                "/* N64_UNSUPPORTED: expr */";
+                "";
         }
 
         currentPos = prevPos;
@@ -90,8 +115,8 @@ class N64CEmitter {
             case CString(s): '"$s"';
             case CIdent(s): resolveIdent(s);
             case CRegexp(_, _):
-                warn("Regular expressions not supported");
-                "/* N64_UNSUPPORTED: regex */";
+                error("Regular expressions not supported");
+                "";
         }
     }
 
@@ -1085,14 +1110,117 @@ class N64CEmitter {
         return chain;
     }
 
-    // Control flow emission
+    function emitNew(tp:TypePath, params:Array<Expr>):String {
+        var typeName = tp.name;
+        var args = [for (p in params) emitExpr(p)].join(", ");
+
+        return switch (typeName) {
+            case "Vec2":
+                if (params.length >= 2) {
+                    var x = emitExpr(params[0]);
+                    var y = emitExpr(params[1]);
+                    '(Vec2){$x, $y}';
+                } else if (params.length == 1) {
+                    var v = emitExpr(params[0]);
+                    '(Vec2){$v, $v}';
+                } else {
+                    "(Vec2){0.0f, 0.0f}";
+                }
+            case "Vec3", "Vec4":
+                if (params.length >= 3) {
+                    var x = emitExpr(params[0]);
+                    var y = emitExpr(params[1]);
+                    var z = emitExpr(params[2]);
+                    '(Vec3){$x, $y, $z}';
+                } else if (params.length == 1) {
+                    var v = emitExpr(params[0]);
+                    '(Vec3){$v, $v, $v}';
+                } else {
+                    "(Vec3){0.0f, 0.0f, 0.0f}";
+                }
+            case "String":
+                if (params.length > 0) emitExpr(params[0]) else '""';
+            case "Array", "Map", "StringMap", "IntMap":
+                warn('$typeName not supported on N64');
+                "";
+            default:
+                if (params.length == 0) '($typeName){0}' else '($typeName){$args}';
+        };
+    }
+
+    function emitObjectDecl(fields:Array<ObjectField>):String {
+        var fieldStrs:Array<String> = [];
+        for (f in fields) {
+            var value = emitExpr(f.expr);
+            fieldStrs.push('.${ f.field } = $value');
+        }
+        return '{${fieldStrs.join(", ")}}';
+    }
+
+    function emitLocalFunction(func:Function):String {
+        error("Local functions/closures not supported");
+        return "";
+    }
+
+    function emitSwitch(e:Expr, cases:Array<Case>, edef:Null<Expr>):String {
+        var switchExpr = emitExpr(e);
+        var caseStrs:Array<String> = [];
+
+        for (c in cases) {
+            for (v in c.values) {
+                var caseVal = emitExpr(v);
+                caseStrs.push('case $caseVal:');
+            }
+            var body = c.expr != null ? emitExpr(c.expr) : "";
+            if (body != "") {
+                caseStrs.push('{ $body; break; }');
+            } else {
+                caseStrs.push("break;");
+            }
+        }
+
+        if (edef != null) {
+            var defBody = emitExpr(edef);
+            caseStrs.push('default: { $defBody; break; }');
+        }
+
+        return 'switch ($switchExpr) { ${caseStrs.join(" ")} }';
+    }
+
+    function emitTry(e:Expr, catches:Array<Catch>):String {
+        error("try/catch not supported");
+        return emitExpr(e);
+    }
+
+    function emitThrow(e:Expr):String {
+        error("throw not supported");
+        return "";
+    }
+
+    function emitCast(e:Expr, t:Null<ComplexType>):String {
+        var inner = emitExpr(e);
+        if (t == null) return inner;
+        var typeName = complexTypeToC(t);
+        return '(($typeName)$inner)';
+    }
+
+    function emitIs(e:Expr, t:ComplexType):String {
+        error("'is' type check not supported at runtime");
+        return "true";
+    }
+
+    function complexTypeToC(ct:ComplexType):String {
+        return switch (ct) {
+            case TPath(p): N64Config.mapType(p.name);
+            default: "void*";
+        };
+    }
 
     function emitBlock(exprs:Array<Expr>):String {
         var lines:Array<String> = [];
         for (e in exprs) {
             var code = emitExpr(e);
-            // Skip empty, whitespace-only, and unsupported expressions
-            if (code != "" && StringTools.trim(code) != "" && code != "/* N64_UNSUPPORTED: expr */") {
+            if (code != "" && StringTools.trim(code) != "") {
                 lines.push(code);
             }
         }
@@ -1135,9 +1263,16 @@ class N64CEmitter {
     }
 
     function emitFor(it:Expr, body:Expr):String {
-        // For loops in Haxe are complex - simplify to while
-        var bodyCode = emitExpr(body);
-        return '/* for loop */ { $bodyCode; }';
+        switch (it.expr) {
+            case EBinop(OpInterval, startExpr, endExpr):
+                var start = emitExpr(startExpr);
+                var end = emitExpr(endExpr);
+                var bodyCode = emitExpr(body);
+                return 'for (int _i = $start; _i < $end; _i++) { $bodyCode; }';
+            default:
+                warn("Complex for-loop iterator not yet supported, use for (i in 0...n) syntax");
+                return "";
+        }
     }
 
     function emitVars(vars:Array<Var>):String {

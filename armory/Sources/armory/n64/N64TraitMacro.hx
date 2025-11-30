@@ -156,7 +156,7 @@ class N64TraitMacro {
             }
             File.saveContent(outPath, json);
         } catch (e:Dynamic) {
-            Context.warning('Failed to write n64_traits.json: $e', Context.currentPos());
+            Context.error('Failed to write n64_traits.json: $e', Context.currentPos());
         }
     }
 }
@@ -447,8 +447,7 @@ class TraitExtractor {
                         case "notifyOnRemove":
                             result.remove = body;
                         case "notifyOnAdd", "notifyOnLateUpdate", "notifyOnFixedUpdate", "notifyOnRender", "notifyOnRender2D":
-                            // These are valid Trait methods but not supported on N64 - warn the user
-                            Context.warning('N64: $funcName is not supported, code will be ignored', e.pos);
+                            Context.warning('N64: $funcName is not yet supported, code will be ignored', e.pos);
                     }
                 }
                 // Recurse into call arguments
@@ -543,6 +542,13 @@ class TraitExtractor {
             case EFor(it, body):
                 return emitForStatement(emitter, it, body);
 
+            case ESwitch(expr, cases, edef):
+                return emitSwitchStatement(emitter, expr, cases, edef);
+
+            case ETry(expr, catches):
+                Context.error('N64: try/catch not supported', e.pos);
+                return emitStatement(emitter, expr);
+
             case EBlock(exprs):
                 var stmts:Array<String> = [];
                 for (expr in exprs) {
@@ -600,11 +606,37 @@ class TraitExtractor {
                 // Note: Haxe's ... is exclusive on the end, like C's < comparison
                 return 'for (int _i = $start; _i < $end; _i++) { ${bodyCode != null ? bodyCode : ""} }';
             default:
-                // Complex iterator - emit warning comment and body
-                Context.warning('N64: Complex for-loop iterator not fully supported, loop variable may not work', it.pos);
-                var bodyCode = emitStatement(emitter, body);
-                return '/* N64_UNSUPPORTED: for-each loop */ { ${bodyCode != null ? bodyCode : ""} }';
+                Context.warning('N64: Complex for-loop iterator not yet supported, use for (i in 0...n) syntax', it.pos);
+                return "";
         }
+    }
+
+    function emitSwitchStatement(emitter:N64CEmitter, e:Expr, cases:Array<Case>, edef:Null<Expr>):String {
+        var switchExpr = emitter.emitExpr(e);
+        var caseStrs:Array<String> = [];
+
+        for (c in cases) {
+            // Each case can have multiple values
+            for (v in c.values) {
+                var caseVal = emitter.emitExpr(v);
+                caseStrs.push('case $caseVal:');
+            }
+            // Case body with proper statement handling
+            if (c.expr != null) {
+                var body = emitStatement(emitter, c.expr);
+                caseStrs.push('{ ${body != null ? body : ""} break; }');
+            } else {
+                caseStrs.push("break;");
+            }
+        }
+
+        // Default case
+        if (edef != null) {
+            var defBody = emitStatement(emitter, edef);
+            caseStrs.push('default: { ${defBody != null ? defBody : ""} break; }');
+        }
+
+        return 'switch ($switchExpr) { ${caseStrs.join(" ")} }';
     }
 }
 #end
