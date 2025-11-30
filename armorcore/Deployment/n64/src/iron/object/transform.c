@@ -22,14 +22,14 @@ void it_rotate_axis(ArmTransform *t, float ax, float ay, float az, float angle)
 
 void it_rotate_axis_global(ArmTransform *t, float ax, float ay, float az, float angle)
 {
-	// Global axis rotation: rot = axis_rot * rot
-	// Build axis quaternion, then multiply in reverse order
-	float axis[3] = {ax, ay, az};
-	T3DQuat axis_rot;
-	t3d_quat_from_rotation(&axis_rot, axis, angle);
+	// Global axis rotation: rot = axis_rot * rot (opposite of local)
+	fm_vec3_t axis = {{ax, ay, az}};
+	fm_quat_t axis_rot;
+	fm_quat_from_axis_angle(&axis_rot, &axis, angle);
 
-	T3DQuat current = *(T3DQuat*)t->rot;
-	t3d_quat_mul((T3DQuat*)t->rot, &axis_rot, &current);
+	fm_quat_t current = *(fm_quat_t*)t->rot;
+	fm_quat_mul((fm_quat_t*)t->rot, &axis_rot, &current);
+
 	t->dirty = DIRTY_FRAMES;
 }
 
