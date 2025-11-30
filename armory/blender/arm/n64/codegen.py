@@ -251,9 +251,11 @@ def generate_transform_block(prefix: str, pos: list, rot: list = None, scale: li
     lines.append(f'    {prefix}.transform.loc[1] = {pos[1]:.6f}f;')
     lines.append(f'    {prefix}.transform.loc[2] = {pos[2]:.6f}f;')
     if rot is not None:
+        # Quaternion: [x, y, z, w]
         lines.append(f'    {prefix}.transform.rot[0] = {rot[0]:.6f}f;')
         lines.append(f'    {prefix}.transform.rot[1] = {rot[1]:.6f}f;')
         lines.append(f'    {prefix}.transform.rot[2] = {rot[2]:.6f}f;')
+        lines.append(f'    {prefix}.transform.rot[3] = {rot[3]:.6f}f;')
     if scale is not None:
         lines.append(f'    {prefix}.transform.scale[0] = {scale[0]:.6f}f;')
         lines.append(f'    {prefix}.transform.scale[1] = {scale[1]:.6f}f;')

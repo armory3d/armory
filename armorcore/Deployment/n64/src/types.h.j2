@@ -31,7 +31,7 @@ typedef struct {{
 // Unified transform - matches Iron's Transform class
 typedef struct {{
     float loc[3];   // Location/position
-    float rot[3];   // Rotation (euler angles in radians)
+    float rot[4];   // Rotation (quaternion XYZW)
     float scale[3]; // Scale
     uint8_t dirty;  // Counts down frames needing matrix update (for triple buffering)
 }} ArmTransform;

@@ -649,6 +649,7 @@ class N64CEmitter {
 
     /**
      * Emit rotate call with axis resolution
+     * Uses quaternion rotation via it_rotate_axis(transform, axis_x, axis_y, axis_z, angle)
      */
     function emitRotate(params:Array<Expr>):String {
         if (params.length < 2) return "/* rotate needs axis and angle */";
@@ -656,62 +657,65 @@ class N64CEmitter {
         var axisExpr = params[0];
         var angleExpr = params[1];
 
-        // Resolve axis to index
-        var axisInfo = resolveAxis(axisExpr);
+        // Resolve axis to N64 coordinates
+        var axisInfo = resolveAxisVec(axisExpr);
         var angleCode = emitExpr(angleExpr);
 
-        // Generate optimized rotation code
-        var axisIndex = axisInfo.index;
-        var sign = axisInfo.negative ? "-" : "";
+        // Format floats with decimal point for C (1 -> 1.0f, not 1f)
+        var xStr = floatToC(axisInfo.x);
+        var yStr = floatToC(axisInfo.y);
+        var zStr = floatToC(axisInfo.z);
 
-        return '((ArmObject*)obj)->transform.rot[$axisIndex] += $sign($angleCode); ((ArmObject*)obj)->transform.dirty = 3';
+        // Generate quaternion rotation call
+        // it_rotate_axis handles the quaternion math internally
+        return 'it_rotate_axis(&((ArmObject*)obj)->transform, $xStr, $yStr, $zStr, $angleCode)';
     }
 
     /**
-     * Resolve a Vec4 axis to index and sign
-     * Coordinate conversion: Blender (X,Y,Z) -> N64 (-X, Y, -Z) for euler angles
+     * Format a float for C code (ensures decimal point)
      */
-    function resolveAxis(e:Expr):{index:Int, negative:Bool} {
+    function floatToC(f:Float):String {
+        var s = Std.string(f);
+        // If no decimal point, add .0
+        if (s.indexOf('.') == -1) {
+            s += '.0';
+        }
+        return s + 'f';
+    }
+
+    /**
+     * Resolve a Vec4 axis to N64 coordinate axis vector
+     * Coordinate conversion: Blender (X,Y,Z) -> N64 (X, Z, -Y)
+     */
+    function resolveAxisVec(e:Expr):{x:Float, y:Float, z:Float} {
         // Look for Vec4(x,y,z) or iron.math.Vec4(x,y,z)
         switch (e.expr) {
             case ENew(_, params) | ECall(_, params):
                 if (params.length >= 3) {
-                    var x = getConstFloat(params[0]);
-                    var y = getConstFloat(params[1]);
-                    var z = getConstFloat(params[2]);
+                    var bx = getConstFloat(params[0]);
+                    var by = getConstFloat(params[1]);
+                    var bz = getConstFloat(params[2]);
 
-                    // Detect cardinal axis with Blender->N64 conversion
-                    // Euler angles: Blender (X,Y,Z) -> N64 (-X, +Y, -Z)
-                    if (Math.abs(x) > 0.5) {
-                        // Blender X -> N64 -X (negate)
-                        return {index: 0, negative: x > 0};  // Invert sign
-                    }
-                    if (Math.abs(y) > 0.5) {
-                        // Blender Y -> N64 Z, and negate
-                        return {index: 2, negative: y < 0};  // Swap to Z and invert sign
-                    }
-                    if (Math.abs(z) > 0.5) {
-                        // Blender Z -> N64 Y (no negation)
-                        return {index: 1, negative: z > 0};  // Swap to Y, keep sign
-                    }
+                    // Blender (X,Y,Z) -> N64 (X, Z, -Y)
+                    return {x: bx, y: bz, z: -by};
                 }
             case EField(_, field):
-                // Vec4.yAxis(), etc.
+                // Vec4.xAxis(), etc.
                 return switch (field) {
-                    case "xAxis": {index: 0, negative: true};   // Blender X -> N64 -X
-                    case "yAxis": {index: 2, negative: false};   // Blender Y -> N64 -Z
-                    case "zAxis": {index: 1, negative: true};  // Blender Z -> N64 +Y
-                    default: {index: 1, negative: false};
+                    case "xAxis": {x: 1.0, y: 0.0, z: 0.0};
+                    case "yAxis": {x: 0.0, y: 0.0, z: -1.0};  // Blender Y -> N64 -Z
+                    case "zAxis": {x: 0.0, y: 1.0, z: 0.0};   // Blender Z -> N64 Y
+                    default: {x: 0.0, y: 1.0, z: 0.0};
                 }
             case EConst(CIdent(name)):
                 // Member variable reference - look up its initialization expression
                 if (vec4Exprs.exists(name)) {
-                    return resolveAxis(vec4Exprs.get(name));
+                    return resolveAxisVec(vec4Exprs.get(name));
                 }
             default:
         }
 
-        return {index: 1, negative: false};  // Default Y axis
+        return {x: 0.0, y: 1.0, z: 0.0};  // Default Y axis
     }
 
     function getConstFloat(e:Expr):Float {

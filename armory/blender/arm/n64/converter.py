@@ -62,6 +62,22 @@ def _normalize(vec):
     return vec
 
 
+def _apply_quat_swizzle(quat, pos_cfg):
+    """
+    Apply coordinate swizzle to quaternion XYZ components.
+    Quaternion is [x, y, z, w] - only xyz need swizzling, w stays the same.
+    Uses position swizzle rules since quaternion imaginary parts follow position axes.
+    """
+    x, y, z, w = quat[0], quat[1], quat[2], quat[3]
+    mapping = {'x': x, 'y': y, 'z': z, '-x': -x, '-y': -y, '-z': -z}
+    return [
+        mapping[pos_cfg['out_x']],
+        mapping[pos_cfg['out_y']],
+        mapping[pos_cfg['out_z']],
+        w  # W component unchanged
+    ]
+
+
 def convert_scene_data(scene_data: dict) -> dict:
     """
     Apply coordinate conversion to all scene data.
@@ -73,7 +89,6 @@ def convert_scene_data(scene_data: dict) -> dict:
     pos_cfg = config['position']
     scale_cfg = config['scale']
     dir_cfg = config['direction']
-    euler_cfg = config['euler']
     scale_factor = scale_cfg.get('factor', 1.0)
 
     for scene_name, scene in scene_data.items():
@@ -89,7 +104,8 @@ def convert_scene_data(scene_data: dict) -> dict:
         # Convert objects
         for obj in scene.get('objects', []):
             obj['pos'] = _apply_swizzle(obj['pos'], pos_cfg)
-            obj['rot'] = _apply_swizzle(obj['rot'], euler_cfg)
+            # Rotation is quaternion [x, y, z, w] - swizzle xyz components
+            obj['rot'] = _apply_quat_swizzle(obj['rot'], pos_cfg)
             # Scale includes factor
             raw_scale = _apply_swizzle(obj['scale'], scale_cfg)
             obj['scale'] = [s * scale_factor for s in raw_scale]

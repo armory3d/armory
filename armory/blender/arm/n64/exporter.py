@@ -240,8 +240,8 @@ class N64Exporter:
                 mesh_name = self.exported_meshes[mesh]
 
                 # Raw Blender coordinates - converter.py will transform later
-                # Euler from matrix for consistent rotation handling
-                euler = obj.matrix_world.to_quaternion().to_euler('YZX')
+                # Export rotation as quaternion (XYZW order for T3D)
+                quat = obj.matrix_world.to_quaternion()
 
                 # Compute bounding sphere from mesh's bounding box (local space)
                 # bound_box is 8 corners of the AABB in local coordinates
@@ -279,7 +279,7 @@ class N64Exporter:
                     "name": arm.utils.safesrc(obj.name),
                     "mesh": f'MODEL_{mesh_name.upper()}',
                     "pos": list(obj.location),
-                    "rot": [euler.x, euler.y, euler.z],
+                    "rot": [quat.x, quat.y, quat.z, quat.w],  # Quaternion XYZW
                     "scale": list(obj.scale),
                     "visible": not obj.hide_render,
                     "bounds_center": bounds_center,

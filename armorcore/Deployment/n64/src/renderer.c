@@ -35,7 +35,7 @@ void renderer_update_objects(ArmScene *scene)
         if (obj->transform.dirty == 0) {
             continue;
         }
-        t3d_mat4fp_from_srt_euler(
+        t3d_mat4fp_from_srt(
             &obj->model_mat[frameIdx],
             obj->transform.scale,
             obj->transform.rot,
