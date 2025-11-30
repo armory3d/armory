@@ -3,9 +3,15 @@
 #include <t3d/t3dmodel.h>
 
 #include "../types.h"
+#include "../engine.h"
 #include "../data/models.h"
 #include "../data/traits.h"
 #include "../data/scenes.h"
+
+#if ENGINE_ENABLE_PHYSICS
+#include "../physics.h"
+#include "../lib/oimo_64/oimo_64.h"
+#endif
 
 extern rspq_block_t *models_get_dpl(ModelId id);
 
@@ -43,6 +49,11 @@ void scene_{scene_name}_init(ArmScene *scene)
     scene->object_count = {object_count};
 
 {objects_block}
+
+    // Physics bodies
+#if ENGINE_ENABLE_PHYSICS
+{physics_block}
+#endif
 
     // Scene traits
     scene->trait_count = {scene_trait_count};

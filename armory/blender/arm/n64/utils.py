@@ -14,6 +14,16 @@ def copy_src(name, path=''):
     shutil.copyfile(tmpl_path, out_path)
 
 
+def copy_dir(name, path=''):
+    """Copy a directory from N64 deployment templates to build directory."""
+    tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), path, name)
+    out_path = os.path.join(arm.utils.build_dir(), 'n64', path, name)
+
+    if os.path.exists(out_path):
+        shutil.rmtree(out_path)
+    shutil.copytree(tmpl_path, out_path)
+
+
 def get_clear_color(scene):
     """Extract clear/background color from a Blender scene."""
     if scene.world is None:

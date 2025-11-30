@@ -11,7 +11,7 @@
 #include "physics.h"
 #endif
 
-#define FIXED_TIMESTEP (1.0f / 30.0f)
+#define FIXED_TIMESTEP ({fixed_timestep}f)
 
 static float get_time_s(void)
 {{
@@ -43,6 +43,7 @@ int main(void)
         while (fixed_time >= FIXED_TIMESTEP) {{
 #if ENGINE_ENABLE_PHYSICS
             physics_step(FIXED_TIMESTEP);
+            scene_sync_physics(current_scene);
 #endif
             scene_on_fixed_update(current_scene, FIXED_TIMESTEP);
             fixed_time -= FIXED_TIMESTEP;

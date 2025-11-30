@@ -69,10 +69,10 @@ class N64Config {
         "Bool" => "bool",
         "bool" => "bool",
         "String" => "const char*",
-        "Vec2" => "Vec2",
-        "iron.math.Vec2" => "Vec2",
-        "Vec4" => "Vec3",
-        "iron.math.Vec4" => "Vec3",
+        "Vec2" => "ArmVec2",
+        "iron.math.Vec2" => "ArmVec2",
+        "Vec4" => "ArmVec3",
+        "iron.math.Vec4" => "ArmVec3",
         "SceneId" => "SceneId"
     ];
 
@@ -85,7 +85,10 @@ class N64Config {
         "gamepad" => true,
         "keyboard" => true,
         "mouse" => true,
-        "name" => true
+        "name" => true,
+        // Physics members - N64 handles physics through scene init, not traits
+        "physics" => true,
+        "rb" => true
     ];
 
     // =========================================

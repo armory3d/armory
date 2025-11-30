@@ -21,6 +21,9 @@ src = \
 	src/data/traits.c \
 {scene_files}
 
+# Physics sources (conditionally included)
+{physics_sources}
+
 assets_png = $(wildcard assets/*.png)
 assets_gltf = $(wildcard assets/*.gltf)
 assets_conv = $(addprefix filesystem/,$(notdir $(assets_png:%.png=%.sprite))) \

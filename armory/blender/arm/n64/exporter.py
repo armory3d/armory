@@ -28,6 +28,7 @@ class N64Exporter:
         self.scene_data = {}
         self.exported_meshes = {}
         self.trait_info = {}        # Trait metadata from macro JSON
+        self.has_physics = False    # Track if any rigid bodies are exported
 
 
     @classmethod
@@ -162,10 +163,16 @@ class N64Exporter:
                         "props": props
                     })
 
+        # Get gravity from scene (Blender's scene.gravity is the actual gravity vector)
+        gravity = [0.0, -9.81, 0.0]  # Default gravity
+        if hasattr(scene, 'gravity'):
+            gravity = [scene.gravity[0], scene.gravity[1], scene.gravity[2]]
+
         self.scene_data[scene_name] = {
             "world": {
                 "clear_color": n64_utils.get_clear_color(scene),
-                "ambient_color": list(scene.fast64.renderSettings.ambientColor)
+                "ambient_color": list(scene.fast64.renderSettings.ambientColor),
+                "gravity": gravity
             },
             "cameras": [],
             "lights": [],
@@ -268,7 +275,71 @@ class N64Exporter:
                                 "props": props
                             })
 
-                self.scene_data[scene_name]["objects"].append({
+                # Extract rigid body data (N64 only supports box and sphere)
+                rigid_body_data = None
+                wrd = bpy.data.worlds['Arm']
+                if obj.rigid_body is not None and wrd.arm_physics != 'Disabled':
+                    rb = obj.rigid_body
+                    shape = rb.collision_shape
+
+                    # N64 only supports BOX and SPHERE - map others to box
+                    if shape == 'SPHERE':
+                        rb_shape = "sphere"
+                        # Calculate sphere radius from bounding box (max half-extent * max scale)
+                        max_scale = max(obj.scale)
+                        rb_radius = max(half_extents) * max_scale
+                        rb_half_extents = None
+                    else:
+                        # Everything else becomes a box
+                        rb_shape = "box"
+                        rb_radius = None
+                        # Half extents scaled by object scale
+                        # Convert from Blender (Z-up) to N64 (Y-up): swap Y and Z
+                        rb_half_extents = [
+                            half_extents[0] * obj.scale[0],
+                            half_extents[2] * obj.scale[2],  # Blender Z -> N64 Y
+                            half_extents[1] * obj.scale[1]   # Blender Y -> N64 Z
+                        ]
+                        if shape not in ('BOX', 'SPHERE'):
+                            log.warn(f'Object "{obj.name}": collision shape "{shape}" not supported on N64, using BOX')
+
+                    # Mass (0 = static)
+                    is_static = rb.type == 'PASSIVE'
+                    rb_mass = 0.0 if is_static else rb.mass
+
+                    # Collision groups/masks (convert from Blender's 20-bit to simple int)
+                    col_group = 0
+                    for i, b in enumerate(rb.collision_collections):
+                        if b:
+                            col_group |= (1 << i)
+
+                    col_mask = 0
+                    if hasattr(obj, 'arm_rb_collision_filter_mask'):
+                        for i, b in enumerate(obj.arm_rb_collision_filter_mask):
+                            if b:
+                                col_mask |= (1 << i)
+                    else:
+                        col_mask = 1  # Default mask
+
+                    rigid_body_data = {
+                        "shape": rb_shape,
+                        "mass": rb_mass,
+                        "friction": rb.friction,
+                        "restitution": rb.restitution,
+                        "collision_group": col_group,
+                        "collision_mask": col_mask,
+                        "is_trigger": getattr(obj, 'arm_rb_trigger', False),
+                        "is_kinematic": rb.kinematic
+                    }
+
+                    if rb_shape == "sphere":
+                        rigid_body_data["radius"] = rb_radius
+                    else:
+                        rigid_body_data["half_extents"] = rb_half_extents
+
+                    self.has_physics = True
+
+                obj_data = {
                     "name": arm.utils.safesrc(obj.name),
                     "mesh": f'MODEL_{mesh_name.upper()}',
                     "pos": list(obj.location),
@@ -278,7 +349,12 @@ class N64Exporter:
                     "bounds_center": bounds_center,
                     "bounds_radius": bounds_radius,
                     "traits": obj_traits
-                })
+                }
+
+                if rigid_body_data is not None:
+                    obj_data["rigid_body"] = rigid_body_data
+
+                self.scene_data[scene_name]["objects"].append(obj_data)
 
 
     def write_makefile(self):
@@ -297,10 +373,26 @@ class N64Exporter:
             scene_lines.append(f'    src/scenes/{scene_name}.c')
         scene_files = '\\\n'.join(scene_lines)
 
+        # Physics source files (only if physics is used)
+        if self.has_physics:
+            physics_sources = '''src +=\\
+    src/physics.c \\
+    src/lib/oimo_64/common/vec3.c \\
+    src/lib/oimo_64/common/mat3.c \\
+    src/lib/oimo_64/common/quat.c \\
+    src/lib/oimo_64/common/transform.c \\
+    src/lib/oimo_64/dynamics/world.c \\
+    src/lib/oimo_64/dynamics/rigidbody/rigidbody.c \\
+    src/lib/oimo_64/collision/geometry/sphere_geometry.c \\
+    src/lib/oimo_64/collision/geometry/box_geometry.c'''
+        else:
+            physics_sources = '# No physics'
+
         output = tmpl_content.format(
             tiny3d_path=os.path.join(arm.utils.get_sdk_path(), 'lib', 'tiny3d').replace('\\', '/'),
             game_title=arm.utils.safestr(wrd.arm_project_name),
-            scene_files=scene_files
+            scene_files=scene_files,
+            physics_sources=physics_sources
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
@@ -333,7 +425,33 @@ class N64Exporter:
 
     def write_engine(self):
         n64_utils.copy_src('engine.c', 'src')
-        n64_utils.copy_src('engine.h', 'src')
+
+        # Generate engine.h from template with physics flag
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'engine.h.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'engine.h')
+
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
+
+        output = tmpl_content.format(
+            enable_physics=1 if self.has_physics else 0
+        )
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
+
+
+    def write_physics(self):
+        """Copy physics engine files if physics is enabled."""
+        if not self.has_physics:
+            return
+
+        # Copy physics wrapper
+        n64_utils.copy_src('physics.c', 'src')
+        n64_utils.copy_src('physics.h', 'src')
+
+        # Copy oimo_64 library
+        n64_utils.copy_dir('lib', 'src')
 
 
     def write_main(self):
@@ -344,8 +462,12 @@ class N64Exporter:
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
 
+        # Get physics fixed timestep from Armory settings (default 0.02 = 50Hz)
+        fixed_timestep = getattr(wrd, 'arm_physics_fixed_step', 0.02)
+
         output = tmpl_content.format(
-            initial_scene_id=f'SCENE_{arm.utils.safesrc(wrd.arm_exporterlist[wrd.arm_exporterlist_index].arm_project_scene.name).upper()}'
+            initial_scene_id=f'SCENE_{arm.utils.safesrc(wrd.arm_exporterlist[wrd.arm_exporterlist_index].arm_project_scene.name).upper()}',
+            fixed_timestep=fixed_timestep
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
@@ -408,12 +530,6 @@ class N64Exporter:
         self.write_scenes_c()
         self.write_scenes_h()
 
-        # Build raw scene data from Blender
-        for scene in bpy.data.scenes:
-            if scene.library:
-                continue
-            self.build_scene_data(scene)
-
         # Apply coordinate conversion using rules from macro JSON
         n64_converter.convert_scene_data(self.scene_data)
 
@@ -452,6 +568,7 @@ class N64Exporter:
             lights_block=codegen.generate_light_block(scene_data['lights'], self.trait_info, scene_name),
             object_count=len(scene_data['objects']),
             objects_block=codegen.generate_object_block(scene_data['objects'], self.trait_info, scene_name),
+            physics_block=codegen.generate_physics_block(scene_data['objects'], scene_data['world']),
             scene_trait_count=len(scene_traits),
             scene_traits_block=codegen.generate_scene_traits_block(scene_traits, self.trait_info, scene_name)
         )
@@ -597,10 +714,17 @@ class N64Exporter:
         self.make_directories()
         self.export_meshes()
 
+        # Build scene data early to determine if physics is needed
+        for scene in bpy.data.scenes:
+            if scene.library:
+                continue
+            self.build_scene_data(scene)
+
         self.write_makefile()
         self.write_types()
         self.write_input()
         self.write_engine()
+        self.write_physics()
         self.write_main()
         self.write_models()
         self.write_renderer()

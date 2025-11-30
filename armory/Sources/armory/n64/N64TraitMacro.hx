@@ -41,8 +41,8 @@ class N64TraitMacro {
         var className = cls.name;
         var modulePath = cls.module;
 
-        // Skip internal traits
-        if (modulePath.indexOf("iron.") == 0 || modulePath.indexOf("armory.trait.internal") == 0) {
+        // Skip internal/engine traits - only process user traits from arm package
+        if (modulePath.indexOf("iron.") == 0 || modulePath.indexOf("armory.") == 0) {
             return null;
         }
 
@@ -79,6 +79,9 @@ class N64TraitMacro {
             for (code in ir.initCode) {
                 if (code != "" && code != "if () {  }" && code != "if () { }") hasUsefulCode = true;
             }
+            for (code in ir.fixedUpdateCode) {
+                if (code != "" && code != "if () {  }" && code != "if () { }") hasUsefulCode = true;
+            }
             for (code in ir.updateCode) {
                 if (code != "" && code != "if () {  }" && code != "if () { }") hasUsefulCode = true;
             }
@@ -105,6 +108,7 @@ class N64TraitMacro {
                 needs_data: ir.needs_data,
                 members: membersObj,
                 init: ir.initCode,
+                fixed_update: ir.fixedUpdateCode,
                 update: ir.updateCode,
                 remove: ir.removeCode,
                 flags: {
@@ -167,6 +171,7 @@ typedef TraitIR = {
     needs_data:Bool,
     members:Map<String, MemberIR>,       // name -> {type, default}
     initCode:Array<String>,
+    fixedUpdateCode:Array<String>,
     updateCode:Array<String>,
     removeCode:Array<String>,
     needsObj:Bool,
@@ -220,7 +225,7 @@ class TraitExtractor {
                         members.set(field.name, member);
                         memberNames.push(field.name);
                         // Store Vec4 init expressions for axis resolution in rotate()
-                        if (member.type == "Vec3" && e != null) {
+                        if (member.type == "ArmVec3" && e != null) {
                             vec4Exprs.set(field.name, e);
                         }
                     }
@@ -235,6 +240,7 @@ class TraitExtractor {
 
         // Pass 3: Convert lifecycle functions to C code
         var initCode:Array<String> = [];
+        var fixedUpdateCode:Array<String> = [];
         var updateCode:Array<String> = [];
         var removeCode:Array<String> = [];
         var needsObj = false;
@@ -266,15 +272,16 @@ class TraitExtractor {
         }
 
         initCode = processLifecycle(lifecycles.init);
+        fixedUpdateCode = processLifecycle(lifecycles.fixed_update);
         updateCode = processLifecycle(lifecycles.update);
         removeCode = processLifecycle(lifecycles.remove);
 
         // If scale assignment is used, add _initialScale member and init code
         if (needsInitialScale) {
-            members.set("_initialScale", {type: "Vec3", default_value: "{1, 1, 1}"});
+            members.set("_initialScale", {type: "ArmVec3", default_value: "{1, 1, 1}"});
             if (!Lambda.has(memberNames, "_initialScale")) memberNames.push("_initialScale");
             // Add init code to capture object's initial scale (semicolon included)
-            var captureCode = '((' + className + 'Data*)data)->_initialScale = (Vec3){((ArmObject*)obj)->transform.scale[0], ((ArmObject*)obj)->transform.scale[1], ((ArmObject*)obj)->transform.scale[2]};';
+            var captureCode = '((' + className + 'Data*)data)->_initialScale = (ArmVec3){((ArmObject*)obj)->transform.scale[0], ((ArmObject*)obj)->transform.scale[1], ((ArmObject*)obj)->transform.scale[2]};';
             initCode.insert(0, captureCode);
             needsObj = true;  // Need obj to read initial scale
         }
@@ -283,7 +290,7 @@ class TraitExtractor {
         var needsData = memberNames.length > 0;
 
         // Determine if trait should be skipped (no code and no data)
-        var hasCode = initCode.length > 0 || updateCode.length > 0 || removeCode.length > 0;
+        var hasCode = initCode.length > 0 || fixedUpdateCode.length > 0 || updateCode.length > 0 || removeCode.length > 0;
         var shouldSkip = !hasCode && !needsData;
 
         return {
@@ -292,6 +299,7 @@ class TraitExtractor {
             needs_data: needsData,
             members: members,
             initCode: initCode,
+            fixedUpdateCode: fixedUpdateCode,
             updateCode: updateCode,
             removeCode: removeCode,
             needsObj: needsObj,
@@ -382,11 +390,11 @@ class TraitExtractor {
     function exprToDefault(e:Expr, cType:String):String {
         return switch (e.expr) {
             case EConst(CInt(v)):
-                // For Vec3, convert single int to {v, v, v}
-                if (cType == "Vec3") '{$v, $v, $v}' else v;
+                // For ArmVec3, convert single int to {v, v, v}
+                if (cType == "ArmVec3") '{$v, $v, $v}' else v;
             case EConst(CFloat(f)):
-                // For Vec3, convert single float to {f, f, f}
-                if (cType == "Vec3") '{${f}f, ${f}f, ${f}f}' else '${f}f';
+                // For ArmVec3, convert single float to {f, f, f}
+                if (cType == "ArmVec3") '{${f}f, ${f}f, ${f}f}' else '${f}f';
             case EConst(CString(s)): '"$s"';
             case EConst(CIdent("true")): "true";
             case EConst(CIdent("false")): "false";
@@ -394,7 +402,7 @@ class TraitExtractor {
             case EUnop(OpNeg, false, inner): '-${exprToDefault(inner, cType)}';
             case ENew(_, params), ECall(_, params):
                 // Vec4/Vec3 constructor: new Vec4(x, y, z)
-                if (cType == "Vec3" && params.length >= 3) {
+                if (cType == "ArmVec3" && params.length >= 3) {
                     var x = exprToDefault(params[0], "float");
                     var y = exprToDefault(params[1], "float");
                     var z = exprToDefault(params[2], "float");
@@ -411,15 +419,15 @@ class TraitExtractor {
             case "float": "0.0f";
             case "int32_t": "0";
             case "bool": "false";
-            case "Vec3": "{0, 0, 0}";
+            case "ArmVec3": "{0, 0, 0}";
             case "const char*": "NULL";
             case "SceneId": "SCENE_COUNT";
             default: "0";
         }
     }
 
-    function findLifecycles():{init:Expr, update:Expr, remove:Expr} {
-        var result = {init: null, update: null, remove: null};
+    function findLifecycles():{init:Expr, fixed_update:Expr, update:Expr, remove:Expr} {
+        var result = {init: null, fixed_update: null, update: null, remove: null};
 
         var constructor = methodMap.get("new");
         if (constructor == null || constructor.expr == null) return result;
@@ -428,12 +436,12 @@ class TraitExtractor {
         return result;
     }
 
-    function scanForLifecycles(e:Expr, result:{init:Expr, update:Expr, remove:Expr}):Void {
+    function scanForLifecycles(e:Expr, result:{init:Expr, fixed_update:Expr, update:Expr, remove:Expr}):Void {
         if (e == null) return;
 
         switch (e.expr) {
             case ECall(func, params):
-                // Look for notifyOnInit, notifyOnUpdate, notifyOnRemove
+                // Look for notifyOnInit, notifyOnFixedUpdate, notifyOnUpdate, notifyOnRemove
                 var funcName = getFuncName(func);
                 if (funcName != null && params.length > 0) {
                     var callback = params[0];
@@ -442,11 +450,13 @@ class TraitExtractor {
                     switch (funcName) {
                         case "notifyOnInit":
                             result.init = body;
+                        case "notifyOnFixedUpdate":
+                            result.fixed_update = body;
                         case "notifyOnUpdate":
                             result.update = body;
                         case "notifyOnRemove":
                             result.remove = body;
-                        case "notifyOnAdd", "notifyOnLateUpdate", "notifyOnFixedUpdate", "notifyOnRender", "notifyOnRender2D":
+                        case "notifyOnAdd", "notifyOnLateUpdate", "notifyOnRender", "notifyOnRender2D":
                             Context.warning('N64: $funcName is not yet supported, code will be ignored', e.pos);
                     }
                 }

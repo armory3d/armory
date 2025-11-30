@@ -114,6 +114,7 @@ def generate_trait_declarations(traits: list) -> str:
 
         lines.append(f"// {name}")
         lines.append(f"void {name_lower}_on_ready(void* obj, void* data);")
+        lines.append(f"void {name_lower}_on_fixed_update(void* obj, float dt, void* data);")
         lines.append(f"void {name_lower}_on_update(void* obj, float dt, void* data);")
         lines.append(f"void {name_lower}_on_remove(void* obj, void* data);")
         lines.append("")
@@ -155,6 +156,7 @@ def generate_trait_implementations(traits: list) -> str:
         name_lower = name.lower()
 
         init_code = trait.get("init", [])
+        fixed_update_code = trait.get("fixed_update", [])
         update_code = trait.get("update", [])
         remove_code = trait.get("remove", [])
 
@@ -165,6 +167,15 @@ def generate_trait_implementations(traits: list) -> str:
         lines.append(f"void {name_lower}_on_ready(void* obj, void* data) {{")
         lines.append(f"    (void)obj; (void)data;")
         for stmt in init_code:
+            if _is_valid_statement(stmt):
+                lines.append(f"    {stmt}")
+        lines.append("}")
+        lines.append("")
+
+        # Fixed update function (on_fixed_update)
+        lines.append(f"void {name_lower}_on_fixed_update(void* obj, float dt, void* data) {{")
+        lines.append(f"    (void)obj; (void)data; (void)dt;")
+        for stmt in fixed_update_code:
             if _is_valid_statement(stmt):
                 lines.append(f"    {stmt}")
         lines.append("}")
@@ -258,6 +269,7 @@ def generate_trait_block(prefix: str, traits: list, trait_info: dict, scene_name
             trait_class = trait["class_name"]
             trait_func_name = arm.utils.safesrc(trait_class).lower()
             lines.append(f'    {prefix}.traits[{t_idx}].on_ready = {trait_func_name}_on_ready;')
+            lines.append(f'    {prefix}.traits[{t_idx}].on_fixed_update = {trait_func_name}_on_fixed_update;')
             lines.append(f'    {prefix}.traits[{t_idx}].on_update = {trait_func_name}_on_update;')
             lines.append(f'    {prefix}.traits[{t_idx}].on_remove = {trait_func_name}_on_remove;')
 
@@ -324,7 +336,91 @@ def generate_object_block(objects: list, trait_info: dict, scene_name: str) -> s
         br = obj.get("bounds_radius", 1.0)
         lines.append(f'    {prefix}.bounds_center = {_fmt_vec3(bc)};')
         lines.append(f'    {prefix}.bounds_radius = {br:.6f}f;')
+        lines.append(f'    {prefix}.rigid_body = NULL;')  # Initialize to NULL, physics block will set if needed
         lines.extend(generate_trait_block(prefix, obj.get("traits", []), trait_info, scene_name))
+    return '\n'.join(lines)
+
+
+def generate_physics_block(objects: list, world_data: dict) -> str:
+    """Generate C code for physics initialization (inside #if ENGINE_ENABLE_PHYSICS)."""
+    lines = []
+
+    # Set gravity from world data (convert Blender Z-up to N64 Y-up)
+    # Blender (X, Y, Z) -> N64 (X, Z, -Y)
+    gravity = world_data.get("gravity", [0, 0, -9.81])
+    gx, gy, gz = gravity[0], gravity[1], gravity[2]
+    n64_gx, n64_gy, n64_gz = gx, gz, -gy  # Convert to N64 Y-up
+    lines.append(f'    physics_set_gravity({n64_gx:.6f}f, {n64_gy:.6f}f, {n64_gz:.6f}f);')
+    lines.append('')
+
+    # Create rigid bodies for objects that have physics
+    for i, obj in enumerate(objects):
+        rb = obj.get("rigid_body")
+        if rb is None:
+            continue
+
+        obj_name = obj.get("name", f"object_{i}")
+        shape = rb.get("shape", "box")
+        mass = rb.get("mass", 0.0)
+        friction = rb.get("friction", 0.5)
+        restitution = rb.get("restitution", 0.0)
+        col_group = rb.get("collision_group", 1)
+        col_mask = rb.get("collision_mask", 1)
+        is_trigger = rb.get("is_trigger", False)
+        is_kinematic = rb.get("is_kinematic", False)
+
+        # Determine body type
+        if mass == 0.0:
+            body_type = "RIGIDBODY_STATIC"
+        elif is_kinematic:
+            body_type = "RIGIDBODY_KINEMATIC"
+        else:
+            body_type = "RIGIDBODY_DYNAMIC"
+
+        lines.append(f'    // Physics body for {obj_name}')
+        lines.append('    {')
+
+        # Create body first
+        lines.append(f'        RigidBody* body = rigidbody_create();')
+        lines.append(f'        rigidbody_set_type(body, {body_type});')
+
+        # Create shape based on type
+        if shape == "sphere":
+            radius = rb.get("radius", 1.0)
+            lines.append(f'        Shape* shape = shape_create_sphere({radius:.6f}f);')
+        else:  # box
+            he = rb.get("half_extents", [1, 1, 1])
+            lines.append(f'        Shape* shape = shape_create_box({he[0]:.6f}f, {he[1]:.6f}f, {he[2]:.6f}f);')
+
+        # Set shape properties
+        lines.append(f'        shape_set_collision_group(shape, {col_group});')
+        lines.append(f'        shape_set_collision_mask(shape, {col_mask});')
+
+        # Add shape to body
+        lines.append('        rigidbody_add_shape(body, shape);')
+
+        # Set mass if specified (for dynamic bodies)
+        if body_type == "RIGIDBODY_DYNAMIC" and mass > 0:
+            lines.append(f'        // Set explicit mass from Blender')
+            lines.append(f'        {{')
+            lines.append(f'            MassData md;')
+            lines.append(f'            rigidbody_get_mass_data(body, &md);')
+            lines.append(f'            md.mass = {mass:.6f}f;')
+            lines.append(f'            rigidbody_set_mass_data(body, &md);')
+            lines.append(f'        }}')
+
+        # Set initial transform from object
+        lines.append(f'        Vec3 pos = vec3_new(objects[{i}].transform.loc[0], objects[{i}].transform.loc[1], objects[{i}].transform.loc[2]);')
+        lines.append('        rigidbody_set_position(body, &pos);')
+        lines.append(f'        Quat rot = quat_new(objects[{i}].transform.rot[0], objects[{i}].transform.rot[1], objects[{i}].transform.rot[2], objects[{i}].transform.rot[3]);')
+        lines.append('        rigidbody_set_orientation(body, &rot);')
+
+        # Add to world and link to object
+        lines.append('        world_add_body(physics_get_world(), body);')
+        lines.append(f'        objects[{i}].rigid_body = body;')
+        lines.append('    }')
+        lines.append('')
+
     return '\n'.join(lines)
 
 

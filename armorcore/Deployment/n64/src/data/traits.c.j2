@@ -1,8 +1,14 @@
 #include "traits.h"
 #include "scenes.h"
 #include "../types.h"
+#include "../engine.h"
 #include "../iron/object/transform.h"
 #include "../iron/system/input.h"
+
+#if ENGINE_ENABLE_PHYSICS
+#include "../physics.h"
+#include "../lib/oimo_64/oimo_64.h"
+#endif
 
 // Centralized trait data instances
 {trait_data_definitions}

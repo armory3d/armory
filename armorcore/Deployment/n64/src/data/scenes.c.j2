@@ -3,7 +3,12 @@
 #include <t3d/t3dmodel.h>
 
 #include "../types.h"
+#include "../engine.h"
 #include "scenes.h"
+
+#if ENGINE_ENABLE_PHYSICS
+#include "../physics.h"
+#endif
 
 static ArmScene g_scenes[SCENE_COUNT];
 static SceneId g_pending_scene = SCENE_COUNT;  // SCENE_COUNT = no pending
@@ -111,6 +116,20 @@ void scene_on_fixed_update(SceneId id, float dt)
 			}}
 		}}
 	}}
+}}
+
+void scene_sync_physics(SceneId id)
+{{
+#if ENGINE_ENABLE_PHYSICS
+	ArmScene *s = &g_scenes[id];
+	if (s->objects) {{
+		for (uint16_t i = 0; i < s->object_count; i++) {{
+			physics_sync_object(&s->objects[i]);
+		}}
+	}}
+#else
+	(void)id;
+#endif
 }}
 
 void scene_on_update(SceneId id, float dt)

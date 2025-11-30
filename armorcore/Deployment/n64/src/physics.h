@@ -1,0 +1,40 @@
+#pragma once
+
+#include <libdragon.h>
+#include <stdbool.h>
+#include "lib/oimo_64/oimo_64.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define PHYSICS_DEFAULT_GRAVITY_Y (-9.81f)
+
+void physics_init(void);
+void physics_shutdown(void);
+void physics_reset(void);
+
+World* physics_get_world(void);
+
+void physics_set_gravity(float x, float y, float z);
+void physics_set_paused(bool paused);
+bool physics_is_paused(void);
+
+void physics_step(float dt);
+
+// Sync a single object's transform from its rigid body
+void physics_sync_object(void* obj);
+
+typedef struct {
+    bool hit;
+    Vec3 point;
+    Vec3 normal;
+    float distance;
+    RigidBody* body;
+} PhysicsRayHit;
+
+bool physics_raycast(const Vec3* from, const Vec3* direction, float max_distance, PhysicsRayHit* out_hit);
+
+#ifdef __cplusplus
+}
+#endif

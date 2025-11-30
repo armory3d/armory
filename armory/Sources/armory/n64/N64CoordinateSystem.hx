@@ -58,14 +58,14 @@ class N64CoordinateSystem {
     }
 
     /**
-     * Generate runtime conversion code for a Vec3 variable.
+     * Generate runtime conversion code for a ArmVec3 variable.
      */
     public static function emitRuntimePositionConversion(varName:String):String {
-        return '(Vec3){${varName}.x, ${varName}.z, -(${varName}.y)}';
+        return '(ArmVec3){${varName}.x, ${varName}.z, -(${varName}.y)}';
     }
 
     /**
-     * Generate runtime conversion code for scale from a Vec3 variable.
+     * Generate runtime conversion code for scale from a ArmVec3 variable.
      */
     public static function emitRuntimeScaleConversion(varName:String):String {
         return '$varName.x, $varName.z, $varName.y';

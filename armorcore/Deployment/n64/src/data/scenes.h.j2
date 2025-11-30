@@ -20,6 +20,9 @@ void scene_on_update(SceneId id, float dt);
 void scene_on_remove(SceneId id);
 void scene_clear(SceneId id);
 
+// Physics sync - updates object transforms from physics simulation
+void scene_sync_physics(SceneId id);
+
 // Scene switching
 void scene_switch_to(SceneId id);
 SceneId scene_get_pending(void);

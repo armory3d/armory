@@ -43,7 +43,7 @@ class N64CEmitter {
         }
     }
 
-    function warn(msg:String):Void {
+    public function warn(msg:String):Void {
         if (currentPos != null) {
             Context.warning('N64: $msg', currentPos);
         }
@@ -146,6 +146,8 @@ class N64CEmitter {
     }
 
     function isSkippedVariable(name:String):Bool {
+        // Check against config skip list
+        if (N64Config.shouldSkipMember(name)) return true;
         return switch (name) {
             case "camera": true;  // Camera casting not supported
             case "msg", "error": true;  // try/catch variables
@@ -382,6 +384,12 @@ class N64CEmitter {
             return "((ArmObject*)obj)->transform";
         }
 
+        // object.visible, object.rigid_body, etc. - direct field access on object
+        if (base == "object") {
+            needsObj = true;
+            return '((ArmObject*)obj)->$field';
+        }
+
         // Vec2 field access: direction.x, direction.y
         if (base != null && vec2Vars.exists(base)) {
             var vec2 = vec2Vars.get(base);
@@ -498,6 +506,10 @@ class N64CEmitter {
         var vec2Call = tryEmitVec2Call(e, params);
         if (vec2Call != null) return vec2Call;
 
+        // Check for object.getTrait(RigidBody) and similar
+        var traitCall = tryEmitGetTraitCall(e, params);
+        if (traitCall != null) return traitCall;
+
         // Detect API calls
         var callInfo = detectApiCall(e);
         if (callInfo != null) {
@@ -514,6 +526,28 @@ class N64CEmitter {
         var emittedName = emitExpr(e);
         var args = [for (p in params) emitExpr(p)].join(", ");
         return '$emittedName($args)';
+    }
+
+    /** Handle object.getTrait(TraitClass) calls */
+    function tryEmitGetTraitCall(e:Expr, params:Array<Expr>):String {
+        return switch (e.expr) {
+            case EField(base, method):
+                if (method == "getTrait") {
+                    var baseName = getBaseIdent(base);
+                    if (baseName == "object" && params.length > 0) {
+                        var traitType = getBaseIdent(params[0]);
+                        if (traitType == "RigidBody") {
+                            // On N64, the rigid body is directly linked to the object
+                            return "((ArmObject*)obj)->rigid_body";
+                        } else {
+                            warn('getTrait($traitType) not supported on N64');
+                            return '/* N64_UNSUPPORTED: getTrait($traitType) */';
+                        }
+                    }
+                }
+                null;
+            default: null;
+        };
     }
 
     function tryEmitMathCall(e:Expr, params:Array<Expr>):String {
@@ -742,6 +776,9 @@ class N64CEmitter {
                             switch (root) {
                                 case "gamepad", "keyboard", "mouse":
                                     return {category: root, method: innerField};
+                                // Physics: rb.applyForce, etc.
+                                case "rb":
+                                    return {category: "rigidbody", method: method};
                                 default:
                             }
                         }
@@ -753,6 +790,11 @@ class N64CEmitter {
                             switch (category) {
                                 case "gamepad", "keyboard", "mouse", "transform", "scene", "Input", "Scene":
                                     return {category: category, method: method};
+                                // Physics: PhysicsWorld.active, rb.method
+                                case "PhysicsWorld":
+                                    return {category: "physicsworld", method: method};
+                                case "rb":
+                                    return {category: "rigidbody", method: method};
                                 default: null;
                             }
                         } else null;
@@ -794,10 +836,21 @@ class N64CEmitter {
             return emitSceneCall(method, params);
         }
 
+        // Physics APIs - delegated to N64PhysicsMacro
+        if (category == "physicsworld") {
+            return N64PhysicsMacro.emitPhysicsWorldCall(method, params, this);
+        }
+        if (category == "rigidbody") {
+            return N64PhysicsMacro.emitRigidBodyCall(method, params, this);
+        }
+
         // Fallback
         warn('Unsupported API: $apiKey');
         return '/* N64_UNSUPPORTED: API $apiKey */';
     }
+
+    // Physics emission moved to N64PhysicsMacro.hx
+
     function emitGamepadCall(method:String, params:Array<Expr>):String {
         // Get N64 function name
         var n64Func = N64Config.mapInputState(method);
@@ -1119,24 +1172,24 @@ class N64CEmitter {
                 if (params.length >= 2) {
                     var x = emitExpr(params[0]);
                     var y = emitExpr(params[1]);
-                    '(Vec2){$x, $y}';
+                    '(ArmVec2){$x, $y}';
                 } else if (params.length == 1) {
                     var v = emitExpr(params[0]);
-                    '(Vec2){$v, $v}';
+                    '(ArmVec2){$v, $v}';
                 } else {
-                    "(Vec2){0.0f, 0.0f}";
+                    "(ArmVec2){0.0f, 0.0f}";
                 }
             case "Vec3", "Vec4":
                 if (params.length >= 3) {
                     var x = emitExpr(params[0]);
                     var y = emitExpr(params[1]);
                     var z = emitExpr(params[2]);
-                    '(Vec3){$x, $y, $z}';
+                    '(ArmVec3){$x, $y, $z}';
                 } else if (params.length == 1) {
                     var v = emitExpr(params[0]);
-                    '(Vec3){$v, $v, $v}';
+                    '(ArmVec3){$v, $v, $v}';
                 } else {
-                    "(Vec3){0.0f, 0.0f, 0.0f}";
+                    "(ArmVec3){0.0f, 0.0f, 0.0f}";
                 }
             case "String":
                 if (params.length > 0) emitExpr(params[0]) else '""';
@@ -1281,8 +1334,8 @@ class N64CEmitter {
             localVars.set(v.name, true);
             var typeName = v.type != null ? N64Config.mapType(typeToString(v.type)) : "float";
 
-            // Handle Vec2 variable declarations specially
-            if (typeName == "Vec2" && v.expr != null) {
+            // Handle Vec2 variable declarations specially (split into _x, _y floats)
+            if ((typeName == "Vec2" || typeName == "ArmVec2") && v.expr != null) {
                 var vec2Init = tryExtractVec2(v.expr);
                 if (vec2Init != null) {
                     // Store variable name references for later field access (motion.x -> motion_x)
