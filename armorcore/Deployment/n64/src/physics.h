@@ -2,7 +2,7 @@
 
 #include <libdragon.h>
 #include <stdbool.h>
-#include "lib/oimo_64/oimo_64.h"
+#include "oimo_64/oimo_64.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,7 +14,7 @@ void physics_init(void);
 void physics_shutdown(void);
 void physics_reset(void);
 
-World* physics_get_world(void);
+OimoWorld* physics_get_world(void);
 
 void physics_set_gravity(float x, float y, float z);
 void physics_set_paused(bool paused);
@@ -27,13 +27,13 @@ void physics_sync_object(void* obj);
 
 typedef struct {
     bool hit;
-    Vec3 point;
-    Vec3 normal;
+    OimoVec3 point;
+    OimoVec3 normal;
     float distance;
-    RigidBody* body;
+    OimoRigidBody* body;
 } PhysicsRayHit;
 
-bool physics_raycast(const Vec3* from, const Vec3* direction, float max_distance, PhysicsRayHit* out_hit);
+bool physics_raycast(const OimoVec3* from, const OimoVec3* direction, float max_distance, PhysicsRayHit* out_hit);
 
 #ifdef __cplusplus
 }

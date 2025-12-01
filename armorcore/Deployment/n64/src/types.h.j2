@@ -12,8 +12,8 @@ extern "C" {{
 
 #define FB_COUNT 3 {debug_hud_define}
 
-// Forward declare RigidBody for physics (always declared, conditionally used)
-struct RigidBody;
+// Forward declare OimoRigidBody for physics (always declared, conditionally used)
+struct OimoRigidBody;
 
 // Simple Vec2 type for trait data
 typedef struct {{
@@ -58,7 +58,7 @@ typedef struct ArmObject {{
     T3DVec3 bounds_center;  // Center offset from origin
     float bounds_radius;    // Radius (already multiplied by max scale)
 
-    struct RigidBody *rigid_body;  // Physics body (NULL if no physics)
+    struct OimoRigidBody *rigid_body;  // Physics body (NULL if no physics)
 
     uint8_t trait_count;
     ArmTrait *traits;
