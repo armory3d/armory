@@ -364,6 +364,23 @@ static inline void oimo_rigid_body_update_mass(OimoRigidBody* rb) {
     oimo_rigid_body_wake_up(rb);
 }
 
+// Set mass data directly (like OimoPhysics setMassData)
+// This overrides the auto-calculated mass from density * volume
+static inline void oimo_rigid_body_set_mass_data(OimoRigidBody* rb, const OimoMassData* massData) {
+    rb->_mass = massData->mass;
+    rb->_localInertia = massData->localInertia;
+
+    oimo_rigid_body_complete_mass_data(rb);
+    oimo_rigid_body_wake_up(rb);
+}
+
+// Convenience function to just set mass (keeping computed inertia)
+static inline void oimo_rigid_body_set_mass(OimoRigidBody* rb, OimoScalar mass) {
+    rb->_mass = mass;
+    oimo_rigid_body_complete_mass_data(rb);
+    oimo_rigid_body_wake_up(rb);
+}
+
 static inline OimoVec3 oimo_rigid_body_get_position(const OimoRigidBody* rb) {
     return rb->_transform.position;
 }

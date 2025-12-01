@@ -15,6 +15,7 @@ static OimoShape g_shapes[MAX_PHYSICS_BODIES];
 typedef union {
     OimoSphereGeometry sphere;
     OimoBoxGeometry box;
+    OimoCapsuleGeometry capsule;
 } GeometryUnion;
 static GeometryUnion g_geometries[MAX_PHYSICS_BODIES];
 
@@ -132,6 +133,13 @@ void physics_create_box(ArmObject* obj, int type, float hx, float hy, float hz,
     oimo_shape_init(&g_shapes[idx], &shapeConfig);
     oimo_rigid_body_add_shape(rb, &g_shapes[idx]);
 
+    // Set mass data like OimoPhysics does (1:1 with oimo_module RigidBody.hx)
+    if (type == OIMO_RIGID_BODY_DYNAMIC) {
+        rb->_mass = mass;
+        rb->_localInertia = oimo_mat3(0.1f, 0, 0, 0, 0.1f, 0, 0, 0, 0.1f);  // angularFriction=0.1
+        oimo_rigid_body_complete_mass_data(rb);
+    }
+
     oimo_world_add_rigid_body(&g_world, rb);
     obj->rigid_body = rb;
 }
@@ -168,6 +176,13 @@ void physics_create_sphere(ArmObject* obj, int type, float radius,
     oimo_shape_init(&g_shapes[idx], &shapeConfig);
     oimo_rigid_body_add_shape(rb, &g_shapes[idx]);
 
+    // Set mass data like OimoPhysics does (1:1 with oimo_module RigidBody.hx)
+    if (type == OIMO_RIGID_BODY_DYNAMIC) {
+        rb->_mass = mass;
+        rb->_localInertia = oimo_mat3(0.1f, 0, 0, 0, 0.1f, 0, 0, 0, 0.1f);  // angularFriction=0.1
+        oimo_rigid_body_complete_mass_data(rb);
+    }
+
     oimo_world_add_rigid_body(&g_world, rb);
     obj->rigid_body = rb;
 }
@@ -178,6 +193,51 @@ void physics_remove_body(ArmObject* obj) {
     oimo_world_remove_rigid_body(&g_world, obj->rigid_body);
     free_body(obj->rigid_body);
     obj->rigid_body = NULL;
+}
+
+void physics_create_capsule(ArmObject* obj, int type, float radius, float half_height,
+                            float mass, float friction, float restitution) {
+    if (!g_initialized || !obj) return;
+
+    OimoRigidBody* rb = alloc_body();
+    if (!rb) return;
+
+    int idx = get_body_index(rb);
+
+    // Body config
+    OimoRigidBodyConfig config = oimo_rigid_body_config();
+    config.type = type;
+    config.position = oimo_vec3(obj->transform.loc[0], obj->transform.loc[1], obj->transform.loc[2]);
+    OimoQuat q = oimo_quat(obj->transform.rot[0], obj->transform.rot[1],
+                           obj->transform.rot[2], obj->transform.rot[3]);
+    config.rotation = oimo_quat_to_mat3(&q);
+    config.autoSleep = (type == OIMO_RIGID_BODY_DYNAMIC);
+    oimo_rigid_body_init(rb, &config);
+
+    // Geometry & shape
+    oimo_capsule_geometry_init(&g_geometries[idx].capsule, radius, half_height);
+
+    OimoShapeConfig shapeConfig = oimo_shape_config();
+    shapeConfig.geometry = &g_geometries[idx].capsule.base;
+    shapeConfig.friction = friction;
+    shapeConfig.restitution = restitution;
+    // Volume = cylinder + 2 hemispheres = PI * r^2 * (2*h) + (4/3) * PI * r^3
+    float volume = 3.14159265f * radius * radius * (2.0f * half_height) +
+                   (4.0f / 3.0f) * 3.14159265f * radius * radius * radius;
+    shapeConfig.density = (type == OIMO_RIGID_BODY_STATIC) ? 0.0f : (mass / volume);
+
+    oimo_shape_init(&g_shapes[idx], &shapeConfig);
+    oimo_rigid_body_add_shape(rb, &g_shapes[idx]);
+
+    // Set mass data like OimoPhysics does (1:1 with oimo_module RigidBody.hx)
+    if (type == OIMO_RIGID_BODY_DYNAMIC) {
+        rb->_mass = mass;
+        rb->_localInertia = oimo_mat3(0.1f, 0, 0, 0, 0.1f, 0, 0, 0, 0.1f);  // angularFriction=0.1
+        oimo_rigid_body_complete_mass_data(rb);
+    }
+
+    oimo_world_add_rigid_body(&g_world, rb);
+    obj->rigid_body = rb;
 }
 
 // Transform sync

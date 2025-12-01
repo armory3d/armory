@@ -27,6 +27,8 @@ void physics_create_box(ArmObject* obj, int type, float hx, float hy, float hz,
                         float mass, float friction, float restitution);
 void physics_create_sphere(ArmObject* obj, int type, float radius,
                            float mass, float friction, float restitution);
+void physics_create_capsule(ArmObject* obj, int type, float radius, float half_height,
+                            float mass, float friction, float restitution);
 void physics_remove_body(ArmObject* obj);
 
 // Transform sync (call after physics_step)

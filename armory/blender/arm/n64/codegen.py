@@ -393,18 +393,32 @@ def generate_physics_block(objects: list, world_data: dict) -> str:
 
         # Create shape config based on type
         lines.append(f'        OimoShapeConfig shape_config = oimo_shape_config_default();')
+        lines.append(f'        shape_config.friction = {friction:.6f}f;')
+        lines.append(f'        shape_config.restitution = {restitution:.6f}f;')
         lines.append(f'        shape_config.collision_group = {col_group};')
         lines.append(f'        shape_config.collision_mask = {col_mask};')
 
         if shape == "sphere":
             radius = rb.get("radius", 1.0)
+            # Volume of sphere = (4/3) * PI * r^3
+            volume = (4.0 / 3.0) * 3.14159265 * radius * radius * radius
+            density = 0.0 if mass == 0.0 else mass / volume
+            lines.append(f'        shape_config.density = {density:.6f}f;')
             lines.append(f'        shape_config.geometry = oimo_geometry_sphere({radius:.6f}f);')
         elif shape == "capsule":
             radius = rb.get("radius", 0.5)
             half_height = rb.get("half_height", 0.5)
+            # Volume of capsule = cylinder + sphere = PI * r^2 * (2*h) + (4/3) * PI * r^3
+            volume = 3.14159265 * radius * radius * (2.0 * half_height) + (4.0 / 3.0) * 3.14159265 * radius * radius * radius
+            density = 0.0 if mass == 0.0 else mass / volume
+            lines.append(f'        shape_config.density = {density:.6f}f;')
             lines.append(f'        shape_config.geometry = oimo_geometry_capsule({radius:.6f}f, {half_height:.6f}f);')
         else:  # box
             he = rb.get("half_extents", [1, 1, 1])
+            # Volume of box = 8 * hx * hy * hz
+            volume = 8.0 * he[0] * he[1] * he[2]
+            density = 0.0 if mass == 0.0 else mass / volume
+            lines.append(f'        shape_config.density = {density:.6f}f;')
             lines.append(f'        shape_config.geometry = oimo_geometry_box({he[0]:.6f}f, {he[1]:.6f}f, {he[2]:.6f}f);')
 
         # Allocate and init rigid body
@@ -416,11 +430,16 @@ def generate_physics_block(objects: list, world_data: dict) -> str:
         lines.append(f'        oimo_shape_init(shape, &shape_config);')
         lines.append(f'        oimo_rigidbody_add_shape(body, shape);')
 
-        # Set mass if specified (for dynamic bodies)
-        if body_type == "OIMO_BODY_DYNAMIC" and mass > 0:
-            lines.append(f'        // Set explicit mass from Blender')
-            lines.append(f'        body->mass = {mass:.6f}f;')
-            lines.append(f'        oimo_rigidbody_update_mass(body);')
+        # Set mass data like OimoPhysics does - override auto-calculated mass
+        # For dynamic bodies: use Blender's mass with a uniform inertia tensor
+        # For static bodies: mass=0, inertia=0 (handled by complete_mass_data)
+        if body_type == "OIMO_BODY_DYNAMIC":
+            # Use angularFriction=0.1 for inertia diagonal (same as oimo_module default)
+            angular_friction = 0.1
+            lines.append(f'        // Set mass data (1:1 with oimo_module RigidBody.hx)')
+            lines.append(f'        body->_mass = {mass:.6f}f;')
+            lines.append(f'        body->_localInertia = oimo_mat3({angular_friction}f, 0, 0, 0, {angular_friction}f, 0, 0, 0, {angular_friction}f);')
+            lines.append(f'        oimo_rigid_body_complete_mass_data(body);')
 
         # Add to world and link to object
         lines.append('        oimo_world_add_rigidbody(physics_get_world(), body);')
