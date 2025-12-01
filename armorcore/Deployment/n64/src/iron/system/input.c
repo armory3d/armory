@@ -1,7 +1,6 @@
 #include "input.h"
 #include <libdragon.h>
 
-// N64 stick practical range (doesn't reach full ±128)
 #define STICK_MAX 85.0f
 
 static joypad_inputs_t current_inputs;
@@ -60,7 +59,6 @@ bool input_released(N64Button btn)
 float input_stick_x(void)
 {
     float val = (float)current_inputs.stick_x / STICK_MAX;
-    // Clamp to -1.0 to 1.0
     if (val > 1.0f) val = 1.0f;
     if (val < -1.0f) val = -1.0f;
     return val;

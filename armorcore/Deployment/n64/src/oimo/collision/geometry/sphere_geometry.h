@@ -1,10 +1,3 @@
-/**
- * OimoPhysics N64 Port - Sphere Geometry
- *
- * Sphere collision geometry.
- * Based on OimoPhysics SphereGeometry.hx
- */
-
 #ifndef OIMO_COLLISION_GEOMETRY_SPHERE_GEOMETRY_H
 #define OIMO_COLLISION_GEOMETRY_SPHERE_GEOMETRY_H
 
@@ -17,19 +10,11 @@
 #include "aabb.h"
 #include "geometry.h"
 
-// ============================================================================
-// Sphere Geometry Structure
-// ============================================================================
 typedef struct OimoSphereGeometry {
-    OimoGeometry base;    // Base geometry (must be first for casting)
-    OimoScalar radius;    // Sphere radius
+    OimoGeometry base;
+    OimoScalar radius;
 } OimoSphereGeometry;
 
-// ============================================================================
-// Construction
-// ============================================================================
-
-// Initialize sphere geometry with given radius
 static inline void oimo_sphere_geometry_init(OimoSphereGeometry* sphere, OimoScalar radius) {
     oimo_geometry_init(&sphere->base, OIMO_GEOMETRY_SPHERE);
     sphere->radius = radius;
@@ -53,18 +38,10 @@ static inline OimoSphereGeometry oimo_sphere_geometry(OimoScalar radius) {
     return sphere;
 }
 
-// ============================================================================
-// Getters
-// ============================================================================
-
 // Get radius
 static inline OimoScalar oimo_sphere_geometry_get_radius(const OimoSphereGeometry* sphere) {
     return sphere->radius;
 }
-
-// ============================================================================
-// Setters
-// ============================================================================
 
 // Set radius and update mass properties
 static inline void oimo_sphere_geometry_set_radius(OimoSphereGeometry* sphere, OimoScalar radius) {
@@ -82,10 +59,6 @@ static inline void oimo_sphere_geometry_set_radius(OimoSphereGeometry* sphere, O
     );
 }
 
-// ============================================================================
-// AABB Computation
-// ============================================================================
-
 // Compute AABB for sphere at given transform
 static inline void oimo_sphere_geometry_compute_aabb(
     const OimoSphereGeometry* sphere,
@@ -102,10 +75,6 @@ static inline void oimo_sphere_geometry_compute_aabb(
     aabb->max.z = tf->position.z + r;
 }
 
-// ============================================================================
-// Ray Casting
-// ============================================================================
-
 // Ray cast against sphere in local coordinates
 // begin and end are in local space (relative to sphere center)
 static inline int oimo_sphere_geometry_ray_cast_local(
@@ -115,13 +84,13 @@ static inline int oimo_sphere_geometry_ray_cast_local(
     OimoRayCastHit* hit
 ) {
     // Ray: P(t) = begin + t * d, where d = end - begin
-    OimoVec3 d = oimo_vec3_sub(end, begin);
+    OimoVec3 d = oimo_vec3_sub(*end, *begin);
 
     // Solve: |begin + t*d|^2 = r^2
     // => (d·d)*t^2 + 2*(begin·d)*t + (begin·begin - r^2) = 0
-    OimoScalar a = oimo_vec3_dot(&d, &d);
-    OimoScalar b = oimo_vec3_dot(begin, &d);
-    OimoScalar c = oimo_vec3_dot(begin, begin) - sphere->radius * sphere->radius;
+    OimoScalar a = oimo_vec3_dot(d, d);
+    OimoScalar b = oimo_vec3_dot(*begin, d);
+    OimoScalar c = oimo_vec3_dot(*begin, *begin) - sphere->radius * sphere->radius;
 
     // Discriminant: D = b^2 - a*c
     OimoScalar discriminant = b * b - a * c;
@@ -134,8 +103,8 @@ static inline int oimo_sphere_geometry_ray_cast_local(
     if (t < 0 || t > 1) return 0;
 
     // Compute hit position and normal
-    OimoVec3 hit_pos = oimo_vec3_add_scaled(begin, &d, t);
-    OimoVec3 hit_normal = oimo_vec3_normalize(&hit_pos);
+    OimoVec3 hit_pos = oimo_vec3_add_scaled(*begin, d, t);
+    OimoVec3 hit_normal = oimo_vec3_normalize(hit_pos);
 
     hit->position = hit_pos;
     hit->normal = hit_normal;
@@ -167,10 +136,6 @@ static inline int oimo_sphere_geometry_ray_cast(
 
     return 1;
 }
-
-// ============================================================================
-// Supporting Vertex (for GJK, if needed in future)
-// ============================================================================
 
 // Compute local supporting vertex in given direction
 // For a sphere, the supporting vertex is always at the center (for core geometry)

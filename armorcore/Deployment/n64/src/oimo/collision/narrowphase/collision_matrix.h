@@ -1,11 +1,3 @@
-/**
- * Oimo Physics - N64 Port
- * Collision Matrix - Dispatcher for collision detection between geometry pairs
- *
- * Based on OimoPhysics by saharan
- * https://github.com/saharan/OimoPhysics
- */
-
 #ifndef OIMO_COLLISION_NARROWPHASE_COLLISION_MATRIX_H
 #define OIMO_COLLISION_NARROWPHASE_COLLISION_MATRIX_H
 
@@ -23,10 +15,6 @@
 extern "C" {
 #endif
 
-/**
- * Collision Matrix - holds detector instances for each geometry pair.
- * For N64, we only support Sphere and Box (2x2 = 4 combinations).
- */
 typedef struct OimoCollisionMatrix {
     OimoSphereSphereDetector sphere_sphere;
     OimoSphereBoxDetector sphere_box;      // sphere is geom1
@@ -34,9 +22,6 @@ typedef struct OimoCollisionMatrix {
     OimoBoxBoxDetector box_box;
 } OimoCollisionMatrix;
 
-/**
- * Initialize the collision matrix with all detectors.
- */
 static inline void oimo_collision_matrix_init(OimoCollisionMatrix* matrix) {
     oimo_sphere_sphere_detector_init(&matrix->sphere_sphere);
     oimo_sphere_box_detector_init(&matrix->sphere_box, false);  // sphere-box order
@@ -44,17 +29,33 @@ static inline void oimo_collision_matrix_init(OimoCollisionMatrix* matrix) {
     oimo_box_box_detector_init(&matrix->box_box);
 }
 
-/**
- * Perform collision detection between two geometries.
- *
- * @param matrix The collision matrix
- * @param result Output - collision results
- * @param geom1 First geometry
- * @param geom2 Second geometry
- * @param tf1 Transform of first geometry
- * @param tf2 Transform of second geometry
- * @return true if a valid detector was found, false otherwise
- */
+static inline OimoCollisionMatrix oimo_collision_matrix_create(void) {
+    OimoCollisionMatrix matrix;
+    oimo_collision_matrix_init(&matrix);
+    return matrix;
+}
+
+// Get a detector pointer for the given geometry types (for storing in contacts)
+static inline OimoDetector* oimo_collision_matrix_get_detector(
+    OimoCollisionMatrix* matrix,
+    OimoGeometryType type1,
+    OimoGeometryType type2)
+{
+    if (type1 == OIMO_GEOMETRY_SPHERE && type2 == OIMO_GEOMETRY_SPHERE) {
+        return &matrix->sphere_sphere.base;
+    }
+    if (type1 == OIMO_GEOMETRY_SPHERE && type2 == OIMO_GEOMETRY_BOX) {
+        return &matrix->sphere_box.base;
+    }
+    if (type1 == OIMO_GEOMETRY_BOX && type2 == OIMO_GEOMETRY_SPHERE) {
+        return &matrix->box_sphere.base;
+    }
+    if (type1 == OIMO_GEOMETRY_BOX && type2 == OIMO_GEOMETRY_BOX) {
+        return &matrix->box_box.base;
+    }
+    return NULL;
+}
+
 static inline bool oimo_collision_matrix_detect(
     OimoCollisionMatrix* matrix,
     OimoDetectorResult* result,
@@ -112,10 +113,6 @@ static inline bool oimo_collision_matrix_detect(
     return false;
 }
 
-/**
- * Get the detector type for a geometry pair.
- * Returns -1 if unsupported.
- */
 static inline OimoDetectorType oimo_collision_matrix_get_detector_type(int geom_type1, int geom_type2) {
     if (geom_type1 == OIMO_GEOMETRY_SPHERE && geom_type2 == OIMO_GEOMETRY_SPHERE) {
         return OIMO_DETECTOR_SPHERE_SPHERE;

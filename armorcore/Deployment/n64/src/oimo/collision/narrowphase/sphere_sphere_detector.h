@@ -1,11 +1,3 @@
-/**
- * Oimo Physics - N64 Port
- * Sphere vs Sphere Detector
- *
- * Based on OimoPhysics by saharan
- * https://github.com/saharan/OimoPhysics
- */
-
 #ifndef OIMO_COLLISION_NARROWPHASE_SPHERE_SPHERE_DETECTOR_H
 #define OIMO_COLLISION_NARROWPHASE_SPHERE_SPHERE_DETECTOR_H
 
@@ -19,30 +11,14 @@
 extern "C" {
 #endif
 
-/**
- * Sphere vs Sphere collision detector.
- */
 typedef struct OimoSphereSphereDetector {
     OimoDetector base;
 } OimoSphereSphereDetector;
 
-/**
- * Initialize the sphere-sphere detector.
- */
 static inline void oimo_sphere_sphere_detector_init(OimoSphereSphereDetector* detector) {
     oimo_detector_init(&detector->base, OIMO_DETECTOR_SPHERE_SPHERE, false);
 }
 
-/**
- * Detect collision between two spheres.
- *
- * @param detector The detector instance
- * @param result Output - collision results
- * @param sphere1 First sphere geometry
- * @param sphere2 Second sphere geometry
- * @param tf1 Transform of first sphere
- * @param tf2 Transform of second sphere
- */
 static inline void oimo_sphere_sphere_detector_detect(
     OimoSphereSphereDetector* detector,
     OimoDetectorResult* result,
@@ -62,7 +38,7 @@ static inline void oimo_sphere_sphere_detector_detect(
     OimoScalar sum_radii = r1 + r2;
 
     // Check if spheres are separated
-    OimoScalar len2 = oimo_vec3_dot(&d, &d);
+    OimoScalar len2 = oimo_vec3_dot(d, d);
     if (len2 >= sum_radii * sum_radii) {
         return;  // No collision
     }

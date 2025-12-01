@@ -275,24 +275,35 @@ class N64Exporter:
                                 "props": props
                             })
 
-                # Extract rigid body data (N64 only supports box and sphere)
+                # Extract rigid body data (N64 supports box, sphere, and capsule)
                 rigid_body_data = None
                 wrd = bpy.data.worlds['Arm']
                 if obj.rigid_body is not None and wrd.arm_physics != 'Disabled':
                     rb = obj.rigid_body
                     shape = rb.collision_shape
 
-                    # N64 only supports BOX and SPHERE - map others to box
+                    # N64 supports BOX, SPHERE, and CAPSULE - map others to box
                     if shape == 'SPHERE':
                         rb_shape = "sphere"
                         # Calculate sphere radius from bounding box (max half-extent * max scale)
                         max_scale = max(obj.scale)
                         rb_radius = max(half_extents) * max_scale
                         rb_half_extents = None
+                        rb_half_height = None
+                    elif shape == 'CAPSULE':
+                        rb_shape = "capsule"
+                        # Capsule: radius from X/Z, half-height from Y (in Blender coords)
+                        # Blender capsule is aligned along Z, we convert to Y-up for N64
+                        rb_radius = max(half_extents[0], half_extents[1]) * max(obj.scale[0], obj.scale[1])
+                        # Half-height is the cylinder part (total height - 2*radius) / 2
+                        total_height = half_extents[2] * 2.0 * obj.scale[2]
+                        rb_half_height = max(0.0, (total_height - 2.0 * rb_radius) / 2.0)
+                        rb_half_extents = None
                     else:
                         # Everything else becomes a box
                         rb_shape = "box"
                         rb_radius = None
+                        rb_half_height = None
                         # Half extents scaled by object scale
                         # Convert from Blender (Z-up) to N64 (Y-up): swap Y and Z
                         rb_half_extents = [
@@ -300,7 +311,7 @@ class N64Exporter:
                             half_extents[2] * obj.scale[2],  # Blender Z -> N64 Y
                             half_extents[1] * obj.scale[1]   # Blender Y -> N64 Z
                         ]
-                        if shape not in ('BOX', 'SPHERE'):
+                        if shape not in ('BOX', 'SPHERE', 'CAPSULE'):
                             log.warn(f'Object "{obj.name}": collision shape "{shape}" not supported on N64, using BOX')
 
                     # Mass (0 = static)
@@ -334,6 +345,9 @@ class N64Exporter:
 
                     if rb_shape == "sphere":
                         rigid_body_data["radius"] = rb_radius
+                    elif rb_shape == "capsule":
+                        rigid_body_data["radius"] = rb_radius
+                        rigid_body_data["half_height"] = rb_half_height
                     else:
                         rigid_body_data["half_extents"] = rb_half_extents
 
@@ -374,17 +388,11 @@ class N64Exporter:
         scene_files = '\\\n'.join(scene_lines)
 
         # Physics source files (only if physics is used)
+        # Note: oimo is header-only, only physics.c and geometry.c need compilation
         if self.has_physics:
             physics_sources = '''src +=\\
     src/physics.c \\
-    src/lib/oimo_64/common/vec3.c \\
-    src/lib/oimo_64/common/mat3.c \\
-    src/lib/oimo_64/common/quat.c \\
-    src/lib/oimo_64/common/transform.c \\
-    src/lib/oimo_64/dynamics/world.c \\
-    src/lib/oimo_64/dynamics/rigidbody/rigidbody.c \\
-    src/lib/oimo_64/collision/geometry/sphere_geometry.c \\
-    src/lib/oimo_64/collision/geometry/box_geometry.c'''
+    src/oimo/collision/geometry/geometry.c'''
         else:
             physics_sources = '# No physics'
 
@@ -450,8 +458,8 @@ class N64Exporter:
         n64_utils.copy_src('physics.c', 'src')
         n64_utils.copy_src('physics.h', 'src')
 
-        # Copy oimo_64 library
-        n64_utils.copy_dir('lib', 'src')
+        # Copy oimo library (header-only physics engine)
+        n64_utils.copy_dir('oimo', 'src')
 
 
     def write_main(self):

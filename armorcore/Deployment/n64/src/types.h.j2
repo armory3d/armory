@@ -12,18 +12,10 @@ extern "C" {{
 
 #define FB_COUNT 3 {debug_hud_define}
 
-// Forward declare OimoRigidBody for physics (always declared, conditionally used)
 struct OimoRigidBody;
 
-// Simple Vec2 type for trait data
-typedef struct {{
-    float x, y;
-}} ArmVec2;
-
-// Simple Vec3 type for trait data (named ArmVec3 to avoid conflict with oimo_64's Vec3)
-typedef struct {{
-    float x, y, z;
-}} ArmVec3;
+typedef struct {{ float x, y; }} ArmVec2;
+typedef struct {{ float x, y, z; }} ArmVec3;
 
 typedef void (*ArmTraitReadyFn)(void *entity, void *data);
 typedef void (*ArmTraitFixedUpdateFn)(void *entity, float dt, void *data);
@@ -38,50 +30,39 @@ typedef struct {{
     void *data;
 }} ArmTrait;
 
-// Unified transform - matches Iron's Transform class
 typedef struct {{
-    float loc[3];   // Location/position
-    float rot[4];   // Rotation (quaternion XYZW)
-    float scale[3]; // Scale
-    uint8_t dirty;  // Counts down frames needing matrix update (for triple buffering)
+    float loc[3];
+    float rot[4];   // quaternion XYZW
+    float scale[3];
+    uint8_t dirty;
 }} ArmTransform;
 
 typedef struct ArmObject {{
     ArmTransform transform;
-
     rspq_block_t *dpl;
     T3DMat4FP *model_mat;
-
     bool visible;
-
-    // Bounding sphere for frustum culling (local space, pre-scaled)
-    T3DVec3 bounds_center;  // Center offset from origin
-    float bounds_radius;    // Radius (already multiplied by max scale)
-
-    struct OimoRigidBody *rigid_body;  // Physics body (NULL if no physics)
-
+    T3DVec3 bounds_center;
+    float bounds_radius;
+    struct OimoRigidBody *rigid_body;
     uint8_t trait_count;
     ArmTrait *traits;
 }} ArmObject;
 
 typedef struct ArmLight {{
     ArmTransform transform;
-
     uint8_t color[4];
-    T3DVec3 dir;  // Computed from transform.rot
-
+    T3DVec3 dir;
     uint8_t trait_count;
     ArmTrait *traits;
 }} ArmLight;
 
 typedef struct ArmCamera {{
     ArmTransform transform;
-
-    T3DVec3 target;  // Look-at target (can be computed from transform)
+    T3DVec3 target;
     float fov;
     float near;
     float far;
-
     uint8_t trait_count;
     ArmTrait *traits;
 }} ArmCamera;

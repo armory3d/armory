@@ -1,15 +1,3 @@
-/**
- * OimoPhysics N64 Port - 3x3 Matrix
- *
- * 3x3 matrix class for rotation and inertia tensors.
- * Based on OimoPhysics Mat3.hx
- *
- * Matrix layout (row-major):
- *   | e00 e01 e02 |
- *   | e10 e11 e12 |
- *   | e20 e21 e22 |
- */
-
 #ifndef OIMO_COMMON_MAT3_H
 #define OIMO_COMMON_MAT3_H
 
@@ -17,23 +5,14 @@
 #include "math_util.h"
 #include "vec3.h"
 
-// Forward declaration for Quat (circular dependency)
 struct OimoQuat;
 
-// ============================================================================
-// Mat3 Type
-// ============================================================================
 typedef struct OimoMat3 {
     OimoScalar e00, e01, e02;
     OimoScalar e10, e11, e12;
     OimoScalar e20, e21, e22;
 } OimoMat3;
 
-// ============================================================================
-// Construction
-// ============================================================================
-
-// Create identity matrix
 static inline OimoMat3 oimo_mat3_identity(void) {
     return (OimoMat3){
         1, 0, 0,
@@ -73,11 +52,6 @@ static inline OimoMat3 oimo_mat3_copy(const OimoMat3* m) {
     };
 }
 
-// ============================================================================
-// Basic Operations
-// ============================================================================
-
-// m1 + m2
 static inline OimoMat3 oimo_mat3_add(const OimoMat3* m1, const OimoMat3* m2) {
     return (OimoMat3){
         m1->e00 + m2->e00, m1->e01 + m2->e01, m1->e02 + m2->e02,
@@ -121,33 +95,23 @@ static inline OimoMat3 oimo_mat3_mul(const OimoMat3* m1, const OimoMat3* m2) {
     };
 }
 
-// ============================================================================
-// Matrix-Vector Operations
-// ============================================================================
-
-// m * v (transform vector by matrix)
-static inline OimoVec3 oimo_mat3_mul_vec3(const OimoMat3* m, const OimoVec3* v) {
+static inline OimoVec3 oimo_mat3_mul_vec3(const OimoMat3* m, OimoVec3 v) {
     return (OimoVec3){
-        m->e00 * v->x + m->e01 * v->y + m->e02 * v->z,
-        m->e10 * v->x + m->e11 * v->y + m->e12 * v->z,
-        m->e20 * v->x + m->e21 * v->y + m->e22 * v->z
+        m->e00 * v.x + m->e01 * v.y + m->e02 * v.z,
+        m->e10 * v.x + m->e11 * v.y + m->e12 * v.z,
+        m->e20 * v.x + m->e21 * v.y + m->e22 * v.z
     };
 }
 
 // m^T * v (transform vector by transposed matrix)
-static inline OimoVec3 oimo_mat3_tmul_vec3(const OimoMat3* m, const OimoVec3* v) {
+static inline OimoVec3 oimo_mat3_tmul_vec3(const OimoMat3* m, OimoVec3 v) {
     return (OimoVec3){
-        m->e00 * v->x + m->e10 * v->y + m->e20 * v->z,
-        m->e01 * v->x + m->e11 * v->y + m->e21 * v->z,
-        m->e02 * v->x + m->e12 * v->y + m->e22 * v->z
+        m->e00 * v.x + m->e10 * v.y + m->e20 * v.z,
+        m->e01 * v.x + m->e11 * v.y + m->e21 * v.z,
+        m->e02 * v.x + m->e12 * v.y + m->e22 * v.z
     };
 }
 
-// ============================================================================
-// Row/Column Operations
-// ============================================================================
-
-// Get row i as vector
 static inline OimoVec3 oimo_mat3_get_row(const OimoMat3* m, int i) {
     switch (i) {
         case 0: return (OimoVec3){ m->e00, m->e01, m->e02 };
@@ -203,11 +167,6 @@ static inline OimoMat3 oimo_mat3_from_rows(const OimoVec3* r0, const OimoVec3* r
     };
 }
 
-// ============================================================================
-// Transpose & Inverse
-// ============================================================================
-
-// Transpose
 static inline OimoMat3 oimo_mat3_transpose(const OimoMat3* m) {
     return (OimoMat3){
         m->e00, m->e10, m->e20,
@@ -250,11 +209,6 @@ static inline OimoMat3 oimo_mat3_inverse(const OimoMat3* m) {
     };
 }
 
-// ============================================================================
-// Scaling Operations
-// ============================================================================
-
-// prepend scale: scaling_matrix * m
 static inline OimoMat3 oimo_mat3_prepend_scale(const OimoMat3* m, OimoScalar sx, OimoScalar sy, OimoScalar sz) {
     return (OimoMat3){
         m->e00 * sx, m->e01 * sx, m->e02 * sx,
@@ -272,11 +226,6 @@ static inline OimoMat3 oimo_mat3_append_scale(const OimoMat3* m, OimoScalar sx, 
     };
 }
 
-// ============================================================================
-// Rotation Operations
-// ============================================================================
-
-// Create rotation matrix from axis-angle
 static inline OimoMat3 oimo_mat3_from_axis_angle(OimoScalar rad, OimoScalar ax, OimoScalar ay, OimoScalar az) {
     OimoScalar s = oimo_sin(rad);
     OimoScalar c = oimo_cos(rad);
@@ -302,11 +251,6 @@ static inline OimoMat3 oimo_mat3_from_euler_xyz(OimoScalar rx, OimoScalar ry, Oi
     };
 }
 
-// ============================================================================
-// Mutating Operations
-// ============================================================================
-
-// Set to identity
 static inline void oimo_mat3_set_identity(OimoMat3* m) {
     m->e00 = 1; m->e01 = 0; m->e02 = 0;
     m->e10 = 0; m->e11 = 1; m->e12 = 0;

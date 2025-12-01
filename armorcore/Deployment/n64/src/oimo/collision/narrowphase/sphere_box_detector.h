@@ -1,11 +1,3 @@
-/**
- * Oimo Physics - N64 Port
- * Sphere vs Box Detector
- *
- * Based on OimoPhysics by saharan
- * https://github.com/saharan/OimoPhysics
- */
-
 #ifndef OIMO_COLLISION_NARROWPHASE_SPHERE_BOX_DETECTOR_H
 #define OIMO_COLLISION_NARROWPHASE_SPHERE_BOX_DETECTOR_H
 
@@ -21,34 +13,16 @@
 extern "C" {
 #endif
 
-/**
- * Sphere vs Box collision detector.
- * Can handle both sphere-box and box-sphere orderings via swapped flag.
- */
 typedef struct OimoSphereBoxDetector {
     OimoDetector base;
 } OimoSphereBoxDetector;
 
-/**
- * Initialize the sphere-box detector.
- * @param swapped If true, expects (box, sphere) instead of (sphere, box)
- */
 static inline void oimo_sphere_box_detector_init(OimoSphereBoxDetector* detector, bool swapped) {
     oimo_detector_init(&detector->base,
         swapped ? OIMO_DETECTOR_BOX_SPHERE : OIMO_DETECTOR_SPHERE_BOX,
         swapped);
 }
 
-/**
- * Detect collision between a sphere and a box.
- *
- * @param detector The detector instance
- * @param result Output - collision results
- * @param sphere The sphere geometry (geom1 if not swapped)
- * @param box The box geometry (geom2 if not swapped)
- * @param tf_sphere Transform of sphere
- * @param tf_box Transform of box
- */
 static inline void oimo_sphere_box_detector_detect(
     OimoSphereBoxDetector* detector,
     OimoDetectorResult* result,
@@ -70,10 +44,8 @@ static inline void oimo_sphere_box_detector_detect(
     oimo_vec3_sub_to(&box_to_sphere, &tf_sphere->position, &tf_box->position);
 
     // Transform to box's local space (multiply by transposed rotation)
-    OimoVec3 box_to_sphere_in_box;
-    OimoMat3 rot_transposed;
-    oimo_mat3_transpose(&rot_transposed, &tf_box->rotation);
-    oimo_mat3_mul_vec3(&box_to_sphere_in_box, &rot_transposed, &box_to_sphere);
+    OimoMat3 rot_transposed = oimo_mat3_transpose(&tf_box->rotation);
+    OimoVec3 box_to_sphere_in_box = oimo_mat3_mul_vec3(&rot_transposed, box_to_sphere);
 
     // Check if sphere center is inside the box
     bool inside_box =
@@ -138,10 +110,8 @@ static inline void oimo_sphere_box_detector_detect(
         box_to_closest_in_box.z = normal_in_box.z * half_ext.z + base.z;
 
         // Transform back to world space
-        OimoVec3 box_to_closest;
-        OimoVec3 normal;
-        oimo_mat3_mul_vec3(&box_to_closest, &tf_box->rotation, &box_to_closest_in_box);
-        oimo_mat3_mul_vec3(&normal, &tf_box->rotation, &normal_in_box);
+        OimoVec3 box_to_closest = oimo_mat3_mul_vec3(&tf_box->rotation, box_to_closest_in_box);
+        OimoVec3 normal = oimo_mat3_mul_vec3(&tf_box->rotation, normal_in_box);
 
         oimo_detector_set_normal(&detector->base, result, &normal);
 
@@ -174,7 +144,7 @@ static inline void oimo_sphere_box_detector_detect(
     OimoVec3 closest_to_sphere_in_box;
     oimo_vec3_sub_to(&closest_to_sphere_in_box, &box_to_sphere_in_box, &box_to_closest_in_box);
 
-    OimoScalar dist2 = oimo_vec3_dot(&closest_to_sphere_in_box, &closest_to_sphere_in_box);
+    OimoScalar dist2 = oimo_vec3_dot(closest_to_sphere_in_box, closest_to_sphere_in_box);
     if (dist2 >= r * r) {
         return;  // No collision
     }
@@ -182,10 +152,8 @@ static inline void oimo_sphere_box_detector_detect(
     OimoScalar dist = oimo_sqrt(dist2);
 
     // Transform back to world space
-    OimoVec3 box_to_closest;
-    OimoVec3 closest_to_sphere;
-    oimo_mat3_mul_vec3(&box_to_closest, &tf_box->rotation, &box_to_closest_in_box);
-    oimo_mat3_mul_vec3(&closest_to_sphere, &tf_box->rotation, &closest_to_sphere_in_box);
+    OimoVec3 box_to_closest = oimo_mat3_mul_vec3(&tf_box->rotation, box_to_closest_in_box);
+    OimoVec3 closest_to_sphere = oimo_mat3_mul_vec3(&tf_box->rotation, closest_to_sphere_in_box);
 
     // Normal from box to sphere
     OimoVec3 normal;

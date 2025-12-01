@@ -1,10 +1,3 @@
-/**
- * OimoPhysics N64 Port - Transform
- *
- * Transform class combining position and rotation.
- * Based on OimoPhysics Transform.hx
- */
-
 #ifndef OIMO_COMMON_TRANSFORM_H
 #define OIMO_COMMON_TRANSFORM_H
 
@@ -13,17 +6,10 @@
 #include "mat3.h"
 #include "quat.h"
 
-// ============================================================================
-// Transform Type
-// ============================================================================
 typedef struct OimoTransform {
     OimoVec3 position;   // Translation
     OimoMat3 rotation;   // Rotation matrix (3x3 orthogonal)
 } OimoTransform;
-
-// ============================================================================
-// Construction
-// ============================================================================
 
 // Create identity transform (no translation, no rotation)
 static inline OimoTransform oimo_transform_identity(void) {
@@ -65,10 +51,6 @@ static inline OimoTransform oimo_transform_copy(const OimoTransform* tf) {
     return result;
 }
 
-// ============================================================================
-// Getters
-// ============================================================================
-
 // Get position
 static inline OimoVec3 oimo_transform_get_position(const OimoTransform* tf) {
     return oimo_vec3_copy(&tf->position);
@@ -83,10 +65,6 @@ static inline OimoMat3 oimo_transform_get_rotation(const OimoTransform* tf) {
 static inline OimoQuat oimo_transform_get_orientation(const OimoTransform* tf) {
     return oimo_mat3_to_quat(&tf->rotation);
 }
-
-// ============================================================================
-// Setters
-// ============================================================================
 
 // Set to identity
 static inline void oimo_transform_set_identity(OimoTransform* tf) {
@@ -119,10 +97,6 @@ static inline void oimo_transform_set_rotation_xyz(OimoTransform* tf, OimoScalar
     tf->rotation = oimo_mat3_from_euler_xyz(rx, ry, rz);
 }
 
-// ============================================================================
-// Transform Operations
-// ============================================================================
-
 // Translate by offset
 static inline void oimo_transform_translate(OimoTransform* tf, const OimoVec3* offset) {
     oimo_vec3_add_eq(&tf->position, offset);
@@ -145,43 +119,35 @@ static inline void oimo_transform_rotate_xyz(OimoTransform* tf, OimoScalar rx, O
     tf->rotation = oimo_mat3_mul(&rot, &tf->rotation);
 }
 
-// ============================================================================
-// Point/Vector Transformation
-// ============================================================================
-
 // Transform a point: rotation * point + position
 static inline OimoVec3 oimo_transform_point(const OimoTransform* tf, const OimoVec3* p) {
-    OimoVec3 rotated = oimo_mat3_mul_vec3(&tf->rotation, p);
-    return oimo_vec3_add(&rotated, &tf->position);
+    OimoVec3 rotated = oimo_mat3_mul_vec3(&tf->rotation, *p);
+    return oimo_vec3_add(rotated, tf->position);
 }
 
 // Transform a vector (direction): rotation * vector (no translation)
 static inline OimoVec3 oimo_transform_vector(const OimoTransform* tf, const OimoVec3* v) {
-    return oimo_mat3_mul_vec3(&tf->rotation, v);
+    return oimo_mat3_mul_vec3(&tf->rotation, *v);
 }
 
 // Inverse transform a point: rotation^T * (point - position)
 static inline OimoVec3 oimo_transform_inv_point(const OimoTransform* tf, const OimoVec3* p) {
-    OimoVec3 local = oimo_vec3_sub(p, &tf->position);
-    return oimo_mat3_tmul_vec3(&tf->rotation, &local);
+    OimoVec3 local = oimo_vec3_sub(*p, tf->position);
+    return oimo_mat3_tmul_vec3(&tf->rotation, local);
 }
 
 // Inverse transform a vector: rotation^T * vector
 static inline OimoVec3 oimo_transform_inv_vector(const OimoTransform* tf, const OimoVec3* v) {
-    return oimo_mat3_tmul_vec3(&tf->rotation, v);
+    return oimo_mat3_tmul_vec3(&tf->rotation, *v);
 }
-
-// ============================================================================
-// Transform Composition
-// ============================================================================
 
 // Multiply transforms: tf1 * tf2
 // Result position = tf1.rotation * tf2.position + tf1.position
 // Result rotation = tf1.rotation * tf2.rotation
 static inline OimoTransform oimo_transform_mul(const OimoTransform* tf1, const OimoTransform* tf2) {
     OimoTransform result;
-    OimoVec3 rotated_pos = oimo_mat3_mul_vec3(&tf1->rotation, &tf2->position);
-    result.position = oimo_vec3_add(&rotated_pos, &tf1->position);
+    OimoVec3 rotated_pos = oimo_mat3_mul_vec3(&tf1->rotation, tf2->position);
+    result.position = oimo_vec3_add(rotated_pos, tf1->position);
     result.rotation = oimo_mat3_mul(&tf1->rotation, &tf2->rotation);
     return result;
 }
@@ -190,14 +156,10 @@ static inline OimoTransform oimo_transform_mul(const OimoTransform* tf1, const O
 static inline OimoTransform oimo_transform_inverse(const OimoTransform* tf) {
     OimoTransform result;
     result.rotation = oimo_mat3_transpose(&tf->rotation);
-    OimoVec3 neg_pos = oimo_vec3_neg(&tf->position);
-    result.position = oimo_mat3_mul_vec3(&result.rotation, &neg_pos);
+    OimoVec3 neg_pos = oimo_vec3_neg(tf->position);
+    result.position = oimo_mat3_mul_vec3(&result.rotation, neg_pos);
     return result;
 }
-
-// ============================================================================
-// Utility
-// ============================================================================
 
 // Copy from another transform
 static inline void oimo_transform_copy_to(OimoTransform* dst, const OimoTransform* src) {

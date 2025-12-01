@@ -6,7 +6,6 @@
 extern "C" {
 #endif
 
-// N64 button mapping (matches libdragon joypad)
 typedef enum {
     N64_BTN_A = 0,
     N64_BTN_B,
@@ -25,18 +24,13 @@ typedef enum {
     N64_BTN_COUNT
 } N64Button;
 
-// Initialize input system (call once at startup)
 void input_init(void);
-
-// Poll input state (call once per frame, before update)
 void input_poll(void);
 
-// Button state queries
 bool input_started(N64Button btn);
 bool input_down(N64Button btn);
 bool input_released(N64Button btn);
 
-// Analog stick (-1.0 to 1.0)
 float input_stick_x(void);
 float input_stick_y(void);
 

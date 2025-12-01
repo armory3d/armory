@@ -1,14 +1,3 @@
-/**
- * OimoPhysics N64 Port - Quaternion
- *
- * Quaternion class for rotation representation.
- * Based on OimoPhysics Quat.hx
- *
- * Quaternion: q = x*i + y*j + z*k + w
- * where i, j, k are imaginary units and w is the real part.
- * Identity quaternion is (0, 0, 0, 1).
- */
-
 #ifndef OIMO_COMMON_QUAT_H
 #define OIMO_COMMON_QUAT_H
 
@@ -17,74 +6,46 @@
 #include "vec3.h"
 #include "mat3.h"
 
-// ============================================================================
-// Quat Type
-// ============================================================================
 typedef struct OimoQuat {
-    OimoScalar x;  // Imaginary i component
-    OimoScalar y;  // Imaginary j component
-    OimoScalar z;  // Imaginary k component
-    OimoScalar w;  // Real component
+    OimoScalar x, y, z, w;
 } OimoQuat;
 
-// ============================================================================
-// Construction
-// ============================================================================
-
-// Create identity quaternion (no rotation)
 static inline OimoQuat oimo_quat_identity(void) {
     return (OimoQuat){ 0, 0, 0, 1 };
 }
 
-// Create quaternion with components
 static inline OimoQuat oimo_quat(OimoScalar x, OimoScalar y, OimoScalar z, OimoScalar w) {
     return (OimoQuat){ x, y, z, w };
 }
 
-// Copy quaternion
 static inline OimoQuat oimo_quat_copy(const OimoQuat* q) {
     return (OimoQuat){ q->x, q->y, q->z, q->w };
 }
 
-// ============================================================================
-// Basic Operations
-// ============================================================================
-
-// q1 + q2
 static inline OimoQuat oimo_quat_add(const OimoQuat* q1, const OimoQuat* q2) {
     return (OimoQuat){ q1->x + q2->x, q1->y + q2->y, q1->z + q2->z, q1->w + q2->w };
 }
 
-// q1 - q2
 static inline OimoQuat oimo_quat_sub(const OimoQuat* q1, const OimoQuat* q2) {
     return (OimoQuat){ q1->x - q2->x, q1->y - q2->y, q1->z - q2->z, q1->w - q2->w };
 }
 
-// q * s
 static inline OimoQuat oimo_quat_scale(const OimoQuat* q, OimoScalar s) {
     return (OimoQuat){ q->x * s, q->y * s, q->z * s, q->w * s };
 }
 
-// -q
 static inline OimoQuat oimo_quat_neg(const OimoQuat* q) {
     return (OimoQuat){ -q->x, -q->y, -q->z, -q->w };
 }
 
-// Conjugate: q*
 static inline OimoQuat oimo_quat_conjugate(const OimoQuat* q) {
     return (OimoQuat){ -q->x, -q->y, -q->z, q->w };
 }
 
-// ============================================================================
-// Products
-// ============================================================================
-
-// Dot product: q1 · q2
 static inline OimoScalar oimo_quat_dot(const OimoQuat* q1, const OimoQuat* q2) {
     return q1->x * q2->x + q1->y * q2->y + q1->z * q2->z + q1->w * q2->w;
 }
 
-// Quaternion multiplication: q1 * q2
 static inline OimoQuat oimo_quat_mul(const OimoQuat* q1, const OimoQuat* q2) {
     return (OimoQuat){
         q1->w * q2->x + q1->x * q2->w + q1->y * q2->z - q1->z * q2->y,
@@ -93,10 +54,6 @@ static inline OimoQuat oimo_quat_mul(const OimoQuat* q1, const OimoQuat* q2) {
         q1->w * q2->w - q1->x * q2->x - q1->y * q2->y - q1->z * q2->z
     };
 }
-
-// ============================================================================
-// Length Operations
-// ============================================================================
 
 // Squared length: |q|²
 static inline OimoScalar oimo_quat_len_sq(const OimoQuat* q) {
@@ -118,11 +75,6 @@ static inline OimoQuat oimo_quat_normalize(const OimoQuat* q) {
     return (OimoQuat){ 0, 0, 0, 1 };
 }
 
-// ============================================================================
-// Conversion: Quaternion <-> Mat3
-// ============================================================================
-
-// Convert quaternion to rotation matrix
 static inline OimoMat3 oimo_quat_to_mat3(const OimoQuat* q) {
     OimoScalar x = q->x, y = q->y, z = q->z, w = q->w;
     OimoScalar x2 = 2 * x, y2 = 2 * y, z2 = 2 * z;
@@ -194,11 +146,6 @@ static inline void oimo_mat3_from_quat(OimoMat3* m, const OimoQuat* q) {
     m->e20 = xz - wy;     m->e21 = yz + wx;     m->e22 = 1 - xx - yy;
 }
 
-// ============================================================================
-// Axis-Angle Conversion
-// ============================================================================
-
-// Create quaternion from axis-angle rotation
 static inline OimoQuat oimo_quat_from_axis_angle(const OimoVec3* axis, OimoScalar angle) {
     OimoScalar half_angle = angle * 0.5f;
     OimoScalar s = oimo_sin(half_angle);
@@ -232,14 +179,8 @@ static inline OimoScalar oimo_quat_to_axis_angle(const OimoQuat* q, OimoVec3* ou
     return 2.0f * oimo_atan2(sin_half, q->w);
 }
 
-// ============================================================================
-// Arc Rotation
-// ============================================================================
-
-// Create quaternion representing the shortest arc rotation from v1 to v2
-// Both v1 and v2 should be normalized
 static inline OimoQuat oimo_quat_set_arc(const OimoVec3* v1, const OimoVec3* v2) {
-    OimoScalar d = oimo_vec3_dot(v1, v2);
+    OimoScalar d = oimo_vec3_dot(*v1, *v2);
     OimoQuat q;
 
     q.w = oimo_sqrt((1.0f + d) * 0.5f);
@@ -276,7 +217,7 @@ static inline OimoQuat oimo_quat_set_arc(const OimoVec3* v1, const OimoVec3* v2)
 
     // Normal case: sin(theta/2) / sin(theta) = 1 / (2 * cos(theta/2))
     OimoScalar s = 0.5f / q.w;
-    OimoVec3 cross = oimo_vec3_cross(v1, v2);
+    OimoVec3 cross = oimo_vec3_cross(*v1, *v2);
     q.x = cross.x * s;
     q.y = cross.y * s;
     q.z = cross.z * s;
@@ -284,12 +225,6 @@ static inline OimoQuat oimo_quat_set_arc(const OimoVec3* v1, const OimoVec3* v2)
     return q;
 }
 
-// ============================================================================
-// Interpolation
-// ============================================================================
-
-// Spherical linear interpolation (SLERP)
-// Both quaternions must be normalized
 static inline OimoQuat oimo_quat_slerp(const OimoQuat* q1, const OimoQuat* q2, OimoScalar t) {
     OimoScalar qx = q2->x, qy = q2->y, qz = q2->z, qw = q2->w;
     OimoScalar d = oimo_quat_dot(q1, q2);
@@ -340,11 +275,6 @@ static inline OimoQuat oimo_quat_slerp(const OimoQuat* q1, const OimoQuat* q2, O
     };
 }
 
-// ============================================================================
-// Mutating Operations
-// ============================================================================
-
-// Set to identity
 static inline void oimo_quat_set_identity(OimoQuat* q) {
     q->x = 0; q->y = 0; q->z = 0; q->w = 1;
 }
@@ -371,17 +301,12 @@ static inline void oimo_quat_normalize_eq(OimoQuat* q) {
     }
 }
 
-// ============================================================================
-// Rotate Vector
-// ============================================================================
-
-// Rotate vector v by quaternion q: q * v * q^-1
 static inline OimoVec3 oimo_quat_rotate_vec3(const OimoQuat* q, const OimoVec3* v) {
     // Using the formula: v' = v + 2*w*(qv × v) + 2*(qv × (qv × v))
     // where qv = (x, y, z) is the vector part of quaternion
     OimoVec3 qv = { q->x, q->y, q->z };
-    OimoVec3 uv = oimo_vec3_cross(&qv, v);
-    OimoVec3 uuv = oimo_vec3_cross(&qv, &uv);
+    OimoVec3 uv = oimo_vec3_cross(qv, *v);
+    OimoVec3 uuv = oimo_vec3_cross(qv, uv);
 
     return (OimoVec3){
         v->x + 2.0f * (q->w * uv.x + uuv.x),

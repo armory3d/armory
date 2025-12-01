@@ -1,17 +1,3 @@
-/**
- * Oimo Physics - N64 Port
- * Box vs Box Detector - SAT with Face Clipping
- *
- * Based on OimoPhysics by saharan
- * https://github.com/saharan/OimoPhysics
- *
- * This is the most complex collision detector. It uses:
- * - Separating Axis Theorem (SAT) with 15 potential axes
- *   (6 face normals + 9 edge cross products)
- * - Face clipping for contact manifold generation
- * - Edge-edge contact handling
- */
-
 #ifndef OIMO_COLLISION_NARROWPHASE_BOX_BOX_DETECTOR_H
 #define OIMO_COLLISION_NARROWPHASE_BOX_BOX_DETECTOR_H
 
@@ -27,37 +13,25 @@
 extern "C" {
 #endif
 
-// Edge axis bias multiplier for preferring face contacts
 #define OIMO_BOX_BOX_EDGE_BIAS_MULT 1.0f
 
-/**
- * Incident vertex - used during face clipping.
- */
 typedef struct OimoIncidentVertex {
-    OimoScalar x, y;      // Projected 2D coordinates on reference face
-    OimoScalar wx, wy, wz; // World coordinates (relative to c1)
+    OimoScalar x, y;
+    OimoScalar wx, wy, wz;
 } OimoIncidentVertex;
 
-/**
- * Face clipper - clips incident face against reference face.
- */
 typedef struct OimoFaceClipper {
-    OimoScalar w, h;  // Reference face half-dimensions
+    OimoScalar w, h;
     int num_vertices;
     OimoIncidentVertex vertices[8];
     int num_tmp_vertices;
     OimoIncidentVertex tmp_vertices[8];
 } OimoFaceClipper;
 
-/**
- * Box vs Box collision detector.
- */
 typedef struct OimoBoxBoxDetector {
     OimoDetector base;
     OimoFaceClipper clipper;
 } OimoBoxBoxDetector;
-
-// ==================== Incident Vertex Functions ====================
 
 static inline void oimo_incident_vertex_init(OimoIncidentVertex* v,
     OimoScalar x, OimoScalar y, OimoScalar wx, OimoScalar wy, OimoScalar wz)
@@ -86,8 +60,6 @@ static inline void oimo_incident_vertex_interp(OimoIncidentVertex* out,
     out->wy = v1->wy + (v2->wy - v1->wy) * t;
     out->wz = v1->wz + (v2->wz - v1->wz) * t;
 }
-
-// ==================== Face Clipper Functions ====================
 
 static inline void oimo_face_clipper_init(OimoFaceClipper* clipper, OimoScalar w, OimoScalar h) {
     clipper->w = w;
@@ -241,17 +213,12 @@ static inline void oimo_face_clipper_reduce(OimoFaceClipper* clipper) {
     oimo_face_clipper_flip(clipper);
 }
 
-// ==================== Helper Functions ====================
-
-/**
- * Project box onto axis (returns half the projected extent).
- */
 static inline OimoScalar oimo_box_box_project(const OimoVec3* axis,
     const OimoVec3* sx, const OimoVec3* sy, const OimoVec3* sz)
 {
-    OimoScalar dx = oimo_abs(oimo_vec3_dot(axis, sx));
-    OimoScalar dy = oimo_abs(oimo_vec3_dot(axis, sy));
-    OimoScalar dz = oimo_abs(oimo_vec3_dot(axis, sz));
+    OimoScalar dx = oimo_abs(oimo_vec3_dot(*axis, *sx));
+    OimoScalar dy = oimo_abs(oimo_vec3_dot(*axis, *sy));
+    OimoScalar dz = oimo_abs(oimo_vec3_dot(*axis, *sz));
     return dx + dy + dz;
 }
 
@@ -261,8 +228,8 @@ static inline OimoScalar oimo_box_box_project(const OimoVec3* axis,
 static inline OimoScalar oimo_box_box_project2(const OimoVec3* axis,
     const OimoVec3* sx, const OimoVec3* sy)
 {
-    OimoScalar dx = oimo_abs(oimo_vec3_dot(axis, sx));
-    OimoScalar dy = oimo_abs(oimo_vec3_dot(axis, sy));
+    OimoScalar dx = oimo_abs(oimo_vec3_dot(*axis, *sx));
+    OimoScalar dy = oimo_abs(oimo_vec3_dot(*axis, *sy));
     return dx + dy;
 }
 
@@ -300,8 +267,8 @@ static inline bool oimo_sat_check(
 static inline void oimo_supporting_vertex_rect(OimoVec3* out,
     const OimoVec3* half_ext_x, const OimoVec3* half_ext_y, const OimoVec3* axis)
 {
-    bool sign_x = oimo_vec3_dot(half_ext_x, axis) > 0.0f;
-    bool sign_y = oimo_vec3_dot(half_ext_y, axis) > 0.0f;
+    bool sign_x = oimo_vec3_dot(*half_ext_x, *axis) > 0.0f;
+    bool sign_y = oimo_vec3_dot(*half_ext_y, *axis) > 0.0f;
 
     if (sign_x) {
         if (sign_y) {
@@ -335,7 +302,7 @@ static inline void oimo_get_box_face(
     OimoVec3* v1, OimoVec3* v2, OimoVec3* v3, OimoVec3* v4,
     const OimoVec3* sx, const OimoVec3* sy, const OimoVec3* sz, int face_id)
 {
-    OimoVec3 tmp, tmp2;
+    OimoVec3 tmp;
     switch (face_id) {
         case 0: // x+: (1,1,1), (1,-1,1), (1,-1,-1), (1,1,-1)
             // v1 = sx + sy + sz
@@ -400,18 +367,10 @@ static inline void oimo_get_box_face(
     }
 }
 
-// ==================== Main Detector ====================
-
-/**
- * Initialize the box-box detector.
- */
 static inline void oimo_box_box_detector_init(OimoBoxBoxDetector* detector) {
     oimo_detector_init(&detector->base, OIMO_DETECTOR_BOX_BOX, false);
 }
 
-/**
- * Detect collision between two boxes using SAT and face clipping.
- */
 static inline void oimo_box_box_detector_detect(
     OimoBoxBoxDetector* detector,
     OimoDetectorResult* result,
@@ -466,19 +425,19 @@ static inline void oimo_box_box_detector_detect(
     // Axis = x1
     proj1 = w1;
     proj2 = oimo_box_box_project(&x1, &sx2, &sy2, &sz2);
-    proj_c12 = oimo_vec3_dot(&x1, &c12);
+    proj_c12 = oimo_vec3_dot(x1, c12);
     if (oimo_sat_check(&min_depth, &min_id, &min_sign, &min_axis, proj1, proj2, proj_c12, &x1, 0, 1.0f)) return;
 
     // Axis = y1
     proj1 = h1;
     proj2 = oimo_box_box_project(&y1, &sx2, &sy2, &sz2);
-    proj_c12 = oimo_vec3_dot(&y1, &c12);
+    proj_c12 = oimo_vec3_dot(y1, c12);
     if (oimo_sat_check(&min_depth, &min_id, &min_sign, &min_axis, proj1, proj2, proj_c12, &y1, 1, 1.0f)) return;
 
     // Axis = z1
     proj1 = d1;
     proj2 = oimo_box_box_project(&z1, &sx2, &sy2, &sz2);
-    proj_c12 = oimo_vec3_dot(&z1, &c12);
+    proj_c12 = oimo_vec3_dot(z1, c12);
     if (oimo_sat_check(&min_depth, &min_id, &min_sign, &min_axis, proj1, proj2, proj_c12, &z1, 2, 1.0f)) return;
 
     // Apply bias to prefer face contacts over edge contacts
@@ -491,19 +450,19 @@ static inline void oimo_box_box_detector_detect(
     // Axis = x2
     proj1 = oimo_box_box_project(&x2, &sx1, &sy1, &sz1);
     proj2 = w2;
-    proj_c12 = oimo_vec3_dot(&x2, &c12);
+    proj_c12 = oimo_vec3_dot(x2, c12);
     if (oimo_sat_check(&min_depth, &min_id, &min_sign, &min_axis, proj1, proj2, proj_c12, &x2, 3, 1.0f)) return;
 
     // Axis = y2
     proj1 = oimo_box_box_project(&y2, &sx1, &sy1, &sz1);
     proj2 = h2;
-    proj_c12 = oimo_vec3_dot(&y2, &c12);
+    proj_c12 = oimo_vec3_dot(y2, c12);
     if (oimo_sat_check(&min_depth, &min_id, &min_sign, &min_axis, proj1, proj2, proj_c12, &y2, 4, 1.0f)) return;
 
     // Axis = z2
     proj1 = oimo_box_box_project(&z2, &sx1, &sy1, &sz1);
     proj2 = d2;
-    proj_c12 = oimo_vec3_dot(&z2, &c12);
+    proj_c12 = oimo_vec3_dot(z2, c12);
     if (oimo_sat_check(&min_depth, &min_id, &min_sign, &min_axis, proj1, proj2, proj_c12, &z2, 5, 1.0f)) return;
 
     // Apply bias again before edge checks
@@ -523,7 +482,7 @@ static inline void oimo_box_box_detector_detect(
         oimo_vec3_normalize_to(&edge_axis, &edge_axis);
         proj1 = oimo_box_box_project2(&edge_axis, &sy1, &sz1);
         proj2 = oimo_box_box_project2(&edge_axis, &sy2, &sz2);
-        proj_c12 = oimo_vec3_dot(&edge_axis, &c12);
+        proj_c12 = oimo_vec3_dot(edge_axis, c12);
         if (oimo_sat_check(&min_depth, &min_id, &min_sign, &min_axis, proj1, proj2, proj_c12, &edge_axis, 6, OIMO_BOX_BOX_EDGE_BIAS_MULT)) return;
     }
 
@@ -533,7 +492,7 @@ static inline void oimo_box_box_detector_detect(
         oimo_vec3_normalize_to(&edge_axis, &edge_axis);
         proj1 = oimo_box_box_project2(&edge_axis, &sy1, &sz1);
         proj2 = oimo_box_box_project2(&edge_axis, &sx2, &sz2);
-        proj_c12 = oimo_vec3_dot(&edge_axis, &c12);
+        proj_c12 = oimo_vec3_dot(edge_axis, c12);
         if (oimo_sat_check(&min_depth, &min_id, &min_sign, &min_axis, proj1, proj2, proj_c12, &edge_axis, 7, OIMO_BOX_BOX_EDGE_BIAS_MULT)) return;
     }
 
@@ -543,7 +502,7 @@ static inline void oimo_box_box_detector_detect(
         oimo_vec3_normalize_to(&edge_axis, &edge_axis);
         proj1 = oimo_box_box_project2(&edge_axis, &sy1, &sz1);
         proj2 = oimo_box_box_project2(&edge_axis, &sx2, &sy2);
-        proj_c12 = oimo_vec3_dot(&edge_axis, &c12);
+        proj_c12 = oimo_vec3_dot(edge_axis, c12);
         if (oimo_sat_check(&min_depth, &min_id, &min_sign, &min_axis, proj1, proj2, proj_c12, &edge_axis, 8, OIMO_BOX_BOX_EDGE_BIAS_MULT)) return;
     }
 
@@ -553,7 +512,7 @@ static inline void oimo_box_box_detector_detect(
         oimo_vec3_normalize_to(&edge_axis, &edge_axis);
         proj1 = oimo_box_box_project2(&edge_axis, &sx1, &sz1);
         proj2 = oimo_box_box_project2(&edge_axis, &sy2, &sz2);
-        proj_c12 = oimo_vec3_dot(&edge_axis, &c12);
+        proj_c12 = oimo_vec3_dot(edge_axis, c12);
         if (oimo_sat_check(&min_depth, &min_id, &min_sign, &min_axis, proj1, proj2, proj_c12, &edge_axis, 9, OIMO_BOX_BOX_EDGE_BIAS_MULT)) return;
     }
 
@@ -563,7 +522,7 @@ static inline void oimo_box_box_detector_detect(
         oimo_vec3_normalize_to(&edge_axis, &edge_axis);
         proj1 = oimo_box_box_project2(&edge_axis, &sx1, &sz1);
         proj2 = oimo_box_box_project2(&edge_axis, &sx2, &sz2);
-        proj_c12 = oimo_vec3_dot(&edge_axis, &c12);
+        proj_c12 = oimo_vec3_dot(edge_axis, c12);
         if (oimo_sat_check(&min_depth, &min_id, &min_sign, &min_axis, proj1, proj2, proj_c12, &edge_axis, 10, OIMO_BOX_BOX_EDGE_BIAS_MULT)) return;
     }
 
@@ -573,7 +532,7 @@ static inline void oimo_box_box_detector_detect(
         oimo_vec3_normalize_to(&edge_axis, &edge_axis);
         proj1 = oimo_box_box_project2(&edge_axis, &sx1, &sz1);
         proj2 = oimo_box_box_project2(&edge_axis, &sx2, &sy2);
-        proj_c12 = oimo_vec3_dot(&edge_axis, &c12);
+        proj_c12 = oimo_vec3_dot(edge_axis, c12);
         if (oimo_sat_check(&min_depth, &min_id, &min_sign, &min_axis, proj1, proj2, proj_c12, &edge_axis, 11, OIMO_BOX_BOX_EDGE_BIAS_MULT)) return;
     }
 
@@ -583,7 +542,7 @@ static inline void oimo_box_box_detector_detect(
         oimo_vec3_normalize_to(&edge_axis, &edge_axis);
         proj1 = oimo_box_box_project2(&edge_axis, &sx1, &sy1);
         proj2 = oimo_box_box_project2(&edge_axis, &sy2, &sz2);
-        proj_c12 = oimo_vec3_dot(&edge_axis, &c12);
+        proj_c12 = oimo_vec3_dot(edge_axis, c12);
         if (oimo_sat_check(&min_depth, &min_id, &min_sign, &min_axis, proj1, proj2, proj_c12, &edge_axis, 12, OIMO_BOX_BOX_EDGE_BIAS_MULT)) return;
     }
 
@@ -593,7 +552,7 @@ static inline void oimo_box_box_detector_detect(
         oimo_vec3_normalize_to(&edge_axis, &edge_axis);
         proj1 = oimo_box_box_project2(&edge_axis, &sx1, &sy1);
         proj2 = oimo_box_box_project2(&edge_axis, &sx2, &sz2);
-        proj_c12 = oimo_vec3_dot(&edge_axis, &c12);
+        proj_c12 = oimo_vec3_dot(edge_axis, c12);
         if (oimo_sat_check(&min_depth, &min_id, &min_sign, &min_axis, proj1, proj2, proj_c12, &edge_axis, 13, OIMO_BOX_BOX_EDGE_BIAS_MULT)) return;
     }
 
@@ -603,7 +562,7 @@ static inline void oimo_box_box_detector_detect(
         oimo_vec3_normalize_to(&edge_axis, &edge_axis);
         proj1 = oimo_box_box_project2(&edge_axis, &sx1, &sy1);
         proj2 = oimo_box_box_project2(&edge_axis, &sx2, &sy2);
-        proj_c12 = oimo_vec3_dot(&edge_axis, &c12);
+        proj_c12 = oimo_vec3_dot(edge_axis, c12);
         if (oimo_sat_check(&min_depth, &min_id, &min_sign, &min_axis, proj1, proj2, proj_c12, &edge_axis, 14, OIMO_BOX_BOX_EDGE_BIAS_MULT)) return;
     }
 
@@ -658,9 +617,9 @@ static inline void oimo_box_box_detector_detect(
         OimoVec3 r;
         oimo_vec3_sub_to(&r, &p1, &p2);
 
-        OimoScalar dot12 = oimo_vec3_dot(&d1_dir, &d2_dir);
-        OimoScalar dot1r = oimo_vec3_dot(&d1_dir, &r);
-        OimoScalar dot2r = oimo_vec3_dot(&d2_dir, &r);
+        OimoScalar dot12 = oimo_vec3_dot(d1_dir, d2_dir);
+        OimoScalar dot1r = oimo_vec3_dot(d1_dir, r);
+        OimoScalar dot2r = oimo_vec3_dot(d2_dir, r);
 
         OimoScalar inv_det = 1.0f / (1.0f - dot12 * dot12);
         OimoScalar t1 = (dot12 * dot2r - dot1r) * inv_det;
@@ -766,15 +725,15 @@ static inline void oimo_box_box_detector_detect(
     int inc_id = 0;
 
     OimoScalar inc_dot;
-    inc_dot = oimo_vec3_dot(&ref_normal, &x2);
+    inc_dot = oimo_vec3_dot(ref_normal, x2);
     if (inc_dot < min_inc_dot) { min_inc_dot = inc_dot; inc_id = 0; }
     if (-inc_dot < min_inc_dot) { min_inc_dot = -inc_dot; inc_id = 1; }
 
-    inc_dot = oimo_vec3_dot(&ref_normal, &y2);
+    inc_dot = oimo_vec3_dot(ref_normal, y2);
     if (inc_dot < min_inc_dot) { min_inc_dot = inc_dot; inc_id = 2; }
     if (-inc_dot < min_inc_dot) { min_inc_dot = -inc_dot; inc_id = 3; }
 
-    inc_dot = oimo_vec3_dot(&ref_normal, &z2);
+    inc_dot = oimo_vec3_dot(ref_normal, z2);
     if (inc_dot < min_inc_dot) { min_inc_dot = inc_dot; inc_id = 4; }
     if (-inc_dot < min_inc_dot) { min_inc_dot = -inc_dot; inc_id = 5; }
 
@@ -791,16 +750,16 @@ static inline void oimo_box_box_detector_detect(
     // Clip incident face against reference face
     oimo_face_clipper_init(&detector->clipper, ref_w, ref_h);
     oimo_face_clipper_add_vertex(&detector->clipper,
-        oimo_vec3_dot(&inc_v1, &ref_x), oimo_vec3_dot(&inc_v1, &ref_y),
+        oimo_vec3_dot(inc_v1, ref_x), oimo_vec3_dot(inc_v1, ref_y),
         inc_v1.x, inc_v1.y, inc_v1.z);
     oimo_face_clipper_add_vertex(&detector->clipper,
-        oimo_vec3_dot(&inc_v2, &ref_x), oimo_vec3_dot(&inc_v2, &ref_y),
+        oimo_vec3_dot(inc_v2, ref_x), oimo_vec3_dot(inc_v2, ref_y),
         inc_v2.x, inc_v2.y, inc_v2.z);
     oimo_face_clipper_add_vertex(&detector->clipper,
-        oimo_vec3_dot(&inc_v3, &ref_x), oimo_vec3_dot(&inc_v3, &ref_y),
+        oimo_vec3_dot(inc_v3, ref_x), oimo_vec3_dot(inc_v3, ref_y),
         inc_v3.x, inc_v3.y, inc_v3.z);
     oimo_face_clipper_add_vertex(&detector->clipper,
-        oimo_vec3_dot(&inc_v4, &ref_x), oimo_vec3_dot(&inc_v4, &ref_y),
+        oimo_vec3_dot(inc_v4, ref_x), oimo_vec3_dot(inc_v4, ref_y),
         inc_v4.x, inc_v4.y, inc_v4.z);
 
     oimo_face_clipper_clip(&detector->clipper);
@@ -824,7 +783,7 @@ static inline void oimo_box_box_detector_detect(
 
         OimoVec3 clipped_to_ref;
         oimo_vec3_sub_to(&clipped_to_ref, &ref_center, &clipped_vertex);
-        OimoScalar depth = oimo_vec3_dot(&clipped_to_ref, &ref_normal);
+        OimoScalar depth = oimo_vec3_dot(clipped_to_ref, ref_normal);
 
         OimoVec3 clipped_on_ref;
         OimoVec3 scaled;

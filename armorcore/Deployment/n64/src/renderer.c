@@ -50,7 +50,6 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
     frameIdx = (frameIdx + 1) % FB_COUNT;
     renderer_update_objects(scene);
 
-    // ======== Draw (3D) ======== //
     rdpq_attach(display_get(), display_get_zbuf());
     t3d_frame_start();
     t3d_viewport_attach(viewport);
@@ -72,10 +71,7 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
         t3d_light_set_directional(i, l->color, &l->dir);
     }
 
-    // Frustum culling - get camera's view frustum
     const T3DFrustum *frustum = &viewport->viewFrustum;
-
-    // TODO: Sectors/portals - for indoor environments, only render visible rooms
     int visible_count = 0;
     t3d_matrix_push_pos(1);
     for (uint16_t i = 0; i < scene->object_count; i++) {
@@ -84,20 +80,17 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
             continue;
         }
 
-        // Frustum culling: compute world-space bounding sphere center
         T3DVec3 world_center = {{
             obj->transform.loc[0] + obj->bounds_center.v[0],
             obj->transform.loc[1] + obj->bounds_center.v[1],
             obj->transform.loc[2] + obj->bounds_center.v[2]
         }};
 
-        // Scale radius by max object scale
         float max_scale = obj->transform.scale[0];
         if (obj->transform.scale[1] > max_scale) max_scale = obj->transform.scale[1];
         if (obj->transform.scale[2] > max_scale) max_scale = obj->transform.scale[2];
         float world_radius = obj->bounds_radius * max_scale;
 
-        // Skip objects outside camera frustum
         if (!t3d_frustum_vs_sphere(frustum, &world_center, world_radius)) {
             continue;
         }
@@ -108,7 +101,6 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
     }
     t3d_matrix_pop(1);
 
-    // ======== Draw (2D) ======== //
     rdpq_sync_pipe();
 
 #ifdef ARM_DEBUG_HUD

@@ -16,7 +16,7 @@ using StringTools;
  * - Provide helpers for Vec3/Vec4 extraction from Haxe expressions
  *
  * This macro acts as the single source of truth for physics code emission,
- * decoupling the main N64CEmitter from oimo_64 API knowledge.
+ * decoupling the main N64CEmitter from oimo API knowledge.
  */
 class N64PhysicsMacro {
 
@@ -36,7 +36,7 @@ class N64PhysicsMacro {
      * Emit a Vec3 in N64 coordinates from Blender components.
      */
     public static function emitN64Vec3(x:String, y:String, z:String):String {
-        return 'vec3_new($x, $z, -($y))';
+        return 'oimo_vec3($x, $z, -($y))';
     }
 
     // =========================================
@@ -87,33 +87,33 @@ class N64PhysicsMacro {
     public static function emitRigidBodyCall(method:String, params:Array<Expr>, emitter:N64CEmitter):String {
         return switch (method) {
             case "applyForce":
-                emitForceOrImpulse("rigidbody_apply_force_to_center", "_force", params, emitter);
+                emitForceOrImpulse("oimo_rigidbody_apply_force", "_force", params, emitter);
 
             case "applyImpulse":
-                emitForceOrImpulse("rigidbody_apply_linear_impulse", "_imp", params, emitter);
+                emitForceOrImpulse("oimo_rigidbody_apply_impulse_center", "_imp", params, emitter);
 
             case "setLinearVelocity":
-                emitVelocitySetter("rigidbody_set_linear_velocity", "_vel", params, emitter);
+                emitVelocitySetter("oimo_rigidbody_set_linear_velocity", "_vel", params, emitter);
 
             case "setAngularVelocity":
-                emitVelocitySetter("rigidbody_set_angular_velocity", "_angvel", params, emitter);
+                emitVelocitySetter("oimo_rigidbody_set_angular_velocity", "_angvel", params, emitter);
 
             case "getLinearVelocity":
-                emitVelocityGetter("rigidbody_get_linear_velocity", emitter);
+                emitVelocityGetter("oimo_rigidbody_get_linear_velocity", emitter);
 
             case "getAngularVelocity":
-                emitVelocityGetter("rigidbody_get_angular_velocity", emitter);
+                emitVelocityGetter("oimo_rigidbody_get_angular_velocity", emitter);
 
             case "activate":
-                '{ if (((ArmObject*)obj)->rigid_body) { rigidbody_activate(((ArmObject*)obj)->rigid_body); } }';
+                '{ if (((ArmObject*)obj)->rigid_body) { oimo_rigidbody_wake_up(((ArmObject*)obj)->rigid_body); } }';
 
             case "disableDeactivation":
-                '{ if (((ArmObject*)obj)->rigid_body) { rigidbody_set_can_sleep(((ArmObject*)obj)->rigid_body, false); } }';
+                '{ if (((ArmObject*)obj)->rigid_body) { ((ArmObject*)obj)->rigid_body->auto_sleep = 0; } }';
 
             case "setFriction":
                 if (params.length > 0) {
                     var friction = emitter.emitExpr(params[0]);
-                    '/* N64_TODO: setFriction($friction) - oimo_64 friction is per-shape */';
+                    '/* N64_TODO: setFriction($friction) - oimo friction is per-shape */';
                 } else {
                     '/* N64_UNSUPPORTED: setFriction needs arg */';
                 }
@@ -121,7 +121,7 @@ class N64PhysicsMacro {
             case "setMass":
                 if (params.length > 0) {
                     var mass = emitter.emitExpr(params[0]);
-                    '{ if (((ArmObject*)obj)->rigid_body) { MassData _md; rigidbody_get_mass_data(((ArmObject*)obj)->rigid_body, &_md); _md.mass = $mass; rigidbody_set_mass_data(((ArmObject*)obj)->rigid_body, &_md); } }';
+                    '{ if (((ArmObject*)obj)->rigid_body) { ((ArmObject*)obj)->rigid_body->mass = $mass; oimo_rigidbody_update_mass(((ArmObject*)obj)->rigid_body); } }';
                 } else {
                     '/* N64_UNSUPPORTED: setMass needs arg */';
                 }
@@ -147,11 +147,11 @@ class N64PhysicsMacro {
         if (vec != null) {
             // Static vector - convert at compile time
             var n64vec = blenderToN64Vec3(vec);
-            return '{ if (((ArmObject*)obj)->rigid_body) { Vec3 $varName = vec3_new(${n64vec.x}, ${n64vec.y}, ${n64vec.z}); $cFunc(((ArmObject*)obj)->rigid_body, &$varName); } }';
+            return '{ if (((ArmObject*)obj)->rigid_body) { OimoVec3 $varName = oimo_vec3(${n64vec.x}, ${n64vec.y}, ${n64vec.z}); $cFunc(((ArmObject*)obj)->rigid_body, &$varName); } }';
         } else {
             // Dynamic vector - emit runtime swizzle
             var emitted = emitter.emitExpr(forceExpr);
-            return '{ if (((ArmObject*)obj)->rigid_body) { Vec3 $varName = vec3_new($emitted.x, $emitted.z, -$emitted.y); $cFunc(((ArmObject*)obj)->rigid_body, &$varName); } }';
+            return '{ if (((ArmObject*)obj)->rigid_body) { OimoVec3 $varName = oimo_vec3($emitted.x, $emitted.z, -$emitted.y); $cFunc(((ArmObject*)obj)->rigid_body, &$varName); } }';
         }
     }
 
@@ -167,10 +167,10 @@ class N64PhysicsMacro {
 
         if (vec != null) {
             var n64vec = blenderToN64Vec3(vec);
-            return '{ if (((ArmObject*)obj)->rigid_body) { Vec3 $varName = vec3_new(${n64vec.x}, ${n64vec.y}, ${n64vec.z}); $cFunc(((ArmObject*)obj)->rigid_body, &$varName); } }';
+            return '{ if (((ArmObject*)obj)->rigid_body) { OimoVec3 $varName = oimo_vec3(${n64vec.x}, ${n64vec.y}, ${n64vec.z}); $cFunc(((ArmObject*)obj)->rigid_body, &$varName); } }';
         } else {
             var emitted = emitter.emitExpr(params[0]);
-            return '{ if (((ArmObject*)obj)->rigid_body) { Vec3 $varName = vec3_new($emitted.x, $emitted.z, -$emitted.y); $cFunc(((ArmObject*)obj)->rigid_body, &$varName); } }';
+            return '{ if (((ArmObject*)obj)->rigid_body) { OimoVec3 $varName = oimo_vec3($emitted.x, $emitted.z, -$emitted.y); $cFunc(((ArmObject*)obj)->rigid_body, &$varName); } }';
         }
     }
 
@@ -181,7 +181,7 @@ class N64PhysicsMacro {
     static function emitVelocityGetter(cFunc:String, emitter:N64CEmitter):String {
         // TODO: Need to convert back from N64 to Blender coords if user code expects that
         // For now, return as-is (N64 coords)
-        return '(((ArmObject*)obj)->rigid_body ? $cFunc(((ArmObject*)obj)->rigid_body) : &(Vec3){0,0,0})';
+        return '(((ArmObject*)obj)->rigid_body ? $cFunc(((ArmObject*)obj)->rigid_body) : oimo_vec3_zero())';
     }
 
     // =========================================

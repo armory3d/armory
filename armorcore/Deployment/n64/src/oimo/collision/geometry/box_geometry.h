@@ -1,10 +1,3 @@
-/**
- * OimoPhysics N64 Port - Box Geometry
- *
- * Box collision geometry.
- * Based on OimoPhysics BoxGeometry.hx
- */
-
 #ifndef OIMO_COLLISION_GEOMETRY_BOX_GEOMETRY_H
 #define OIMO_COLLISION_GEOMETRY_BOX_GEOMETRY_H
 
@@ -17,19 +10,11 @@
 #include "aabb.h"
 #include "geometry.h"
 
-// ============================================================================
-// Box Geometry Structure
-// ============================================================================
 typedef struct OimoBoxGeometry {
-    OimoGeometry base;          // Base geometry (must be first for casting)
-    OimoVec3 half_extents;      // Half-extents (half width, half height, half depth)
+    OimoGeometry base;
+    OimoVec3 half_extents;
 } OimoBoxGeometry;
 
-// ============================================================================
-// Construction
-// ============================================================================
-
-// Initialize box geometry with given half-extents
 static inline void oimo_box_geometry_init(OimoBoxGeometry* box, const OimoVec3* half_extents) {
     oimo_geometry_init(&box->base, OIMO_GEOMETRY_BOX);
     box->half_extents = oimo_vec3_copy(half_extents);
@@ -75,10 +60,6 @@ static inline OimoBoxGeometry oimo_box_geometry3(OimoScalar hw, OimoScalar hh, O
     return oimo_box_geometry(&half_ext);
 }
 
-// ============================================================================
-// Getters
-// ============================================================================
-
 // Get half-extents
 static inline OimoVec3 oimo_box_geometry_get_half_extents(const OimoBoxGeometry* box) {
     return oimo_vec3_copy(&box->half_extents);
@@ -98,10 +79,6 @@ static inline OimoScalar oimo_box_geometry_get_height(const OimoBoxGeometry* box
 static inline OimoScalar oimo_box_geometry_get_depth(const OimoBoxGeometry* box) {
     return 2.0f * box->half_extents.z;
 }
-
-// ============================================================================
-// Setters
-// ============================================================================
 
 // Set half-extents and update mass properties
 static inline void oimo_box_geometry_set_half_extents(OimoBoxGeometry* box, const OimoVec3* half_extents) {
@@ -126,10 +103,6 @@ static inline void oimo_box_geometry_set_half_extents(OimoBoxGeometry* box, cons
     );
 }
 
-// ============================================================================
-// AABB Computation
-// ============================================================================
-
 // Compute AABB for box at given transform
 static inline void oimo_box_geometry_compute_aabb(
     const OimoBoxGeometry* box,
@@ -142,9 +115,9 @@ static inline void oimo_box_geometry_compute_aabb(
     OimoVec3 half_z = oimo_vec3(0, 0, box->half_extents.z);
 
     // Rotate each half-axis
-    OimoVec3 tfx = oimo_mat3_mul_vec3(&tf->rotation, &half_x);
-    OimoVec3 tfy = oimo_mat3_mul_vec3(&tf->rotation, &half_y);
-    OimoVec3 tfz = oimo_mat3_mul_vec3(&tf->rotation, &half_z);
+    OimoVec3 tfx = oimo_mat3_mul_vec3(&tf->rotation, half_x);
+    OimoVec3 tfy = oimo_mat3_mul_vec3(&tf->rotation, half_y);
+    OimoVec3 tfz = oimo_mat3_mul_vec3(&tf->rotation, half_z);
 
     // Take absolute values
     tfx.x = oimo_abs(tfx.x); tfx.y = oimo_abs(tfx.y); tfx.z = oimo_abs(tfx.z);
@@ -158,13 +131,9 @@ static inline void oimo_box_geometry_compute_aabb(
     extent.z = tfx.z + tfy.z + tfz.z;
 
     // AABB = position ± extent
-    aabb->min = oimo_vec3_sub(&tf->position, &extent);
-    aabb->max = oimo_vec3_add(&tf->position, &extent);
+    aabb->min = oimo_vec3_sub(tf->position, extent);
+    aabb->max = oimo_vec3_add(tf->position, extent);
 }
-
-// ============================================================================
-// Ray Casting
-// ============================================================================
 
 // Ray cast against box in local coordinates (slab method)
 static inline int oimo_box_geometry_ray_cast_local(
@@ -286,10 +255,6 @@ static inline int oimo_box_geometry_ray_cast(
     return 1;
 }
 
-// ============================================================================
-// Supporting Vertex (for GJK/SAT)
-// ============================================================================
-
 // Compute local supporting vertex in given direction
 static inline OimoVec3 oimo_box_geometry_support_local(
     const OimoBoxGeometry* box,
@@ -301,10 +266,6 @@ static inline OimoVec3 oimo_box_geometry_support_local(
         dir->z > 0 ? box->half_extents.z : -box->half_extents.z
     );
 }
-
-// ============================================================================
-// Vertex Access (for collision detection)
-// ============================================================================
 
 // Get box vertex by index (0-7)
 // Vertices are ordered: (-,-,-), (+,-,-), (-,+,-), (+,+,-), (-,-,+), (+,-,+), (-,+,+), (+,+,+)

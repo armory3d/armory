@@ -1,135 +1,203 @@
+// physics.c - Mini-engine physics implementation
 #include "physics.h"
-#include <stdlib.h>
 #include <string.h>
 
-static OimoWorld* g_world = NULL;
+// Static pools
+static OimoWorld g_world;
 static bool g_paused = false;
+static bool g_initialized = false;
 
-void physics_init(void) {
-    g_world = (OimoWorld*)malloc(sizeof(OimoWorld));
-    if (g_world) {
-        oimo_world_init(g_world);
-        oimo_world_set_gravity(g_world, 0.0f, PHYSICS_DEFAULT_GRAVITY_Y, 0.0f);
+#define MAX_PHYSICS_BODIES 32
+static OimoRigidBody g_bodies[MAX_PHYSICS_BODIES];
+static bool g_body_used[MAX_PHYSICS_BODIES];
+static OimoShape g_shapes[MAX_PHYSICS_BODIES];
+
+typedef union {
+    OimoSphereGeometry sphere;
+    OimoBoxGeometry box;
+} GeometryUnion;
+static GeometryUnion g_geometries[MAX_PHYSICS_BODIES];
+
+// Pool helpers
+static OimoRigidBody* alloc_body(void) {
+    for (int i = 0; i < MAX_PHYSICS_BODIES; i++) {
+        if (!g_body_used[i]) {
+            g_body_used[i] = true;
+            return &g_bodies[i];
+        }
     }
+    return NULL;
+}
+
+static void free_body(OimoRigidBody* rb) {
+    for (int i = 0; i < MAX_PHYSICS_BODIES; i++) {
+        if (&g_bodies[i] == rb) {
+            g_body_used[i] = false;
+            return;
+        }
+    }
+}
+
+static int get_body_index(OimoRigidBody* rb) {
+    for (int i = 0; i < MAX_PHYSICS_BODIES; i++) {
+        if (&g_bodies[i] == rb) return i;
+    }
+    return -1;
+}
+
+// World management
+void physics_init(void) {
+    if (g_initialized) return;
+
+    memset(g_bodies, 0, sizeof(g_bodies));
+    memset(g_body_used, 0, sizeof(g_body_used));
+    memset(g_shapes, 0, sizeof(g_shapes));
+    memset(g_geometries, 0, sizeof(g_geometries));
+
+    OimoVec3 gravity = oimo_vec3(0.0f, -9.80665f, 0.0f);
+    oimo_world_init(&g_world, &gravity);
+
     g_paused = false;
+    g_initialized = true;
 }
 
 void physics_shutdown(void) {
-    if (g_world) {
-        // TODO: Properly destroy all bodies and shapes
-        free(g_world);
-        g_world = NULL;
-    }
+    if (!g_initialized) return;
+    physics_reset();
+    g_initialized = false;
 }
 
 void physics_reset(void) {
-    // TODO: Clear all bodies from world
-    if (g_world) {
-        // For now, just reinitialize
-        oimo_world_init(g_world);
+    if (!g_initialized) return;
+
+    for (int i = 0; i < MAX_PHYSICS_BODIES; i++) {
+        if (g_body_used[i]) {
+            oimo_world_remove_rigid_body(&g_world, &g_bodies[i]);
+            g_body_used[i] = false;
+        }
     }
+
+    OimoVec3 gravity = g_world._gravity;
+    oimo_world_init(&g_world, &gravity);
 }
-
-OimoWorld* physics_get_world(void) { return g_world; }
-
-void physics_set_gravity(float x, float y, float z) {
-    if (g_world) {
-        oimo_world_set_gravity(g_world, x, y, z);
-    }
-}
-
-void physics_set_paused(bool paused) { g_paused = paused; }
-bool physics_is_paused(void) { return g_paused; }
 
 void physics_step(float dt) {
-    if (!g_world || g_paused) return;
-    oimo_world_step(g_world, dt);
+    if (!g_initialized || g_paused) return;
+    oimo_world_step(&g_world, dt);
 }
 
-#include "types.h"
-#include <math.h>
+void physics_pause(void) { g_paused = true; }
+void physics_resume(void) { g_paused = false; }
+OimoWorld* physics_get_world(void) { return &g_world; }
 
-// N64 fixed-point safe range (avoid overflow in t3d_mat4_to_fixed)
-#define PHYSICS_MAX_POS 1000.0f
-
-static inline float clamp_position(float v) {
-    if (isnan(v) || isinf(v)) return 0.0f;
-    if (v > PHYSICS_MAX_POS) return PHYSICS_MAX_POS;
-    if (v < -PHYSICS_MAX_POS) return -PHYSICS_MAX_POS;
-    return v;
+// Gravity
+void physics_set_gravity(float x, float y, float z) {
+    if (!g_initialized) return;
+    oimo_world_set_gravity(&g_world, oimo_vec3(x, y, z));
 }
 
-static inline float sanitize_quat(float v) {
-    if (isnan(v) || isinf(v)) return 0.0f;
-    return v;
+OimoVec3 physics_get_gravity(void) {
+    return g_initialized ? oimo_world_get_gravity(&g_world) : oimo_vec3_zero();
 }
 
-void physics_sync_object(void* obj_ptr) {
-    ArmObject* obj = (ArmObject*)obj_ptr;
+// Body creation
+void physics_create_box(ArmObject* obj, int type, float hx, float hy, float hz,
+                        float mass, float friction, float restitution) {
+    if (!g_initialized || !obj) return;
+
+    OimoRigidBody* rb = alloc_body();
+    if (!rb) return;
+
+    int idx = get_body_index(rb);
+
+    // Body config
+    OimoRigidBodyConfig config = oimo_rigid_body_config();
+    config.type = type;
+    config.position = oimo_vec3(obj->transform.loc[0], obj->transform.loc[1], obj->transform.loc[2]);
+    OimoQuat q = oimo_quat(obj->transform.rot[0], obj->transform.rot[1],
+                           obj->transform.rot[2], obj->transform.rot[3]);
+    config.rotation = oimo_quat_to_mat3(&q);
+    config.autoSleep = (type == OIMO_RIGID_BODY_DYNAMIC);
+    oimo_rigid_body_init(rb, &config);
+
+    // Geometry & shape
+    oimo_box_geometry_init3(&g_geometries[idx].box, hx, hy, hz);
+
+    OimoShapeConfig shapeConfig = oimo_shape_config();
+    shapeConfig.geometry = &g_geometries[idx].box.base;
+    shapeConfig.friction = friction;
+    shapeConfig.restitution = restitution;
+    shapeConfig.density = (type == OIMO_RIGID_BODY_STATIC) ? 0.0f : (mass / (8.0f * hx * hy * hz));
+
+    oimo_shape_init(&g_shapes[idx], &shapeConfig);
+    oimo_rigid_body_add_shape(rb, &g_shapes[idx]);
+
+    oimo_world_add_rigid_body(&g_world, rb);
+    obj->rigid_body = rb;
+}
+
+void physics_create_sphere(ArmObject* obj, int type, float radius,
+                           float mass, float friction, float restitution) {
+    if (!g_initialized || !obj) return;
+
+    OimoRigidBody* rb = alloc_body();
+    if (!rb) return;
+
+    int idx = get_body_index(rb);
+
+    // Body config
+    OimoRigidBodyConfig config = oimo_rigid_body_config();
+    config.type = type;
+    config.position = oimo_vec3(obj->transform.loc[0], obj->transform.loc[1], obj->transform.loc[2]);
+    OimoQuat q = oimo_quat(obj->transform.rot[0], obj->transform.rot[1],
+                           obj->transform.rot[2], obj->transform.rot[3]);
+    config.rotation = oimo_quat_to_mat3(&q);
+    config.autoSleep = (type == OIMO_RIGID_BODY_DYNAMIC);
+    oimo_rigid_body_init(rb, &config);
+
+    // Geometry & shape
+    oimo_sphere_geometry_init(&g_geometries[idx].sphere, radius);
+
+    OimoShapeConfig shapeConfig = oimo_shape_config();
+    shapeConfig.geometry = &g_geometries[idx].sphere.base;
+    shapeConfig.friction = friction;
+    shapeConfig.restitution = restitution;
+    float volume = (4.0f / 3.0f) * 3.14159265f * radius * radius * radius;
+    shapeConfig.density = (type == OIMO_RIGID_BODY_STATIC) ? 0.0f : (mass / volume);
+
+    oimo_shape_init(&g_shapes[idx], &shapeConfig);
+    oimo_rigid_body_add_shape(rb, &g_shapes[idx]);
+
+    oimo_world_add_rigid_body(&g_world, rb);
+    obj->rigid_body = rb;
+}
+
+void physics_remove_body(ArmObject* obj) {
+    if (!g_initialized || !obj || !obj->rigid_body) return;
+
+    oimo_world_remove_rigid_body(&g_world, obj->rigid_body);
+    free_body(obj->rigid_body);
+    obj->rigid_body = NULL;
+}
+
+// Transform sync
+void physics_sync_object(ArmObject* obj) {
     if (!obj || !obj->rigid_body) return;
 
     OimoRigidBody* rb = obj->rigid_body;
+    if (rb->_type == OIMO_RIGID_BODY_STATIC || rb->_sleeping) return;
 
-    // Get position from physics (with bounds checking for N64 fixed-point)
-    OimoVec3 pos = oimo_rigidbody_get_position(rb);
-    obj->transform.loc[0] = clamp_position(pos.v[0]);
-    obj->transform.loc[1] = clamp_position(pos.v[1]);
-    obj->transform.loc[2] = clamp_position(pos.v[2]);
+    OimoVec3 pos = oimo_rigid_body_get_position(rb);
+    obj->transform.loc[0] = pos.x;
+    obj->transform.loc[1] = pos.y;
+    obj->transform.loc[2] = pos.z;
 
-    // Get rotation matrix from physics and convert to quaternion
-    OimoMat3 rot_mat = oimo_rigidbody_get_rotation(rb);
-    // Convert rotation matrix to quaternion
-    // Using standard matrix-to-quaternion conversion
-    float trace = rot_mat.e00 + rot_mat.e11 + rot_mat.e22;
-    float qw, qx, qy, qz;
+    OimoQuat rot = oimo_rigid_body_get_orientation(rb);
+    obj->transform.rot[0] = rot.x;
+    obj->transform.rot[1] = rot.y;
+    obj->transform.rot[2] = rot.z;
+    obj->transform.rot[3] = rot.w;
 
-    if (trace > 0) {
-        float s = 0.5f / sqrtf(trace + 1.0f);
-        qw = 0.25f / s;
-        qx = (rot_mat.e21 - rot_mat.e12) * s;
-        qy = (rot_mat.e02 - rot_mat.e20) * s;
-        qz = (rot_mat.e10 - rot_mat.e01) * s;
-    } else if (rot_mat.e00 > rot_mat.e11 && rot_mat.e00 > rot_mat.e22) {
-        float s = 2.0f * sqrtf(1.0f + rot_mat.e00 - rot_mat.e11 - rot_mat.e22);
-        qw = (rot_mat.e21 - rot_mat.e12) / s;
-        qx = 0.25f * s;
-        qy = (rot_mat.e01 + rot_mat.e10) / s;
-        qz = (rot_mat.e02 + rot_mat.e20) / s;
-    } else if (rot_mat.e11 > rot_mat.e22) {
-        float s = 2.0f * sqrtf(1.0f + rot_mat.e11 - rot_mat.e00 - rot_mat.e22);
-        qw = (rot_mat.e02 - rot_mat.e20) / s;
-        qx = (rot_mat.e01 + rot_mat.e10) / s;
-        qy = 0.25f * s;
-        qz = (rot_mat.e12 + rot_mat.e21) / s;
-    } else {
-        float s = 2.0f * sqrtf(1.0f + rot_mat.e22 - rot_mat.e00 - rot_mat.e11);
-        qw = (rot_mat.e10 - rot_mat.e01) / s;
-        qx = (rot_mat.e02 + rot_mat.e20) / s;
-        qy = (rot_mat.e12 + rot_mat.e21) / s;
-        qz = 0.25f * s;
-    }
-
-    obj->transform.rot[0] = sanitize_quat(qx);
-    obj->transform.rot[1] = sanitize_quat(qy);
-    obj->transform.rot[2] = sanitize_quat(qz);
-    obj->transform.rot[3] = sanitize_quat(qw);
-
-    // Ensure quaternion is valid (default to identity if all zero)
-    if (obj->transform.rot[0] == 0.0f && obj->transform.rot[1] == 0.0f &&
-        obj->transform.rot[2] == 0.0f && obj->transform.rot[3] == 0.0f) {
-        obj->transform.rot[3] = 1.0f;
-    }
-
-    // Mark transform as dirty for rendering
     obj->transform.dirty = 3;
-}
-
-bool physics_raycast(const OimoVec3* from, const OimoVec3* direction, float max_distance, PhysicsRayHit* out_hit) {
-    if (!g_world || !out_hit) return false;
-
-    // TODO: Implement raycast using oimo_64
-    // For now, return no hit
-    out_hit->hit = false;
-    return false;
 }
 

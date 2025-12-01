@@ -371,52 +371,55 @@ def generate_physics_block(objects: list, world_data: dict) -> str:
 
         # Determine body type
         if mass == 0.0:
-            body_type = "RIGIDBODY_STATIC"
+            body_type = "OIMO_BODY_STATIC"
         elif is_kinematic:
-            body_type = "RIGIDBODY_KINEMATIC"
+            body_type = "OIMO_BODY_KINEMATIC"
         else:
-            body_type = "RIGIDBODY_DYNAMIC"
+            body_type = "OIMO_BODY_DYNAMIC"
 
         lines.append(f'    // Physics body for {obj_name}')
         lines.append('    {')
 
-        # Create body first
-        lines.append(f'        RigidBody* body = rigidbody_create();')
-        lines.append(f'        rigidbody_set_type(body, {body_type});')
+        # Create rigid body config
+        lines.append(f'        OimoRigidBodyConfig rb_config = oimo_rigidbody_config_default();')
+        lines.append(f'        rb_config.type = {body_type};')
 
-        # Create shape based on type
+        # Set initial position from object transform
+        lines.append(f'        rb_config.position = oimo_vec3(objects[{i}].transform.loc[0], objects[{i}].transform.loc[1], objects[{i}].transform.loc[2]);')
+
+        # Create shape config based on type
+        lines.append(f'        OimoShapeConfig shape_config = oimo_shape_config_default();')
+        lines.append(f'        shape_config.collision_group = {col_group};')
+        lines.append(f'        shape_config.collision_mask = {col_mask};')
+
         if shape == "sphere":
             radius = rb.get("radius", 1.0)
-            lines.append(f'        Shape* shape = shape_create_sphere({radius:.6f}f);')
+            lines.append(f'        shape_config.geometry = oimo_geometry_sphere({radius:.6f}f);')
+        elif shape == "capsule":
+            radius = rb.get("radius", 0.5)
+            half_height = rb.get("half_height", 0.5)
+            lines.append(f'        shape_config.geometry = oimo_geometry_capsule({radius:.6f}f, {half_height:.6f}f);')
         else:  # box
             he = rb.get("half_extents", [1, 1, 1])
-            lines.append(f'        Shape* shape = shape_create_box({he[0]:.6f}f, {he[1]:.6f}f, {he[2]:.6f}f);')
+            lines.append(f'        shape_config.geometry = oimo_geometry_box({he[0]:.6f}f, {he[1]:.6f}f, {he[2]:.6f}f);')
 
-        # Set shape properties
-        lines.append(f'        shape_set_collision_group(shape, {col_group});')
-        lines.append(f'        shape_set_collision_mask(shape, {col_mask});')
+        # Allocate and init rigid body
+        lines.append(f'        OimoRigidBody* body = (OimoRigidBody*)malloc(sizeof(OimoRigidBody));')
+        lines.append(f'        oimo_rigidbody_init(body, &rb_config);')
 
-        # Add shape to body
-        lines.append('        rigidbody_add_shape(body, shape);')
+        # Allocate and init shape
+        lines.append(f'        OimoShape* shape = (OimoShape*)malloc(sizeof(OimoShape));')
+        lines.append(f'        oimo_shape_init(shape, &shape_config);')
+        lines.append(f'        oimo_rigidbody_add_shape(body, shape);')
 
         # Set mass if specified (for dynamic bodies)
-        if body_type == "RIGIDBODY_DYNAMIC" and mass > 0:
+        if body_type == "OIMO_BODY_DYNAMIC" and mass > 0:
             lines.append(f'        // Set explicit mass from Blender')
-            lines.append(f'        {{')
-            lines.append(f'            MassData md;')
-            lines.append(f'            rigidbody_get_mass_data(body, &md);')
-            lines.append(f'            md.mass = {mass:.6f}f;')
-            lines.append(f'            rigidbody_set_mass_data(body, &md);')
-            lines.append(f'        }}')
-
-        # Set initial transform from object
-        lines.append(f'        Vec3 pos = vec3_new(objects[{i}].transform.loc[0], objects[{i}].transform.loc[1], objects[{i}].transform.loc[2]);')
-        lines.append('        rigidbody_set_position(body, &pos);')
-        lines.append(f'        Quat rot = quat_new(objects[{i}].transform.rot[0], objects[{i}].transform.rot[1], objects[{i}].transform.rot[2], objects[{i}].transform.rot[3]);')
-        lines.append('        rigidbody_set_orientation(body, &rot);')
+            lines.append(f'        body->mass = {mass:.6f}f;')
+            lines.append(f'        oimo_rigidbody_update_mass(body);')
 
         # Add to world and link to object
-        lines.append('        world_add_body(physics_get_world(), body);')
+        lines.append('        oimo_world_add_rigidbody(physics_get_world(), body);')
         lines.append(f'        objects[{i}].rigid_body = body;')
         lines.append('    }')
         lines.append('')

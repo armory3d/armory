@@ -1,27 +1,13 @@
-/**
- * OimoPhysics N64 Port - Axis-Aligned Bounding Box
- *
- * AABB structure for broadphase collision detection.
- * Based on OimoPhysics Aabb.hx
- */
-
 #ifndef OIMO_COLLISION_GEOMETRY_AABB_H
 #define OIMO_COLLISION_GEOMETRY_AABB_H
 
 #include "../../common/setting.h"
 #include "../../common/vec3.h"
 
-// ============================================================================
-// AABB Type
-// ============================================================================
 typedef struct OimoAabb {
     OimoVec3 min;  // Minimum corner
     OimoVec3 max;  // Maximum corner
 } OimoAabb;
-
-// ============================================================================
-// Construction
-// ============================================================================
 
 // Create empty AABB (both corners at zero)
 static inline OimoAabb oimo_aabb_zero(void) {
@@ -42,8 +28,8 @@ static inline OimoAabb oimo_aabb(const OimoVec3* min, const OimoVec3* max) {
 // Create AABB from center and half-extents
 static inline OimoAabb oimo_aabb_from_center_extents(const OimoVec3* center, const OimoVec3* half_extents) {
     OimoAabb aabb;
-    aabb.min = oimo_vec3_sub(center, half_extents);
-    aabb.max = oimo_vec3_add(center, half_extents);
+    oimo_vec3_sub_to(&aabb.min, center, half_extents);
+    oimo_vec3_add_to(&aabb.max, center, half_extents);
     return aabb;
 }
 
@@ -55,25 +41,21 @@ static inline OimoAabb oimo_aabb_copy(const OimoAabb* aabb) {
     return result;
 }
 
-// ============================================================================
-// Getters
-// ============================================================================
-
 // Get center of AABB: (min + max) / 2
 static inline OimoVec3 oimo_aabb_get_center(const OimoAabb* aabb) {
-    OimoVec3 center = oimo_vec3_add(&aabb->min, &aabb->max);
-    return oimo_vec3_scale(&center, 0.5f);
+    OimoVec3 center = oimo_vec3_add(aabb->min, aabb->max);
+    return oimo_vec3_scale(center, 0.5f);
 }
 
 // Get half-extents of AABB: (max - min) / 2
 static inline OimoVec3 oimo_aabb_get_extents(const OimoAabb* aabb) {
-    OimoVec3 extents = oimo_vec3_sub(&aabb->max, &aabb->min);
-    return oimo_vec3_scale(&extents, 0.5f);
+    OimoVec3 extents = oimo_vec3_sub(aabb->max, aabb->min);
+    return oimo_vec3_scale(extents, 0.5f);
 }
 
 // Get size (full extents) of AABB: max - min
 static inline OimoVec3 oimo_aabb_get_size(const OimoAabb* aabb) {
-    return oimo_vec3_sub(&aabb->max, &aabb->min);
+    return oimo_vec3_sub(aabb->max, aabb->min);
 }
 
 // Get surface area: 2 * (w*h + h*d + d*w)
@@ -87,10 +69,6 @@ static inline OimoScalar oimo_aabb_get_volume(const OimoAabb* aabb) {
     OimoVec3 size = oimo_aabb_get_size(aabb);
     return size.x * size.y * size.z;
 }
-
-// ============================================================================
-// Setters
-// ============================================================================
 
 // Set min corner
 static inline void oimo_aabb_set_min(OimoAabb* aabb, const OimoVec3* min) {
@@ -114,10 +92,6 @@ static inline void oimo_aabb_copy_to(OimoAabb* dst, const OimoAabb* src) {
     oimo_vec3_copy_to(&dst->max, &src->max);
 }
 
-// ============================================================================
-// Overlap Testing
-// ============================================================================
-
 // Check if two AABBs overlap
 static inline int oimo_aabb_overlap(const OimoAabb* a, const OimoAabb* b) {
     // AABBs overlap if they overlap on all three axes
@@ -139,10 +113,6 @@ static inline int oimo_aabb_contains(const OimoAabb* a, const OimoAabb* b) {
            (a->min.y <= b->min.y && a->max.y >= b->max.y) &&
            (a->min.z <= b->min.z && a->max.z >= b->max.z);
 }
-
-// ============================================================================
-// Combining
-// ============================================================================
 
 // Combine two AABBs into one that contains both
 static inline OimoAabb oimo_aabb_combine(const OimoAabb* a, const OimoAabb* b) {
@@ -176,10 +146,6 @@ static inline void oimo_aabb_include_point(OimoAabb* aabb, const OimoVec3* point
     aabb->max.z = oimo_max(aabb->max.z, point->z);
 }
 
-// ============================================================================
-// Intersection
-// ============================================================================
-
 // Get intersection of two AABBs (result may be invalid if they don't overlap)
 static inline OimoAabb oimo_aabb_intersection(const OimoAabb* a, const OimoAabb* b) {
     OimoAabb result;
@@ -198,10 +164,6 @@ static inline int oimo_aabb_is_valid(const OimoAabb* aabb) {
            (aabb->min.y <= aabb->max.y) &&
            (aabb->min.z <= aabb->max.z);
 }
-
-// ============================================================================
-// Expansion
-// ============================================================================
 
 // Expand AABB by margin on all sides
 static inline OimoAabb oimo_aabb_expand(const OimoAabb* aabb, OimoScalar margin) {
@@ -224,10 +186,6 @@ static inline void oimo_aabb_expand_eq(OimoAabb* aabb, OimoScalar margin) {
     aabb->max.y += margin;
     aabb->max.z += margin;
 }
-
-// ============================================================================
-// Ray Casting
-// ============================================================================
 
 // Ray-AABB intersection test
 // Returns 1 if ray intersects, 0 otherwise

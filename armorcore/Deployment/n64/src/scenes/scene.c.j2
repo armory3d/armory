@@ -10,14 +10,12 @@
 
 #if ENGINE_ENABLE_PHYSICS
 #include "../physics.h"
-#include "../oimo_64/oimo_64.h"
 #endif
 
 extern rspq_block_t *models_get_dpl(ModelId id);
 
 void scene_{scene_name}_init(ArmScene *scene)
 {{
-    // World
     scene->world.clear_color[0] = {cr};
     scene->world.clear_color[1] = {cg};
     scene->world.clear_color[2] = {cb};
@@ -28,7 +26,6 @@ void scene_{scene_name}_init(ArmScene *scene)
     scene->world.ambient_color[2] = {ab};
     scene->world.ambient_color[3] = 0xFF;
 
-    // Cameras
     static ArmCamera cameras[{camera_count}];
     scene->cameras = cameras;
     scene->camera_count = {camera_count};
@@ -36,26 +33,22 @@ void scene_{scene_name}_init(ArmScene *scene)
 
 {cameras_block}
 
-    // Lights
     static ArmLight lights[{light_count}];
     scene->lights = lights;
     scene->light_count = {light_count};
 
 {lights_block}
 
-    // Objects
     static ArmObject objects[{object_count}];
     scene->objects = objects;
     scene->object_count = {object_count};
 
 {objects_block}
 
-    // Physics bodies
 #if ENGINE_ENABLE_PHYSICS
 {physics_block}
 #endif
 
-    // Scene traits
     scene->trait_count = {scene_trait_count};
 {scene_traits_block}
 }}
