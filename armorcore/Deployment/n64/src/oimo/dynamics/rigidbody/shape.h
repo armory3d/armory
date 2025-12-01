@@ -60,8 +60,12 @@ static inline void oimo_shape_init(OimoShape* shape, const OimoShapeConfig* conf
     shape->userData = NULL;
 }
 
+// Forward declaration for capsule geometry
+#include "../../collision/geometry/capsule_geometry.h"
+
 // Sync shape transforms with rigid body (called during simulation)
 // tf1 = previous body transform, tf2 = current body transform
+// 1:1 from OimoPhysics Shape._sync
 static inline void oimo_shape_sync(OimoShape* shape, const OimoTransform* tf1, const OimoTransform* tf2) {
     // _ptransform = _localTransform * tf1
     shape->_ptransform = oimo_transform_mul(&shape->_localTransform, tf1);
@@ -80,15 +84,26 @@ static inline void oimo_shape_sync(OimoShape* shape, const OimoTransform* tf1, c
         OimoBoxGeometry* box = (OimoBoxGeometry*)shape->_geom;
         oimo_box_geometry_compute_aabb(box, &aabb1, &shape->_ptransform);
         oimo_box_geometry_compute_aabb(box, &aabb2, &shape->_transform);
+    } else if (shape->_geom->type == OIMO_GEOMETRY_CAPSULE) {
+        OimoCapsuleGeometry* capsule = (OimoCapsuleGeometry*)shape->_geom;
+        oimo_capsule_geometry_compute_aabb(capsule, &aabb1, &shape->_ptransform);
+        oimo_capsule_geometry_compute_aabb(capsule, &aabb2, &shape->_transform);
     }
 
-    // Combine AABBs
+    // Combine AABBs (min of mins, max of maxes)
     shape->_aabb.min.x = oimo_min(aabb1.min.x, aabb2.min.x);
     shape->_aabb.min.y = oimo_min(aabb1.min.y, aabb2.min.y);
     shape->_aabb.min.z = oimo_min(aabb1.min.z, aabb2.min.z);
     shape->_aabb.max.x = oimo_max(aabb1.max.x, aabb2.max.x);
     shape->_aabb.max.y = oimo_max(aabb1.max.y, aabb2.max.y);
     shape->_aabb.max.z = oimo_max(aabb1.max.z, aabb2.max.z);
+
+    // CRITICAL: Update proxy AABB for broadphase collision detection
+    // 1:1 from OimoPhysics: _rigidBody._world._broadPhase.moveProxy(_proxy, _aabb, displacement)
+    if (shape->_proxy != NULL) {
+        shape->_proxy->_aabbMin = shape->_aabb.min;
+        shape->_proxy->_aabbMax = shape->_aabb.max;
+    }
 }
 
 // Getters

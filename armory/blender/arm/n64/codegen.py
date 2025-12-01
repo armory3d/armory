@@ -387,6 +387,10 @@ def generate_physics_block(objects: list, world_data: dict) -> str:
         # Set initial position from object transform
         lines.append(f'        rb_config.position = oimo_vec3(objects[{i}].transform.loc[0], objects[{i}].transform.loc[1], objects[{i}].transform.loc[2]);')
 
+        # Set initial rotation from object transform (quaternion XYZW)
+        lines.append(f'        OimoQuat init_rot = oimo_quat(objects[{i}].transform.rot[0], objects[{i}].transform.rot[1], objects[{i}].transform.rot[2], objects[{i}].transform.rot[3]);')
+        lines.append(f'        rb_config.rotation = oimo_quat_to_mat3(&init_rot);')
+
         # Create shape config based on type
         lines.append(f'        OimoShapeConfig shape_config = oimo_shape_config_default();')
         lines.append(f'        shape_config.collision_group = {col_group};')

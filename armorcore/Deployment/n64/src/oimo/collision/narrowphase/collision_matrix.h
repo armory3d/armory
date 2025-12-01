@@ -6,9 +6,13 @@
 #include "sphere_sphere_detector.h"
 #include "sphere_box_detector.h"
 #include "box_box_detector.h"
+#include "capsule_capsule_detector.h"
+#include "sphere_capsule_detector.h"
+#include "box_capsule_detector.h"
 #include "../geometry/geometry_type.h"
 #include "../geometry/sphere_geometry.h"
 #include "../geometry/box_geometry.h"
+#include "../geometry/capsule_geometry.h"
 #include "../../common/transform.h"
 
 #ifdef __cplusplus
@@ -20,6 +24,11 @@ typedef struct OimoCollisionMatrix {
     OimoSphereBoxDetector sphere_box;      // sphere is geom1
     OimoSphereBoxDetector box_sphere;      // box is geom1 (swapped)
     OimoBoxBoxDetector box_box;
+    OimoCapsuleCapsuleDetector capsule_capsule;
+    OimoSphereCapsuleDetector sphere_capsule;  // sphere is geom1
+    OimoSphereCapsuleDetector capsule_sphere;  // capsule is geom1 (swapped)
+    OimoBoxCapsuleDetector box_capsule;        // box is geom1
+    OimoBoxCapsuleDetector capsule_box;        // capsule is geom1 (swapped)
 } OimoCollisionMatrix;
 
 static inline void oimo_collision_matrix_init(OimoCollisionMatrix* matrix) {
@@ -27,6 +36,11 @@ static inline void oimo_collision_matrix_init(OimoCollisionMatrix* matrix) {
     oimo_sphere_box_detector_init(&matrix->sphere_box, false);  // sphere-box order
     oimo_sphere_box_detector_init(&matrix->box_sphere, true);   // box-sphere order (swapped)
     oimo_box_box_detector_init(&matrix->box_box);
+    oimo_capsule_capsule_detector_init(&matrix->capsule_capsule);
+    oimo_sphere_capsule_detector_init(&matrix->sphere_capsule, false);  // sphere-capsule order
+    oimo_sphere_capsule_detector_init(&matrix->capsule_sphere, true);   // capsule-sphere order (swapped)
+    oimo_box_capsule_detector_init(&matrix->box_capsule, false);        // box-capsule order
+    oimo_box_capsule_detector_init(&matrix->capsule_box, true);         // capsule-box order (swapped)
 }
 
 static inline OimoCollisionMatrix oimo_collision_matrix_create(void) {
@@ -52,6 +66,21 @@ static inline OimoDetector* oimo_collision_matrix_get_detector(
     }
     if (type1 == OIMO_GEOMETRY_BOX && type2 == OIMO_GEOMETRY_BOX) {
         return &matrix->box_box.base;
+    }
+    if (type1 == OIMO_GEOMETRY_CAPSULE && type2 == OIMO_GEOMETRY_CAPSULE) {
+        return &matrix->capsule_capsule.base;
+    }
+    if (type1 == OIMO_GEOMETRY_SPHERE && type2 == OIMO_GEOMETRY_CAPSULE) {
+        return &matrix->sphere_capsule.base;
+    }
+    if (type1 == OIMO_GEOMETRY_CAPSULE && type2 == OIMO_GEOMETRY_SPHERE) {
+        return &matrix->capsule_sphere.base;
+    }
+    if (type1 == OIMO_GEOMETRY_BOX && type2 == OIMO_GEOMETRY_CAPSULE) {
+        return &matrix->box_capsule.base;
+    }
+    if (type1 == OIMO_GEOMETRY_CAPSULE && type2 == OIMO_GEOMETRY_BOX) {
+        return &matrix->capsule_box.base;
     }
     return NULL;
 }
@@ -108,6 +137,54 @@ static inline bool oimo_collision_matrix_detect(
             tf1, tf2);
         return true;
     }
+    // Capsule collisions
+    else if (type1 == OIMO_GEOMETRY_CAPSULE && type2 == OIMO_GEOMETRY_CAPSULE) {
+        oimo_capsule_capsule_detector_detect(
+            &matrix->capsule_capsule,
+            result,
+            (const OimoCapsuleGeometry*)geom1,
+            (const OimoCapsuleGeometry*)geom2,
+            tf1, tf2);
+        return true;
+    }
+    else if (type1 == OIMO_GEOMETRY_SPHERE && type2 == OIMO_GEOMETRY_CAPSULE) {
+        oimo_sphere_capsule_detector_detect(
+            &matrix->sphere_capsule,
+            result,
+            (const OimoSphereGeometry*)geom1,
+            (const OimoCapsuleGeometry*)geom2,
+            tf1, tf2);
+        return true;
+    }
+    else if (type1 == OIMO_GEOMETRY_CAPSULE && type2 == OIMO_GEOMETRY_SPHERE) {
+        // Capsule-sphere: pass sphere first, capsule second (swapped detector handles normal flip)
+        oimo_sphere_capsule_detector_detect(
+            &matrix->capsule_sphere,
+            result,
+            (const OimoSphereGeometry*)geom2,  // sphere
+            (const OimoCapsuleGeometry*)geom1, // capsule
+            tf2, tf1);  // transforms also swapped
+        return true;
+    }
+    else if (type1 == OIMO_GEOMETRY_BOX && type2 == OIMO_GEOMETRY_CAPSULE) {
+        oimo_box_capsule_detector_detect(
+            &matrix->box_capsule,
+            result,
+            (const OimoBoxGeometry*)geom1,
+            (const OimoCapsuleGeometry*)geom2,
+            tf1, tf2);
+        return true;
+    }
+    else if (type1 == OIMO_GEOMETRY_CAPSULE && type2 == OIMO_GEOMETRY_BOX) {
+        // Capsule-box: pass box first, capsule second (swapped detector handles normal flip)
+        oimo_box_capsule_detector_detect(
+            &matrix->capsule_box,
+            result,
+            (const OimoBoxGeometry*)geom2,     // box
+            (const OimoCapsuleGeometry*)geom1, // capsule
+            tf2, tf1);  // transforms also swapped
+        return true;
+    }
 
     // Unsupported geometry combination
     return false;
@@ -125,6 +202,21 @@ static inline OimoDetectorType oimo_collision_matrix_get_detector_type(int geom_
     }
     if (geom_type1 == OIMO_GEOMETRY_BOX && geom_type2 == OIMO_GEOMETRY_BOX) {
         return OIMO_DETECTOR_BOX_BOX;
+    }
+    if (geom_type1 == OIMO_GEOMETRY_CAPSULE && geom_type2 == OIMO_GEOMETRY_CAPSULE) {
+        return OIMO_DETECTOR_CAPSULE_CAPSULE;
+    }
+    if (geom_type1 == OIMO_GEOMETRY_SPHERE && geom_type2 == OIMO_GEOMETRY_CAPSULE) {
+        return OIMO_DETECTOR_SPHERE_CAPSULE;
+    }
+    if (geom_type1 == OIMO_GEOMETRY_CAPSULE && geom_type2 == OIMO_GEOMETRY_SPHERE) {
+        return OIMO_DETECTOR_CAPSULE_SPHERE;
+    }
+    if (geom_type1 == OIMO_GEOMETRY_BOX && geom_type2 == OIMO_GEOMETRY_CAPSULE) {
+        return OIMO_DETECTOR_BOX_CAPSULE;
+    }
+    if (geom_type1 == OIMO_GEOMETRY_CAPSULE && geom_type2 == OIMO_GEOMETRY_BOX) {
+        return OIMO_DETECTOR_CAPSULE_BOX;
     }
     return (OimoDetectorType)-1;  // Unsupported
 }
