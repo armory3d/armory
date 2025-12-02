@@ -1,0 +1,67 @@
+#pragma once
+
+#include "system/input.h"
+#include "../types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * Event-driven trait system.
+ *
+ * Instead of checking input inside on_update, traits register handlers
+ * for specific button events. The engine polls input once and dispatches
+ * to all registered handlers.
+ *
+ * Event types:
+ *   - btn_<button>_started  - Button just pressed this frame
+ *   - btn_<button>_released - Button just released this frame
+ *   - btn_<button>_down     - Button held down
+ */
+
+// Maximum traits that can subscribe to a single button event
+#define MAX_BUTTON_SUBSCRIBERS 16
+
+// Event handler function signature: (obj, data, dt)
+typedef void (*TraitEventHandler)(void* obj, void* data, float dt);
+
+// Subscription entry: links a handler to an object/data pair
+typedef struct {
+    TraitEventHandler handler;
+    void* obj;
+    void* data;
+} TraitEventSub;
+
+// Per-button event subscriptions
+typedef struct {
+    TraitEventSub started[MAX_BUTTON_SUBSCRIBERS];
+    TraitEventSub released[MAX_BUTTON_SUBSCRIBERS];
+    TraitEventSub down[MAX_BUTTON_SUBSCRIBERS];
+    uint8_t started_count;
+    uint8_t released_count;
+    uint8_t down_count;
+} ButtonEventSubs;
+
+// Global event state
+typedef struct {
+    ButtonEventSubs buttons[N64_BTN_COUNT];
+} TraitEventState;
+
+// Initialize event system (call once at startup)
+void trait_events_init(void);
+
+// Clear all subscriptions (call on scene change)
+void trait_events_clear(void);
+
+// Subscribe to button events
+void trait_events_subscribe_started(N64Button btn, TraitEventHandler handler, void* obj, void* data);
+void trait_events_subscribe_released(N64Button btn, TraitEventHandler handler, void* obj, void* data);
+void trait_events_subscribe_down(N64Button btn, TraitEventHandler handler, void* obj, void* data);
+
+// Dispatch all button events (call once per frame after input_poll)
+void trait_events_dispatch(float dt);
+
+#ifdef __cplusplus
+}
+#endif

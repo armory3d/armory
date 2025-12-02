@@ -18,8 +18,8 @@ void models_shutdown(void);
 T3DModel *models_get(ModelId id);
 rspq_block_t *models_get_dpl(ModelId id);
 
-// TODO: Implement reference counting to know when a model is no longer used by any scene
 void models_unload(ModelId id);
+void models_unload_all(void);  // Unload all models to free memory
 
 #ifdef __cplusplus
 }}

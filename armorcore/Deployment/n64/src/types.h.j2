@@ -16,6 +16,7 @@ struct OimoRigidBody;
 
 typedef struct {{ float x, y; }} ArmVec2;
 typedef struct {{ float x, y, z; }} ArmVec3;
+typedef struct {{ float x, y, z, w; }} ArmVec4;
 
 typedef void (*ArmTraitReadyFn)(void *entity, void *data);
 typedef void (*ArmTraitFixedUpdateFn)(void *entity, float dt, void *data);

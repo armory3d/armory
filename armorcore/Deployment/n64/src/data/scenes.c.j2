@@ -1,6 +1,7 @@
 #include <libdragon.h>
 #include <t3d/t3d.h>
 #include <t3d/t3dmodel.h>
+#include <string.h>
 
 #include "../types.h"
 #include "../engine.h"
@@ -165,27 +166,62 @@ void scene_clear(SceneId id)
     ArmScene *s = &g_scenes[id];
     scene_on_remove(id);
 
+    // Free object resources
     if (s->objects != NULL) {{
         for (uint16_t i = 0; i < s->object_count; i++) {{
 #if ENGINE_ENABLE_PHYSICS
             if (s->objects[i].rigid_body) physics_remove_body(&s->objects[i]);
 #endif
             if (s->objects[i].model_mat) {{ free_uncached(s->objects[i].model_mat); s->objects[i].model_mat = NULL; }}
-            if (s->objects[i].traits) {{ free(s->objects[i].traits); s->objects[i].traits = NULL; }}
+            // Free trait data (malloc'd) before freeing traits array
+            if (s->objects[i].traits) {{
+                for (uint8_t t = 0; t < s->objects[i].trait_count; t++) {{
+                    if (s->objects[i].traits[t].data) {{ free(s->objects[i].traits[t].data); s->objects[i].traits[t].data = NULL; }}
+                }}
+                free(s->objects[i].traits);
+                s->objects[i].traits = NULL;
+            }}
             s->objects[i].dpl = NULL;
+            s->objects[i].trait_count = 0;
         }}
     }}
+
+    // Free camera trait data
     if (s->cameras != NULL) {{
         for (uint8_t i = 0; i < s->camera_count; i++) {{
-            if (s->cameras[i].traits) {{ free(s->cameras[i].traits); s->cameras[i].traits = NULL; }}
+            if (s->cameras[i].traits) {{
+                for (uint8_t t = 0; t < s->cameras[i].trait_count; t++) {{
+                    if (s->cameras[i].traits[t].data) {{ free(s->cameras[i].traits[t].data); s->cameras[i].traits[t].data = NULL; }}
+                }}
+                free(s->cameras[i].traits);
+                s->cameras[i].traits = NULL;
+            }}
+            s->cameras[i].trait_count = 0;
         }}
     }}
+
+    // Free light trait data
     if (s->lights != NULL) {{
         for (uint8_t i = 0; i < s->light_count; i++) {{
-            if (s->lights[i].traits) {{ free(s->lights[i].traits); s->lights[i].traits = NULL; }}
+            if (s->lights[i].traits) {{
+                for (uint8_t t = 0; t < s->lights[i].trait_count; t++) {{
+                    if (s->lights[i].traits[t].data) {{ free(s->lights[i].traits[t].data); s->lights[i].traits[t].data = NULL; }}
+                }}
+                free(s->lights[i].traits);
+                s->lights[i].traits = NULL;
+            }}
+            s->lights[i].trait_count = 0;
         }}
     }}
-    if (s->traits) {{ free(s->traits); s->traits = NULL; }}
+
+    // Free scene-level trait data (note: scene_traits array itself is static, don't free it)
+    if (s->traits != NULL) {{
+        for (uint8_t i = 0; i < s->trait_count; i++) {{
+            if (s->traits[i].data) {{ free(s->traits[i].data); s->traits[i].data = NULL; }}
+        }}
+        // Don't free s->traits - it's a static array
+        s->traits = NULL;
+    }}
 
 	s->world.clear_color[0] = s->world.clear_color[1] = s->world.clear_color[2] = 0;
 	s->world.clear_color[3] = 0xFF;
@@ -205,6 +241,22 @@ ArmScene *scene_get(SceneId id)
 {{
     if (id >= SCENE_COUNT) return NULL;
     return &g_scenes[id];
+}}
+
+// Scene name to ID lookup table
+static const struct {{ const char *name; SceneId id; }} g_scene_names[] = {{
+{scene_name_entries}
+}};
+
+SceneId scene_get_id_by_name(const char *name)
+{{
+    if (name == NULL) return SCENE_COUNT;
+    for (int i = 0; i < {scene_count}; i++) {{
+        if (strcmp(g_scene_names[i].name, name) == 0) {{
+            return g_scene_names[i].id;
+        }}
+    }}
+    return SCENE_COUNT; // Not found
 }}
 
 SceneId scene_get_pending(void) {{ return g_pending_scene; }}

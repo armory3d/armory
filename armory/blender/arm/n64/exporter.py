@@ -8,14 +8,12 @@ import arm.utils
 import arm.log as log
 
 from arm.n64 import codegen
-from arm.n64 import converter as n64_converter
 from arm.n64 import utils as n64_utils
 
 if arm.is_reload(__name__):
     arm.utils = arm.reload_module(arm.utils)
     log = arm.reload_module(log)
     codegen = arm.reload_module(codegen)
-    n64_converter = arm.reload_module(n64_converter)
     n64_utils = arm.reload_module(n64_utils)
 else:
     arm.enable_reload(__name__)
@@ -156,11 +154,12 @@ class N64Exporter:
         if hasattr(scene, 'arm_traitlist'):
             for trait in scene.arm_traitlist:
                 if trait.enabled_prop and trait.class_name_prop:
-                    props = n64_utils.extract_blender_trait_props(trait)
+                    prop_data = n64_utils.extract_blender_trait_props(trait)
                     scene_traits.append({
                         "class_name": trait.class_name_prop,
                         "type": trait.type_prop,
-                        "props": props
+                        "props": prop_data['values'],
+                        "type_overrides": prop_data['types']
                     })
 
         # Get gravity from scene (Blender's scene.gravity is the actual gravity vector)
@@ -182,7 +181,7 @@ class N64Exporter:
 
         for obj in scene.objects:
             if obj.type == 'CAMERA':
-                # Raw Blender coordinates - converter.py will transform later
+                # Raw Blender coordinates - codegen.py will transform later
                 cam_dir = obj.rotation_euler.to_matrix().col[2]
                 cam_target = [
                     obj.location[0] - cam_dir[0],
@@ -197,11 +196,12 @@ class N64Exporter:
                 if hasattr(obj, 'arm_traitlist'):
                     for trait in obj.arm_traitlist:
                         if trait.enabled_prop and trait.class_name_prop:
-                            props = n64_utils.extract_blender_trait_props(trait)
+                            prop_data = n64_utils.extract_blender_trait_props(trait)
                             cam_traits.append({
                                 "class_name": trait.class_name_prop,
                                 "type": trait.type_prop,
-                                "props": props
+                                "props": prop_data['values'],
+                                "type_overrides": prop_data['types']
                             })
 
                 self.scene_data[scene_name]["cameras"].append({
@@ -214,7 +214,7 @@ class N64Exporter:
                     "traits": cam_traits
                 })
             elif obj.type == 'LIGHT':  # TODO: support multiple light types [Point and Sun]
-                # Raw Blender direction - converter.py will transform and normalize
+                # Raw Blender direction - codegen.py will transform and normalize
                 light_dir = obj.rotation_euler.to_matrix().col[2]
 
                 # Extract traits from light
@@ -222,11 +222,12 @@ class N64Exporter:
                 if hasattr(obj, 'arm_traitlist'):
                     for trait in obj.arm_traitlist:
                         if trait.enabled_prop and trait.class_name_prop:
-                            props = n64_utils.extract_blender_trait_props(trait)
+                            prop_data = n64_utils.extract_blender_trait_props(trait)
                             light_traits.append({
                                 "class_name": trait.class_name_prop,
                                 "type": trait.type_prop,
-                                "props": props
+                                "props": prop_data['values'],
+                                "type_overrides": prop_data['types']
                             })
 
                 self.scene_data[scene_name]["lights"].append({
@@ -239,7 +240,7 @@ class N64Exporter:
                 mesh = obj.data
                 mesh_name = self.exported_meshes[mesh]
 
-                # Raw Blender coordinates - converter.py will transform later
+                # Raw Blender coordinates - codegen.py will transform later
                 # Export rotation as quaternion (XYZW order for T3D)
                 quat = obj.matrix_world.to_quaternion()
 
@@ -268,11 +269,12 @@ class N64Exporter:
                 if hasattr(obj, 'arm_traitlist'):
                     for trait in obj.arm_traitlist:
                         if trait.enabled_prop and trait.class_name_prop:
-                            props = n64_utils.extract_blender_trait_props(trait)
+                            prop_data = n64_utils.extract_blender_trait_props(trait)
                             obj_traits.append({
                                 "class_name": trait.class_name_prop,
                                 "type": trait.type_prop,
-                                "props": props
+                                "props": prop_data['values'],
+                                "type_overrides": prop_data['types']
                             })
 
                 # Extract rigid body data (N64 supports box, sphere, and capsule)
@@ -422,13 +424,42 @@ class N64Exporter:
             f.write(output)
 
 
-    def write_input(self):
-        n64_utils.copy_src('iron/system/input.c', 'src')
-        n64_utils.copy_src('iron/system/input.h', 'src')
-
-
     def write_traits(self):
-        codegen.write_traits_files()
+        # Collect all type overrides from all trait instances across all scenes
+        type_overrides = self._collect_type_overrides()
+        codegen.write_traits_files(type_overrides)
+
+    def _collect_type_overrides(self) -> dict:
+        """Collect all type overrides from trait instances across all scenes.
+
+        Returns:
+            dict mapping trait_class -> member_name -> c_type
+        """
+        overrides = {}
+
+        def collect_from_traits(traits):
+            for trait in traits:
+                class_name = trait.get("class_name", "")
+                trait_overrides = trait.get("type_overrides", {})
+                if trait_overrides:
+                    if class_name not in overrides:
+                        overrides[class_name] = {}
+                    overrides[class_name].update(trait_overrides)
+
+        for scene_data in self.scene_data.values():
+            # Scene-level traits
+            collect_from_traits(scene_data.get("traits", []))
+            # Camera traits
+            for cam in scene_data.get("cameras", []):
+                collect_from_traits(cam.get("traits", []))
+            # Light traits
+            for light in scene_data.get("lights", []):
+                collect_from_traits(light.get("traits", []))
+            # Object traits
+            for obj in scene_data.get("objects", []):
+                collect_from_traits(obj.get("traits", []))
+
+        return overrides
 
 
     def write_engine(self):
@@ -538,8 +569,8 @@ class N64Exporter:
         self.write_scenes_c()
         self.write_scenes_h()
 
-        # Apply coordinate conversion using rules from macro JSON
-        n64_converter.convert_scene_data(self.scene_data)
+        # Apply coordinate conversion (Blender Z-up → N64 Y-up)
+        codegen.convert_scene_data(self.scene_data)
 
         # Write converted scene data to C files
         for scene in bpy.data.scenes:
@@ -595,6 +626,8 @@ class N64Exporter:
 
         init_lines = []
         init_switch_cases_lines = []
+        name_entry_lines = []
+        scene_count = 0
 
         for scene in bpy.data.scenes:
             if scene.library:
@@ -604,13 +637,19 @@ class N64Exporter:
             init_switch_cases_lines.append(f'        case SCENE_{scene_name.upper()}:\n'
                                            f'            scene_{scene_name}_init(&g_scenes[SCENE_{scene_name.upper()}]);\n'
                                            f'            break;')
+            # For runtime string -> SceneId lookup
+            name_entry_lines.append(f'    {{"{scene_name}", SCENE_{scene_name.upper()}}},')
+            scene_count += 1
 
         scene_inits = '\n'.join(init_lines)
         scene_init_switch_cases = '\n'.join(init_switch_cases_lines)
+        scene_name_entries = '\n'.join(name_entry_lines)
 
         output = tmpl_content.format(
             scene_inits=scene_inits,
-            scene_init_switch_cases=scene_init_switch_cases
+            scene_init_switch_cases=scene_init_switch_cases,
+            scene_name_entries=scene_name_entries,
+            scene_count=scene_count
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
@@ -648,8 +687,12 @@ class N64Exporter:
 
 
     def write_iron(self):
+        n64_utils.copy_src('iron/trait_events.h', 'src')
+        n64_utils.copy_src('iron/trait_events.c', 'src')
         n64_utils.copy_src('iron/object/transform.h', 'src')
         n64_utils.copy_src('iron/object/transform.c', 'src')
+        n64_utils.copy_src('iron/system/input.c', 'src')
+        n64_utils.copy_src('iron/system/input.h', 'src')
 
 
     def reset_materials_to_bsdf(self):
@@ -730,7 +773,6 @@ class N64Exporter:
 
         self.write_makefile()
         self.write_types()
-        self.write_input()
         self.write_engine()
         self.write_physics()
         self.write_main()

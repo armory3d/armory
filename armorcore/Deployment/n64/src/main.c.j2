@@ -6,7 +6,9 @@
 #include "engine.h"
 #include "renderer.h"
 #include "data/scenes.h"
+#include "data/models.h"
 #include "iron/system/input.h"
+#include "iron/trait_events.h"
 #if ENGINE_ENABLE_PHYSICS
 #include "physics.h"
 #endif
@@ -21,6 +23,7 @@ static float get_time_s(void)
 int main(void)
 {{
     engine_init();
+    trait_events_init();
 
     T3DViewport viewport = t3d_viewport_create_buffered(FB_COUNT);
 
@@ -36,6 +39,7 @@ int main(void)
         last_time = now;
 
         input_poll();
+        trait_events_dispatch(dt);
 
         ArmScene *scene = scene_get(current_scene);
 
@@ -55,9 +59,12 @@ int main(void)
         if (pending < SCENE_COUNT) {{
             scene_clear_pending();
             scene_clear(current_scene);
+            trait_events_clear();
 #if ENGINE_ENABLE_PHYSICS
             physics_reset();
 #endif
+            // Free all models to reclaim memory before loading new scene
+            models_unload_all();
             fixed_time = 0.0f;
             current_scene = pending;
             scene_init(current_scene);

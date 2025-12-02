@@ -88,3 +88,11 @@ void models_unload(ModelId id)
         e->loaded = 0;
     }}
 }}
+
+// Unload all models to free memory (useful before scene transitions)
+void models_unload_all(void)
+{{
+    for (uint8_t i = 0; i < MODEL_COUNT; i++) {{
+        models_unload(i);
+    }}
+}}

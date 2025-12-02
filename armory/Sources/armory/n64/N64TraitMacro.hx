@@ -14,8 +14,17 @@ using StringTools;
 using Lambda;
 
 /**
- * N64 Trait Macro - Extracts trait info and converts to C code.
- * Outputs resolved C strings to n64_traits.json.
+ * N64 Trait Macro - Event-Driven Architecture
+ *
+ * Pipeline: Haxe AST → IR (JSON) → Python → C code
+ *
+ * This macro:
+ * 1. Extracts trait members with ctype
+ * 2. Detects event patterns (input, lifecycle) and extracts handlers
+ * 3. Outputs clean JSON IR for Python to emit C code
+ *
+ * The macro is the SINGLE SOURCE OF TRUTH for semantics.
+ * Python only does 1:1 IR→C translation.
  */
 class N64TraitMacro {
     static var traitData:Map<String, TraitIR> = new Map();
@@ -41,7 +50,7 @@ class N64TraitMacro {
         var className = cls.name;
         var modulePath = cls.module;
 
-        // Skip internal/engine traits - only process user traits from arm package
+        // Skip internal/engine traits
         if (modulePath.indexOf("iron.") == 0 || modulePath.indexOf("armory.") == 0) {
             return null;
         }
@@ -49,7 +58,7 @@ class N64TraitMacro {
         var fields = Context.getBuildFields();
 
         // Extract trait IR
-        var extractor = new TraitExtractor(className, fields);
+        var extractor = new TraitExtractor(className, modulePath, fields);
         var traitIR = extractor.extract();
 
         if (traitIR != null) {
@@ -59,101 +68,59 @@ class N64TraitMacro {
         return null;
     }
 
-    /**
-     * Write the final JSON with resolved C code
-     */
     static function writeTraitJson():Void {
         if (traitData.keys().hasNext() == false) return;
 
-        var traits:Array<Dynamic> = [];
-        var allButtons:Array<String> = [];
-        var anyTransform = false;
-        var anyScene = false;
-        var sceneNames:Array<String> = [];
+        var traits:Dynamic = {};
 
         for (name in traitData.keys()) {
             var ir = traitData.get(name);
 
-            // Skip traits that have no useful code (empty init with just "if () { }" etc)
-            var hasUsefulCode = false;
-            for (code in ir.initCode) {
-                if (code != "" && code != "if () {  }" && code != "if () { }") hasUsefulCode = true;
-            }
-            for (code in ir.fixedUpdateCode) {
-                if (code != "" && code != "if () {  }" && code != "if () { }") hasUsefulCode = true;
-            }
-            for (code in ir.updateCode) {
-                if (code != "" && code != "if () {  }" && code != "if () { }") hasUsefulCode = true;
-            }
-            for (code in ir.removeCode) {
-                if (code != "" && code != "if () {  }" && code != "if () { }") hasUsefulCode = true;
-            }
-            if (!hasUsefulCode && !ir.needs_data) {
-                continue;  // Skip this trait entirely
-            }
+            // Skip empty traits
+            var hasEvents = Lambda.count(ir.events) > 0;
+            if (!hasEvents && !ir.needsData) continue;
 
-            // Convert members map to object for JSON
-            var membersObj:Dynamic = {};
+            // Convert members
+            var membersArr:Array<Dynamic> = [];
             for (memberName in ir.members.keys()) {
                 var m = ir.members.get(memberName);
-                Reflect.setField(membersObj, memberName, {
-                    type: m.type,
-                    default_value: m.default_value
+                membersArr.push({
+                    name: memberName,
+                    type: m.haxeType,
+                    ctype: m.ctype,
+                    default_value: serializeIRNode(m.defaultValue)
                 });
             }
 
-            traits.push({
-                name: ir.name,
-                skip: ir.skip,
-                needs_data: ir.needs_data,
-                members: membersObj,
-                init: ir.initCode,
-                fixed_update: ir.fixedUpdateCode,
-                update: ir.updateCode,
-                remove: ir.removeCode,
-                flags: {
-                    needs_obj: ir.needsObj,
-                    needs_dt: ir.needsDt
-                },
-                input_buttons: ir.inputButtons
+            // Convert events
+            var eventsObj:Dynamic = {};
+            for (eventName in ir.events.keys()) {
+                var eventNodes = ir.events.get(eventName);
+                Reflect.setField(eventsObj, eventName, [for (n in eventNodes) serializeIRNode(n)]);
+            }
+
+            Reflect.setField(traits, name, {
+                module: ir.module,
+                c_name: ir.cName,
+                members: membersArr,
+                events: eventsObj,
+                meta: ir.meta
             });
-
-            // Aggregate summary info
-            for (btn in ir.inputButtons) {
-                if (!Lambda.has(allButtons, btn)) allButtons.push(btn);
-            }
-            anyTransform = anyTransform || ir.hasTransform;
-            anyScene = anyScene || ir.hasScene;
-
-            // Collect scene names
-            if (ir.targetScene != null && !Lambda.has(sceneNames, ir.targetScene)) {
-                sceneNames.push(ir.targetScene);
-            }
         }
 
         var output:Dynamic = {
-            version: 5,
-            generated: "N64TraitMacro",
-            coordinate_system: N64CoordinateSystem.getConfigForJson(),
-            traits: traits,
-            summary: {
-                input_buttons: allButtons,
-                has_transform: anyTransform,
-                has_scene: anyScene,
-                scene_names: sceneNames
-            }
+            ir_version: 1,
+            traits: traits
         };
 
         var json = Json.stringify(output, null, "  ");
 
-        // Write to build directory
         var defines = Context.getDefines();
         var buildDir = defines.get("arm_build_dir");
         if (buildDir == null) buildDir = "build";
 
         var outPath = buildDir + "/n64_traits.json";
         try {
-            // Ensure directory exists
             var dir = haxe.io.Path.directory(outPath);
             if (dir != "" && !FileSystem.exists(dir)) {
                 FileSystem.createDirectory(dir);
@@ -163,71 +130,211 @@ class N64TraitMacro {
             Context.error('Failed to write n64_traits.json: $e', Context.currentPos());
         }
     }
+
+    static function serializeIRNode(node:IRNode):Dynamic {
+        if (node == null) return null;
+
+        var obj:Dynamic = { type: node.type };
+
+        if (node.value != null) obj.value = node.value;
+        if (node.children != null && node.children.length > 0) {
+            obj.children = [for (c in node.children) serializeIRNode(c)];
+        }
+        if (node.args != null && node.args.length > 0) {
+            obj.args = [for (a in node.args) serializeIRNode(a)];
+        }
+        if (node.target != null) obj.target = node.target;
+        if (node.method != null) obj.method = node.method;
+        if (node.object != null) obj.object = serializeIRNode(node.object);
+        if (node.props != null) obj.props = node.props;
+        if (node.c_code != null) obj.c_code = node.c_code;
+
+        return obj;
+    }
 }
 
-typedef TraitIR = {
-    name:String,
-    skip:Bool,                            // True if trait has no code or data
-    needs_data:Bool,
-    members:Map<String, MemberIR>,       // name -> {type, default}
-    initCode:Array<String>,
-    fixedUpdateCode:Array<String>,
-    updateCode:Array<String>,
-    removeCode:Array<String>,
-    needsObj:Bool,
-    needsDt:Bool,
-    inputButtons:Array<String>,          // Buttons used (e.g., ["N64_BTN_A", "N64_BTN_B"])
-    hasTransform:Bool,
-    hasScene:Bool,
-    targetScene:String                   // Scene name if Scene.setActive() is used
+// ============================================================================
+// IR Types
+// ============================================================================
+
+typedef IRNode = {
+    type: String,
+    ?value: Dynamic,
+    ?children: Array<IRNode>,
+    ?args: Array<IRNode>,
+    ?target: String,
+    ?method: String,
+    ?object: IRNode,
+    ?props: Dynamic,
+    ?c_code: String
 }
 
 typedef MemberIR = {
-    type:String,
-    default_value:String
+    haxeType: String,
+    ctype: String,
+    defaultValue: IRNode
 }
 
-typedef EmitResult = {
-    code:Array<String>,
-    needsObj:Bool,
-    needsDt:Bool,
-    inputButtons:Array<String>,
-    hasTransform:Bool,
-    hasScene:Bool,
-    targetScene:String,
-    needsInitialScale:Bool
+typedef TraitMeta = {
+    uses_input: Bool,
+    uses_transform: Bool,
+    uses_time: Bool,
+    uses_physics: Bool,
+    buttons_used: Array<String>
 }
+
+typedef TraitIR = {
+    name: String,
+    module: String,
+    cName: String,
+    needsData: Bool,
+    members: Map<String, MemberIR>,
+    events: Map<String, Array<IRNode>>,
+    meta: TraitMeta
+}
+
+// ============================================================================
+// Type Mapping (Haxe → C)
+// ============================================================================
+
+class TypeMap {
+    public static var haxeToCType:Map<String, String> = [
+        "Float" => "float",
+        "float" => "float",
+        "Int" => "int32_t",
+        "int" => "int32_t",
+        "Bool" => "bool",
+        "bool" => "bool",
+        "String" => "const char*",
+        "SceneId" => "SceneId",
+        "SceneFormat" => "SceneId",
+        "TSceneFormat" => "SceneId",
+        "Vec2" => "ArmVec2",
+        "Vec3" => "ArmVec3",
+        "Vec4" => "ArmVec4",
+    ];
+
+    public static function getCType(haxeType:String):String {
+        return haxeToCType.exists(haxeType) ? haxeToCType.get(haxeType) : "void*";
+    }
+
+    public static function isSupported(haxeType:String):Bool {
+        return haxeToCType.exists(haxeType);
+    }
+}
+
+// ============================================================================
+// Button Mapping (Armory → N64)
+// ============================================================================
+
+class ButtonMap {
+    // Map common button names to N64 button identifiers
+    // Matches config.py BUTTON_MAP
+    public static var map:Map<String, String> = [
+        // PlayStation-style
+        "cross" => "a", "square" => "b", "circle" => "cright", "triangle" => "cleft",
+        // Xbox-style
+        "a" => "a", "b" => "cright", "x" => "b", "y" => "cleft",
+        // Shoulders/Triggers
+        "r1" => "cdown", "r2" => "r", "r3" => "cup",
+        "l1" => "z", "l2" => "l", "l3" => "cup",
+        // System
+        "start" => "start", "options" => "start", "share" => "start",
+        // D-Pad
+        "up" => "dup", "down" => "ddown", "left" => "dleft", "right" => "dright",
+        "dup" => "dup", "ddown" => "ddown", "dleft" => "dleft", "dright" => "dright",
+        // C-Buttons direct
+        "cup" => "cup", "cdown" => "cdown", "cleft" => "cleft", "cright" => "cright",
+        // N64 native
+        "l" => "l", "r" => "r", "z" => "z",
+    ];
+
+    // Map normalized button name to N64_BTN_* constant
+    public static var n64Const:Map<String, String> = [
+        "a" => "N64_BTN_A", "b" => "N64_BTN_B", "z" => "N64_BTN_Z",
+        "start" => "N64_BTN_START", "l" => "N64_BTN_L", "r" => "N64_BTN_R",
+        "dup" => "N64_BTN_DUP", "ddown" => "N64_BTN_DDOWN", "dleft" => "N64_BTN_DLEFT", "dright" => "N64_BTN_DRIGHT",
+        "cup" => "N64_BTN_CUP", "cdown" => "N64_BTN_CDOWN", "cleft" => "N64_BTN_CLEFT", "cright" => "N64_BTN_CRIGHT",
+    ];
+
+    public static function normalize(button:String):String {
+        var lower = button.toLowerCase();
+        return map.exists(lower) ? map.get(lower) : lower;
+    }
+
+    public static function toN64Const(button:String):String {
+        var normalized = normalize(button);
+        return n64Const.exists(normalized) ? n64Const.get(normalized) : "N64_BTN_A";
+    }
+}
+
+// ============================================================================
+// Skip Lists
+// ============================================================================
+
+class SkipList {
+    public static var members:Map<String, Bool> = [
+        "object" => true, "transform" => true, "name" => true,
+        "gamepad" => true, "keyboard" => true, "mouse" => true,
+        "physics" => true, "rb" => true, "rigidBody" => true,
+    ];
+
+    public static var classes:Map<String, Bool> = [
+        "PhysicsWorld" => true, "RigidBody" => true,
+        "Tween" => true, "Audio" => true, "Network" => true,
+    ];
+
+    public static function shouldSkipMember(name:String):Bool {
+        return members.exists(name);
+    }
+
+    public static function shouldSkipClass(name:String):Bool {
+        return classes.exists(name);
+    }
+}
+
+// ============================================================================
+// Trait Extractor
+// ============================================================================
 
 class TraitExtractor {
     var className:String;
+    var modulePath:String;
     var fields:Array<Field>;
     var members:Map<String, MemberIR>;
     var memberNames:Array<String>;
     var methodMap:Map<String, Function>;
-    var vec4Exprs:Map<String, Expr>;  // Store Vec4 member init expressions for axis resolution
+    var events:Map<String, Array<IRNode>>;
+    var meta:TraitMeta;
+    var localVarTypes:Map<String, String>;  // Track local variable types
 
-    public function new(className:String, fields:Array<Field>) {
+    public function new(className:String, modulePath:String, fields:Array<Field>) {
         this.className = className;
+        this.modulePath = modulePath;
         this.fields = fields;
         this.members = new Map();
         this.memberNames = [];
         this.methodMap = new Map();
-        this.vec4Exprs = new Map();
+        this.events = new Map();
+        this.localVarTypes = new Map();
+        this.meta = {
+            uses_input: false,
+            uses_transform: false,
+            uses_time: false,
+            uses_physics: false,
+            buttons_used: []
+        };
     }
 
     public function extract():TraitIR {
-        // Pass 1: Extract members and build method map
+        // Pass 1: Extract members and methods
         for (field in fields) {
             switch (field.kind) {
                 case FVar(t, e):
-                    var member = extractMember(field.name, t, e, field.meta);
+                    var member = extractMember(field.name, t, e);
                     if (member != null) {
                         members.set(field.name, member);
                         memberNames.push(field.name);
-                        // Store Vec4 init expressions for axis resolution in rotate()
-                        if (member.type == "ArmVec3" && e != null) {
-                            vec4Exprs.set(field.name, e);
-                        }
                     }
                 case FFun(func):
                     methodMap.set(field.name, func);
@@ -235,148 +342,60 @@ class TraitExtractor {
             }
         }
 
-        // Pass 2: Find lifecycle registrations in constructor
+        // Pass 2: Find lifecycle registrations and extract events
         var lifecycles = findLifecycles();
 
-        // Pass 3: Convert lifecycle functions to C code
-        var initCode:Array<String> = [];
-        var fixedUpdateCode:Array<String> = [];
-        var updateCode:Array<String> = [];
-        var removeCode:Array<String> = [];
-        var needsObj = false;
-        var needsDt = false;
-        var inputButtons:Array<String> = [];
-        var hasTransform = false;
-        var hasScene = false;
-        var needsInitialScale = false;
-        var targetScene:String = null;
-
-        // Helper to process a lifecycle function and aggregate results
-        inline function processLifecycle(body:Expr):Array<String> {
-            if (body == null) return [];
-            var result = emitFunction(body);
-            needsObj = needsObj || result.needsObj;
-            needsDt = needsDt || result.needsDt;
-            for (btn in result.inputButtons) if (!Lambda.has(inputButtons, btn)) inputButtons.push(btn);
-            hasTransform = hasTransform || result.hasTransform;
-            hasScene = hasScene || result.hasScene;
-            needsInitialScale = needsInitialScale || result.needsInitialScale;
-            // Add hardcoded scene as a member
-            if (result.targetScene != null) {
-                targetScene = result.targetScene;
-                var sceneEnum = 'SCENE_${result.targetScene.toUpperCase()}';
-                members.set("target_scene", {type: "SceneId", default_value: sceneEnum});
-                if (!Lambda.has(memberNames, "target_scene")) memberNames.push("target_scene");
-            }
-            return result.code;
+        // Pass 3: Convert lifecycle functions to events
+        if (lifecycles.init != null) {
+            extractEvents("on_ready", lifecycles.init);
+        }
+        if (lifecycles.update != null) {
+            extractEvents("on_update", lifecycles.update);
+        }
+        if (lifecycles.fixed_update != null) {
+            extractEvents("on_fixed_update", lifecycles.fixed_update);
+        }
+        if (lifecycles.remove != null) {
+            extractEvents("on_remove", lifecycles.remove);
         }
 
-        initCode = processLifecycle(lifecycles.init);
-        fixedUpdateCode = processLifecycle(lifecycles.fixed_update);
-        updateCode = processLifecycle(lifecycles.update);
-        removeCode = processLifecycle(lifecycles.remove);
-
-        // If scale assignment is used, add _initialScale member and init code
-        if (needsInitialScale) {
-            members.set("_initialScale", {type: "ArmVec3", default_value: "{1, 1, 1}"});
-            if (!Lambda.has(memberNames, "_initialScale")) memberNames.push("_initialScale");
-            // Add init code to capture object's initial scale (semicolon included)
-            var captureCode = '((' + className + 'Data*)data)->_initialScale = (ArmVec3){((ArmObject*)obj)->transform.scale[0], ((ArmObject*)obj)->transform.scale[1], ((ArmObject*)obj)->transform.scale[2]};';
-            initCode.insert(0, captureCode);
-            needsObj = true;  // Need obj to read initial scale
+        // Generate C-safe name
+        // Avoid duplication if className is already the last part of modulePath
+        // e.g., "arm.Rotator" + "Rotator" should become "arm_rotator", not "arm_rotator_rotator"
+        var moduleParts = modulePath.split(".");
+        var lastModulePart = moduleParts[moduleParts.length - 1];
+        var cName:String;
+        if (lastModulePart.toLowerCase() == className.toLowerCase()) {
+            // Class name matches module name, just use module path
+            cName = modulePath.replace(".", "_");
+        } else {
+            // Class name differs, append it
+            cName = modulePath.replace(".", "_") + "_" + className;
         }
-
-        // Determine if trait needs per-instance data
-        var needsData = memberNames.length > 0;
-
-        // Determine if trait should be skipped (no code and no data)
-        var hasCode = initCode.length > 0 || fixedUpdateCode.length > 0 || updateCode.length > 0 || removeCode.length > 0;
-        var shouldSkip = !hasCode && !needsData;
 
         return {
             name: className,
-            skip: shouldSkip,
-            needs_data: needsData,
+            module: modulePath,
+            cName: cName.toLowerCase(),
+            needsData: memberNames.length > 0,
             members: members,
-            initCode: initCode,
-            fixedUpdateCode: fixedUpdateCode,
-            updateCode: updateCode,
-            removeCode: removeCode,
-            needsObj: needsObj,
-            needsDt: needsDt,
-            inputButtons: inputButtons,
-            hasTransform: hasTransform,
-            hasScene: hasScene,
-            targetScene: targetScene
+            events: events,
+            meta: meta
         };
     }
 
-    function extractMember(name:String, t:ComplexType, e:Expr, meta:Metadata):MemberIR {
-        // Skip API objects
-        if (N64Config.shouldSkipMember(name)) return null;
+    function extractMember(name:String, t:ComplexType, e:Expr):MemberIR {
+        if (SkipList.shouldSkipMember(name)) return null;
 
-        var typeName = t != null ? complexTypeToString(t) : "Dynamic";
+        var haxeType = t != null ? complexTypeToString(t) : "Dynamic";
+        if (!TypeMap.isSupported(haxeType)) return null;
 
-        // Skip unsupported types
-        if (!N64Config.isSupportedType(typeName)) return null;
-
-        var cType = N64Config.mapType(typeName);
-        var defaultVal = e != null ? exprToDefault(e, cType) : defaultForType(cType);
-
-        // Detect scene-related members:
-        // 1. Explicit @:n64Scene metadata (preferred)
-        // 2. Name-based heuristic as fallback (with info message)
-        var isScene = hasMetadata(meta, ":n64Scene") || hasMetadata(meta, "n64Scene");
-
-        if (!isScene && cType == "const char*") {
-            // Fallback: check name heuristic for backwards compatibility
-            if (isSceneMemberName(name)) {
-                isScene = true;
-                // Note: This is informational, not a warning - the heuristic is usually correct
-            }
-        }
-
-        if (isScene && cType == "const char*") {
-            cType = "SceneId";
-            // Convert string default to scene enum
-            if (e != null) {
-                var sceneName = extractStringValue(e);
-                if (sceneName != null) {
-                    defaultVal = 'SCENE_${sceneName.toUpperCase()}';
-                } else {
-                    defaultVal = "SCENE_COUNT";  // Invalid/no scene
-                }
-            } else {
-                defaultVal = "SCENE_COUNT";
-            }
-        }
+        var defaultNode:IRNode = e != null ? exprToIR(e) : null;
 
         return {
-            type: cType,
-            default_value: defaultVal
-        };
-    }
-
-    function hasMetadata(meta:Metadata, name:String):Bool {
-        if (meta == null) return false;
-        for (m in meta) {
-            if (m.name == name) return true;
-        }
-        return false;
-    }
-
-    function isSceneMemberName(name:String):Bool {
-        var lower = name.toLowerCase();
-        return lower.indexOf("scene") >= 0 ||
-               lower.indexOf("level") >= 0 ||
-               lower == "nextscene" ||
-               lower == "targetscene";
-    }
-
-    function extractStringValue(e:Expr):String {
-        return switch (e.expr) {
-            case EConst(CString(s)): s;
-            default: null;
+            haxeType: haxeType,
+            ctype: TypeMap.getCType(haxeType),
+            defaultValue: defaultNode
         };
     }
 
@@ -384,96 +403,39 @@ class TraitExtractor {
         return switch (ct) {
             case TPath(p): p.name;
             default: "Dynamic";
-        }
+        };
     }
 
-    function exprToDefault(e:Expr, cType:String):String {
-        return switch (e.expr) {
-            case EConst(CInt(v)):
-                // For ArmVec3, convert single int to {v, v, v}
-                if (cType == "ArmVec3") '{$v, $v, $v}' else v;
-            case EConst(CFloat(f)):
-                // For ArmVec3, convert single float to {f, f, f}
-                if (cType == "ArmVec3") '{${f}f, ${f}f, ${f}f}' else '${f}f';
-            case EConst(CString(s)): '"$s"';
-            case EConst(CIdent("true")): "true";
-            case EConst(CIdent("false")): "false";
-            case EConst(CIdent("null")): "NULL";
-            case EUnop(OpNeg, false, inner): '-${exprToDefault(inner, cType)}';
-            case ENew(_, params), ECall(_, params):
-                // Vec4/Vec3 constructor: new Vec4(x, y, z)
-                if (cType == "ArmVec3" && params.length >= 3) {
-                    var x = exprToDefault(params[0], "float");
-                    var y = exprToDefault(params[1], "float");
-                    var z = exprToDefault(params[2], "float");
-                    '{$x, $y, $z}';
-                } else {
-                    defaultForType(cType);
-                }
-            default: defaultForType(cType);
-        }
-    }
-
-    function defaultForType(cType:String):String {
-        return switch (cType) {
-            case "float": "0.0f";
-            case "int32_t": "0";
-            case "bool": "false";
-            case "ArmVec3": "{0, 0, 0}";
-            case "const char*": "NULL";
-            case "SceneId": "SCENE_COUNT";
-            default: "0";
-        }
-    }
-
-    function findLifecycles():{init:Expr, fixed_update:Expr, update:Expr, remove:Expr} {
-        var result = {init: null, fixed_update: null, update: null, remove: null};
-
+    function findLifecycles():{init:Expr, update:Expr, fixed_update:Expr, remove:Expr} {
+        var result = {init: null, update: null, fixed_update: null, remove: null};
         var constructor = methodMap.get("new");
-        if (constructor == null || constructor.expr == null) return result;
-
-        scanForLifecycles(constructor.expr, result);
+        if (constructor != null && constructor.expr != null) {
+            scanForLifecycles(constructor.expr, result);
+        }
         return result;
     }
 
-    function scanForLifecycles(e:Expr, result:{init:Expr, fixed_update:Expr, update:Expr, remove:Expr}):Void {
+    function scanForLifecycles(e:Expr, result:{init:Expr, update:Expr, fixed_update:Expr, remove:Expr}):Void {
         if (e == null) return;
 
         switch (e.expr) {
-            case ECall(func, params):
-                // Look for notifyOnInit, notifyOnFixedUpdate, notifyOnUpdate, notifyOnRemove
-                var funcName = getFuncName(func);
-                if (funcName != null && params.length > 0) {
-                    var callback = params[0];
-                    var body = resolveCallback(callback);
-
+            case ECall(callExpr, params):
+                var funcName = getFuncName(callExpr);
+                if (params.length > 0) {
+                    var body = resolveCallback(params[0]);
                     switch (funcName) {
-                        case "notifyOnInit":
-                            result.init = body;
-                        case "notifyOnFixedUpdate":
-                            result.fixed_update = body;
-                        case "notifyOnUpdate":
-                            result.update = body;
-                        case "notifyOnRemove":
-                            result.remove = body;
-                        case "notifyOnAdd", "notifyOnLateUpdate", "notifyOnRender", "notifyOnRender2D":
-                            Context.warning('N64: $funcName is not yet supported, code will be ignored', e.pos);
+                        case "notifyOnInit": result.init = body;
+                        case "notifyOnUpdate": result.update = body;
+                        case "notifyOnFixedUpdate": result.fixed_update = body;
+                        case "notifyOnRemove": result.remove = body;
+                        default:
                     }
                 }
-                // Recurse into call arguments
                 for (p in params) scanForLifecycles(p, result);
-
             case EBlock(exprs):
                 for (expr in exprs) scanForLifecycles(expr, result);
-
-            case EIf(_, eif, eelse):
-                scanForLifecycles(eif, result);
-                if (eelse != null) scanForLifecycles(eelse, result);
-
             case EFunction(_, f):
-                // Don't recurse into nested functions here
                 return;
-
             default:
                 e.iter(function(sub) scanForLifecycles(sub, result));
         }
@@ -484,169 +446,583 @@ class TraitExtractor {
             case EConst(CIdent(s)): s;
             case EField(_, field): field;
             default: null;
-        }
+        };
     }
 
     function resolveCallback(e:Expr):Expr {
         return switch (e.expr) {
-            // Inline function: function() { ... }
-            case EFunction(_, f):
-                f.expr;
-
-            // Method reference: this.onUpdate or onUpdate
+            case EFunction(_, f): f.expr;
             case EField(_, methodName):
                 var method = methodMap.get(methodName);
                 method != null ? method.expr : null;
-
             case EConst(CIdent(methodName)):
                 var method = methodMap.get(methodName);
                 method != null ? method.expr : null;
-
             default: null;
-        }
-    }
-
-    function emitFunction(body:Expr):EmitResult {
-        var emitter = new N64CEmitter(className, memberNames, vec4Exprs);
-        var code:Array<String> = [];
-
-        // Process statements
-        switch (body.expr) {
-            case EBlock(exprs):
-                for (expr in exprs) {
-                    var stmt = emitStatement(emitter, expr);
-                    if (stmt != null && stmt != "") {
-                        code.push(stmt);
-                    }
-                }
-            default:
-                var stmt = emitStatement(emitter, body);
-                if (stmt != null && stmt != "") {
-                    code.push(stmt);
-                }
-        }
-
-        return {
-            code: code,
-            needsObj: emitter.requiresObj(),
-            needsDt: emitter.requiresDt(),
-            inputButtons: emitter.getInputButtons(),
-            hasTransform: emitter.hasTransformOps(),
-            hasScene: emitter.hasSceneOps(),
-            targetScene: emitter.getTargetScene(),
-            needsInitialScale: emitter.requiresInitialScale()
         };
     }
 
-    function emitStatement(emitter:N64CEmitter, e:Expr):String {
+    // ========================================================================
+    // Event Extraction
+    // ========================================================================
+
+    function extractEvents(baseEventName:String, body:Expr):Void {
+        var statements:Array<IRNode> = [];
+
+        switch (body.expr) {
+            case EBlock(exprs):
+                for (expr in exprs) {
+                    processStatement(expr, statements);
+                }
+            default:
+                processStatement(body, statements);
+        }
+
+        // If there are remaining statements after event extraction, add to base event
+        if (statements.length > 0) {
+            if (!events.exists(baseEventName)) events.set(baseEventName, []);
+            for (stmt in statements) {
+                events.get(baseEventName).push(stmt);
+            }
+        }
+    }
+
+    function processStatement(e:Expr, statements:Array<IRNode>):Void {
+        if (e == null) return;
+
+        switch (e.expr) {
+            // Detect: if (gamepad.started("a")) { ... }
+            case EIf(econd, eif, eelse):
+                var inputEvent = detectInputEvent(econd);
+                if (inputEvent != null && eelse == null) {
+                    // Extract body as separate event
+                    var eventName = inputEvent.eventName;
+                    if (!events.exists(eventName)) events.set(eventName, []);
+                    extractEventBody(eif, events.get(eventName));
+
+                    // Track button and meta
+                    if (!Lambda.has(meta.buttons_used, inputEvent.button)) {
+                        meta.buttons_used.push(inputEvent.button);
+                    }
+                    meta.uses_input = true;
+                    return; // Don't add to statements
+                }
+                // Regular if - add to statements
+                statements.push(convertIfToIR(econd, eif, eelse));
+
+            default:
+                var node = exprToIR(e);
+                if (node != null && node.type != "skip") {
+                    statements.push(node);
+                }
+        }
+    }
+
+    function extractEventBody(body:Expr, eventNodes:Array<IRNode>):Void {
+        switch (body.expr) {
+            case EBlock(exprs):
+                for (expr in exprs) {
+                    var node = exprToIR(expr);
+                    if (node != null && node.type != "skip") {
+                        eventNodes.push(node);
+                    }
+                }
+            default:
+                var node = exprToIR(body);
+                if (node != null && node.type != "skip") {
+                    eventNodes.push(node);
+                }
+        }
+    }
+
+    function detectInputEvent(econd:Expr):{eventName:String, button:String} {
+        switch (econd.expr) {
+            case ECall(e, params):
+                switch (e.expr) {
+                    case EField(obj, method):
+                        switch (obj.expr) {
+                            case EConst(CIdent("gamepad")):
+                                if (method == "started" || method == "released" || method == "down") {
+                                    if (params.length > 0) {
+                                        var rawButton = extractStringArg(params[0]);
+                                        if (rawButton != null) {
+                                            var button = ButtonMap.normalize(rawButton);
+                                            var eventName = 'btn_${button}_$method';
+                                            return {eventName: eventName, button: button};
+                                        }
+                                    }
+                                }
+                            default:
+                        }
+                    default:
+                }
+            default:
+        }
+        return null;
+    }
+
+    function extractStringArg(e:Expr):String {
+        return switch (e.expr) {
+            case EConst(CString(s)): s;
+            case EConst(CIdent(s)): s;
+            default: null;
+        };
+    }
+
+    // ========================================================================
+    // AST → IR Conversion
+    // ========================================================================
+
+    function convertIfToIR(econd:Expr, eif:Expr, eelse:Expr):IRNode {
+        var thenNodes:Array<IRNode> = [];
+        extractEventBody(eif, thenNodes);
+
+        var elseNodes:Array<IRNode> = null;
+        if (eelse != null) {
+            elseNodes = [];
+            extractEventBody(eelse, elseNodes);
+        }
+
+        return {
+            type: "if",
+            children: [exprToIR(econd)],
+            props: {
+                then: [for (n in thenNodes) n],
+                else_: elseNodes != null ? [for (n in elseNodes) n] : null
+            }
+        };
+    }
+
+    function exprToIR(e:Expr):IRNode {
         if (e == null) return null;
 
-        // Handle control flow specially for proper formatting
-        switch (e.expr) {
-            case EIf(econd, eif, eelse):
-                return emitIfStatement(emitter, econd, eif, eelse);
+        return switch (e.expr) {
+            // Literals
+            case EConst(CInt(v)): { type: "int", value: Std.parseInt(v) };
+            case EConst(CFloat(v)): { type: "float", value: Std.parseFloat(v) };
+            case EConst(CString(v)): { type: "string", value: v };
+            case EConst(CIdent("true")): { type: "bool", value: true };
+            case EConst(CIdent("false")): { type: "bool", value: false };
+            case EConst(CIdent("null")): { type: "null" };
+            case EConst(CIdent(name)): resolveIdent(name);
 
-            case EWhile(econd, body, normalWhile):
-                return emitWhileStatement(emitter, econd, body, normalWhile);
+            // Binary ops
+            case EBinop(op, e1, e2):
+                var opStr = binopToString(op);
+                if (op == OpAssign) {
+                    { type: "assign", children: [exprToIR(e1), exprToIR(e2)] };
+                } else {
+                    { type: "binop", value: opStr, children: [exprToIR(e1), exprToIR(e2)] };
+                }
 
-            case EFor(it, body):
-                return emitForStatement(emitter, it, body);
+            // Unary ops
+            case EUnop(op, postFix, operand):
+                { type: "unop", value: unopToString(op), children: [exprToIR(operand)], props: { postfix: postFix } };
 
-            case ESwitch(expr, cases, edef):
-                return emitSwitchStatement(emitter, expr, cases, edef);
+            // Field access
+            case EField(obj, field):
+                convertFieldAccess(obj, field);
 
-            case ETry(expr, catches):
-                Context.error('N64: try/catch not supported', e.pos);
-                return emitStatement(emitter, expr);
+            // Call
+            case ECall(callExpr, params):
+                convertCall(callExpr, params);
 
+            // Parentheses
+            case EParenthesis(inner):
+                exprToIR(inner);
+
+            // New
+            case ENew(tp, params):
+                {
+                    type: "new",
+                    value: tp.name,
+                    args: [for (p in params) exprToIR(p)]
+                };
+
+            // Block
             case EBlock(exprs):
-                var stmts:Array<String> = [];
-                for (expr in exprs) {
-                    var s = emitStatement(emitter, expr);
-                    if (s != null && s != "") stmts.push(s);
+                { type: "block", children: [for (expr in exprs) exprToIR(expr)] };
+
+            // Local variable declaration: var x = value
+            case EVars(vars):
+                var varDecls:Array<IRNode> = [];
+                for (v in vars) {
+                    var varType = v.type != null ? complexTypeToString(v.type) : inferType(v.expr);
+                    var ctype = TypeMap.getCType(varType);
+                    if (ctype == null) ctype = "float"; // fallback for unknown types
+                    // Track this local variable's type
+                    localVarTypes.set(v.name, varType);
+                    varDecls.push({
+                        type: "var",
+                        value: v.name,
+                        props: { ctype: ctype, haxeType: varType },
+                        children: v.expr != null ? [exprToIR(v.expr)] : null
+                    });
                 }
-                return stmts.join(" ");
+                if (varDecls.length == 1) varDecls[0];
+                else { type: "block", children: varDecls };
 
             default:
-                var code = emitter.emitExpr(e);
-                if (code != "" && code != "/* unsupported expr */") {
-                    // Add semicolon if not already a block statement
-                    if (!code.endsWith("}") && !code.endsWith(";")) {
-                        code += ";";
-                    }
-                    return code;
+                { type: "skip" };
+        };
+    }
+
+    function inferType(e:Expr):String {
+        if (e == null) return "Dynamic";
+        switch (e.expr) {
+            case ENew(tp, _): return tp.name;
+            case EConst(CInt(_)): return "Int";
+            case EConst(CFloat(_)): return "Float";
+            case EConst(CString(_)): return "String";
+            case EField(innerObj, field):
+                // gamepad.leftStick / gamepad.rightStick -> Vec2
+                switch (innerObj.expr) {
+                    case EConst(CIdent("gamepad")):
+                        if (field == "leftStick" || field == "rightStick") {
+                            return "Vec2";
+                        }
+                    default:
                 }
-                return null;
+                return "Dynamic";
+            case ECall(callExpr, _):
+                // Try to infer return type from method calls
+                switch (callExpr.expr) {
+                    case EField(obj, method):
+                        // Vec method calls return Vec
+                        var objType = inferType(obj);
+                        if (StringTools.startsWith(objType, "Vec")) {
+                            if (method == "mult" || method == "add" || method == "sub" || method == "normalize") {
+                                return objType;
+                            }
+                        }
+                    default:
+                }
+                return "Dynamic";
+            default: return "Dynamic";
         }
     }
 
-    function emitIfStatement(emitter:N64CEmitter, econd:Expr, eif:Expr, eelse:Expr):String {
-        var cond = emitter.emitExpr(econd);
-        var thenCode = emitStatement(emitter, eif);
-
-        var result = 'if ($cond) { ${thenCode != null ? thenCode : ""} }';
-
-        if (eelse != null) {
-            var elseCode = emitStatement(emitter, eelse);
-            result += ' else { ${elseCode != null ? elseCode : ""} }';
+    function resolveIdent(name:String):IRNode {
+        if (name == "this" || name == "object") {
+            meta.uses_transform = true;
+            return { type: "ident", value: "object" };
         }
-
-        return result;
+        if (name == "dt") {
+            meta.uses_time = true;
+            return { type: "ident", value: "dt" };
+        }
+        if (memberNames.indexOf(name) >= 0) {
+            return { type: "member", value: name };
+        }
+        if (SkipList.shouldSkipMember(name) || SkipList.shouldSkipClass(name)) {
+            return { type: "skip" };
+        }
+        return { type: "ident", value: name };
     }
 
-    function emitWhileStatement(emitter:N64CEmitter, econd:Expr, body:Expr, normalWhile:Bool):String {
-        var cond = emitter.emitExpr(econd);
-        var bodyCode = emitStatement(emitter, body);
-
-        if (normalWhile) {
-            return 'while ($cond) { ${bodyCode != null ? bodyCode : ""} }';
-        } else {
-            return 'do { ${bodyCode != null ? bodyCode : ""} } while ($cond);';
-        }
-    }
-
-    function emitForStatement(emitter:N64CEmitter, it:Expr, body:Expr):String {
-        // Try to emit simple integer range for loops: for (i in 0...n)
-        switch (it.expr) {
-            case EBinop(OpInterval, startExpr, endExpr):
-                // Range-based for loop: for (i in start...end)
-                var start = emitter.emitExpr(startExpr);
-                var end = emitter.emitExpr(endExpr);
-                var bodyCode = emitStatement(emitter, body);
-                // Note: Haxe's ... is exclusive on the end, like C's < comparison
-                return 'for (int _i = $start; _i < $end; _i++) { ${bodyCode != null ? bodyCode : ""} }';
+    function convertFieldAccess(obj:Expr, field:String):IRNode {
+        // Handle transform access
+        switch (obj.expr) {
+            case EField(innerObj, "transform"):
+                meta.uses_transform = true;
+                return { type: "field", object: { type: "ident", value: "object" }, value: "transform." + field };
+            case EConst(CIdent("transform")):
+                meta.uses_transform = true;
+                return { type: "field", object: { type: "ident", value: "object" }, value: "transform." + field };
+            case EConst(CIdent("Time")):
+                if (field == "delta") {
+                    meta.uses_time = true;
+                    return { type: "ident", value: "dt" };
+                }
+            case EConst(CIdent("gamepad")):
+                // gamepad.leftStick, gamepad.rightStick
+                meta.uses_input = true;
+                if (field == "leftStick" || field == "rightStick") {
+                    return { type: "gamepad_stick", value: field };
+                }
             default:
-                Context.warning('N64: Complex for-loop iterator not yet supported, use for (i in 0...n) syntax', it.pos);
-                return "";
+        }
+
+        // Vec3 component access
+        if (field == "x" || field == "y" || field == "z") {
+            return { type: "field", object: exprToIR(obj), value: field };
+        }
+
+        return { type: "field", object: exprToIR(obj), value: field };
+    }
+
+    function getExprType(e:Expr):String {
+        // Try to infer type from expression
+        switch (e.expr) {
+            case ENew(tp, _):
+                return tp.name;  // new Vec3() -> "Vec3"
+            case EConst(CIdent(name)):
+                // Check local variables first
+                if (localVarTypes.exists(name)) {
+                    return localVarTypes.get(name);
+                }
+                // Check if it's a member with known type
+                if (members.exists(name)) {
+                    var m = members.get(name);
+                    return m.haxeType;
+                }
+            case EField(innerObj, field):
+                // gamepad.leftStick / gamepad.rightStick -> Vec2
+                switch (innerObj.expr) {
+                    case EConst(CIdent("gamepad")):
+                        if (field == "leftStick" || field == "rightStick") {
+                            return "Vec2";
+                        }
+                    default:
+                }
+            case ECall(callExpr, _):
+                // Vec method calls return Vec type
+                switch (callExpr.expr) {
+                    case EField(obj, method):
+                        var objType = getExprType(obj);
+                        if (objType != null && StringTools.startsWith(objType, "Vec")) {
+                            // mult, add, sub, normalize return the same Vec type
+                            if (method == "mult" || method == "add" || method == "sub" || method == "normalize") {
+                                return objType;
+                            }
+                        }
+                    default:
+                }
+            default:
+        }
+        return null;
+    }
+
+    function convertCall(callExpr:Expr, params:Array<Expr>):IRNode {
+        var args = [for (p in params) exprToIR(p)];
+
+        switch (callExpr.expr) {
+            case EField(obj, method):
+                switch (obj.expr) {
+                    // Scene.setActive("Level_02") -> scene_switch_to(SCENE_X)
+                    case EConst(CIdent("Scene")):
+                        return convertSceneCall(method, args);
+
+                    // transform.translate(...) -> it_translate(...)
+                    case EField(_, "transform"), EConst(CIdent("transform")):
+                        meta.uses_transform = true;
+                        return convertTransformCall(method, args);
+
+                    // Math.sin(x) -> sinf(x)
+                    case EConst(CIdent("Math")):
+                        return convertMathCall(method, args);
+
+                    // gamepad.started("a") or keyboard/mouse - should be extracted as event
+                    case EConst(CIdent("gamepad")), EConst(CIdent("keyboard")), EConst(CIdent("mouse")), EConst(CIdent("Input")):
+                        meta.uses_input = true;
+                        if (params.length > 0) {
+                            var btn = extractStringArg(params[0]);
+                            if (btn != null) {
+                                var normalized = ButtonMap.normalize(btn);
+                                if (!Lambda.has(meta.buttons_used, normalized)) {
+                                    meta.buttons_used.push(normalized);
+                                }
+                            }
+                        }
+                        return convertInputCall(method, args);
+
+                    // object.physics.applyForce(...) -> emit ready C call
+                    case EField(innerObj, "physics"):
+                        meta.uses_physics = true;
+                        var objIR = exprToIR(innerObj);
+                        return convertPhysicsCall(method, objIR, args);
+
+                    default:
+                        // Check if it's a Vec method call
+                        var objType = getExprType(obj);
+                        if (objType != null && StringTools.startsWith(objType, "Vec")) {
+                            var objIR = exprToIR(obj);
+                            return convertVecCall(method, objIR, args, objType);
+                        }
+                        return {
+                            type: "call",
+                            target: "unknown",
+                            method: method,
+                            object: exprToIR(obj),
+                            args: args
+                        };
+                }
+
+            case EConst(CIdent(funcName)):
+                return { type: "call", method: funcName, args: args };
+
+            default:
+                return { type: "skip" };
         }
     }
 
-    function emitSwitchStatement(emitter:N64CEmitter, e:Expr, cases:Array<Case>, edef:Null<Expr>):String {
-        var switchExpr = emitter.emitExpr(e);
-        var caseStrs:Array<String> = [];
+    function binopToString(op:Binop):String {
+        return switch (op) {
+            case OpAdd: "+";
+            case OpSub: "-";
+            case OpMult: "*";
+            case OpDiv: "/";
+            case OpMod: "%";
+            case OpEq: "==";
+            case OpNotEq: "!=";
+            case OpLt: "<";
+            case OpLte: "<=";
+            case OpGt: ">";
+            case OpGte: ">=";
+            case OpAnd: "&&";
+            case OpOr: "||";
+            case OpAssign: "=";
+            case OpAssignOp(op): binopToString(op) + "=";
+            default: "?";
+        };
+    }
 
-        for (c in cases) {
-            // Each case can have multiple values
-            for (v in c.values) {
-                var caseVal = emitter.emitExpr(v);
-                caseStrs.push('case $caseVal:');
+    function unopToString(op:Unop):String {
+        return switch (op) {
+            case OpNeg: "-";
+            case OpNot: "!";
+            case OpIncrement: "++";
+            case OpDecrement: "--";
+            default: "?";
+        };
+    }
+
+    // =========================================================================
+    // Physics call conversion - emit ready-to-use C
+    // =========================================================================
+
+    function convertPhysicsCall(method:String, objIR:IRNode, args:Array<IRNode>):IRNode {
+        // Physics calls become direct C function calls
+        // The object's rigid_body field is accessed, and vec args are passed by pointer
+        return {
+            type: "physics_call",
+            method: method,
+            object: objIR,
+            args: args
+        };
+    }
+
+    // =========================================================================
+    // Vec call conversion - emit ready-to-use C
+    // =========================================================================
+
+    function convertVecCall(method:String, objIR:IRNode, args:Array<IRNode>, vecType:String):IRNode {
+        // Vec method calls become inline C expressions
+        // vecType is "Vec2" or "Vec3"
+        return {
+            type: "vec_call",
+            method: method,
+            object: objIR,
+            args: args,
+            props: { vecType: vecType }
+        };
+    }
+
+    // =========================================================================
+    // Scene call conversion - Scene.setActive() -> scene_switch_to()
+    // =========================================================================
+
+    function convertSceneCall(method:String, args:Array<IRNode>):IRNode {
+        if (method == "setActive" && args.length > 0) {
+            var arg = args[0];
+            // If it's a string literal, convert to enum directly
+            if (arg.type == "string") {
+                var sceneName = Std.string(arg.value).toUpperCase();
+                return {
+                    type: "scene_call",
+                    method: "setActive",
+                    c_code: 'scene_switch_to(SCENE_$sceneName)'
+                };
             }
-            // Case body with proper statement handling
-            if (c.expr != null) {
-                var body = emitStatement(emitter, c.expr);
-                caseStrs.push('{ ${body != null ? body : ""} break; }');
-            } else {
-                caseStrs.push("break;");
+            // For any other expression (variable, member, concatenation, etc.),
+            // use runtime helper that maps string -> SceneId
+            return {
+                type: "scene_call",
+                method: "setActive",
+                args: args
+            };
+        }
+        return { type: "skip" };
+    }
+
+    // =========================================================================
+    // Transform call conversion - with coordinate swizzle Blender→N64
+    // Blender: X=right, Y=forward, Z=up
+    // N64/T3D: X=right, Y=up, Z=back (so Y→Z, Z→-Y)
+    // =========================================================================
+
+    function convertTransformCall(method:String, args:Array<IRNode>):IRNode {
+        return {
+            type: "transform_call",
+            method: method,
+            args: args
+        };
+    }
+
+    // =========================================================================
+    // Math call conversion - Math.sin() -> sinf(), etc.
+    // =========================================================================
+
+    function convertMathCall(method:String, args:Array<IRNode>):IRNode {
+        // Map Haxe Math methods to C math.h functions
+        var cFunc = switch (method) {
+            case "sin": "sinf";
+            case "cos": "cosf";
+            case "tan": "tanf";
+            case "asin": "asinf";
+            case "acos": "acosf";
+            case "atan": "atanf";
+            case "atan2": "atan2f";
+            case "sqrt": "sqrtf";
+            case "pow": "powf";
+            case "abs": "fabsf";
+            case "floor": "floorf";
+            case "ceil": "ceilf";
+            case "round": "roundf";
+            case "min": "fminf";
+            case "max": "fmaxf";
+            case "exp": "expf";
+            case "log": "logf";
+            default: method;
+        };
+        return {
+            type: "math_call",
+            value: cFunc,
+            args: args
+        };
+    }
+
+    // =========================================================================
+    // Input call conversion - gamepad.started("a") -> input_started(N64_BTN_A)
+    // =========================================================================
+
+    function convertInputCall(method:String, args:Array<IRNode>):IRNode {
+        // Map button to N64_BTN_* constant
+        var n64Button = "N64_BTN_A"; // default button
+        if (args.length > 0) {
+            var btnArg = args[0];
+            if (btnArg.type == "string") {
+                var btnName = btnArg.value;
+                n64Button = ButtonMap.toN64Const(btnName);
             }
         }
 
-        // Default case
-        if (edef != null) {
-            var defBody = emitStatement(emitter, edef);
-            caseStrs.push('default: { ${defBody != null ? defBody : ""} break; }');
-        }
+        // Emit ready-to-use C code
+        // Note: down() returns float (intensity 0.0-1.0), started/released return bool
+        var cCode = switch(method) {
+            case "started": 'input_started($n64Button)';
+            case "released": 'input_released($n64Button)';
+            case "down": 'input_down($n64Button)';
+            case "getStickX": 'input_stick_x()';
+            case "getStickY": 'input_stick_y()';
+            default: '0'; // unsupported input method - return neutral value
+        };
 
-        return 'switch ($switchExpr) { ${caseStrs.join(" ")} }';
+        return {
+            type: "input_call",
+            c_code: cCode,
+            method: method
+        };
     }
 }
 #end

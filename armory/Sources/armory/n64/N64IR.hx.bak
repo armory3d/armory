@@ -1,0 +1,368 @@
+package armory.n64;
+
+#if macro
+import armory.n64.N64Config;
+/**
+ * N64 Intermediate Representation (IR)
+ *
+ * This module defines the IR nodes that the macro emits.
+ * The IR describes WHAT operations to perform in N64-native format.
+ * Python codegen reads the JSON IR and generates C code with simple 1:1 mapping.
+ *
+ * IMPORTANT: All coordinates in IR are already in N64 format (X, Z, -Y swizzle applied).
+ * All float literals include proper C format suffix.
+ *
+ * Pipeline: Haxe Macro → IR (JSON) → Python → C code
+ */
+
+/**
+ * All possible IR node types.
+ * Each node represents a semantic operation that Python will convert to C.
+ */
+enum IRNodeType {
+    // Literals (values already formatted for C)
+    IntLit;             // Integer literal
+    FloatLit;           // Float literal with "f" suffix in value
+    StringLit;          // String literal
+    BoolLit;            // Boolean literal
+    NullLit;            // NULL literal
+
+    // Variables & References
+    MemberAccess;       // Access trait member: data->speed
+    LocalVar;           // Local variable reference
+    ParamRef;           // Parameter reference (obj, dt, data)
+
+    // Arithmetic & Logic
+    BinaryOp;           // +, -, *, /, %, &&, ||, ==, !=, <, >, <=, >=
+    UnaryOp;            // -, !, ++, --
+
+    // Control Flow
+    IfStmt;             // if/else
+    WhileLoop;          // while loop
+    ForLoop;            // for loop (range-based)
+
+    // Assignments
+    Assign;             // =
+    AssignOp;           // +=, -=, *=, /=
+
+    // Transform Operations (N64 coordinates - already swizzled)
+    TransformGetLoc;    // Get location array
+    TransformSetLoc;    // it_set_loc(transform, x, y, z) - N64 coords
+    TransformGetRot;    // Get rotation array
+    TransformSetRot;    // it_set_rot(transform, x, y, z, w) - N64 coords
+    TransformGetScale;  // Get scale array
+    TransformSetScale;  // it_set_scale(transform, x, y, z) - N64 coords
+    TransformTranslate; // it_translate(transform, x, y, z) - N64 coords
+    TransformRotate;    // it_rotate_axis(transform, ax, ay, az, angle) - N64 coords
+
+    // Input Operations (button names already mapped to N64)
+    InputDown;          // input_down(N64_BTN_X)
+    InputStarted;       // input_started(N64_BTN_X)
+    InputReleased;      // input_released(N64_BTN_X)
+    InputStickX;        // input_stick_x()
+    InputStickY;        // input_stick_y()
+
+    // Math Functions (names already mapped to C)
+    MathCall;           // sqrtf, sinf, cosf, fabsf, etc.
+
+    // Vector Operations (N64 format)
+    Vec3Create;         // (ArmVec3){x, y, z}
+    Vec3Component;      // vec.x, vec.y, vec.z
+    Vec3Length;         // vec3_length(vec)
+    Vec3Normalize;      // vec3_normalize(vec)
+    Vec3Dot;            // vec3_dot(a, b)
+    Vec3Add;            // vec3_add(a, b)
+    Vec3Sub;            // vec3_sub(a, b)
+    Vec3Mult;           // vec3_mult(vec, scalar)
+
+    // Scene Operations
+    SceneSet;           // scene_set_pending(SCENE_XXX) - literal scene name
+    SceneSetMember;     // scene_set_pending(data->memberName) - member variable
+
+    // Function Calls
+    FuncCall;           // Generic function call
+
+    // Blocks
+    Block;              // Sequence of statements
+
+    // Skip marker (for unsupported operations)
+    Skip;               // Emit nothing
+}
+
+/**
+ * IR Node - the basic unit of the intermediate representation.
+ * Serialized to JSON for Python to process.
+ */
+typedef IRNode = {
+    type: String,                    // IRNodeType as string
+    ?value: Dynamic,                 // Literal value, operator, etc.
+    ?children: Array<IRNode>,        // Child nodes (operands, body, etc.)
+    ?props: Dynamic                  // Additional properties (axis, button name, etc.)
+}
+
+/**
+ * Member IR - trait member definition
+ */
+typedef MemberIR = {
+    haxeType: String,                // Original Haxe type name
+    defaultValue: IRNode             // Default value as IR node (or null)
+}
+
+/**
+ * Trait flags - metadata about trait requirements
+ */
+typedef TraitFlags = {
+    needs_obj: Bool,
+    needs_dt: Bool,
+    has_transform: Bool,
+    has_scene: Bool
+}
+
+/**
+ * Trait IR - complete IR for a single trait
+ */
+typedef TraitIR = {
+    name: String,
+    needsData: Bool,
+    members: Map<String, MemberIR>,  // Member definitions
+    init: Array<IRNode>,             // on_ready code
+    fixedUpdate: Array<IRNode>,      // on_fixed_update code
+    update: Array<IRNode>,           // on_update code
+    remove: Array<IRNode>,           // on_remove code
+    events: Map<String, Array<IRNode>>,  // Event handlers: event_name -> [IRNodes]
+    flags: TraitFlags,
+    inputButtons: Array<String>,     // Buttons used (for N64 input setup)
+    targetScene: String              // Target scene name if Scene.setActive() is used
+}
+
+/**
+ * IR Builder - helper class to construct IR nodes
+ * All semantic transformations (coord swizzling, name mapping) happen here.
+ */
+class IRBuilder {
+    // === Literals (formatted for C) ===
+
+    public static function intLit(v: Int): IRNode {
+        return { type: "IntLit", value: Std.string(v) };
+    }
+
+    public static function floatLit(v: Float): IRNode {
+        var s = Std.string(v);
+        if (s.indexOf(".") == -1 && s.toLowerCase().indexOf("e") == -1) s += ".0";
+        return { type: "FloatLit", value: s + "f" };
+    }
+
+    public static function stringLit(v: String): IRNode {
+        return { type: "StringLit", value: v };
+    }
+
+    public static function boolLit(v: Bool): IRNode {
+        return { type: "BoolLit", value: v ? "true" : "false" };
+    }
+
+    public static function nullLit(): IRNode {
+        return { type: "NullLit", value: "NULL" };
+    }
+
+    // === Variables ===
+
+    public static function member(name: String): IRNode {
+        return { type: "MemberAccess", value: name };
+    }
+
+    public static function local(name: String): IRNode {
+        return { type: "LocalVar", value: name };
+    }
+
+    public static function param(name: String): IRNode {
+        return { type: "ParamRef", value: name };
+    }
+
+    // === Operators ===
+
+    public static function binop(op: String, left: IRNode, right: IRNode): IRNode {
+        return { type: "BinaryOp", value: op, children: [left, right] };
+    }
+
+    public static function unop(op: String, operand: IRNode, postfix: Bool = false): IRNode {
+        return { type: "UnaryOp", value: op, children: [operand], props: { postfix: postfix } };
+    }
+
+    // === Control Flow ===
+
+    public static function ifStmt(cond: IRNode, thenBlock: Array<IRNode>, ?elseBlock: Array<IRNode>): IRNode {
+        var node: IRNode = { type: "IfStmt", children: [cond], props: { then: thenBlock } };
+        if (elseBlock != null) node.props.else_ = elseBlock;
+        return node;
+    }
+
+    public static function whileLoop(cond: IRNode, body: Array<IRNode>): IRNode {
+        return { type: "WhileLoop", children: [cond], props: { body: body } };
+    }
+
+    public static function forLoop(varName: String, start: IRNode, end: IRNode, body: Array<IRNode>): IRNode {
+        return { type: "ForLoop", value: varName, children: [start, end], props: { body: body } };
+    }
+
+    // === Assignments ===
+
+    public static function assign(target: IRNode, value: IRNode): IRNode {
+        return { type: "Assign", children: [target, value] };
+    }
+
+    public static function assignOp(op: String, target: IRNode, value: IRNode): IRNode {
+        return { type: "AssignOp", value: op, children: [target, value] };
+    }
+
+    // === Transform Operations (convert Blender → N64 coords here) ===
+    // Blender: X right, Y forward, Z up
+    // N64:     X right, Y up, Z forward
+    // Conversion: (bx, by, bz) -> (bx, bz, -by)
+
+    public static function transformGetLoc(): IRNode {
+        return { type: "TransformGetLoc" };
+    }
+
+    public static function transformSetLoc(bx: IRNode, by: IRNode, bz: IRNode): IRNode {
+        return { type: "TransformSetLoc", children: [bx, bz, negateNode(by)] };
+    }
+
+    public static function transformGetRot(): IRNode {
+        return { type: "TransformGetRot" };
+    }
+
+    public static function transformSetRot(bx: IRNode, by: IRNode, bz: IRNode, w: IRNode): IRNode {
+        return { type: "TransformSetRot", children: [bx, bz, negateNode(by), w] };
+    }
+
+    public static function transformGetScale(): IRNode {
+        return { type: "TransformGetScale" };
+    }
+
+    public static function transformSetScale(bx: IRNode, by: IRNode, bz: IRNode): IRNode {
+        return { type: "TransformSetScale", children: [bx, bz, by] };
+    }
+
+    public static function transformTranslate(bx: IRNode, by: IRNode, bz: IRNode): IRNode {
+        return { type: "TransformTranslate", children: [bx, bz, negateNode(by)] };
+    }
+
+    public static function transformRotateAxis(axis: String, angle: IRNode): IRNode {
+        var axisVec = switch (axis) {
+            case "x": "1.0f, 0.0f, 0.0f";
+            case "y": "0.0f, 0.0f, -1.0f";
+            case "z": "0.0f, 1.0f, 0.0f";
+            default: "0.0f, 1.0f, 0.0f";
+        };
+        return { type: "TransformRotate", value: axisVec, children: [angle] };
+    }
+
+    public static function transformRotateVec(bax: IRNode, bay: IRNode, baz: IRNode, angle: IRNode): IRNode {
+        return { type: "TransformRotate", children: [bax, baz, negateNode(bay), angle] };
+    }
+
+    static function negateNode(node: IRNode): IRNode {
+        if (node.type == "FloatLit" || node.type == "IntLit") {
+            var val: String = node.value;
+            if (val.charAt(0) == "-") {
+                return { type: node.type, value: val.substr(1) };
+            } else {
+                return { type: node.type, value: "-" + val };
+            }
+        }
+        return { type: "UnaryOp", value: "-", children: [node], props: { postfix: false } };
+    }
+
+    // === Input Operations (map button names here) ===
+
+    public static function inputDown(button: String): IRNode {
+        return { type: "InputDown", value: N64Config.mapButton(button) };
+    }
+
+    public static function inputStarted(button: String): IRNode {
+        return { type: "InputStarted", value: N64Config.mapButton(button) };
+    }
+
+    public static function inputReleased(button: String): IRNode {
+        return { type: "InputReleased", value: N64Config.mapButton(button) };
+    }
+
+    public static function inputStickX(): IRNode {
+        return { type: "InputStickX" };
+    }
+
+    public static function inputStickY(): IRNode {
+        return { type: "InputStickY" };
+    }
+
+    // === Math Functions (map names here) ===
+
+    public static function mathCall(name: String, args: Array<IRNode>): IRNode {
+        var cName = N64Config.mapMathFunc(name);
+        return { type: "MathCall", value: cName, children: args };
+    }
+
+    // === Vector Operations ===
+
+    public static function vec3(x: IRNode, y: IRNode, z: IRNode): IRNode {
+        return { type: "Vec3Create", children: [x, y, z] };
+    }
+
+    public static function vec3Component(vec: IRNode, component: String): IRNode {
+        return { type: "Vec3Component", value: component, children: [vec] };
+    }
+
+    public static function vec3Length(vec: IRNode): IRNode {
+        return { type: "Vec3Length", children: [vec] };
+    }
+
+    public static function vec3Normalize(vec: IRNode): IRNode {
+        return { type: "Vec3Normalize", children: [vec] };
+    }
+
+    public static function vec3Dot(a: IRNode, b: IRNode): IRNode {
+        return { type: "Vec3Dot", children: [a, b] };
+    }
+
+    public static function vec3Add(a: IRNode, b: IRNode): IRNode {
+        return { type: "Vec3Add", children: [a, b] };
+    }
+
+    public static function vec3Sub(a: IRNode, b: IRNode): IRNode {
+        return { type: "Vec3Sub", children: [a, b] };
+    }
+
+    public static function vec3Mult(vec: IRNode, scalar: IRNode): IRNode {
+        return { type: "Vec3Mult", children: [vec, scalar] };
+    }
+
+    // === Scene Operations ===
+
+    public static function sceneSet(sceneName: String): IRNode {
+        return { type: "SceneSet", value: "SCENE_" + sceneName.toUpperCase() };
+    }
+
+    public static function sceneSetMember(memberName: String): IRNode {
+        // Scene set using a member variable (already typed as SceneId)
+        return { type: "SceneSetMember", value: memberName };
+    }
+
+    // === Function Calls ===
+
+    public static function funcCall(funcName: String, args: Array<IRNode>): IRNode {
+        return { type: "FuncCall", value: funcName, children: args };
+    }
+
+    // === Blocks ===
+
+    public static function block(statements: Array<IRNode>): IRNode {
+        return { type: "Block", children: statements };
+    }
+
+    // === Skip (for unsupported operations) ===
+
+    public static function skip(): IRNode {
+        return { type: "Skip" };
+    }
+}
+#end
