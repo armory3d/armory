@@ -112,11 +112,6 @@ def get_trait(trait_info: dict, trait_class: str) -> dict:
     return trait_info.get("traits", {}).get(trait_class, {})
 
 
-def get_ir_version(trait_info: dict) -> int:
-    """Get IR schema version."""
-    return trait_info.get("ir_version", 0)
-
-
 def trait_needs_data(trait_info: dict, trait_class: str) -> bool:
     """Check if trait has custom data members."""
     trait = get_trait(trait_info, trait_class)
@@ -225,30 +220,6 @@ def _extract_default_value(node, member_ctype: str) -> str:
                 y = _extract_default_value(args[1], "float")
                 return f"(ArmVec2){{{x}, {y}}}"
             return _get_type_default(member_ctype)
-
-        # Legacy IR types (PascalCase) - keep for backwards compat
-        elif node_type == "IntLit":
-            return str(value)
-        elif node_type == "FloatLit":
-            return str(value)
-        elif node_type == "StringLit":
-            if member_ctype == "SceneId":
-                return value  # Already "SCENE_XXX"
-            return f'"{value}"'
-        elif node_type == "BoolLit":
-            return "true" if value else "false"
-        elif node_type == "NullLit":
-            if member_ctype == "SceneId":
-                return "SCENE_UNKNOWN"
-            return "NULL"
-        elif node_type == "Vec3Create":
-            children = node.get("children", [])
-            if len(children) >= 3:
-                x = _extract_default_value(children[0], "float")
-                y = _extract_default_value(children[1], "float")
-                z = _extract_default_value(children[2], "float")
-                return f"(ArmVec3){{{x}, {y}, {z}}}"
-            return "(ArmVec3){0, 0, 0}"
 
     # Fallback: use as-is or get type default
     if isinstance(node, (int, float, str, bool)):

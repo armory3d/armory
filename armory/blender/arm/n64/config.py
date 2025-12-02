@@ -26,16 +26,6 @@ import math
 SCALE_FACTOR: float = 0.015
 
 
-def convert_position_str(x: str, y: str, z: str) -> str:
-    """Convert position strings from Blender to N64 coordinates."""
-    return f"{x}, {z}, -({y})"
-
-
-def convert_scale_str(x: str, y: str, z: str) -> str:
-    """Convert scale strings from Blender to N64 coordinates."""
-    return f"{x}, {z}, {y}"
-
-
 def convert_vec3_list(vec: List[float]) -> List[float]:
     """Convert a 3-element list from Blender to N64 coordinates."""
     return [vec[0], vec[2], -vec[1]]
