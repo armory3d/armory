@@ -5,6 +5,7 @@
 #include "../common/setting.h"
 #include "../collision/broadphase/broadphase.h"
 #include "../collision/broadphase/bruteforce_broadphase.h"
+#include "../collision/broadphase/spatial_hash_broadphase.h"
 #include "time_step.h"
 #include "rigidbody/rigid_body.h"
 #include "rigidbody/rigid_body_type.h"
@@ -18,11 +19,21 @@
 #define OIMO_MAX_RIGID_BODIES 32
 #define OIMO_MAX_SHAPES 64
 
+// Broadphase selection: define OIMO_USE_BRUTE_FORCE to use O(n²) brute force,
+// otherwise uses O(n) spatial hash (recommended for >8 bodies)
+#ifndef OIMO_USE_BRUTE_FORCE
+#define OIMO_USE_SPATIAL_HASH 1
+#endif
+
 typedef struct OimoWorld {
     OimoRigidBody* _rigidBodyList;
     OimoRigidBody* _rigidBodyListLast;
 
-    OimoBroadPhase _broadPhaseStorage;  // Embedded broadphase (brute force)
+#ifdef OIMO_USE_SPATIAL_HASH
+    OimoSpatialHashBroadPhase _broadPhaseStorage;  // Spatial hash broadphase
+#else
+    OimoBroadPhase _broadPhaseStorage;  // Brute force broadphase
+#endif
     OimoBroadPhase* _broadPhase;
     OimoContactManager _contactManager;
 
@@ -51,9 +62,14 @@ static inline void oimo_world_build_island(OimoWorld* world, OimoRigidBody* base
 
 // Initialize world - 1:1 from World constructor
 static inline void oimo_world_init(OimoWorld* world, OimoVec3* gravity) {
-    // Initialize broadphase (brute force)
+    // Initialize broadphase
+#ifdef OIMO_USE_SPATIAL_HASH
+    oimo_spatial_hash_broadphase_init(&world->_broadPhaseStorage);
+    world->_broadPhase = &world->_broadPhaseStorage.base;
+#else
     oimo_bruteforce_broadphase_init(&world->_broadPhaseStorage);
     world->_broadPhase = &world->_broadPhaseStorage;
+#endif
 
     // Initialize contact manager
     oimo_contact_manager_init(&world->_contactManager, world->_broadPhase);
@@ -268,6 +284,11 @@ static inline void oimo_world_solve_islands(OimoWorld* world) {
 
 // Step the simulation - 1:1 from World.step
 static inline void oimo_world_step(OimoWorld* world, OimoScalar timeStep) {
+    // Guard against zero or negative timestep
+    if (timeStep <= OIMO_EPSILON) {
+        return;
+    }
+
     if (world->_timeStep.dt > 0.0f) {
         world->_timeStep.dtRatio = timeStep / world->_timeStep.dt;
     }

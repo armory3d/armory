@@ -12,6 +12,9 @@ extern "C" {{
 
 #define FB_COUNT 3 {debug_hud_define}
 
+// Number of frames to keep transform dirty for double/triple buffering
+#define TRANSFORM_DIRTY_FRAMES 3
+
 struct OimoRigidBody;
 
 typedef struct {{ float x, y; }} ArmVec2;

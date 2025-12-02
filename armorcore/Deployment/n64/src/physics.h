@@ -23,16 +23,55 @@ void physics_set_gravity(float x, float y, float z);
 OimoVec3 physics_get_gravity(void);
 
 // Body creation (type: OIMO_RIGID_BODY_STATIC, DYNAMIC, KINEMATIC)
-void physics_create_box(ArmObject* obj, int type, float hx, float hy, float hz,
-                        float mass, float friction, float restitution);
-void physics_create_sphere(ArmObject* obj, int type, float radius,
-                           float mass, float friction, float restitution);
-void physics_create_capsule(ArmObject* obj, int type, float radius, float half_height,
-                            float mass, float friction, float restitution);
+// Full versions with collision group/mask
+// Returns true on success, false if pool exhausted
+bool physics_create_box_ex(ArmObject* obj, int type, float hx, float hy, float hz,
+                           float mass, float friction, float restitution,
+                           int collision_group, int collision_mask);
+bool physics_create_sphere_ex(ArmObject* obj, int type, float radius,
+                              float mass, float friction, float restitution,
+                              int collision_group, int collision_mask);
+bool physics_create_capsule_ex(ArmObject* obj, int type, float radius, float half_height,
+                               float mass, float friction, float restitution,
+                               int collision_group, int collision_mask);
+
+// Convenience wrappers with default collision group=1, mask=1
+static inline bool physics_create_box(ArmObject* obj, int type, float hx, float hy, float hz,
+                                      float mass, float friction, float restitution) {
+    return physics_create_box_ex(obj, type, hx, hy, hz, mass, friction, restitution, 1, 1);
+}
+static inline bool physics_create_sphere(ArmObject* obj, int type, float radius,
+                                         float mass, float friction, float restitution) {
+    return physics_create_sphere_ex(obj, type, radius, mass, friction, restitution, 1, 1);
+}
+static inline bool physics_create_capsule(ArmObject* obj, int type, float radius, float half_height,
+                                          float mass, float friction, float restitution) {
+    return physics_create_capsule_ex(obj, type, radius, half_height, mass, friction, restitution, 1, 1);
+}
+
 void physics_remove_body(ArmObject* obj);
 
 // Transform sync (call after physics_step)
 void physics_sync_object(ArmObject* obj);
+
+// Contact/collision info
+typedef struct PhysicsContactPair {
+    ArmObject* obj_a;
+    ArmObject* obj_b;
+    OimoVec3 pos_a;
+    OimoVec3 pos_b;
+    OimoVec3 normal;
+    float impulse;
+} PhysicsContactPair;
+
+// Callback for contact events
+typedef void (*PhysicsContactCallback)(const PhysicsContactPair* contact, void* user_data);
+
+// Set contact callback (called for each active contact after physics_step)
+void physics_set_contact_callback(PhysicsContactCallback callback, void* user_data);
+
+// Get contacts for a specific rigid body (returns count, fills contacts array up to max_contacts)
+int physics_get_contacts(OimoRigidBody* rb, PhysicsContactPair* contacts, int max_contacts);
 
 // Rigid body helpers
 static inline void physics_apply_force(OimoRigidBody* rb, const OimoVec3* force) {

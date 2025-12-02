@@ -134,9 +134,10 @@ static inline void oimo_broadphase_pool_pairs(OimoBroadPhase* bp) {
 /**
  * Brute-force broadphase: collect all overlapping pairs.
  * Simple O(n²) algorithm suitable for small numbers of objects.
+ * For spatial hash, this is overridden in oimo_broadphase_collect_pairs_dispatch.
  * Matches: collectPairs()
  */
-static inline void oimo_broadphase_collect_pairs(OimoBroadPhase* bp) {
+static inline void oimo_broadphase_collect_pairs_bruteforce(OimoBroadPhase* bp) {
     // Return previous pairs to pool
     oimo_broadphase_pool_pairs(bp);
 
@@ -154,6 +155,21 @@ static inline void oimo_broadphase_collect_pairs(OimoBroadPhase* bp) {
             p2 = p2->_next;
         }
         p1 = p1->_next;
+    }
+}
+
+// Forward declaration for spatial hash dispatch
+struct OimoSpatialHashBroadPhase;
+static inline void oimo_spatial_hash_collect_pairs(struct OimoSpatialHashBroadPhase* bp);
+
+/**
+ * Dispatch collect_pairs to the appropriate implementation
+ */
+static inline void oimo_broadphase_collect_pairs(OimoBroadPhase* bp) {
+    if (bp->_type == OIMO_BROADPHASE_SPATIAL_HASH) {
+        oimo_spatial_hash_collect_pairs((struct OimoSpatialHashBroadPhase*)bp);
+    } else {
+        oimo_broadphase_collect_pairs_bruteforce(bp);
     }
 }
 

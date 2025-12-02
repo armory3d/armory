@@ -270,16 +270,16 @@ static inline void oimo_rigid_body_integrate(OimoRigidBody* rb, OimoScalar dt) {
         return;
     }
 
-    // Limit linear velocity
+    // Limit linear velocity - use inv_sqrt to avoid sqrt in common case
     if (translationLengthSq > OIMO_MAX_TRANSLATION_PER_STEP * OIMO_MAX_TRANSLATION_PER_STEP) {
-        OimoScalar l = OIMO_MAX_TRANSLATION_PER_STEP / oimo_sqrt(translationLengthSq);
+        OimoScalar l = OIMO_MAX_TRANSLATION_PER_STEP * oimo_inv_sqrt(translationLengthSq);
         oimo_vec3_scale_eq(&rb->_vel, l);
         oimo_vec3_scale_eq(&translation, l);
     }
 
-    // Limit angular velocity
+    // Limit angular velocity - use inv_sqrt to avoid sqrt in common case
     if (rotationLengthSq > OIMO_MAX_ROTATION_PER_STEP * OIMO_MAX_ROTATION_PER_STEP) {
-        OimoScalar l = OIMO_MAX_ROTATION_PER_STEP / oimo_sqrt(rotationLengthSq);
+        OimoScalar l = OIMO_MAX_ROTATION_PER_STEP * oimo_inv_sqrt(rotationLengthSq);
         oimo_vec3_scale_eq(&rb->_angVel, l);
         oimo_vec3_scale_eq(&rotation, l);
     }

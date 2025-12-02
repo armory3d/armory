@@ -84,21 +84,30 @@ static int _oimo_box_pool_idx = 0;
 static int _oimo_capsule_pool_idx = 0;
 
 static inline OimoGeometry* oimo_geometry_sphere(OimoScalar radius) {
-    if (_oimo_sphere_pool_idx >= OIMO_MAX_GEOMETRIES) _oimo_sphere_pool_idx = 0;
+    if (_oimo_sphere_pool_idx >= OIMO_MAX_GEOMETRIES) {
+        debugf("Oimo: sphere geometry pool exhausted (%d max)\n", OIMO_MAX_GEOMETRIES);
+        return NULL;
+    }
     OimoSphereGeometry* g = &_oimo_sphere_pool[_oimo_sphere_pool_idx++];
     oimo_sphere_geometry_init(g, radius);
     return (OimoGeometry*)g;
 }
 
 static inline OimoGeometry* oimo_geometry_box(OimoScalar hw, OimoScalar hh, OimoScalar hd) {
-    if (_oimo_box_pool_idx >= OIMO_MAX_GEOMETRIES) _oimo_box_pool_idx = 0;
+    if (_oimo_box_pool_idx >= OIMO_MAX_GEOMETRIES) {
+        debugf("Oimo: box geometry pool exhausted (%d max)\n", OIMO_MAX_GEOMETRIES);
+        return NULL;
+    }
     OimoBoxGeometry* g = &_oimo_box_pool[_oimo_box_pool_idx++];
     oimo_box_geometry_init3(g, hw, hh, hd);
     return (OimoGeometry*)g;
 }
 
 static inline OimoGeometry* oimo_geometry_capsule(OimoScalar radius, OimoScalar halfHeight) {
-    if (_oimo_capsule_pool_idx >= OIMO_MAX_GEOMETRIES) _oimo_capsule_pool_idx = 0;
+    if (_oimo_capsule_pool_idx >= OIMO_MAX_GEOMETRIES) {
+        debugf("Oimo: capsule geometry pool exhausted (%d max)\n", OIMO_MAX_GEOMETRIES);
+        return NULL;
+    }
     OimoCapsuleGeometry* g = &_oimo_capsule_pool[_oimo_capsule_pool_idx++];
     oimo_capsule_geometry_init(g, radius, halfHeight);
     return (OimoGeometry*)g;
