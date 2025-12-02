@@ -960,6 +960,7 @@ def generate_trait_block(prefix: str, traits: List[Dict],
             # Use c_name from IR (e.g., "arm_player_player") for function names
             c_name = trait_ir.get("c_name", arm.utils.safesrc(trait_class).lower())
             events = trait_ir.get("events", {})
+            meta = trait_ir.get("meta", {})
 
             # Lifecycle hooks - use the full c_name
             lines.append(f'    {prefix}.traits[{t_idx}].on_ready = {c_name}_on_ready;')
@@ -981,22 +982,35 @@ def generate_trait_block(prefix: str, traits: List[Dict],
             else:
                 lines.append(f'    {prefix}.traits[{t_idx}].data = NULL;')
 
-            # Subscribe to button events
-            for event_name in events.keys():
-                if event_name.startswith("btn_"):
-                    # Parse event name: btn_<button>_<state>
-                    parts = event_name.split("_")
-                    if len(parts) >= 3:
-                        button = parts[1].upper()
-                        state = parts[2]  # started, released, down
-                        n64_btn = _map_button_to_n64(button)
+            # Subscribe to button events using structured metadata from macro
+            button_events = meta.get("button_events", [])
+            if button_events:
+                # Use pre-computed c_button and event_type from macro
+                for btn_evt in button_events:
+                    event_name = btn_evt.get("event_name", "")
+                    c_button = btn_evt.get("c_button", "N64_BTN_A")
+                    event_type = btn_evt.get("event_type", "started")
 
-                        # Use c_name for handler (e.g., "arm_player_player_btn_a_started")
-                        handler_name = f"{c_name}_{event_name}"
-                        obj_ptr = f"&{prefix}" if not prefix.startswith("&") else prefix
-                        data_ptr = f"{prefix}.traits[{t_idx}].data"
+                    handler_name = f"{c_name}_{event_name}"
+                    obj_ptr = f"&{prefix}" if not prefix.startswith("&") else prefix
+                    data_ptr = f"{prefix}.traits[{t_idx}].data"
 
-                        lines.append(f'    trait_events_subscribe_{state}({n64_btn}, {handler_name}, {obj_ptr}, {data_ptr});')
+                    lines.append(f'    trait_events_subscribe_{event_type}({c_button}, {handler_name}, {obj_ptr}, {data_ptr});')
+            else:
+                # Fallback: parse event names for backwards compatibility
+                for event_name in events.keys():
+                    if event_name.startswith("btn_"):
+                        parts = event_name.split("_")
+                        if len(parts) >= 3:
+                            button = parts[1].upper()
+                            state = parts[2]
+                            n64_btn = _map_button_to_n64(button)
+
+                            handler_name = f"{c_name}_{event_name}"
+                            obj_ptr = f"&{prefix}" if not prefix.startswith("&") else prefix
+                            data_ptr = f"{prefix}.traits[{t_idx}].data"
+
+                            lines.append(f'    trait_events_subscribe_{state}({n64_btn}, {handler_name}, {obj_ptr}, {data_ptr});')
     else:
         lines.append(f'    {prefix}.traits = NULL;')
 
@@ -1129,6 +1143,7 @@ def generate_scene_traits_block(traits: List[Dict], trait_info: dict, scene_name
         # Use c_name from IR (e.g., "arm_level_level") for function names
         c_name = trait_ir.get("c_name", arm.utils.safesrc(trait_class).lower())
         events = trait_ir.get("events", {})
+        meta = trait_ir.get("meta", {})
 
         lines.append(f'    scene_traits[{i}].on_ready = {c_name}_on_ready;')
         lines.append(f'    scene_traits[{i}].on_fixed_update = {c_name}_on_fixed_update;')
@@ -1148,17 +1163,27 @@ def generate_scene_traits_block(traits: List[Dict], trait_info: dict, scene_name
         else:
             lines.append(f'    scene_traits[{i}].data = NULL;')
 
-        # Subscribe to button events for scene-level traits
-        for event_name in events.keys():
-            if event_name.startswith("btn_"):
-                parts = event_name.split("_")
-                if len(parts) >= 3:
-                    button = parts[1].upper()
-                    state = parts[2]
-                    n64_btn = _map_button_to_n64(button)
-                    # Use c_name for handler (e.g., "arm_level_level_btn_a_started")
-                    handler_name = f"{c_name}_{event_name}"
-                    lines.append(f'    trait_events_subscribe_{state}({n64_btn}, {handler_name}, scene, scene_traits[{i}].data);')
+        # Subscribe to button events using structured metadata from macro
+        button_events = meta.get("button_events", [])
+        if button_events:
+            for btn_evt in button_events:
+                event_name = btn_evt.get("event_name", "")
+                c_button = btn_evt.get("c_button", "N64_BTN_A")
+                event_type = btn_evt.get("event_type", "started")
+
+                handler_name = f"{c_name}_{event_name}"
+                lines.append(f'    trait_events_subscribe_{event_type}({c_button}, {handler_name}, scene, scene_traits[{i}].data);')
+        else:
+            # Fallback: parse event names for backwards compatibility
+            for event_name in events.keys():
+                if event_name.startswith("btn_"):
+                    parts = event_name.split("_")
+                    if len(parts) >= 3:
+                        button = parts[1].upper()
+                        state = parts[2]
+                        n64_btn = _map_button_to_n64(button)
+                        handler_name = f"{c_name}_{event_name}"
+                        lines.append(f'    trait_events_subscribe_{state}({n64_btn}, {handler_name}, scene, scene_traits[{i}].data);')
 
     lines.append(f'    scene->traits = scene_traits;')
     return '\n'.join(lines)

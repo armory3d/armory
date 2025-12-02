@@ -175,12 +175,20 @@ typedef MemberIR = {
     defaultValue: IRNode
 }
 
+typedef ButtonEventMeta = {
+    event_name: String,      // e.g., "btn_a_started"
+    button: String,          // normalized button name, e.g., "a"
+    c_button: String,        // N64 constant, e.g., "N64_BTN_A"
+    event_type: String       // "started", "released", or "down"
+}
+
 typedef TraitMeta = {
     uses_input: Bool,
     uses_transform: Bool,
     uses_time: Bool,
     uses_physics: Bool,
-    buttons_used: Array<String>
+    buttons_used: Array<String>,
+    button_events: Array<ButtonEventMeta>  // structured button event info
 }
 
 typedef TraitIR = {
@@ -322,7 +330,8 @@ class TraitExtractor {
             uses_transform: false,
             uses_time: false,
             uses_physics: false,
-            buttons_used: []
+            buttons_used: [],
+            button_events: []
         };
     }
 
@@ -508,6 +517,13 @@ class TraitExtractor {
                     if (!Lambda.has(meta.buttons_used, inputEvent.button)) {
                         meta.buttons_used.push(inputEvent.button);
                     }
+                    // Add structured button event metadata
+                    meta.button_events.push({
+                        event_name: eventName,
+                        button: inputEvent.button,
+                        c_button: inputEvent.c_button,
+                        event_type: inputEvent.eventType
+                    });
                     meta.uses_input = true;
                     return; // Don't add to statements
                 }
@@ -539,7 +555,7 @@ class TraitExtractor {
         }
     }
 
-    function detectInputEvent(econd:Expr):{eventName:String, button:String} {
+    function detectInputEvent(econd:Expr):{eventName:String, button:String, c_button:String, eventType:String} {
         switch (econd.expr) {
             case ECall(e, params):
                 switch (e.expr) {
@@ -551,8 +567,14 @@ class TraitExtractor {
                                         var rawButton = extractStringArg(params[0]);
                                         if (rawButton != null) {
                                             var button = ButtonMap.normalize(rawButton);
+                                            var c_button = ButtonMap.toN64Const(rawButton);
                                             var eventName = 'btn_${button}_$method';
-                                            return {eventName: eventName, button: button};
+                                            return {
+                                                eventName: eventName,
+                                                button: button,
+                                                c_button: c_button,
+                                                eventType: method
+                                            };
                                         }
                                     }
                                 }
