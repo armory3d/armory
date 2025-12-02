@@ -54,6 +54,7 @@ int main(void)
         }}
 
         scene_on_update(current_scene, dt);
+        scene_on_late_update(current_scene, dt);
 
         SceneId pending = scene_get_pending();
         if (pending < SCENE_COUNT) {{

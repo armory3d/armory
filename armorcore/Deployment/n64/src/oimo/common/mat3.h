@@ -200,7 +200,7 @@ static inline OimoMat3 oimo_mat3_inverse(const OimoMat3* m) {
     OimoScalar d22 = m->e00 * m->e11 - m->e01 * m->e10;
 
     OimoScalar det = m->e00 * d00 - m->e01 * d01 + m->e02 * d02;
-    OimoScalar inv_det = (det != 0) ? (1.0f / det) : 0;
+    OimoScalar inv_det = (oimo_abs(det) > OIMO_EPSILON) ? (1.0f / det) : 0;
 
     return (OimoMat3){
          d00 * inv_det, -d10 * inv_det,  d20 * inv_det,

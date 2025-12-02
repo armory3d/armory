@@ -562,10 +562,12 @@ class TraitCodeGenerator:
         # ArmTraitReadyFn: (void *entity, void *data) - no dt
         # ArmTraitFixedUpdateFn: (void *entity, float dt, void *data)
         # ArmTraitUpdateFn: (void *entity, float dt, void *data)
+        # ArmTraitLateUpdateFn: (void *entity, float dt, void *data)
         # ArmTraitRemoveFn: (void *entity, void *data) - no dt
         decls.append(f"void {self.c_name}_on_ready(void* obj, void* data);")
         decls.append(f"void {self.c_name}_on_fixed_update(void* obj, float dt, void* data);")
         decls.append(f"void {self.c_name}_on_update(void* obj, float dt, void* data);")
+        decls.append(f"void {self.c_name}_on_late_update(void* obj, float dt, void* data);")
         decls.append(f"void {self.c_name}_on_remove(void* obj, void* data);")
         return decls
 
@@ -602,6 +604,14 @@ class TraitCodeGenerator:
         event_nodes = self.events.get("on_update", [])
         body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
         impl_lines.append(f"void {self.c_name}_on_update(void* obj, float dt, void* data) {{")
+        impl_lines.append(body)
+        impl_lines.append("}")
+        impl_lines.append("")
+
+        # on_late_update - dt before data (ArmTraitLateUpdateFn)
+        event_nodes = self.events.get("on_late_update", [])
+        body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
+        impl_lines.append(f"void {self.c_name}_on_late_update(void* obj, float dt, void* data) {{")
         impl_lines.append(body)
         impl_lines.append("}")
         impl_lines.append("")
@@ -955,6 +965,7 @@ def generate_trait_block(prefix: str, traits: List[Dict],
             lines.append(f'    {prefix}.traits[{t_idx}].on_ready = {c_name}_on_ready;')
             lines.append(f'    {prefix}.traits[{t_idx}].on_fixed_update = {c_name}_on_fixed_update;')
             lines.append(f'    {prefix}.traits[{t_idx}].on_update = {c_name}_on_update;')
+            lines.append(f'    {prefix}.traits[{t_idx}].on_late_update = {c_name}_on_late_update;')
             lines.append(f'    {prefix}.traits[{t_idx}].on_remove = {c_name}_on_remove;')
 
             # Trait data

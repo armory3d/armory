@@ -50,6 +50,53 @@ void trait_events_subscribe_down(N64Button btn, TraitEventHandler handler, void*
     subs->down_count++;
 }
 
+// Helper to remove subscription from an array by object pointer
+static void remove_sub_by_obj(TraitEventSub* subs, uint8_t* count, void* obj)
+{
+    for (int i = 0; i < *count; ) {
+        if (subs[i].obj == obj) {
+            // Shift remaining elements down
+            for (int j = i; j < *count - 1; j++) {
+                subs[j] = subs[j + 1];
+            }
+            (*count)--;
+        } else {
+            i++;
+        }
+    }
+}
+
+void trait_events_unsubscribe_started(N64Button btn, void* obj)
+{
+    if (btn >= N64_BTN_COUNT) return;
+    ButtonEventSubs* subs = &g_events.buttons[btn];
+    remove_sub_by_obj(subs->started, &subs->started_count, obj);
+}
+
+void trait_events_unsubscribe_released(N64Button btn, void* obj)
+{
+    if (btn >= N64_BTN_COUNT) return;
+    ButtonEventSubs* subs = &g_events.buttons[btn];
+    remove_sub_by_obj(subs->released, &subs->released_count, obj);
+}
+
+void trait_events_unsubscribe_down(N64Button btn, void* obj)
+{
+    if (btn >= N64_BTN_COUNT) return;
+    ButtonEventSubs* subs = &g_events.buttons[btn];
+    remove_sub_by_obj(subs->down, &subs->down_count, obj);
+}
+
+void trait_events_unsubscribe_all(void* obj)
+{
+    for (int btn = 0; btn < N64_BTN_COUNT; btn++) {
+        ButtonEventSubs* subs = &g_events.buttons[btn];
+        remove_sub_by_obj(subs->started, &subs->started_count, obj);
+        remove_sub_by_obj(subs->released, &subs->released_count, obj);
+        remove_sub_by_obj(subs->down, &subs->down_count, obj);
+    }
+}
+
 void trait_events_dispatch(float dt)
 {
     for (int btn = 0; btn < N64_BTN_COUNT; btn++) {

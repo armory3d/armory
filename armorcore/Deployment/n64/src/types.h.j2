@@ -21,12 +21,14 @@ typedef struct {{ float x, y, z, w; }} ArmVec4;
 typedef void (*ArmTraitReadyFn)(void *entity, void *data);
 typedef void (*ArmTraitFixedUpdateFn)(void *entity, float dt, void *data);
 typedef void (*ArmTraitUpdateFn)(void *entity, float dt, void *data);
+typedef void (*ArmTraitLateUpdateFn)(void *entity, float dt, void *data);
 typedef void (*ArmTraitRemoveFn)(void *entity, void *data);
 
 typedef struct {{
     ArmTraitReadyFn on_ready;
-	ArmTraitFixedUpdateFn on_fixed_update;
+    ArmTraitFixedUpdateFn on_fixed_update;
     ArmTraitUpdateFn on_update;
+    ArmTraitLateUpdateFn on_late_update;
     ArmTraitRemoveFn on_remove;
     void *data;
 }} ArmTrait;

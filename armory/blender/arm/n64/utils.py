@@ -5,6 +5,20 @@ import shutil
 import arm.utils
 
 
+# =============================================================================
+# N64 Build Configuration
+# =============================================================================
+# Internal config - can be expanded later with Blender UI or project file
+N64_CONFIG = {
+    'max_physics_bodies': 32,       # Max rigid bodies per scene
+    'max_button_subscribers': 16,   # Max traits subscribed to a single button event
+}
+
+def get_config(key, default=None):
+    """Get N64 config value."""
+    return N64_CONFIG.get(key, default)
+
+
 def copy_src(name, path=''):
     """Copy a source file from N64 deployment templates to build directory."""
     tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), path, name)

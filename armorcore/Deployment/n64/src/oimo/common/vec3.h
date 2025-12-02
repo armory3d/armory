@@ -129,7 +129,7 @@ static inline void oimo_vec3_negate_to(OimoVec3* out, const OimoVec3* v) {
 static inline void oimo_vec3_normalize_to(OimoVec3* out, const OimoVec3* v) {
     OimoScalar len_sq = v->x * v->x + v->y * v->y + v->z * v->z;
     if (len_sq > 0) {
-        OimoScalar inv_len = 1.0f / sqrtf(len_sq);
+        OimoScalar inv_len = 1.0f / oimo_sqrt(len_sq);
         out->x = v->x * inv_len;
         out->y = v->y * inv_len;
         out->z = v->z * inv_len;

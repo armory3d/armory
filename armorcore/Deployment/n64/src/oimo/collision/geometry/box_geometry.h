@@ -207,7 +207,7 @@ static inline int oimo_box_geometry_ray_cast_local(
 
     // No valid intersection
     if (tmin > tmax) return 0;
-    if (tmin == 0) return 0;  // Ray starts inside
+    if (tmin <= OIMO_EPSILON) return 0;  // Ray starts inside
 
     // Compute hit position
     hit->position.x = p1x + dx * tmin;

@@ -76,7 +76,7 @@ static inline OimoScalar oimo_safe_acos(OimoScalar x) {
 // Inverse square root (1 / sqrt(x))
 static inline OimoScalar oimo_inv_sqrt(OimoScalar x) {
     if (x <= 0) return 0;
-    return 1.0f / sqrtf(x);
+    return 1.0f / oimo_sqrt(x);
 }
 
 // Sign function: returns -1, 0, or 1

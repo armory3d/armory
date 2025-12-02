@@ -266,7 +266,7 @@ static inline void oimo_rigid_body_integrate(OimoRigidBody* rb, OimoScalar dt) {
     OimoScalar translationLengthSq = oimo_vec3_len_sq(translation);
     OimoScalar rotationLengthSq = oimo_vec3_len_sq(rotation);
 
-    if (translationLengthSq == 0 && rotationLengthSq == 0) {
+    if (translationLengthSq <= OIMO_EPSILON && rotationLengthSq <= OIMO_EPSILON) {
         return;
     }
 
@@ -292,7 +292,7 @@ static inline void oimo_rigid_body_integrate_pseudo_velocity(OimoRigidBody* rb) 
     OimoScalar pseudoVelLengthSq = oimo_vec3_len_sq(rb->_pseudoVel);
     OimoScalar angPseudoVelLengthSq = oimo_vec3_len_sq(rb->_angPseudoVel);
 
-    if (pseudoVelLengthSq == 0 && angPseudoVelLengthSq == 0) {
+    if (pseudoVelLengthSq <= OIMO_EPSILON && angPseudoVelLengthSq <= OIMO_EPSILON) {
         return;
     }
 

@@ -3,6 +3,7 @@
 #ifndef OIMO_DYNAMICS_CONTACT_MANAGER_H
 #define OIMO_DYNAMICS_CONTACT_MANAGER_H
 
+#include <libdragon.h>
 #include "../collision/broadphase/broadphase.h"
 #include "../collision/broadphase/proxy_pair.h"
 #include "../collision/narrowphase/collision_matrix.h"
@@ -23,6 +24,7 @@ typedef struct OimoContactManager {
     OimoContact _contactPool[OIMO_MAX_CONTACTS];
     int _contactPoolUsed;
     OimoContact* _freeList;
+    bool _poolOverflowWarned;
 
     OimoBroadPhase* _broadPhase;
     OimoCollisionMatrix _collisionMatrix;
@@ -38,6 +40,7 @@ static inline void oimo_contact_manager_init(OimoContactManager* cm, OimoBroadPh
     // Initialize contact pool
     cm->_contactPoolUsed = 0;
     cm->_freeList = NULL;
+    cm->_poolOverflowWarned = false;
     for (int i = 0; i < OIMO_MAX_CONTACTS; i++) {
         oimo_contact_init(&cm->_contactPool[i]);
     }
@@ -56,6 +59,10 @@ static inline OimoContact* oimo_contact_manager_alloc_contact(OimoContactManager
         oimo_contact_init(c);
         return c;
     }
+    if (!cm->_poolOverflowWarned) {
+        debugf("Oimo: contact pool exhausted (%d max). Increase OIMO_MAX_CONTACTS.\n", OIMO_MAX_CONTACTS);
+        cm->_poolOverflowWarned = true;
+    }
     return NULL; // Pool exhausted
 }
 
@@ -63,6 +70,7 @@ static inline OimoContact* oimo_contact_manager_alloc_contact(OimoContactManager
 static inline void oimo_contact_manager_free_contact(OimoContactManager* cm, OimoContact* c) {
     c->_next = cm->_freeList;
     cm->_freeList = c;
+    cm->_poolOverflowWarned = false;
 }
 
 // Check if two shapes should collide - 1:1 from ContactManager.shouldCollide

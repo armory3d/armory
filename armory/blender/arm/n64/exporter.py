@@ -485,8 +485,20 @@ class N64Exporter:
         if not self.has_physics:
             return
 
-        # Copy physics wrapper
-        n64_utils.copy_src('physics.c', 'src')
+        # Render physics.c template
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'physics.c.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'physics.c')
+
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
+
+        max_physics_bodies = n64_utils.get_config('max_physics_bodies', 32)
+        output = tmpl_content.format(max_physics_bodies=max_physics_bodies)
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
+
+        # Copy physics header
         n64_utils.copy_src('physics.h', 'src')
 
         # Copy oimo library (header-only physics engine)
@@ -687,7 +699,19 @@ class N64Exporter:
 
 
     def write_iron(self):
-        n64_utils.copy_src('iron/trait_events.h', 'src')
+        # Render trait_events.h template
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'iron', 'trait_events.h.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'iron', 'trait_events.h')
+
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
+
+        max_button_subscribers = n64_utils.get_config('max_button_subscribers', 16)
+        output = tmpl_content.format(max_button_subscribers=max_button_subscribers)
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
+
         n64_utils.copy_src('iron/trait_events.c', 'src')
         n64_utils.copy_src('iron/object/transform.h', 'src')
         n64_utils.copy_src('iron/object/transform.c', 'src')

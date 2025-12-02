@@ -65,7 +65,7 @@ static inline void oimo_pgs_contact_solver_pre_solve_velocity(
         md->invMAngN2 = oimo_mat3_mul_vec3(&invI2, j->ang2);
 
         md->massN = invM1 + invM2 + oimo_vec3_dot(md->invMAngN1, j->ang1) + oimo_vec3_dot(md->invMAngN2, j->ang2);
-        if (md->massN != 0.0f) md->massN = 1.0f / md->massN;
+        if (oimo_abs(md->massN) > OIMO_EPSILON) md->massN = 1.0f / md->massN;
 
         // Tangent/binormal mass
         OimoJacobianRow* jt = &row->jacobianT;
@@ -86,7 +86,7 @@ static inline void oimo_pgs_contact_solver_pre_solve_velocity(
         OimoScalar invMassTB11 = invM1 + invM2 + oimo_vec3_dot(md->invMAngB1, jb->ang1) + oimo_vec3_dot(md->invMAngB2, jb->ang2);
 
         OimoScalar invDet = invMassTB00 * invMassTB11 - invMassTB01 * invMassTB10;
-        if (invDet != 0.0f) invDet = 1.0f / invDet;
+        if (oimo_abs(invDet) > OIMO_EPSILON) invDet = 1.0f / invDet;
 
         md->massTB00 = invMassTB11 * invDet;
         md->massTB01 = -invMassTB01 * invDet;
@@ -184,7 +184,7 @@ static inline void oimo_pgs_contact_solver_solve_velocity(OimoPgsContactConstrai
 
         // Cone friction
         OimoScalar maxImpulse = row->friction * imp->impulseN;
-        if (maxImpulse == 0.0f) {
+        if (oimo_abs(maxImpulse) <= OIMO_EPSILON) {
             imp->impulseT = 0.0f;
             imp->impulseB = 0.0f;
         } else {
@@ -269,7 +269,7 @@ static inline void oimo_pgs_contact_solver_update_position_data(OimoPgsContactCo
         md->invMAngN2 = oimo_mat3_mul_vec3(&invI2, j->ang2);
 
         md->massN = invM1 + invM2 + oimo_vec3_dot(md->invMAngN1, j->ang1) + oimo_vec3_dot(md->invMAngN2, j->ang2);
-        if (md->massN != 0.0f) md->massN = 1.0f / md->massN;
+        if (oimo_abs(md->massN) > OIMO_EPSILON) md->massN = 1.0f / md->massN;
     }
 }
 

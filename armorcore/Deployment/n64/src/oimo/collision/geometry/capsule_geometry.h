@@ -37,7 +37,7 @@ static inline void oimo_capsule_geometry_init(OimoCapsuleGeometry* capsule, Oimo
 
     // Inertia coefficient calculation (matches OimoPhysics)
     // These are I/m values (inertia divided by mass)
-    OimoScalar invVolume = capsule->base.volume == 0 ? 0 : 1.0f / capsule->base.volume;
+    OimoScalar invVolume = (oimo_abs(capsule->base.volume) <= OIMO_EPSILON) ? 0.0f : (1.0f / capsule->base.volume);
 
     // Iyy: rotation around the capsule's long axis (Y)
     OimoScalar inertiaY = invVolume * (

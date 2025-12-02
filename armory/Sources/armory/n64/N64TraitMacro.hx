@@ -355,6 +355,9 @@ class TraitExtractor {
         if (lifecycles.fixed_update != null) {
             extractEvents("on_fixed_update", lifecycles.fixed_update);
         }
+        if (lifecycles.late_update != null) {
+            extractEvents("on_late_update", lifecycles.late_update);
+        }
         if (lifecycles.remove != null) {
             extractEvents("on_remove", lifecycles.remove);
         }
@@ -406,8 +409,8 @@ class TraitExtractor {
         };
     }
 
-    function findLifecycles():{init:Expr, update:Expr, fixed_update:Expr, remove:Expr} {
-        var result = {init: null, update: null, fixed_update: null, remove: null};
+    function findLifecycles():{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr} {
+        var result = {init: null, update: null, fixed_update: null, late_update: null, remove: null};
         var constructor = methodMap.get("new");
         if (constructor != null && constructor.expr != null) {
             scanForLifecycles(constructor.expr, result);
@@ -415,7 +418,7 @@ class TraitExtractor {
         return result;
     }
 
-    function scanForLifecycles(e:Expr, result:{init:Expr, update:Expr, fixed_update:Expr, remove:Expr}):Void {
+    function scanForLifecycles(e:Expr, result:{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr}):Void {
         if (e == null) return;
 
         switch (e.expr) {
@@ -427,6 +430,7 @@ class TraitExtractor {
                         case "notifyOnInit": result.init = body;
                         case "notifyOnUpdate": result.update = body;
                         case "notifyOnFixedUpdate": result.fixed_update = body;
+                        case "notifyOnLateUpdate": result.late_update = body;
                         case "notifyOnRemove": result.remove = body;
                         default:
                     }

@@ -7,47 +7,47 @@ static OimoWorld g_world;
 static bool g_paused = false;
 static bool g_initialized = false;
 
-#define MAX_PHYSICS_BODIES 32
+#define MAX_PHYSICS_BODIES {max_physics_bodies}
 static OimoRigidBody g_bodies[MAX_PHYSICS_BODIES];
 static bool g_body_used[MAX_PHYSICS_BODIES];
 static OimoShape g_shapes[MAX_PHYSICS_BODIES];
 
-typedef union {
+typedef union {{
     OimoSphereGeometry sphere;
     OimoBoxGeometry box;
     OimoCapsuleGeometry capsule;
-} GeometryUnion;
+}} GeometryUnion;
 static GeometryUnion g_geometries[MAX_PHYSICS_BODIES];
 
 // Pool helpers
-static OimoRigidBody* alloc_body(void) {
-    for (int i = 0; i < MAX_PHYSICS_BODIES; i++) {
-        if (!g_body_used[i]) {
+static OimoRigidBody* alloc_body(void) {{
+    for (int i = 0; i < MAX_PHYSICS_BODIES; i++) {{
+        if (!g_body_used[i]) {{
             g_body_used[i] = true;
             return &g_bodies[i];
-        }
-    }
+        }}
+    }}
     return NULL;
-}
+}}
 
-static void free_body(OimoRigidBody* rb) {
-    for (int i = 0; i < MAX_PHYSICS_BODIES; i++) {
-        if (&g_bodies[i] == rb) {
+static void free_body(OimoRigidBody* rb) {{
+    for (int i = 0; i < MAX_PHYSICS_BODIES; i++) {{
+        if (&g_bodies[i] == rb) {{
             g_body_used[i] = false;
             return;
-        }
-    }
-}
+        }}
+    }}
+}}
 
-static int get_body_index(OimoRigidBody* rb) {
-    for (int i = 0; i < MAX_PHYSICS_BODIES; i++) {
+static int get_body_index(OimoRigidBody* rb) {{
+    for (int i = 0; i < MAX_PHYSICS_BODIES; i++) {{
         if (&g_bodies[i] == rb) return i;
-    }
+    }}
     return -1;
-}
+}}
 
 // World management
-void physics_init(void) {
+void physics_init(void) {{
     if (g_initialized) return;
 
     memset(g_bodies, 0, sizeof(g_bodies));
@@ -60,50 +60,50 @@ void physics_init(void) {
 
     g_paused = false;
     g_initialized = true;
-}
+}}
 
-void physics_shutdown(void) {
+void physics_shutdown(void) {{
     if (!g_initialized) return;
     physics_reset();
     g_initialized = false;
-}
+}}
 
-void physics_reset(void) {
+void physics_reset(void) {{
     if (!g_initialized) return;
 
-    for (int i = 0; i < MAX_PHYSICS_BODIES; i++) {
-        if (g_body_used[i]) {
+    for (int i = 0; i < MAX_PHYSICS_BODIES; i++) {{
+        if (g_body_used[i]) {{
             oimo_world_remove_rigid_body(&g_world, &g_bodies[i]);
             g_body_used[i] = false;
-        }
-    }
+        }}
+    }}
 
     OimoVec3 gravity = g_world._gravity;
     oimo_world_init(&g_world, &gravity);
-}
+}}
 
-void physics_step(float dt) {
+void physics_step(float dt) {{
     if (!g_initialized || g_paused) return;
     oimo_world_step(&g_world, dt);
-}
+}}
 
-void physics_pause(void) { g_paused = true; }
-void physics_resume(void) { g_paused = false; }
-OimoWorld* physics_get_world(void) { return &g_world; }
+void physics_pause(void) {{ g_paused = true; }}
+void physics_resume(void) {{ g_paused = false; }}
+OimoWorld* physics_get_world(void) {{ return &g_world; }}
 
 // Gravity
-void physics_set_gravity(float x, float y, float z) {
+void physics_set_gravity(float x, float y, float z) {{
     if (!g_initialized) return;
     oimo_world_set_gravity(&g_world, oimo_vec3(x, y, z));
-}
+}}
 
-OimoVec3 physics_get_gravity(void) {
+OimoVec3 physics_get_gravity(void) {{
     return g_initialized ? oimo_world_get_gravity(&g_world) : oimo_vec3_zero();
-}
+}}
 
 // Body creation
 void physics_create_box(ArmObject* obj, int type, float hx, float hy, float hz,
-                        float mass, float friction, float restitution) {
+                        float mass, float friction, float restitution) {{
     if (!g_initialized || !obj) return;
 
     OimoRigidBody* rb = alloc_body();
@@ -134,18 +134,18 @@ void physics_create_box(ArmObject* obj, int type, float hx, float hy, float hz,
     oimo_rigid_body_add_shape(rb, &g_shapes[idx]);
 
     // Set mass data like OimoPhysics does (1:1 with oimo_module RigidBody.hx)
-    if (type == OIMO_RIGID_BODY_DYNAMIC) {
+    if (type == OIMO_RIGID_BODY_DYNAMIC) {{
         rb->_mass = mass;
         rb->_localInertia = oimo_mat3(0.1f, 0, 0, 0, 0.1f, 0, 0, 0, 0.1f);  // angularFriction=0.1
         oimo_rigid_body_complete_mass_data(rb);
-    }
+    }}
 
     oimo_world_add_rigid_body(&g_world, rb);
     obj->rigid_body = rb;
-}
+}}
 
 void physics_create_sphere(ArmObject* obj, int type, float radius,
-                           float mass, float friction, float restitution) {
+                           float mass, float friction, float restitution) {{
     if (!g_initialized || !obj) return;
 
     OimoRigidBody* rb = alloc_body();
@@ -177,26 +177,26 @@ void physics_create_sphere(ArmObject* obj, int type, float radius,
     oimo_rigid_body_add_shape(rb, &g_shapes[idx]);
 
     // Set mass data like OimoPhysics does (1:1 with oimo_module RigidBody.hx)
-    if (type == OIMO_RIGID_BODY_DYNAMIC) {
+    if (type == OIMO_RIGID_BODY_DYNAMIC) {{
         rb->_mass = mass;
         rb->_localInertia = oimo_mat3(0.1f, 0, 0, 0, 0.1f, 0, 0, 0, 0.1f);  // angularFriction=0.1
         oimo_rigid_body_complete_mass_data(rb);
-    }
+    }}
 
     oimo_world_add_rigid_body(&g_world, rb);
     obj->rigid_body = rb;
-}
+}}
 
-void physics_remove_body(ArmObject* obj) {
+void physics_remove_body(ArmObject* obj) {{
     if (!g_initialized || !obj || !obj->rigid_body) return;
 
     oimo_world_remove_rigid_body(&g_world, obj->rigid_body);
     free_body(obj->rigid_body);
     obj->rigid_body = NULL;
-}
+}}
 
 void physics_create_capsule(ArmObject* obj, int type, float radius, float half_height,
-                            float mass, float friction, float restitution) {
+                            float mass, float friction, float restitution) {{
     if (!g_initialized || !obj) return;
 
     OimoRigidBody* rb = alloc_body();
@@ -230,18 +230,18 @@ void physics_create_capsule(ArmObject* obj, int type, float radius, float half_h
     oimo_rigid_body_add_shape(rb, &g_shapes[idx]);
 
     // Set mass data like OimoPhysics does (1:1 with oimo_module RigidBody.hx)
-    if (type == OIMO_RIGID_BODY_DYNAMIC) {
+    if (type == OIMO_RIGID_BODY_DYNAMIC) {{
         rb->_mass = mass;
         rb->_localInertia = oimo_mat3(0.1f, 0, 0, 0, 0.1f, 0, 0, 0, 0.1f);  // angularFriction=0.1
         oimo_rigid_body_complete_mass_data(rb);
-    }
+    }}
 
     oimo_world_add_rigid_body(&g_world, rb);
     obj->rigid_body = rb;
-}
+}}
 
 // Transform sync
-void physics_sync_object(ArmObject* obj) {
+void physics_sync_object(ArmObject* obj) {{
     if (!obj || !obj->rigid_body) return;
 
     OimoRigidBody* rb = obj->rigid_body;
@@ -259,5 +259,5 @@ void physics_sync_object(ArmObject* obj) {
     obj->transform.rot[3] = rot.w;
 
     obj->transform.dirty = 3;
-}
+}}
 

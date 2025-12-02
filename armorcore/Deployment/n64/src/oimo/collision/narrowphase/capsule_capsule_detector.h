@@ -87,11 +87,11 @@ static inline void oimo_capsule_capsule_detector_detect(
     // closest points: p1 + t1 * d1, p2 + t2 * d2
     OimoScalar t1, t2;
 
-    if (d11 == 0 && d22 == 0) {
+    if (oimo_abs(d11) <= OIMO_EPSILON && oimo_abs(d22) <= OIMO_EPSILON) {
         // point vs point
         t1 = 0;
         t2 = 0;
-    } else if (d11 == 0) {
+    } else if (oimo_abs(d11) <= OIMO_EPSILON) {
         // point vs segment
         t1 = 0;
         // t2 = t1 * d12 + p12d2; <- t1 = 0
@@ -99,7 +99,7 @@ static inline void oimo_capsule_capsule_detector_detect(
         if (t2 < 0) t2 = 0;
         else if (t2 > d22) t2 = 1;
         else t2 /= d22;
-    } else if (d22 == 0) {
+    } else if (oimo_abs(d22) <= OIMO_EPSILON) {
         // segment vs point
         t2 = 0;
         // t1 = t2 * d12 + p21d1; <- t2 = 0
@@ -110,7 +110,7 @@ static inline void oimo_capsule_capsule_detector_detect(
     } else {
         OimoScalar det = d11 * d22 - d12 * d12;
 
-        if (det == 0) {
+        if (oimo_abs(det) <= OIMO_EPSILON) {
             // d1 is parallel to d2. use 0 for t1
             t1 = 0;
         } else {
