@@ -56,7 +56,7 @@ static inline OimoScalar oimo_atan(OimoScalar x) {
 }
 
 static inline OimoScalar oimo_atan2(OimoScalar y, OimoScalar x) {
-    return atan2f(y, x);  // No fastmath version available
+    return fm_atan2f(y, x);
 }
 
 // Returns asin(clamp(x, -1, 1)) - never returns NaN
