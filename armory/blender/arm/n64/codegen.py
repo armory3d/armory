@@ -397,6 +397,7 @@ class IREmitter:
             return f"{{ OimoVec3 _vel = (OimoVec3){{{vec_expr}.x, {vec_expr}.z, -({vec_expr}.y)}}; physics_set_linear_velocity({obj}->rigid_body, &_vel); }}"
 
         if method == "getLinearVelocity":
+            # Returns OimoVec3 (structurally identical to ArmVec3: {x, y, z})
             return f"physics_get_linear_velocity({obj}->rigid_body)"
 
         return ""
@@ -877,12 +878,9 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
 
     return {
         "trait_data_structs": "\n\n".join(trait_data_structs),
-        "trait_data_externs": "",  # Currently unused, reserved for future
         "trait_declarations": "\n".join(trait_declarations),
         "event_handler_declarations": "\n".join(event_handler_declarations),
-        "trait_data_definitions": "",  # Currently unused, reserved for future
         "trait_implementations": "\n".join(trait_implementations),
-        "event_handler_implementations": "",  # Currently unused, reserved for future
     }
 
 
@@ -1110,6 +1108,7 @@ def generate_scene_traits_block(traits: List[Dict], trait_info: dict, scene_name
         lines.append(f'    scene_traits[{i}].on_ready = {c_name}_on_ready;')
         lines.append(f'    scene_traits[{i}].on_fixed_update = {c_name}_on_fixed_update;')
         lines.append(f'    scene_traits[{i}].on_update = {c_name}_on_update;')
+        lines.append(f'    scene_traits[{i}].on_late_update = {c_name}_on_late_update;')
         lines.append(f'    scene_traits[{i}].on_remove = {c_name}_on_remove;')
 
         from arm.n64 import utils as n64_utils

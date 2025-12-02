@@ -2,6 +2,8 @@
 #include "physics.h"
 #include <string.h>
 
+#define MAX_PHYSICS_BODIES {max_physics_bodies}
+
 // Static pools
 static OimoWorld g_world;
 static bool g_paused = false;
@@ -11,7 +13,6 @@ static bool g_initialized = false;
 static PhysicsContactCallback g_contact_callback = NULL;
 static void* g_contact_user_data = NULL;
 
-#define MAX_PHYSICS_BODIES {max_physics_bodies}
 static OimoRigidBody g_bodies[MAX_PHYSICS_BODIES];
 static bool g_body_used[MAX_PHYSICS_BODIES];
 static OimoShape g_shapes[MAX_PHYSICS_BODIES];
