@@ -366,27 +366,8 @@ class IREmitter:
         return f"{c_func}({', '.join(arg_strs)})"
 
     def emit_input_call(self, node: Dict) -> str:
-        """Input calls - button mapping done in macro, we just emit c_code."""
-        # Macro provides ready-to-use C code
-        if "c_code" in node:
-            return node["c_code"]
-
-        # Fallback for old IR without c_code - generate based on method
-        # Use N64Button enum values (N64_BTN_A, N64_BTN_B, etc.)
-        method = node.get("method", "")
-        if method == "down":
-            return "input_down(N64_BTN_A)"  # default to A button
-        if method == "started":
-            return "input_started(N64_BTN_A)"
-        if method == "released":
-            return "input_released(N64_BTN_A)"
-        if method == "getStickX":
-            return "input_stick_x()"
-        if method == "getStickY":
-            return "input_stick_y()"
-
-        # Return neutral value for unknown methods
-        return "0"
+        """Input calls - macro provides ready-to-use C code."""
+        return node.get("c_code", "0")
 
     def emit_physics_call(self, node: Dict) -> str:
         """Physics calls - resolved by macro."""
@@ -983,34 +964,16 @@ def generate_trait_block(prefix: str, traits: List[Dict],
                 lines.append(f'    {prefix}.traits[{t_idx}].data = NULL;')
 
             # Subscribe to button events using structured metadata from macro
-            button_events = meta.get("button_events", [])
-            if button_events:
-                # Use pre-computed c_button and event_type from macro
-                for btn_evt in button_events:
-                    event_name = btn_evt.get("event_name", "")
-                    c_button = btn_evt.get("c_button", "N64_BTN_A")
-                    event_type = btn_evt.get("event_type", "started")
+            for btn_evt in meta.get("button_events", []):
+                event_name = btn_evt.get("event_name", "")
+                c_button = btn_evt.get("c_button", "N64_BTN_A")
+                event_type = btn_evt.get("event_type", "started")
 
-                    handler_name = f"{c_name}_{event_name}"
-                    obj_ptr = f"&{prefix}" if not prefix.startswith("&") else prefix
-                    data_ptr = f"{prefix}.traits[{t_idx}].data"
+                handler_name = f"{c_name}_{event_name}"
+                obj_ptr = f"&{prefix}" if not prefix.startswith("&") else prefix
+                data_ptr = f"{prefix}.traits[{t_idx}].data"
 
-                    lines.append(f'    trait_events_subscribe_{event_type}({c_button}, {handler_name}, {obj_ptr}, {data_ptr});')
-            else:
-                # Fallback: parse event names for backwards compatibility
-                for event_name in events.keys():
-                    if event_name.startswith("btn_"):
-                        parts = event_name.split("_")
-                        if len(parts) >= 3:
-                            button = parts[1].upper()
-                            state = parts[2]
-                            n64_btn = _map_button_to_n64(button)
-
-                            handler_name = f"{c_name}_{event_name}"
-                            obj_ptr = f"&{prefix}" if not prefix.startswith("&") else prefix
-                            data_ptr = f"{prefix}.traits[{t_idx}].data"
-
-                            lines.append(f'    trait_events_subscribe_{state}({n64_btn}, {handler_name}, {obj_ptr}, {data_ptr});')
+                lines.append(f'    trait_events_subscribe_{event_type}({c_button}, {handler_name}, {obj_ptr}, {data_ptr});')
     else:
         lines.append(f'    {prefix}.traits = NULL;')
 
@@ -1164,57 +1127,15 @@ def generate_scene_traits_block(traits: List[Dict], trait_info: dict, scene_name
             lines.append(f'    scene_traits[{i}].data = NULL;')
 
         # Subscribe to button events using structured metadata from macro
-        button_events = meta.get("button_events", [])
-        if button_events:
-            for btn_evt in button_events:
-                event_name = btn_evt.get("event_name", "")
-                c_button = btn_evt.get("c_button", "N64_BTN_A")
-                event_type = btn_evt.get("event_type", "started")
+        for btn_evt in meta.get("button_events", []):
+            event_name = btn_evt.get("event_name", "")
+            c_button = btn_evt.get("c_button", "N64_BTN_A")
+            event_type = btn_evt.get("event_type", "started")
 
-                handler_name = f"{c_name}_{event_name}"
-                lines.append(f'    trait_events_subscribe_{event_type}({c_button}, {handler_name}, scene, scene_traits[{i}].data);')
-        else:
-            # Fallback: parse event names for backwards compatibility
-            for event_name in events.keys():
-                if event_name.startswith("btn_"):
-                    parts = event_name.split("_")
-                    if len(parts) >= 3:
-                        button = parts[1].upper()
-                        state = parts[2]
-                        n64_btn = _map_button_to_n64(button)
-                        handler_name = f"{c_name}_{event_name}"
-                        lines.append(f'    trait_events_subscribe_{state}({n64_btn}, {handler_name}, scene, scene_traits[{i}].data);')
+            handler_name = f"{c_name}_{event_name}"
+            lines.append(f'    trait_events_subscribe_{event_type}({c_button}, {handler_name}, scene, scene_traits[{i}].data);')
 
     lines.append(f'    scene->traits = scene_traits;')
     return '\n'.join(lines)
-
-
-def _map_button_to_n64(button: str) -> str:
-    """Map button name to N64_BTN_* constant."""
-    mapping = {
-        "A": "N64_BTN_A",
-        "B": "N64_BTN_B",
-        "Z": "N64_BTN_Z",
-        "START": "N64_BTN_START",
-        "L": "N64_BTN_L",
-        "R": "N64_BTN_R",
-        "DU": "N64_BTN_DUP",
-        "DUP": "N64_BTN_DUP",
-        "DD": "N64_BTN_DDOWN",
-        "DDOWN": "N64_BTN_DDOWN",
-        "DL": "N64_BTN_DLEFT",
-        "DLEFT": "N64_BTN_DLEFT",
-        "DR": "N64_BTN_DRIGHT",
-        "DRIGHT": "N64_BTN_DRIGHT",
-        "CU": "N64_BTN_CUP",
-        "CUP": "N64_BTN_CUP",
-        "CD": "N64_BTN_CDOWN",
-        "CDOWN": "N64_BTN_CDOWN",
-        "CL": "N64_BTN_CLEFT",
-        "CLEFT": "N64_BTN_CLEFT",
-        "CR": "N64_BTN_CRIGHT",
-        "CRIGHT": "N64_BTN_CRIGHT",
-    }
-    return mapping.get(button, f"N64_BTN_{button}")
 
 
