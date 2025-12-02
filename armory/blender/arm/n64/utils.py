@@ -2,7 +2,36 @@
 
 import os
 import shutil
+from typing import List
 import arm.utils
+
+
+# =============================================================================
+# Coordinate System Conversion
+# =============================================================================
+# Blender: X=right, Y=forward, Z=up
+# N64/T3D: X=right, Y=up,      Z=back
+#
+# Position:  (X, Y, Z) → (X, Z, -Y)
+# Scale:     (X, Y, Z) → (X, Z, Y) * factor
+# Direction: (X, Y, Z) → (X, Z, -Y), normalized
+
+SCALE_FACTOR: float = 0.015
+
+
+def convert_vec3_list(vec: List[float]) -> List[float]:
+    """Convert a 3-element list from Blender to N64 coordinates."""
+    return [vec[0], vec[2], -vec[1]]
+
+
+def convert_quat_list(quat: List[float]) -> List[float]:
+    """Convert quaternion list from Blender to N64 coordinates."""
+    return [quat[0], quat[2], -quat[1], quat[3]]
+
+
+def convert_scale_list(vec: List[float], factor: float = SCALE_FACTOR) -> List[float]:
+    """Convert scale list from Blender to N64 coordinates with factor."""
+    return [vec[0] * factor, vec[2] * factor, vec[1] * factor]
 
 
 # =============================================================================

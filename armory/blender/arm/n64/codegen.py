@@ -36,7 +36,7 @@ import os
 import math
 from typing import Dict, List, Any, Optional
 
-from arm.n64.config import (
+from arm.n64.utils import (
     convert_vec3_list, convert_quat_list, convert_scale_list,
     SCALE_FACTOR
 )
