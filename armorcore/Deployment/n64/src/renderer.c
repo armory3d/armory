@@ -37,6 +37,38 @@ void renderer_begin_frame(T3DViewport *viewport, ArmScene *scene)
 	);
 }
 
+void renderer_update_hierarchy(ArmScene *scene)
+{
+    // Update child positions based on parent positions.
+    // Objects are sorted topologically (parents before children),
+    // so a single pass handles nested hierarchies correctly.
+    for (uint16_t i = 0; i < scene->object_count; i++) {
+        ArmObject *obj = &scene->objects[i];
+
+        if (obj->parent_index < 0) {
+            continue;  // No parent, skip
+        }
+
+        ArmObject *parent = &scene->objects[obj->parent_index];
+
+        // If child's transform is dirty, it was modified by a trait this frame.
+        // Update local_offset to preserve the new relative position.
+        if (obj->transform.dirty > 0) {
+            obj->local_offset.x = obj->transform.loc.x - parent->transform.loc.x;
+            obj->local_offset.y = obj->transform.loc.y - parent->transform.loc.y;
+            obj->local_offset.z = obj->transform.loc.z - parent->transform.loc.z;
+        } else {
+            // Child didn't move - apply parent's position + stored offset
+            obj->transform.loc.x = parent->transform.loc.x + obj->local_offset.x;
+            obj->transform.loc.y = parent->transform.loc.y + obj->local_offset.y;
+            obj->transform.loc.z = parent->transform.loc.z + obj->local_offset.z;
+
+            // Mark transform as dirty so matrix gets rebuilt
+            obj->transform.dirty = obj->is_static ? 1 : FB_COUNT;
+        }
+    }
+}
+
 void renderer_update_objects(ArmScene *scene)
 {
     for (uint16_t i = 0; i < scene->object_count; i++) {
@@ -67,6 +99,7 @@ void renderer_update_objects(ArmScene *scene)
 void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
 {
     frameIdx = (frameIdx + 1) % FB_COUNT;
+    renderer_update_hierarchy(scene);  // Update parent-child positions first
     renderer_update_objects(scene);
 
     // Get surface BEFORE rdpq_attach - we need this reference for debug drawing later

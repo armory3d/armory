@@ -675,6 +675,10 @@ class TraitExtractor {
             case EBlock(exprs):
                 { type: "block", children: [for (expr in exprs) exprToIR(expr)] };
 
+            // If statement (nested ifs)
+            case EIf(econd, eif, eelse):
+                convertIfToIR(econd, eif, eelse);
+
             // Local variable declaration: var x = value
             case EVars(vars):
                 var varDecls:Array<IRNode> = [];
@@ -693,6 +697,10 @@ class TraitExtractor {
                 }
                 if (varDecls.length == 1) varDecls[0];
                 else { type: "block", children: varDecls };
+
+            // Return statement
+            case EReturn(retExpr):
+                { type: "return", children: retExpr != null ? [exprToIR(retExpr)] : null };
 
             default:
                 { type: "skip" };

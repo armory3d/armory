@@ -39,6 +39,39 @@ def convert_scale_list(vec: List[float], factor: float = SCALE_FACTOR) -> List[f
     return [vec[0] * factor, vec[2] * factor, vec[1] * factor]
 
 
+def topological_sort_objects(objects: List[dict]) -> List[dict]:
+    """Sort objects so parents come before children (topological order).
+
+    This ensures that when updating transforms at runtime, parent positions
+    are always computed before their children, enabling nested hierarchies.
+    """
+    # Build name → object mapping
+    name_to_obj = {obj['name']: obj for obj in objects}
+
+    # Build adjacency: parent → list of children
+    children = {obj['name']: [] for obj in objects}
+    roots = []
+
+    for obj in objects:
+        parent_name = obj.get('parent')
+        if parent_name and parent_name in name_to_obj:
+            children[parent_name].append(obj['name'])
+        else:
+            roots.append(obj['name'])
+
+    # BFS from roots to get topological order
+    sorted_names = []
+    queue = list(roots)
+    while queue:
+        name = queue.pop(0)
+        sorted_names.append(name)
+        for child_name in children[name]:
+            queue.append(child_name)
+
+    # Return objects in sorted order
+    return [name_to_obj[name] for name in sorted_names]
+
+
 # =============================================================================
 # N64 Build Configuration
 # =============================================================================

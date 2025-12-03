@@ -15,6 +15,9 @@
 static ArmScene g_scenes[SCENE_COUNT];
 static SceneId g_pending_scene = SCENE_COUNT;
 
+// Global pointer to current scene's objects array (for local transform functions)
+ArmObject *g_scene_objects = NULL;
+
 void scene_init(SceneId id)
 {{
     if (id >= SCENE_COUNT) return;
@@ -29,6 +32,7 @@ void scene_init(SceneId id)
 void scene_on_ready(SceneId id)
 {{
 	ArmScene *s = &g_scenes[id];
+	g_scene_objects = s->objects;  // Set global for local transform functions
 
 	for (uint8_t i = 0; i < s->trait_count; i++) {{
 		if (s->traits[i].on_ready) s->traits[i].on_ready(s, s->traits[i].data);
@@ -59,6 +63,7 @@ void scene_on_ready(SceneId id)
 void scene_on_fixed_update(SceneId id, float dt)
 {{
 	ArmScene *s = &g_scenes[id];
+	g_scene_objects = s->objects;  // Set global for local transform functions
 
 	for (uint8_t i = 0; i < s->trait_count; i++) {{
 		if (s->traits[i].on_fixed_update) s->traits[i].on_fixed_update(s, dt, s->traits[i].data);
@@ -103,6 +108,7 @@ void scene_sync_physics(SceneId id)
 void scene_on_update(SceneId id, float dt)
 {{
 	ArmScene *s = &g_scenes[id];
+	g_scene_objects = s->objects;  // Set global for local transform functions
 
 	for (uint8_t i = 0; i < s->trait_count; i++) {{
 		if (s->traits[i].on_update) s->traits[i].on_update(s, dt, s->traits[i].data);
