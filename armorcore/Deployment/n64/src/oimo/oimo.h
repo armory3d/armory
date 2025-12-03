@@ -70,52 +70,6 @@ static inline OimoShapeConfig oimo_shape_config_default(void) {
     return oimo_shape_config();
 }
 
-// Geometry pool allocation
-#define OIMO_MAX_GEOMETRIES 64
-static OimoSphereGeometry _oimo_sphere_pool[OIMO_MAX_GEOMETRIES];
-static OimoBoxGeometry _oimo_box_pool[OIMO_MAX_GEOMETRIES];
-static OimoCapsuleGeometry _oimo_capsule_pool[OIMO_MAX_GEOMETRIES];
-static int _oimo_sphere_pool_idx = 0;
-static int _oimo_box_pool_idx = 0;
-static int _oimo_capsule_pool_idx = 0;
-
-static inline OimoGeometry* oimo_geometry_sphere(OimoScalar radius) {
-    if (_oimo_sphere_pool_idx >= OIMO_MAX_GEOMETRIES) {
-        debugf("Oimo: sphere geometry pool exhausted (%d max)\n", OIMO_MAX_GEOMETRIES);
-        return NULL;
-    }
-    OimoSphereGeometry* g = &_oimo_sphere_pool[_oimo_sphere_pool_idx++];
-    oimo_sphere_geometry_init(g, radius);
-    return (OimoGeometry*)g;
-}
-
-static inline OimoGeometry* oimo_geometry_box(OimoScalar hw, OimoScalar hh, OimoScalar hd) {
-    if (_oimo_box_pool_idx >= OIMO_MAX_GEOMETRIES) {
-        debugf("Oimo: box geometry pool exhausted (%d max)\n", OIMO_MAX_GEOMETRIES);
-        return NULL;
-    }
-    OimoBoxGeometry* g = &_oimo_box_pool[_oimo_box_pool_idx++];
-    oimo_box_geometry_init3(g, hw, hh, hd);
-    return (OimoGeometry*)g;
-}
-
-static inline OimoGeometry* oimo_geometry_capsule(OimoScalar radius, OimoScalar halfHeight) {
-    if (_oimo_capsule_pool_idx >= OIMO_MAX_GEOMETRIES) {
-        debugf("Oimo: capsule geometry pool exhausted (%d max)\n", OIMO_MAX_GEOMETRIES);
-        return NULL;
-    }
-    OimoCapsuleGeometry* g = &_oimo_capsule_pool[_oimo_capsule_pool_idx++];
-    oimo_capsule_geometry_init(g, radius, halfHeight);
-    return (OimoGeometry*)g;
-}
-
-// Reset pools
-static inline void oimo_geometry_pools_reset(void) {
-    _oimo_sphere_pool_idx = 0;
-    _oimo_box_pool_idx = 0;
-    _oimo_capsule_pool_idx = 0;
-}
-
 // Function aliases
 #define oimo_rigidbody_init             oimo_rigid_body_init
 #define oimo_rigidbody_add_shape        oimo_rigid_body_add_shape

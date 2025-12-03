@@ -156,17 +156,18 @@ OimoVec3 physics_get_gravity(void) {{
     return g_initialized ? oimo_world_get_gravity(&g_world) : oimo_vec3_zero();
 }}
 
-// Helper to determine final body type based on params
 static int resolve_body_type(int requested_type, const PhysicsBodyParams* params) {{
-    if (params && params->animated) {{
-        return OIMO_RIGID_BODY_KINEMATIC;
-    }}
-    return requested_type;
+    return (params && params->animated) ? OIMO_RIGID_BODY_KINEMATIC : requested_type;
 }}
 
-// Full body creation with all Blender parameters
-bool physics_create_box_full(ArmObject* obj, int type, float hx, float hy, float hz,
-                             const PhysicsBodyParams* params) {{
+typedef struct {{
+    OimoRigidBody* rb;
+    int idx;
+    int final_type;
+}} BodySetupResult;
+
+static bool setup_body_common(ArmObject* obj, int type, const PhysicsBodyParams* params,
+                              BodySetupResult* out) {{
     if (!g_initialized || !obj || !params) return false;
 
     OimoRigidBody* rb = alloc_body();
@@ -175,37 +176,38 @@ bool physics_create_box_full(ArmObject* obj, int type, float hx, float hy, float
         return false;
     }}
 
-    int idx = get_body_index(rb);
-    int final_type = resolve_body_type(type, params);
+    out->rb = rb;
+    out->idx = get_body_index(rb);
+    out->final_type = resolve_body_type(type, params);
 
-    // Body config
     OimoRigidBodyConfig config = oimo_rigid_body_config();
-    config.type = final_type;
+    config.type = out->final_type;
     config.position = oimo_vec3(obj->transform.loc[0], obj->transform.loc[1], obj->transform.loc[2]);
     OimoQuat q = oimo_quat(obj->transform.rot[0], obj->transform.rot[1],
                            obj->transform.rot[2], obj->transform.rot[3]);
     config.rotation = oimo_quat_to_mat3(&q);
     config.linearDamping = params->linear_damping;
     config.angularDamping = params->angular_damping;
-    config.autoSleep = params->use_deactivation && (final_type == OIMO_RIGID_BODY_DYNAMIC);
+    config.autoSleep = params->use_deactivation && (out->final_type == OIMO_RIGID_BODY_DYNAMIC);
     oimo_rigid_body_init(rb, &config);
+    return true;
+}}
 
-    // Geometry & shape
-    oimo_box_geometry_init3(&g_geometries[idx].box, hx, hy, hz);
-
+static void setup_shape_common(OimoShape* shape, OimoGeometry* geom, int final_type,
+                               float density, const PhysicsBodyParams* params) {{
     OimoShapeConfig shapeConfig = oimo_shape_config();
-    shapeConfig.geometry = &g_geometries[idx].box.base;
+    shapeConfig.geometry = geom;
     shapeConfig.friction = params->friction;
     shapeConfig.restitution = params->restitution;
-    shapeConfig.density = (final_type == OIMO_RIGID_BODY_STATIC) ? 0.0f : (params->mass / (8.0f * hx * hy * hz));
+    shapeConfig.density = (final_type == OIMO_RIGID_BODY_STATIC) ? 0.0f : density;
     shapeConfig.collisionGroup = params->collision_group;
     shapeConfig.collisionMask = params->collision_mask;
+    oimo_shape_init(shape, &shapeConfig);
+    shape->_isTrigger = params->trigger;
+}}
 
-    oimo_shape_init(&g_shapes[idx], &shapeConfig);
-    g_shapes[idx]._isTrigger = params->trigger;
-    oimo_rigid_body_add_shape(rb, &g_shapes[idx]);
-
-    // Set mass data with angular friction
+static void finalize_body(OimoRigidBody* rb, ArmObject* obj, int final_type,
+                          const PhysicsBodyParams* params) {{
     if (final_type == OIMO_RIGID_BODY_DYNAMIC) {{
         rb->_mass = params->mass;
         float af = params->angular_friction;
@@ -213,125 +215,53 @@ bool physics_create_box_full(ArmObject* obj, int type, float hx, float hy, float
         rb->_localInertia = oimo_mat3(af, 0, 0, 0, af, 0, 0, 0, af);
         oimo_rigid_body_complete_mass_data(rb);
     }}
-
     oimo_world_add_rigid_body(&g_world, rb);
     obj->rigid_body = rb;
     rb->userData = obj;
+}}
+
+bool physics_create_box_full(ArmObject* obj, int type, float hx, float hy, float hz,
+                             const PhysicsBodyParams* params) {{
+    BodySetupResult setup;
+    if (!setup_body_common(obj, type, params, &setup)) return false;
+
+    oimo_box_geometry_init3(&g_geometries[setup.idx].box, hx, hy, hz);
+    float density = params->mass / (8.0f * hx * hy * hz);
+    setup_shape_common(&g_shapes[setup.idx], &g_geometries[setup.idx].box.base,
+                       setup.final_type, density, params);
+    oimo_rigid_body_add_shape(setup.rb, &g_shapes[setup.idx]);
+    finalize_body(setup.rb, obj, setup.final_type, params);
     return true;
 }}
 
 bool physics_create_sphere_full(ArmObject* obj, int type, float radius,
                                 const PhysicsBodyParams* params) {{
-    if (!g_initialized || !obj || !params) return false;
+    BodySetupResult setup;
+    if (!setup_body_common(obj, type, params, &setup)) return false;
 
-    OimoRigidBody* rb = alloc_body();
-    if (!rb) {{
-        debugf("Physics: body pool exhausted\\n");
-        return false;
-    }}
-
-    int idx = get_body_index(rb);
-    int final_type = resolve_body_type(type, params);
-
-    // Body config
-    OimoRigidBodyConfig config = oimo_rigid_body_config();
-    config.type = final_type;
-    config.position = oimo_vec3(obj->transform.loc[0], obj->transform.loc[1], obj->transform.loc[2]);
-    OimoQuat q = oimo_quat(obj->transform.rot[0], obj->transform.rot[1],
-                           obj->transform.rot[2], obj->transform.rot[3]);
-    config.rotation = oimo_quat_to_mat3(&q);
-    config.linearDamping = params->linear_damping;
-    config.angularDamping = params->angular_damping;
-    config.autoSleep = params->use_deactivation && (final_type == OIMO_RIGID_BODY_DYNAMIC);
-    oimo_rigid_body_init(rb, &config);
-
-    // Geometry & shape
-    oimo_sphere_geometry_init(&g_geometries[idx].sphere, radius);
-
-    OimoShapeConfig shapeConfig = oimo_shape_config();
-    shapeConfig.geometry = &g_geometries[idx].sphere.base;
-    shapeConfig.friction = params->friction;
-    shapeConfig.restitution = params->restitution;
+    oimo_sphere_geometry_init(&g_geometries[setup.idx].sphere, radius);
     float volume = (4.0f / 3.0f) * 3.14159265f * radius * radius * radius;
-    shapeConfig.density = (final_type == OIMO_RIGID_BODY_STATIC) ? 0.0f : (params->mass / volume);
-    shapeConfig.collisionGroup = params->collision_group;
-    shapeConfig.collisionMask = params->collision_mask;
-
-    oimo_shape_init(&g_shapes[idx], &shapeConfig);
-    g_shapes[idx]._isTrigger = params->trigger;
-    oimo_rigid_body_add_shape(rb, &g_shapes[idx]);
-
-    // Set mass data
-    if (final_type == OIMO_RIGID_BODY_DYNAMIC) {{
-        rb->_mass = params->mass;
-        float af = params->angular_friction;
-        if (af < 0.001f) af = 0.001f;
-        rb->_localInertia = oimo_mat3(af, 0, 0, 0, af, 0, 0, 0, af);
-        oimo_rigid_body_complete_mass_data(rb);
-    }}
-
-    oimo_world_add_rigid_body(&g_world, rb);
-    obj->rigid_body = rb;
-    rb->userData = obj;
+    float density = params->mass / volume;
+    setup_shape_common(&g_shapes[setup.idx], &g_geometries[setup.idx].sphere.base,
+                       setup.final_type, density, params);
+    oimo_rigid_body_add_shape(setup.rb, &g_shapes[setup.idx]);
+    finalize_body(setup.rb, obj, setup.final_type, params);
     return true;
 }}
 
 bool physics_create_capsule_full(ArmObject* obj, int type, float radius, float half_height,
                                  const PhysicsBodyParams* params) {{
-    if (!g_initialized || !obj || !params) return false;
+    BodySetupResult setup;
+    if (!setup_body_common(obj, type, params, &setup)) return false;
 
-    OimoRigidBody* rb = alloc_body();
-    if (!rb) {{
-        debugf("Physics: body pool exhausted\\n");
-        return false;
-    }}
-
-    int idx = get_body_index(rb);
-    int final_type = resolve_body_type(type, params);
-
-    // Body config
-    OimoRigidBodyConfig config = oimo_rigid_body_config();
-    config.type = final_type;
-    config.position = oimo_vec3(obj->transform.loc[0], obj->transform.loc[1], obj->transform.loc[2]);
-    OimoQuat q = oimo_quat(obj->transform.rot[0], obj->transform.rot[1],
-                           obj->transform.rot[2], obj->transform.rot[3]);
-    config.rotation = oimo_quat_to_mat3(&q);
-    config.linearDamping = params->linear_damping;
-    config.angularDamping = params->angular_damping;
-    config.autoSleep = params->use_deactivation && (final_type == OIMO_RIGID_BODY_DYNAMIC);
-    oimo_rigid_body_init(rb, &config);
-
-    // Geometry & shape
-    oimo_capsule_geometry_init(&g_geometries[idx].capsule, radius, half_height);
-
-    OimoShapeConfig shapeConfig = oimo_shape_config();
-    shapeConfig.geometry = &g_geometries[idx].capsule.base;
-    shapeConfig.friction = params->friction;
-    shapeConfig.restitution = params->restitution;
-    // Capsule volume = cylinder + 2 hemispheres = pi*r^2*h + (4/3)*pi*r^3
+    oimo_capsule_geometry_init(&g_geometries[setup.idx].capsule, radius, half_height);
     float cyl_vol = 3.14159265f * radius * radius * (2.0f * half_height);
     float sphere_vol = (4.0f / 3.0f) * 3.14159265f * radius * radius * radius;
-    float volume = cyl_vol + sphere_vol;
-    shapeConfig.density = (final_type == OIMO_RIGID_BODY_STATIC) ? 0.0f : (params->mass / volume);
-    shapeConfig.collisionGroup = params->collision_group;
-    shapeConfig.collisionMask = params->collision_mask;
-
-    oimo_shape_init(&g_shapes[idx], &shapeConfig);
-    g_shapes[idx]._isTrigger = params->trigger;
-    oimo_rigid_body_add_shape(rb, &g_shapes[idx]);
-
-    // Set mass data
-    if (final_type == OIMO_RIGID_BODY_DYNAMIC) {{
-        rb->_mass = params->mass;
-        float af = params->angular_friction;
-        if (af < 0.001f) af = 0.001f;
-        rb->_localInertia = oimo_mat3(af, 0, 0, 0, af, 0, 0, 0, af);
-        oimo_rigid_body_complete_mass_data(rb);
-    }}
-
-    oimo_world_add_rigid_body(&g_world, rb);
-    obj->rigid_body = rb;
-    rb->userData = obj;
+    float density = params->mass / (cyl_vol + sphere_vol);
+    setup_shape_common(&g_shapes[setup.idx], &g_geometries[setup.idx].capsule.base,
+                       setup.final_type, density, params);
+    oimo_rigid_body_add_shape(setup.rb, &g_shapes[setup.idx]);
+    finalize_body(setup.rb, obj, setup.final_type, params);
     return true;
 }}
 
