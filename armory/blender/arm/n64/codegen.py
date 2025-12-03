@@ -1016,6 +1016,7 @@ def generate_object_block(objects: List[Dict], trait_info: dict, scene_name: str
         lines.append(f'    {prefix}.dpl = models_get_dpl({obj["mesh"]});')
         lines.append(f'    {prefix}.model_mat = malloc_uncached(sizeof(T3DMat4FP) * FB_COUNT);')
         lines.append(f'    {prefix}.visible = {str(obj["visible"]).lower()};')
+        lines.append(f'    {prefix}.is_static = {str(obj.get("is_static", False)).lower()};')
 
         bc = obj.get("bounds_center", [0, 0, 0])
         br = obj.get("bounds_radius", 1.0)

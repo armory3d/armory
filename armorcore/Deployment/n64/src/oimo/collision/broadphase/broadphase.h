@@ -158,19 +158,12 @@ static inline void oimo_broadphase_collect_pairs_bruteforce(OimoBroadPhase* bp) 
     }
 }
 
-// Forward declaration for spatial hash dispatch
-struct OimoSpatialHashBroadPhase;
-static inline void oimo_spatial_hash_collect_pairs(struct OimoSpatialHashBroadPhase* bp);
-
 /**
- * Dispatch collect_pairs to the appropriate implementation
+ * Collect overlapping pairs using brute-force O(n²) algorithm.
+ * Simple and reliable for N64's typical small object counts.
  */
 static inline void oimo_broadphase_collect_pairs(OimoBroadPhase* bp) {
-    if (bp->_type == OIMO_BROADPHASE_SPATIAL_HASH) {
-        oimo_spatial_hash_collect_pairs((struct OimoSpatialHashBroadPhase*)bp);
-    } else {
-        oimo_broadphase_collect_pairs_bruteforce(bp);
-    }
+    oimo_broadphase_collect_pairs_bruteforce(bp);
 }
 
 /**

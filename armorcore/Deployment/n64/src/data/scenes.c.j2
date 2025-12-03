@@ -5,6 +5,7 @@
 
 #include "../types.h"
 #include "../engine.h"
+#include "../renderer.h"
 #include "scenes.h"
 
 #if ENGINE_ENABLE_PHYSICS
@@ -195,6 +196,9 @@ void scene_clear(SceneId id)
 
     ArmScene *s = &g_scenes[id];
     scene_on_remove(id);
+
+    // Free static display list
+    renderer_free_static_dpl(s);
 
     // Free object resources
     if (s->objects != NULL) {{

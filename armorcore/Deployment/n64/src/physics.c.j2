@@ -1,5 +1,6 @@
 // physics.c - Mini-engine physics implementation
 #include "physics.h"
+#include "utils.h"
 #include <string.h>
 
 #define MAX_PHYSICS_BODIES {max_physics_bodies}
@@ -298,6 +299,15 @@ void physics_sync_object(ArmObject* obj) {{
     if (rb->_type == OIMO_RIGID_BODY_STATIC || rb->_sleeping) return;
 
     OimoVec3 pos = oimo_rigid_body_get_position(rb);
+
+    // Check if object has fallen out of world bounds
+    if (!position_in_bounds(pos.x, pos.y, pos.z)) {{
+        // Object fell off world - put it to sleep and hide it
+        oimo_rigid_body_sleep(rb);
+        obj->visible = false;
+        return;
+    }}
+
     obj->transform.loc[0] = pos.x;
     obj->transform.loc[1] = pos.y;
     obj->transform.loc[2] = pos.z;

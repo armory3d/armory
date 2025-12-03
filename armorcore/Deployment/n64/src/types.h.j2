@@ -15,6 +15,11 @@ extern "C" {{
 // Number of frames to keep transform dirty for double/triple buffering
 #define TRANSFORM_DIRTY_FRAMES 3
 
+// Minimum static objects to batch into a combined display list
+#ifndef STATIC_BATCH_THRESHOLD
+#define STATIC_BATCH_THRESHOLD 3
+#endif
+
 struct OimoRigidBody;
 
 typedef struct {{ float x, y; }} ArmVec2;
@@ -48,6 +53,7 @@ typedef struct ArmObject {{
     rspq_block_t *dpl;
     T3DMat4FP *model_mat;
     bool visible;
+    bool is_static;          // Static objects skip matrix updates after init
     T3DVec3 bounds_center;
     float bounds_radius;
     struct OimoRigidBody *rigid_body;
@@ -90,6 +96,8 @@ typedef struct ArmScene {{
 
     uint16_t object_count;
     ArmObject *objects;
+    uint16_t static_count;        // Number of static objects
+    rspq_block_t *static_dpl;     // Combined display list for static objects
 
     uint8_t trait_count;
     ArmTrait *traits;

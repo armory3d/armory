@@ -185,6 +185,7 @@ typedef ButtonEventMeta = {
 typedef TraitMeta = {
     uses_input: Bool,
     uses_transform: Bool,
+    mutates_transform: Bool,   // True if trait modifies transform (translate, rotate, etc.)
     uses_time: Bool,
     uses_physics: Bool,
     buttons_used: Array<String>,
@@ -328,6 +329,7 @@ class TraitExtractor {
         this.meta = {
             uses_input: false,
             uses_transform: false,
+            mutates_transform: false,
             uses_time: false,
             uses_physics: false,
             buttons_used: [],
@@ -636,6 +638,8 @@ class TraitExtractor {
             case EBinop(op, e1, e2):
                 var opStr = binopToString(op);
                 if (op == OpAssign) {
+                    // Check if assigning to transform.loc/rot/scale (mutating transform)
+                    checkTransformMutation(e1);
                     { type: "assign", children: [exprToIR(e1), exprToIR(e2)] };
                 } else {
                     { type: "binop", value: opStr, children: [exprToIR(e1), exprToIR(e2)] };
@@ -744,6 +748,31 @@ class TraitExtractor {
             return { type: "skip" };
         }
         return { type: "ident", value: name };
+    }
+
+    // Check if expression is an assignment to transform properties (loc, rot, scale, dirty)
+    function checkTransformMutation(expr:Expr):Void {
+        switch (expr.expr) {
+            case EField(obj, field):
+                switch (obj.expr) {
+                    // transform.loc = ..., transform.rot = ..., transform.scale = ..., transform.dirty = ...
+                    case EField(_, "transform"), EConst(CIdent("transform")):
+                        if (field == "loc" || field == "rot" || field == "scale" || field == "dirty") {
+                            meta.mutates_transform = true;
+                        }
+                    // transform.loc.x = ... (nested field access)
+                    case EField(innerObj, innerField):
+                        if (innerField == "loc" || innerField == "rot" || innerField == "scale") {
+                            switch (innerObj.expr) {
+                                case EField(_, "transform"), EConst(CIdent("transform")):
+                                    meta.mutates_transform = true;
+                                default:
+                            }
+                        }
+                    default:
+                }
+            default:
+        }
     }
 
     function convertFieldAccess(obj:Expr, field:String):IRNode {
@@ -978,6 +1007,13 @@ class TraitExtractor {
     // =========================================================================
 
     function convertTransformCall(method:String, args:Array<IRNode>):IRNode {
+        // Mark as mutating if it's a transform-modifying method
+        if (method == "translate" || method == "rotate" || method == "move" ||
+            method == "setMatrix" || method == "multMatrix" || method == "setRotation" ||
+            method == "buildMatrix" || method == "applyParent" || method == "applyParentInverse" ||
+            method == "reset") {
+            meta.mutates_transform = true;
+        }
         return {
             type: "transform_call",
             method: method,

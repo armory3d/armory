@@ -4,6 +4,7 @@
 
 #include "../types.h"
 #include "../engine.h"
+#include "../renderer.h"
 #include "../data/models.h"
 #include "../data/traits.h"
 #include "../data/scenes.h"
@@ -25,6 +26,10 @@ void scene_{scene_name}_init(ArmScene *scene)
     scene->world.ambient_color[1] = {ag};
     scene->world.ambient_color[2] = {ab};
     scene->world.ambient_color[3] = 0xFF;
+
+    // Initialize static display list to NULL (will be built after first frames)
+    scene->static_count = 0;
+    scene->static_dpl = NULL;
 
     static ArmCamera cameras[{camera_count}];
     scene->cameras = cameras;

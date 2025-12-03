@@ -364,7 +364,8 @@ class N64Exporter:
                     "visible": not obj.hide_render,
                     "bounds_center": bounds_center,
                     "bounds_radius": bounds_radius,
-                    "traits": obj_traits
+                    "traits": obj_traits,
+                    "is_static": True  # Will be computed after trait_info is loaded
                 }
 
                 if rigid_body_data is not None:
@@ -575,6 +576,7 @@ class N64Exporter:
     def write_renderer(self):
         n64_utils.copy_src('renderer.c', 'src')
         n64_utils.copy_src('renderer.h', 'src')
+        n64_utils.copy_src('utils.h', 'src')
 
 
     def write_scenes(self):
@@ -794,6 +796,9 @@ class N64Exporter:
             if scene.library:
                 continue
             self.build_scene_data(scene)
+
+        # Compute is_static for all objects after trait_info is loaded
+        n64_utils.compute_static_flags(self.scene_data, self.trait_info)
 
         self.write_makefile()
         self.write_types()

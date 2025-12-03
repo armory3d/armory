@@ -294,3 +294,50 @@ def _to_c_literal(value, ctype: str) -> str:
         return f"(ArmVec2){{{value[0]}f, {value[1]}f}}"
     else:
         return str(value)
+
+
+# =============================================================================
+# Static Object Detection
+# =============================================================================
+
+def compute_static_flags(scene_data: dict, trait_info: dict) -> None:
+    """Compute is_static for all objects based on physics and trait analysis.
+
+    An object is static if:
+    1. It has no rigid body physics (or is a PASSIVE/static body)
+    2. None of its traits mutate the transform
+
+    Static objects skip matrix updates after initialization and can be
+    batched into a combined display list for better performance.
+
+    Args:
+        scene_data: Dict mapping scene names to scene data containing objects
+        trait_info: Dict containing trait metadata from the macro JSON
+    """
+    traits_data = trait_info.get('traits', {})
+
+    def trait_mutates_transform(trait_class: str) -> bool:
+        """Check if a trait class mutates the transform."""
+        trait_ir = traits_data.get(trait_class, {})
+        meta = trait_ir.get('meta', {})
+        return meta.get('mutates_transform', False)
+
+    for scene in scene_data.values():
+        for obj in scene.get("objects", []):
+            # Check if has dynamic physics (non-passive rigid body)
+            has_dynamic_physics = False
+            rigid_body = obj.get("rigid_body")
+            if rigid_body:
+                # mass == 0 means static/passive body
+                has_dynamic_physics = rigid_body.get("mass", 0.0) > 0.0
+
+            # Check if any trait mutates transform
+            any_trait_mutates = False
+            for trait in obj.get("traits", []):
+                trait_class = trait.get("class_name", "")
+                if trait_mutates_transform(trait_class):
+                    any_trait_mutates = True
+                    break
+
+            # Object is static if no dynamic physics and no mutating traits
+            obj["is_static"] = not has_dynamic_physics and not any_trait_mutates
