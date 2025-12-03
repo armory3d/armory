@@ -52,16 +52,9 @@ void renderer_update_objects(ArmScene *scene)
             obj->transform.rot,
             obj->transform.loc
         );
-        // Static objects only need matrix computed once (for all framebuffers)
-        // then dirty stays 0 forever
-        if (!obj->is_static) {
-            obj->transform.dirty--;
-        } else if (obj->transform.dirty == 1) {
-            // Last frame of initial matrix computation for static object
-            obj->transform.dirty = 0;
-        } else {
-            obj->transform.dirty--;
-        }
+
+        // Decrement dirty counter (static objects will reach 0 and stay there)
+        obj->transform.dirty--;
     }
 }
 
