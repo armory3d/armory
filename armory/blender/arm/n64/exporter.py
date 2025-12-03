@@ -220,7 +220,7 @@ class N64Exporter:
 
                 self.scene_data[scene_name]["cameras"].append({
                     "name": arm.utils.safesrc(obj.name),
-                    "pos": list(obj.location),
+                    "pos": list(obj.matrix_world.to_translation()),  # World position (flattened)
                     "target": cam_target,
                     "fov": cam_fov,
                     "near": obj.data.clip_start,
@@ -246,6 +246,7 @@ class N64Exporter:
 
                 self.scene_data[scene_name]["lights"].append({
                     "name": arm.utils.safesrc(obj.name),
+                    "pos": list(obj.matrix_world.to_translation()),  # World position (flattened)
                     "color": list(obj.data.color),
                     "dir": list(light_dir),
                     "traits": light_traits
@@ -397,7 +398,7 @@ class N64Exporter:
                 obj_data = {
                     "name": arm.utils.safesrc(obj.name),
                     "mesh": f'MODEL_{mesh_name.upper()}',
-                    "pos": list(obj.location),
+                    "pos": list(obj.matrix_world.to_translation()),  # World position (flattened)
                     "rot": [quat.x, quat.y, quat.z, quat.w],  # Quaternion XYZW
                     "scale": list(obj.scale),
                     "visible": not obj.hide_render,

@@ -450,7 +450,9 @@ class TraitExtractor {
             case EBlock(exprs):
                 for (expr in exprs) scanForLifecycles(expr, result);
             case EFunction(_, f):
-                return;
+                // Continue scanning inside function body to find nested lifecycle registrations
+                // e.g., notifyOnUpdate(update) inside notifyOnInit(function() { ... })
+                if (f.expr != null) scanForLifecycles(f.expr, result);
             default:
                 e.iter(function(sub) scanForLifecycles(sub, result));
         }
@@ -828,6 +830,25 @@ class TraitExtractor {
                         if (field == "leftStick" || field == "rightStick") {
                             return "Vec2";
                         }
+                    // object.transform.loc/rot/scale -> Vec4 (Iron uses Vec4 for all transform components)
+                    case EField(_, "transform"):
+                        if (field == "loc" || field == "scale") {
+                            return "Vec4";
+                        }
+                        if (field == "rot") {
+                            return "Vec4";  // Quaternion as Vec4
+                        }
+                    default:
+                }
+                // Also check for transform.x where transform is accessed directly
+                switch (innerObj.expr) {
+                    case EConst(CIdent("transform")):
+                        if (field == "loc" || field == "scale") {
+                            return "Vec4";
+                        }
+                        if (field == "rot") {
+                            return "Vec4";
+                        }
                     default:
                 }
             case ECall(callExpr, _):
@@ -904,6 +925,12 @@ class TraitExtractor {
                 }
 
             case EConst(CIdent(funcName)):
+                // Skip lifecycle registration calls - they're handled by scanForLifecycles
+                if (funcName == "notifyOnInit" || funcName == "notifyOnUpdate" ||
+                    funcName == "notifyOnFixedUpdate" || funcName == "notifyOnLateUpdate" ||
+                    funcName == "notifyOnRemove" || funcName == "notifyOnAdd") {
+                    return { type: "skip" };
+                }
                 return { type: "call", method: funcName, args: args };
 
             default:
@@ -963,13 +990,24 @@ class TraitExtractor {
 
     function convertVecCall(method:String, objIR:IRNode, args:Array<IRNode>, vecType:String):IRNode {
         // Vec method calls become inline C expressions
-        // vecType is "Vec2" or "Vec3"
+        // Determine C type based on Haxe type
+        var cType = switch (vecType) {
+            case "Vec4": "ArmVec4";
+            case "Vec3": "ArmVec3";
+            default: "ArmVec2";
+        };
+        var is3D = (vecType == "Vec3" || vecType == "Vec4");
+
         return {
             type: "vec_call",
             method: method,
             object: objIR,
             args: args,
-            props: { vecType: vecType }
+            props: {
+                vecType: vecType,
+                cType: cType,
+                is3D: is3D
+            }
         };
     }
 

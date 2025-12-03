@@ -408,7 +408,11 @@ class IREmitter:
         obj_node = node.get("object")
         args = node.get("args", [])
         props = node.get("props", {})
+
+        # Use macro-provided type info
         vec_type = props.get("vecType", "Vec2")
+        c_type = props.get("cType", "ArmVec2")
+        is_3d = props.get("is3D", False)
 
         obj = self.emit(obj_node) if obj_node else ""
         if not obj:
@@ -418,49 +422,58 @@ class IREmitter:
         is_compound = obj.startswith("(Arm")
         v = f"({obj})" if is_compound else obj
 
-        # Treat Vec4 as Vec3 for most operations (xyz components)
-        is_vec3 = vec_type in ("Vec3", "Vec4")
-
         if method == "length":
-            if is_vec3:
+            if is_3d:
                 return f"sqrtf({v}.x*{v}.x + {v}.y*{v}.y + {v}.z*{v}.z)"
             return f"sqrtf({v}.x*{v}.x + {v}.y*{v}.y)"
 
         if method == "mult" and arg_strs:
             s = arg_strs[0]
-            if is_vec3:
+            if is_3d:
                 return f"(ArmVec3){{{v}.x*({s}), {v}.y*({s}), {v}.z*({s})}}"
             return f"(ArmVec2){{{v}.x*({s}), {v}.y*({s})}}"
 
         if method == "add" and arg_strs:
             o = f"({arg_strs[0]})" if arg_strs[0].startswith("(Arm") else arg_strs[0]
-            if is_vec3:
+            if is_3d:
                 return f"(ArmVec3){{{v}.x+{o}.x, {v}.y+{o}.y, {v}.z+{o}.z}}"
             return f"(ArmVec2){{{v}.x+{o}.x, {v}.y+{o}.y}}"
 
         if method == "sub" and arg_strs:
             o = f"({arg_strs[0]})" if arg_strs[0].startswith("(Arm") else arg_strs[0]
-            if is_vec3:
+            if is_3d:
                 return f"(ArmVec3){{{v}.x-{o}.x, {v}.y-{o}.y, {v}.z-{o}.z}}"
             return f"(ArmVec2){{{v}.x-{o}.x, {v}.y-{o}.y}}"
 
         if method == "dot" and arg_strs:
             o = f"({arg_strs[0]})" if arg_strs[0].startswith("(Arm") else arg_strs[0]
-            if is_vec3:
+            if is_3d:
                 return f"({v}.x*{o}.x + {v}.y*{o}.y + {v}.z*{o}.z)"
             return f"({v}.x*{o}.x + {v}.y*{o}.y)"
 
         if method == "normalize":
             if is_compound:
                 return ""  # cannot normalize compound literal inline
-            if is_vec3:
+            if is_3d:
                 return f"{{ float _l=sqrtf({v}.x*{v}.x+{v}.y*{v}.y+{v}.z*{v}.z); if(_l>0.0f){{ {obj}.x/=_l; {obj}.y/=_l; {obj}.z/=_l; }} }}"
             return f"{{ float _l=sqrtf({v}.x*{v}.x+{v}.y*{v}.y); if(_l>0.0f){{ {obj}.x/=_l; {obj}.y/=_l; }} }}"
 
-        # clone() just returns a copy of the vec
+        # clone() - use exact C type from macro
+        # When cloning transform.scale, divide by SCALE_FACTOR to get logical Blender-space values
         if method == "clone":
-            if is_vec3:
-                return f"(ArmVec3){{{v}.x, {v}.y, {v}.z}}"
+            is_transform_scale = (obj_node and obj_node.get("type") == "field" and
+                                  obj_node.get("value") == "transform.scale")
+            if is_transform_scale:
+                inv_scale = 1.0 / SCALE_FACTOR
+                if c_type == "ArmVec4":
+                    return f"(ArmVec4){{{v}.x*{inv_scale}f, {v}.y*{inv_scale}f, {v}.z*{inv_scale}f, 1.0f}}"
+                if c_type == "ArmVec3":
+                    return f"(ArmVec3){{{v}.x*{inv_scale}f, {v}.y*{inv_scale}f, {v}.z*{inv_scale}f}}"
+            else:
+                if c_type == "ArmVec4":
+                    return f"(ArmVec4){{{v}.x, {v}.y, {v}.z, 1.0f}}"
+                if c_type == "ArmVec3":
+                    return f"(ArmVec3){{{v}.x, {v}.y, {v}.z}}"
             return f"(ArmVec2){{{v}.x, {v}.y}}"
 
         return ""
@@ -899,20 +912,13 @@ def generate_transform_block(prefix: str, pos: List[float],
                              is_static: bool = False) -> List[str]:
     """Generate C code for transform initialization."""
     lines = []
-    lines.append(f'    {prefix}.transform.loc[0] = {pos[0]:.6f}f;')
-    lines.append(f'    {prefix}.transform.loc[1] = {pos[1]:.6f}f;')
-    lines.append(f'    {prefix}.transform.loc[2] = {pos[2]:.6f}f;')
+    lines.append(f'    {prefix}.transform.loc = (T3DVec3){{{{{pos[0]:.6f}f, {pos[1]:.6f}f, {pos[2]:.6f}f}}}};')
 
     if rot:
-        lines.append(f'    {prefix}.transform.rot[0] = {rot[0]:.6f}f;')
-        lines.append(f'    {prefix}.transform.rot[1] = {rot[1]:.6f}f;')
-        lines.append(f'    {prefix}.transform.rot[2] = {rot[2]:.6f}f;')
-        lines.append(f'    {prefix}.transform.rot[3] = {rot[3]:.6f}f;')
+        lines.append(f'    {prefix}.transform.rot = (T3DQuat){{{{{rot[0]:.6f}f, {rot[1]:.6f}f, {rot[2]:.6f}f, {rot[3]:.6f}f}}}};')
 
     if scale:
-        lines.append(f'    {prefix}.transform.scale[0] = {scale[0]:.6f}f;')
-        lines.append(f'    {prefix}.transform.scale[1] = {scale[1]:.6f}f;')
-        lines.append(f'    {prefix}.transform.scale[2] = {scale[2]:.6f}f;')
+        lines.append(f'    {prefix}.transform.scale = (T3DVec3){{{{{scale[0]:.6f}f, {scale[1]:.6f}f, {scale[2]:.6f}f}}}};')
         dirty_count = "1" if is_static else "FB_COUNT"
         lines.append(f'    {prefix}.transform.dirty = {dirty_count};')
 
@@ -988,6 +994,7 @@ def generate_camera_block(cameras: List[Dict], trait_info: dict, scene_name: str
         lines.append(f'    {prefix}.fov = {cam["fov"]:.6f}f;')
         lines.append(f'    {prefix}.near = {cam["near"]:.6f}f;')
         lines.append(f'    {prefix}.far = {cam["far"]:.6f}f;')
+
         lines.extend(generate_trait_block(prefix, cam.get("traits", []), trait_info, scene_name))
     return '\n'.join(lines)
 
@@ -1003,6 +1010,7 @@ def generate_light_block(lights: List[Dict], trait_info: dict, scene_name: str) 
         lines.append(f'    {prefix}.color[1] = {n64_utils.to_uint8(light["color"][1])};')
         lines.append(f'    {prefix}.color[2] = {n64_utils.to_uint8(light["color"][2])};')
         lines.append(f'    {prefix}.dir = {_fmt_vec3(light["dir"])};')
+
         lines.extend(generate_trait_block(prefix, light.get("traits", []), trait_info, scene_name))
     return '\n'.join(lines)
 
@@ -1010,6 +1018,7 @@ def generate_light_block(lights: List[Dict], trait_info: dict, scene_name: str) 
 def generate_object_block(objects: List[Dict], trait_info: dict, scene_name: str) -> str:
     """Generate C code for all objects in a scene."""
     lines = []
+
     for i, obj in enumerate(objects):
         prefix = f'objects[{i}]'
         is_static = obj.get("is_static", False)
@@ -1193,5 +1202,3 @@ def generate_scene_traits_block(traits: List[Dict], trait_info: dict, scene_name
 
     lines.append(f'    scene->traits = scene_traits;')
     return '\n'.join(lines)
-
-

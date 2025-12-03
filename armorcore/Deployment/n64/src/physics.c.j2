@@ -182,9 +182,9 @@ static bool setup_body_common(ArmObject* obj, int type, const PhysicsBodyParams*
 
     OimoRigidBodyConfig config = oimo_rigid_body_config();
     config.type = out->final_type;
-    config.position = oimo_vec3(obj->transform.loc[0], obj->transform.loc[1], obj->transform.loc[2]);
-    OimoQuat q = oimo_quat(obj->transform.rot[0], obj->transform.rot[1],
-                           obj->transform.rot[2], obj->transform.rot[3]);
+    config.position = oimo_vec3(obj->transform.loc.x, obj->transform.loc.y, obj->transform.loc.z);
+    OimoQuat q = oimo_quat(obj->transform.rot.x, obj->transform.rot.y,
+                           obj->transform.rot.z, obj->transform.rot.w);
     config.rotation = oimo_quat_to_mat3(&q);
     config.linearDamping = params->linear_damping;
     config.angularDamping = params->angular_damping;
@@ -340,9 +340,9 @@ bool physics_create_mesh_full(ArmObject* obj,
     // Body config (always static for mesh colliders)
     OimoRigidBodyConfig config = oimo_rigid_body_config();
     config.type = OIMO_RIGID_BODY_STATIC;
-    config.position = oimo_vec3(obj->transform.loc[0], obj->transform.loc[1], obj->transform.loc[2]);
-    OimoQuat q = oimo_quat(obj->transform.rot[0], obj->transform.rot[1],
-                           obj->transform.rot[2], obj->transform.rot[3]);
+    config.position = oimo_vec3(obj->transform.loc.x, obj->transform.loc.y, obj->transform.loc.z);
+    OimoQuat q = oimo_quat(obj->transform.rot.x, obj->transform.rot.y,
+                           obj->transform.rot.z, obj->transform.rot.w);
     config.rotation = oimo_quat_to_mat3(&q);
     config.autoSleep = false;
     oimo_rigid_body_init(&g_mesh_bodies[idx], &config);
@@ -399,15 +399,15 @@ void physics_sync_object(ArmObject* obj) {{
         return;
     }}
 
-    obj->transform.loc[0] = pos.x;
-    obj->transform.loc[1] = pos.y;
-    obj->transform.loc[2] = pos.z;
+    obj->transform.loc.x = pos.x;
+    obj->transform.loc.y = pos.y;
+    obj->transform.loc.z = pos.z;
 
     OimoQuat rot = oimo_rigid_body_get_orientation(rb);
-    obj->transform.rot[0] = rot.x;
-    obj->transform.rot[1] = rot.y;
-    obj->transform.rot[2] = rot.z;
-    obj->transform.rot[3] = rot.w;
+    obj->transform.rot.x = rot.x;
+    obj->transform.rot.y = rot.y;
+    obj->transform.rot.z = rot.z;
+    obj->transform.rot.w = rot.w;
 
     obj->transform.dirty = TRANSFORM_DIRTY_FRAMES;
 }}

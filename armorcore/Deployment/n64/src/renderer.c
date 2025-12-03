@@ -41,28 +41,25 @@ void renderer_update_objects(ArmScene *scene)
 {
     for (uint16_t i = 0; i < scene->object_count; i++) {
         ArmObject *obj = &scene->objects[i];
+
         if (obj->transform.dirty == 0) {
             continue;
         }
 
-        // Safety check: skip objects with invalid transform values to prevent FPU overflow
-        if (!transform_is_safe(obj->transform.loc, obj->transform.scale)) {
-            // Reset to origin if values are invalid (object fell off world, etc.)
-            obj->transform.loc[0] = 0.0f;
-            obj->transform.loc[1] = 0.0f;
-            obj->transform.loc[2] = 0.0f;
-            obj->visible = false;  // Hide the object
+        // Safety check: skip objects with invalid transform values
+        if (!transform_is_safe(obj->transform.loc.v, obj->transform.scale.v)) {
+            obj->transform.loc = (T3DVec3){{0.0f, 0.0f, 0.0f}};
+            obj->visible = false;
         }
 
         int mat_idx = obj->is_static ? 0 : frameIdx;
         t3d_mat4fp_from_srt(
             &obj->model_mat[mat_idx],
-            obj->transform.scale,
-            obj->transform.rot,
-            obj->transform.loc
+            obj->transform.scale.v,
+            obj->transform.rot.v,
+            obj->transform.loc.v
         );
 
-        // Decrement dirty counter (static objects will reach 0 and stay there)
         obj->transform.dirty--;
     }
 }
@@ -120,14 +117,14 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
         }
 
         T3DVec3 world_center = {{
-            obj->transform.loc[0] + obj->bounds_center.v[0],
-            obj->transform.loc[1] + obj->bounds_center.v[1],
-            obj->transform.loc[2] + obj->bounds_center.v[2]
+            obj->transform.loc.v[0] + obj->bounds_center.v[0],
+            obj->transform.loc.v[1] + obj->bounds_center.v[1],
+            obj->transform.loc.v[2] + obj->bounds_center.v[2]
         }};
 
-        float max_scale = obj->transform.scale[0];
-        if (obj->transform.scale[1] > max_scale) max_scale = obj->transform.scale[1];
-        if (obj->transform.scale[2] > max_scale) max_scale = obj->transform.scale[2];
+        float max_scale = obj->transform.scale.v[0];
+        if (obj->transform.scale.v[1] > max_scale) max_scale = obj->transform.scale.v[1];
+        if (obj->transform.scale.v[2] > max_scale) max_scale = obj->transform.scale.v[2];
         float world_radius = obj->bounds_radius * max_scale;
 
         if (!t3d_frustum_vs_sphere(frustum, &world_center, world_radius)) {
