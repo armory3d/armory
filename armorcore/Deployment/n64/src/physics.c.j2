@@ -1,6 +1,7 @@
 // physics.c - Mini-engine physics implementation
 #include "physics.h"
 #include "utils.h"
+#include "oimo/collision/geometry/static_mesh_geometry.h"
 #include <string.h>
 
 #define MAX_PHYSICS_BODIES {max_physics_bodies}
@@ -24,6 +25,12 @@ typedef union {{
     OimoCapsuleGeometry capsule;
 }} GeometryUnion;
 static GeometryUnion g_geometries[MAX_PHYSICS_BODIES];
+
+// Mesh collider storage (separate due to dynamic allocation)
+static OimoStaticMeshGeometry g_mesh_geometries[MAX_MESH_COLLIDERS];
+static OimoRigidBody g_mesh_bodies[MAX_MESH_COLLIDERS];
+static OimoShape g_mesh_shapes[MAX_MESH_COLLIDERS];
+static bool g_mesh_used[MAX_MESH_COLLIDERS];
 
 // Pool helpers
 static OimoRigidBody* alloc_body(void) {{
@@ -61,6 +68,12 @@ void physics_init(void) {{
     memset(g_shapes, 0, sizeof(g_shapes));
     memset(g_geometries, 0, sizeof(g_geometries));
 
+    // Mesh colliders
+    memset(g_mesh_geometries, 0, sizeof(g_mesh_geometries));
+    memset(g_mesh_bodies, 0, sizeof(g_mesh_bodies));
+    memset(g_mesh_shapes, 0, sizeof(g_mesh_shapes));
+    memset(g_mesh_used, 0, sizeof(g_mesh_used));
+
     OimoVec3 gravity = oimo_vec3(0.0f, -9.80665f, 0.0f);
     oimo_world_init(&g_world, &gravity);
 
@@ -77,10 +90,20 @@ void physics_shutdown(void) {{
 void physics_reset(void) {{
     if (!g_initialized) return;
 
+    // Remove regular bodies
     for (int i = 0; i < MAX_PHYSICS_BODIES; i++) {{
         if (g_body_used[i]) {{
             oimo_world_remove_rigid_body(&g_world, &g_bodies[i]);
             g_body_used[i] = false;
+        }}
+    }}
+
+    // Remove mesh bodies and free their geometry
+    for (int i = 0; i < MAX_MESH_COLLIDERS; i++) {{
+        if (g_mesh_used[i]) {{
+            oimo_world_remove_rigid_body(&g_world, &g_mesh_bodies[i]);
+            oimo_static_mesh_geometry_free(&g_mesh_geometries[i]);
+            g_mesh_used[i] = false;
         }}
     }}
 
@@ -288,6 +311,64 @@ bool physics_create_capsule_ex(ArmObject* obj, int type, float radius, float hal
     oimo_world_add_rigid_body(&g_world, rb);
     obj->rigid_body = rb;
     rb->userData = obj;  // For contact callbacks
+    return true;
+}}
+
+// Static mesh collider
+bool physics_create_mesh(ArmObject* obj,
+                         const OimoVec3* vertices, const int16_t* indices,
+                         int vertex_count, int index_count,
+                         float friction, float restitution,
+                         int collision_group, int collision_mask) {{
+    if (!g_initialized || !obj) return false;
+
+    // Find free mesh slot
+    int idx = -1;
+    for (int i = 0; i < MAX_MESH_COLLIDERS; i++) {{
+        if (!g_mesh_used[i]) {{
+            idx = i;
+            break;
+        }}
+    }}
+
+    if (idx < 0) {{
+        debugf("Physics: mesh collider pool exhausted\\n");
+        return false;
+    }}
+
+    // Initialize mesh geometry
+    if (!oimo_static_mesh_geometry_init(&g_mesh_geometries[idx], vertices, indices, vertex_count, index_count)) {{
+        debugf("Physics: failed to create mesh geometry\\n");
+        return false;
+    }}
+
+    // Body config (always static for mesh colliders)
+    OimoRigidBodyConfig config = oimo_rigid_body_config();
+    config.type = OIMO_RIGID_BODY_STATIC;
+    config.position = oimo_vec3(obj->transform.loc[0], obj->transform.loc[1], obj->transform.loc[2]);
+    OimoQuat q = oimo_quat(obj->transform.rot[0], obj->transform.rot[1],
+                           obj->transform.rot[2], obj->transform.rot[3]);
+    config.rotation = oimo_quat_to_mat3(&q);
+    config.autoSleep = false;
+    oimo_rigid_body_init(&g_mesh_bodies[idx], &config);
+
+    // Shape config
+    OimoShapeConfig shapeConfig = oimo_shape_config();
+    shapeConfig.geometry = &g_mesh_geometries[idx].base;
+    shapeConfig.friction = friction;
+    shapeConfig.restitution = restitution;
+    shapeConfig.density = 0.0f;  // Static
+    shapeConfig.collisionGroup = collision_group;
+    shapeConfig.collisionMask = collision_mask;
+
+    oimo_shape_init(&g_mesh_shapes[idx], &shapeConfig);
+    oimo_rigid_body_add_shape(&g_mesh_bodies[idx], &g_mesh_shapes[idx]);
+
+    oimo_world_add_rigid_body(&g_world, &g_mesh_bodies[idx]);
+    obj->rigid_body = &g_mesh_bodies[idx];
+    g_mesh_bodies[idx].userData = obj;
+    g_mesh_used[idx] = true;
+
     return true;
 }}
 

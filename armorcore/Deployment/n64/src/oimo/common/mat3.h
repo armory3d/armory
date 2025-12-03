@@ -286,4 +286,13 @@ static inline void oimo_mat3_transpose_eq(OimoMat3* m) {
     t = m->e12; m->e12 = m->e21; m->e21 = t;
 }
 
+// Create diagonal matrix
+static inline OimoMat3 oimo_mat3_diagonal(OimoScalar d00, OimoScalar d11, OimoScalar d22) {
+    return (OimoMat3){
+        d00, 0, 0,
+        0, d11, 0,
+        0, 0, d22
+    };
+}
+
 #endif // OIMO_COMMON_MAT3_H

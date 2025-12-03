@@ -9,6 +9,9 @@
 extern "C" {
 #endif
 
+// Maximum static mesh colliders (separate from body pool due to different memory management)
+#define MAX_MESH_COLLIDERS 8
+
 // World management
 void physics_init(void);
 void physics_shutdown(void);
@@ -34,6 +37,17 @@ bool physics_create_sphere_ex(ArmObject* obj, int type, float radius,
 bool physics_create_capsule_ex(ArmObject* obj, int type, float radius, float half_height,
                                float mass, float friction, float restitution,
                                int collision_group, int collision_mask);
+
+// Static mesh collider (always static body type)
+// vertices: array of Vec3 positions
+// indices: array of triangle indices (3 per triangle)
+// vertex_count: number of vertices
+// index_count: number of indices (must be multiple of 3)
+bool physics_create_mesh(ArmObject* obj,
+                         const OimoVec3* vertices, const int16_t* indices,
+                         int vertex_count, int index_count,
+                         float friction, float restitution,
+                         int collision_group, int collision_mask);
 
 // Convenience wrappers with default collision group=1, mask=1
 static inline bool physics_create_box(ArmObject* obj, int type, float hx, float hy, float hz,

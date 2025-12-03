@@ -9,10 +9,14 @@
 #include "capsule_capsule_detector.h"
 #include "sphere_capsule_detector.h"
 #include "box_capsule_detector.h"
+#include "sphere_mesh_detector.h"
+#include "box_mesh_detector.h"
+#include "capsule_mesh_detector.h"
 #include "../geometry/geometry_type.h"
 #include "../geometry/sphere_geometry.h"
 #include "../geometry/box_geometry.h"
 #include "../geometry/capsule_geometry.h"
+#include "../geometry/static_mesh_geometry.h"
 #include "../../common/transform.h"
 
 #ifdef __cplusplus
@@ -29,6 +33,13 @@ typedef struct OimoCollisionMatrix {
     OimoSphereCapsuleDetector capsule_sphere;  // capsule is geom1 (swapped)
     OimoBoxCapsuleDetector box_capsule;        // box is geom1
     OimoBoxCapsuleDetector capsule_box;        // capsule is geom1 (swapped)
+    // Mesh detectors
+    OimoSphereMeshDetector sphere_mesh;
+    OimoSphereMeshDetector mesh_sphere;
+    OimoBoxMeshDetector box_mesh;
+    OimoBoxMeshDetector mesh_box;
+    OimoCapsuleMeshDetector capsule_mesh;
+    OimoCapsuleMeshDetector mesh_capsule;
 } OimoCollisionMatrix;
 
 static inline void oimo_collision_matrix_init(OimoCollisionMatrix* matrix) {
@@ -41,6 +52,13 @@ static inline void oimo_collision_matrix_init(OimoCollisionMatrix* matrix) {
     oimo_sphere_capsule_detector_init(&matrix->capsule_sphere, true);   // capsule-sphere order (swapped)
     oimo_box_capsule_detector_init(&matrix->box_capsule, false);        // box-capsule order
     oimo_box_capsule_detector_init(&matrix->capsule_box, true);         // capsule-box order (swapped)
+    // Mesh detectors
+    oimo_sphere_mesh_detector_init(&matrix->sphere_mesh, false);
+    oimo_sphere_mesh_detector_init(&matrix->mesh_sphere, true);
+    oimo_box_mesh_detector_init(&matrix->box_mesh, false);
+    oimo_box_mesh_detector_init(&matrix->mesh_box, true);
+    oimo_capsule_mesh_detector_init(&matrix->capsule_mesh, false);
+    oimo_capsule_mesh_detector_init(&matrix->mesh_capsule, true);
 }
 
 static inline OimoCollisionMatrix oimo_collision_matrix_create(void) {
@@ -81,6 +99,25 @@ static inline OimoDetector* oimo_collision_matrix_get_detector(
     }
     if (type1 == OIMO_GEOMETRY_CAPSULE && type2 == OIMO_GEOMETRY_BOX) {
         return &matrix->capsule_box.base;
+    }
+    // Mesh collisions
+    if (type1 == OIMO_GEOMETRY_SPHERE && type2 == OIMO_GEOMETRY_STATIC_MESH) {
+        return &matrix->sphere_mesh.base;
+    }
+    if (type1 == OIMO_GEOMETRY_STATIC_MESH && type2 == OIMO_GEOMETRY_SPHERE) {
+        return &matrix->mesh_sphere.base;
+    }
+    if (type1 == OIMO_GEOMETRY_BOX && type2 == OIMO_GEOMETRY_STATIC_MESH) {
+        return &matrix->box_mesh.base;
+    }
+    if (type1 == OIMO_GEOMETRY_STATIC_MESH && type2 == OIMO_GEOMETRY_BOX) {
+        return &matrix->mesh_box.base;
+    }
+    if (type1 == OIMO_GEOMETRY_CAPSULE && type2 == OIMO_GEOMETRY_STATIC_MESH) {
+        return &matrix->capsule_mesh.base;
+    }
+    if (type1 == OIMO_GEOMETRY_STATIC_MESH && type2 == OIMO_GEOMETRY_CAPSULE) {
+        return &matrix->mesh_capsule.base;
     }
     return NULL;
 }
@@ -185,6 +222,61 @@ static inline bool oimo_collision_matrix_detect(
             tf2, tf1);  // transforms also swapped
         return true;
     }
+    // Mesh collisions
+    else if (type1 == OIMO_GEOMETRY_SPHERE && type2 == OIMO_GEOMETRY_STATIC_MESH) {
+        oimo_sphere_mesh_detector_detect(
+            &matrix->sphere_mesh,
+            result,
+            (const OimoSphereGeometry*)geom1,
+            (const OimoStaticMeshGeometry*)geom2,
+            tf1, tf2);
+        return true;
+    }
+    else if (type1 == OIMO_GEOMETRY_STATIC_MESH && type2 == OIMO_GEOMETRY_SPHERE) {
+        oimo_sphere_mesh_detector_detect(
+            &matrix->mesh_sphere,
+            result,
+            (const OimoSphereGeometry*)geom2,
+            (const OimoStaticMeshGeometry*)geom1,
+            tf2, tf1);
+        return true;
+    }
+    else if (type1 == OIMO_GEOMETRY_BOX && type2 == OIMO_GEOMETRY_STATIC_MESH) {
+        oimo_box_mesh_detector_detect(
+            &matrix->box_mesh,
+            result,
+            (const OimoBoxGeometry*)geom1,
+            (const OimoStaticMeshGeometry*)geom2,
+            tf1, tf2);
+        return true;
+    }
+    else if (type1 == OIMO_GEOMETRY_STATIC_MESH && type2 == OIMO_GEOMETRY_BOX) {
+        oimo_box_mesh_detector_detect(
+            &matrix->mesh_box,
+            result,
+            (const OimoBoxGeometry*)geom2,
+            (const OimoStaticMeshGeometry*)geom1,
+            tf2, tf1);
+        return true;
+    }
+    else if (type1 == OIMO_GEOMETRY_CAPSULE && type2 == OIMO_GEOMETRY_STATIC_MESH) {
+        oimo_capsule_mesh_detector_detect(
+            &matrix->capsule_mesh,
+            result,
+            (const OimoCapsuleGeometry*)geom1,
+            (const OimoStaticMeshGeometry*)geom2,
+            tf1, tf2);
+        return true;
+    }
+    else if (type1 == OIMO_GEOMETRY_STATIC_MESH && type2 == OIMO_GEOMETRY_CAPSULE) {
+        oimo_capsule_mesh_detector_detect(
+            &matrix->mesh_capsule,
+            result,
+            (const OimoCapsuleGeometry*)geom2,
+            (const OimoStaticMeshGeometry*)geom1,
+            tf2, tf1);
+        return true;
+    }
 
     // Unsupported geometry combination
     return false;
@@ -217,6 +309,25 @@ static inline OimoDetectorType oimo_collision_matrix_get_detector_type(int geom_
     }
     if (geom_type1 == OIMO_GEOMETRY_CAPSULE && geom_type2 == OIMO_GEOMETRY_BOX) {
         return OIMO_DETECTOR_CAPSULE_BOX;
+    }
+    // Mesh collisions
+    if (geom_type1 == OIMO_GEOMETRY_SPHERE && geom_type2 == OIMO_GEOMETRY_STATIC_MESH) {
+        return OIMO_DETECTOR_SPHERE_MESH;
+    }
+    if (geom_type1 == OIMO_GEOMETRY_STATIC_MESH && geom_type2 == OIMO_GEOMETRY_SPHERE) {
+        return OIMO_DETECTOR_MESH_SPHERE;
+    }
+    if (geom_type1 == OIMO_GEOMETRY_BOX && geom_type2 == OIMO_GEOMETRY_STATIC_MESH) {
+        return OIMO_DETECTOR_BOX_MESH;
+    }
+    if (geom_type1 == OIMO_GEOMETRY_STATIC_MESH && geom_type2 == OIMO_GEOMETRY_BOX) {
+        return OIMO_DETECTOR_MESH_BOX;
+    }
+    if (geom_type1 == OIMO_GEOMETRY_CAPSULE && geom_type2 == OIMO_GEOMETRY_STATIC_MESH) {
+        return OIMO_DETECTOR_CAPSULE_MESH;
+    }
+    if (geom_type1 == OIMO_GEOMETRY_STATIC_MESH && geom_type2 == OIMO_GEOMETRY_CAPSULE) {
+        return OIMO_DETECTOR_MESH_CAPSULE;
     }
     return (OimoDetectorType)-1;  // Unsupported
 }

@@ -250,4 +250,24 @@ static inline int oimo_aabb_ray_cast(
     return 1;
 }
 
+// Initialize AABB to "empty" state (inverted bounds for expansion)
+static inline void oimo_aabb_init(OimoAabb* aabb) {
+    aabb->min.x = 1e30f;
+    aabb->min.y = 1e30f;
+    aabb->min.z = 1e30f;
+    aabb->max.x = -1e30f;
+    aabb->max.y = -1e30f;
+    aabb->max.z = -1e30f;
+}
+
+// Merge AABB b into result (result = union of result and b)
+static inline void oimo_aabb_merge(OimoAabb* result, const OimoAabb* a, const OimoAabb* b) {
+    result->min.x = oimo_min(a->min.x, b->min.x);
+    result->min.y = oimo_min(a->min.y, b->min.y);
+    result->min.z = oimo_min(a->min.z, b->min.z);
+    result->max.x = oimo_max(a->max.x, b->max.x);
+    result->max.y = oimo_max(a->max.y, b->max.y);
+    result->max.z = oimo_max(a->max.z, b->max.z);
+}
+
 #endif // OIMO_COLLISION_GEOMETRY_AABB_H

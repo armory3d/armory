@@ -5,27 +5,30 @@ typedef enum OimoGeometryType {
     OIMO_GEOMETRY_SPHERE  = 0,
     OIMO_GEOMETRY_BOX     = 1,
     OIMO_GEOMETRY_CAPSULE = 2,
-    // Future types (not implemented for N64):
-    // OIMO_GEOMETRY_CYLINDER    = 3,
-    // OIMO_GEOMETRY_CONE        = 4,
-    // OIMO_GEOMETRY_CONVEX_HULL = 5,
+    OIMO_GEOMETRY_STATIC_MESH = 3,
 
     // Count of supported types
-    OIMO_GEOMETRY_TYPE_COUNT = 3
+    OIMO_GEOMETRY_TYPE_COUNT = 4
 } OimoGeometryType;
 
-// Check if type is a convex geometry (all our supported types are convex)
+// Check if type is a convex geometry
 static inline int oimo_geometry_is_convex(OimoGeometryType type) {
     return type == OIMO_GEOMETRY_SPHERE || type == OIMO_GEOMETRY_BOX || type == OIMO_GEOMETRY_CAPSULE;
+}
+
+// Check if type is a mesh geometry (concave, static only)
+static inline int oimo_geometry_is_mesh(OimoGeometryType type) {
+    return type == OIMO_GEOMETRY_STATIC_MESH;
 }
 
 // Get geometry type name (for debugging)
 static inline const char* oimo_geometry_type_name(OimoGeometryType type) {
     switch (type) {
-        case OIMO_GEOMETRY_SPHERE:  return "Sphere";
-        case OIMO_GEOMETRY_BOX:     return "Box";
-        case OIMO_GEOMETRY_CAPSULE: return "Capsule";
-        default:                    return "Unknown";
+        case OIMO_GEOMETRY_SPHERE:      return "Sphere";
+        case OIMO_GEOMETRY_BOX:         return "Box";
+        case OIMO_GEOMETRY_CAPSULE:     return "Capsule";
+        case OIMO_GEOMETRY_STATIC_MESH: return "StaticMesh";
+        default:                        return "Unknown";
     }
 }
 

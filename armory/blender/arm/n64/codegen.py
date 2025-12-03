@@ -1077,6 +1077,38 @@ def generate_physics_block(objects: List[Dict], world_data: dict) -> str:
             r = rb.get("radius", 0.5)
             hh = rb.get("half_height", 0.5)
             lines.append(f'    physics_create_capsule(&{prefix}, {rb_type}, {r:.6f}f, {hh:.6f}f, {mass:.6f}f, {friction:.6f}f, {restitution:.6f}f);')
+        elif shape == "mesh":
+            mesh_data = rb.get("mesh_data", {})
+            vertices = mesh_data.get("vertices", [])
+            indices = mesh_data.get("indices", [])
+            num_vertices = mesh_data.get("num_vertices", len(vertices))
+            index_count = len(indices)
+
+            # Collision groups
+            col_group = rb.get("collision_group", 1)
+            col_mask = rb.get("collision_mask", 1)
+
+            if vertices and indices:
+                obj_name = obj.get("name", f"mesh_{i}")
+                # Generate static arrays using OimoVec3 for vertices
+                lines.append(f'    static OimoVec3 {obj_name}_col_verts[] = {{')
+                for v_idx, v in enumerate(vertices):
+                    comma = ',' if v_idx < len(vertices) - 1 else ''
+                    lines.append(f'        {{{v[0]:.6f}f, {v[1]:.6f}f, {v[2]:.6f}f}}{comma}')
+                lines.append('    };')
+                # Use int16_t for indices
+                lines.append(f'    static int16_t {obj_name}_col_indices[] = {{')
+                # Output indices in groups of 6 for readability
+                for t_idx in range(0, len(indices), 6):
+                    end_idx = min(t_idx + 6, len(indices))
+                    idx_str = ', '.join(str(indices[j]) for j in range(t_idx, end_idx))
+                    comma = ',' if end_idx < len(indices) else ''
+                    lines.append(f'        {idx_str}{comma}')
+                lines.append('    };')
+                lines.append(f'    physics_create_mesh(&{prefix}, {obj_name}_col_verts, {obj_name}_col_indices, {num_vertices}, {index_count}, {friction:.6f}f, {restitution:.6f}f, {col_group}, {col_mask});')
+            else:
+                # Fallback to box if mesh data is missing
+                lines.append(f'    physics_create_box(&{prefix}, {rb_type}, 0.5f, 0.5f, 0.5f, 0.0f, {friction:.6f}f, {restitution:.6f}f);')
         else:
             # Default to box
             hx, hy, hz = 0.5, 0.5, 0.5

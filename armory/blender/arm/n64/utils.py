@@ -2,8 +2,13 @@
 
 import os
 import shutil
-from typing import List
+from typing import List, Optional
+
+import bpy
+import bmesh
+
 import arm.utils
+import arm.log as log
 
 
 # =============================================================================
@@ -341,3 +346,81 @@ def compute_static_flags(scene_data: dict, trait_info: dict) -> None:
 
             # Object is static if no dynamic physics and no mutating traits
             obj["is_static"] = not has_dynamic_physics and not any_trait_mutates
+
+
+# =============================================================================
+# Collision Mesh Extraction
+# =============================================================================
+
+def extract_collision_mesh(obj: bpy.types.Object, max_triangles: int = 256) -> Optional[dict]:
+    """Extract mesh collision data from a Blender object.
+
+    Returns a dict with 'vertices' and 'indices' lists, or None on failure.
+    Vertices are in LOCAL/OBJECT space (not world space) with N64 coordinate system (Y-up).
+    The physics system will position the mesh using the object's transform.
+
+    Args:
+        obj: Blender mesh object to extract collision data from
+        max_triangles: Maximum number of triangles (default 256 for N64 memory constraints)
+
+    Returns:
+        Dict with vertices, indices, num_vertices, num_triangles - or None on failure
+    """
+    if obj.type != 'MESH':
+        return None
+
+    # Get evaluated mesh with modifiers applied
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    obj_eval = obj.evaluated_get(depsgraph)
+    mesh = obj_eval.to_mesh()
+
+    if mesh is None:
+        return None
+
+    try:
+        # Convert to BMesh for triangulation
+        bm = bmesh.new()
+        bm.from_mesh(mesh)
+        bmesh.ops.triangulate(bm, faces=bm.faces[:], quad_method='FIXED')
+
+        # Get object scale (we apply scale to local coordinates)
+        scale = obj.scale
+
+        # Extract vertices in LOCAL space, scaled and converted to N64 coords (Y-up)
+        vertices = []
+        for v in bm.verts:
+            # Apply scale to local coordinates
+            local_pos = v.co
+            # Convert from Blender Z-up to N64 Y-up: swap Y and Z, apply scale
+            vertices.append([
+                local_pos.x * scale.x,
+                local_pos.z * scale.z,  # Blender Z -> N64 Y
+                local_pos.y * scale.y   # Blender Y -> N64 Z
+            ])
+
+        # Extract triangle indices
+        indices = []
+        for face in bm.faces:
+            if len(face.verts) == 3:
+                indices.extend([v.index for v in face.verts])
+            else:
+                # Should not happen after triangulation
+                log.warn(f'Object "{obj.name}": non-triangle face in collision mesh')
+
+        # Limit triangle count for N64 memory constraints
+        num_triangles = len(indices) // 3
+        if num_triangles > max_triangles:
+            log.warn(f'Object "{obj.name}": collision mesh has {num_triangles} triangles, limiting to {max_triangles}')
+            indices = indices[:max_triangles * 3]
+
+        bm.free()
+
+        return {
+            "vertices": vertices,
+            "indices": indices,
+            "num_vertices": len(vertices),
+            "num_triangles": len(indices) // 3
+        }
+
+    finally:
+        obj_eval.to_mesh_clear()

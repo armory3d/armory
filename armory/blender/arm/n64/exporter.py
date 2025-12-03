@@ -284,7 +284,8 @@ class N64Exporter:
                     rb = obj.rigid_body
                     shape = rb.collision_shape
 
-                    # N64 supports BOX, SPHERE, and CAPSULE - map others to box
+                    # N64 supports BOX, SPHERE, CAPSULE, and MESH (static only)
+                    rb_mesh_data = None
                     if shape == 'SPHERE':
                         rb_shape = "sphere"
                         # Calculate sphere radius from bounding box (max half-extent * max scale)
@@ -301,6 +302,22 @@ class N64Exporter:
                         total_height = half_extents[2] * 2.0 * obj.scale[2]
                         rb_half_height = max(0.0, (total_height - 2.0 * rb_radius) / 2.0)
                         rb_half_extents = None
+                    elif shape == 'MESH' and rb.type == 'PASSIVE':
+                        # Mesh collision only works for static (passive) bodies
+                        rb_shape = "mesh"
+                        rb_radius = None
+                        rb_half_height = None
+                        rb_half_extents = None
+                        # Extract mesh collision data
+                        rb_mesh_data = n64_utils.extract_collision_mesh(obj)
+                        if rb_mesh_data is None:
+                            log.warn(f'Object "{obj.name}": failed to extract mesh collision data, using BOX')
+                            rb_shape = "box"
+                            rb_half_extents = [
+                                half_extents[0] * obj.scale[0],
+                                half_extents[2] * obj.scale[2],
+                                half_extents[1] * obj.scale[1]
+                            ]
                     else:
                         # Everything else becomes a box
                         rb_shape = "box"
@@ -314,7 +331,10 @@ class N64Exporter:
                             half_extents[1] * obj.scale[1]   # Blender Y -> N64 Z
                         ]
                         if shape not in ('BOX', 'SPHERE', 'CAPSULE'):
-                            log.warn(f'Object "{obj.name}": collision shape "{shape}" not supported on N64, using BOX')
+                            if shape == 'MESH' and rb.type != 'PASSIVE':
+                                log.warn(f'Object "{obj.name}": MESH collision shape only supported for static (passive) bodies, using BOX')
+                            else:
+                                log.warn(f'Object "{obj.name}": collision shape "{shape}" not supported on N64, using BOX')
 
                     # Mass (0 = static)
                     is_static = rb.type == 'PASSIVE'
@@ -350,6 +370,8 @@ class N64Exporter:
                     elif rb_shape == "capsule":
                         rigid_body_data["radius"] = rb_radius
                         rigid_body_data["half_height"] = rb_half_height
+                    elif rb_shape == "mesh":
+                        rigid_body_data["mesh_data"] = rb_mesh_data
                     else:
                         rigid_body_data["half_extents"] = rb_half_extents
 
@@ -423,7 +445,6 @@ class N64Exporter:
 
         with open(out_path, 'w', encoding='utf-8') as f:
             f.write(output)
-
 
     def write_traits(self):
         # Collect all type overrides from all trait instances across all scenes

@@ -60,8 +60,9 @@ static inline void oimo_shape_init(OimoShape* shape, const OimoShapeConfig* conf
     shape->userData = NULL;
 }
 
-// Forward declaration for capsule geometry
+// Forward declaration for geometry types
 #include "../../collision/geometry/capsule_geometry.h"
+#include "../../collision/geometry/static_mesh_geometry.h"
 
 // Sync shape transforms with rigid body (called during simulation)
 // tf1 = previous body transform, tf2 = current body transform
@@ -88,6 +89,10 @@ static inline void oimo_shape_sync(OimoShape* shape, const OimoTransform* tf1, c
         OimoCapsuleGeometry* capsule = (OimoCapsuleGeometry*)shape->_geom;
         oimo_capsule_geometry_compute_aabb(capsule, &aabb1, &shape->_ptransform);
         oimo_capsule_geometry_compute_aabb(capsule, &aabb2, &shape->_transform);
+    } else if (shape->_geom->type == OIMO_GEOMETRY_STATIC_MESH) {
+        OimoStaticMeshGeometry* mesh = (OimoStaticMeshGeometry*)shape->_geom;
+        oimo_static_mesh_compute_aabb(mesh, &aabb1, &shape->_ptransform);
+        oimo_static_mesh_compute_aabb(mesh, &aabb2, &shape->_transform);
     }
 
     // Combine AABBs (min of mins, max of maxes)
