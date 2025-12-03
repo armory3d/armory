@@ -895,10 +895,10 @@ def _fmt_vec3(v: List[float]) -> str:
 
 def generate_transform_block(prefix: str, pos: List[float],
                              rot: List[float] = None,
-                             scale: List[float] = None) -> List[str]:
+                             scale: List[float] = None,
+                             is_static: bool = False) -> List[str]:
     """Generate C code for transform initialization."""
     lines = []
-    # Position - already converted to N64 coords by caller
     lines.append(f'    {prefix}.transform.loc[0] = {pos[0]:.6f}f;')
     lines.append(f'    {prefix}.transform.loc[1] = {pos[1]:.6f}f;')
     lines.append(f'    {prefix}.transform.loc[2] = {pos[2]:.6f}f;')
@@ -913,7 +913,8 @@ def generate_transform_block(prefix: str, pos: List[float],
         lines.append(f'    {prefix}.transform.scale[0] = {scale[0]:.6f}f;')
         lines.append(f'    {prefix}.transform.scale[1] = {scale[1]:.6f}f;')
         lines.append(f'    {prefix}.transform.scale[2] = {scale[2]:.6f}f;')
-        lines.append(f'    {prefix}.transform.dirty = FB_COUNT;')
+        dirty_count = "1" if is_static else "FB_COUNT"
+        lines.append(f'    {prefix}.transform.dirty = {dirty_count};')
 
     return lines
 
@@ -1011,12 +1012,14 @@ def generate_object_block(objects: List[Dict], trait_info: dict, scene_name: str
     lines = []
     for i, obj in enumerate(objects):
         prefix = f'objects[{i}]'
-        lines.extend(generate_transform_block(prefix, obj["pos"], obj["rot"], obj["scale"]))
+        is_static = obj.get("is_static", False)
+        lines.extend(generate_transform_block(prefix, obj["pos"], obj["rot"], obj["scale"], is_static))
         lines.append(f'    models_get({obj["mesh"]});')
         lines.append(f'    {prefix}.dpl = models_get_dpl({obj["mesh"]});')
-        lines.append(f'    {prefix}.model_mat = malloc_uncached(sizeof(T3DMat4FP) * FB_COUNT);')
+        mat_count = "1" if is_static else "FB_COUNT"
+        lines.append(f'    {prefix}.model_mat = malloc_uncached(sizeof(T3DMat4FP) * {mat_count});')
         lines.append(f'    {prefix}.visible = {str(obj["visible"]).lower()};')
-        lines.append(f'    {prefix}.is_static = {str(obj.get("is_static", False)).lower()};')
+        lines.append(f'    {prefix}.is_static = {str(is_static).lower()};')
 
         bc = obj.get("bounds_center", [0, 0, 0])
         br = obj.get("bounds_radius", 1.0)

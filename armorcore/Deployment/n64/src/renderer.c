@@ -54,8 +54,9 @@ void renderer_update_objects(ArmScene *scene)
             obj->visible = false;  // Hide the object
         }
 
+        int mat_idx = obj->is_static ? 0 : frameIdx;
         t3d_mat4fp_from_srt(
-            &obj->model_mat[frameIdx],
+            &obj->model_mat[mat_idx],
             obj->transform.scale,
             obj->transform.rot,
             obj->transform.loc
@@ -134,7 +135,8 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
         }
 
         visible_count++;
-        t3d_matrix_set(&obj->model_mat[frameIdx], true);
+        int mat_idx = obj->is_static ? 0 : frameIdx;
+        t3d_matrix_set(&obj->model_mat[mat_idx], true);
         rspq_block_run(obj->dpl);
     }
     t3d_matrix_pop(1);
