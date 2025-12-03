@@ -8,10 +8,7 @@
 #include "../../common/vec3.h"
 #include "../../common/math_util.h"
 
-// Maximum proxies (N64 memory constraint)
 #define OIMO_MAX_PROXIES 128
-
-// Maximum proxy pairs per frame
 #define OIMO_MAX_PROXY_PAIRS 256
 
 typedef void (*OimoBroadPhaseProxyCallback)(OimoProxy* proxy, void* userData);
@@ -99,15 +96,9 @@ static inline void oimo_broadphase_pick_and_push_pair(OimoBroadPhase* bp, OimoPr
     pp->_p2 = p2;
 }
 
-// Forward declarations for functions used before definition
 static inline int oimo_broadphase_is_overlapping(const OimoProxy* p1, const OimoProxy* p2);
 static inline void oimo_broadphase_add_proxy(OimoBroadPhase* bp, OimoProxy* p);
 static inline void oimo_broadphase_remove_proxy(OimoBroadPhase* bp, OimoProxy* p);
-
-/**
- * Return all pairs to the pool.
- * Matches: poolProxyPairs()
- */
 static inline void oimo_broadphase_pool_pairs(OimoBroadPhase* bp) {
     OimoProxyPair* p = bp->_proxyPairList;
 
@@ -131,12 +122,7 @@ static inline void oimo_broadphase_pool_pairs(OimoBroadPhase* bp) {
     }
 }
 
-/**
- * Brute-force broadphase: collect all overlapping pairs.
- * Simple O(n²) algorithm suitable for small numbers of objects.
- * For spatial hash, this is overridden in oimo_broadphase_collect_pairs_dispatch.
- * Matches: collectPairs()
- */
+// O(n²) brute-force pair collection
 static inline void oimo_broadphase_collect_pairs_bruteforce(OimoBroadPhase* bp) {
     // Return previous pairs to pool
     oimo_broadphase_pool_pairs(bp);
@@ -158,17 +144,10 @@ static inline void oimo_broadphase_collect_pairs_bruteforce(OimoBroadPhase* bp) 
     }
 }
 
-/**
- * Collect overlapping pairs using brute-force O(n²) algorithm.
- * Simple and reliable for N64's typical small object counts.
- */
 static inline void oimo_broadphase_collect_pairs(OimoBroadPhase* bp) {
     oimo_broadphase_collect_pairs_bruteforce(bp);
 }
 
-/**
- * Initialize broadphase base.
- */
 static inline void oimo_broadphase_init(OimoBroadPhase* bp, int type) {
     bp->_type = type;
     bp->_numProxies = 0;
@@ -183,10 +162,6 @@ static inline void oimo_broadphase_init(OimoBroadPhase* bp, int type) {
     bp->_pairStorageUsed = 0;
 }
 
-/**
- * Create and add a proxy for a shape.
- * Matches: createProxy(userData, aabb)
- */
 static inline OimoProxy* oimo_broadphase_create_proxy(OimoBroadPhase* bp, void* userData, const OimoAabb* aabb) {
     if (bp->_proxyStorageUsed >= OIMO_MAX_PROXIES) {
         return NULL;  // Out of proxy storage
@@ -205,76 +180,39 @@ static inline OimoProxy* oimo_broadphase_create_proxy(OimoBroadPhase* bp, void* 
     return p;
 }
 
-/**
- * Destroy and remove a proxy.
- * Matches: destroyProxy(proxy)
- */
 static inline void oimo_broadphase_destroy_proxy(OimoBroadPhase* bp, OimoProxy* p) {
     oimo_broadphase_remove_proxy(bp, p);
-    // Note: In static allocation, we don't reclaim storage
 }
 
-/**
- * Add proxy to broadphase.
- * Matches: addProxy(p)
- */
 static inline void oimo_broadphase_add_proxy(OimoBroadPhase* bp, OimoProxy* p) {
     bp->_numProxies++;
     oimo_broadphase_list_push(bp, p);
 }
 
-/**
- * Remove proxy from broadphase.
- * Matches: removeProxy(p)
- */
 static inline void oimo_broadphase_remove_proxy(OimoBroadPhase* bp, OimoProxy* p) {
     bp->_numProxies--;
     oimo_broadphase_list_remove(bp, p);
 }
 
-/**
- * Check if two proxies' AABBs overlap.
- * Matches: isOverlapping(proxy1, proxy2)
- */
 static inline int oimo_broadphase_is_overlapping(const OimoProxy* p1, const OimoProxy* p2) {
-    // M.aabb_overlap(p1._aabbMin, p1._aabbMax, p2._aabbMin, p2._aabbMax)
     return (p1->_aabbMin.x <= p2->_aabbMax.x && p1->_aabbMax.x >= p2->_aabbMin.x) &&
            (p1->_aabbMin.y <= p2->_aabbMax.y && p1->_aabbMax.y >= p2->_aabbMin.y) &&
            (p1->_aabbMin.z <= p2->_aabbMax.z && p1->_aabbMax.z >= p2->_aabbMin.z);
 }
 
-/**
- * Returns the linked list of collected pairs of proxies.
- * Matches: getProxyPairList()
- */
 static inline OimoProxyPair* oimo_broadphase_get_proxy_pair_list(const OimoBroadPhase* bp) {
     return bp->_proxyPairList;
 }
 
-/**
- * Returns whether to collect only pairs created in the last step.
- * Matches: isIncremental()
- */
 static inline int oimo_broadphase_is_incremental(const OimoBroadPhase* bp) {
     return bp->_incremental;
 }
 
-/**
- * Returns the number of broad-phase AABB tests.
- * Matches: getTestCount()
- */
 static inline int oimo_broadphase_get_test_count(const OimoBroadPhase* bp) {
     return bp->_testCount;
 }
 
-/**
- * Test if a line segment intersects an AABB.
- * Matches: aabbSegmentTest(aabbMin, aabbMax, begin, end)
- *
- * Uses separating axis test with 6 axes:
- * - 3 coordinate axes (1,0,0), (0,1,0), (0,0,1)
- * - 3 cross products of segment direction with coordinate axes
- */
+// AABB-segment intersection using SAT (6 axes)
 static inline int oimo_aabb_segment_test(
     const OimoVec3* aabbMin,
     const OimoVec3* aabbMax,

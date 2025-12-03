@@ -54,17 +54,14 @@
 #include "dynamics/island.h"
 #include "dynamics/world.h"
 
-// ============================================================================
-// Compatibility layer for Armory3D code generator
-// These provide alternative naming conventions and helper functions
-// ============================================================================
+// Armory3D compatibility layer
 
-// Body type constants (short form)
+// Body type aliases
 #define OIMO_BODY_STATIC    OIMO_RIGID_BODY_STATIC
 #define OIMO_BODY_DYNAMIC   OIMO_RIGID_BODY_DYNAMIC
 #define OIMO_BODY_KINEMATIC OIMO_RIGID_BODY_KINEMATIC
 
-// Config default functions (return by value)
+// Config defaults
 static inline OimoRigidBodyConfig oimo_rigidbody_config_default(void) {
     return oimo_rigid_body_config();
 }
@@ -73,8 +70,7 @@ static inline OimoShapeConfig oimo_shape_config_default(void) {
     return oimo_shape_config();
 }
 
-// Geometry creation helpers that return pointers (for assignment to shape_config.geometry)
-// These allocate from a static pool - suitable for N64's limited memory model
+// Geometry pool allocation
 #define OIMO_MAX_GEOMETRIES 64
 static OimoSphereGeometry _oimo_sphere_pool[OIMO_MAX_GEOMETRIES];
 static OimoBoxGeometry _oimo_box_pool[OIMO_MAX_GEOMETRIES];
@@ -113,20 +109,20 @@ static inline OimoGeometry* oimo_geometry_capsule(OimoScalar radius, OimoScalar 
     return (OimoGeometry*)g;
 }
 
-// Reset geometry pools (call when resetting physics)
+// Reset pools
 static inline void oimo_geometry_pools_reset(void) {
     _oimo_sphere_pool_idx = 0;
     _oimo_box_pool_idx = 0;
     _oimo_capsule_pool_idx = 0;
 }
 
-// Rigid body function aliases (without underscore)
+// Function aliases
 #define oimo_rigidbody_init             oimo_rigid_body_init
 #define oimo_rigidbody_add_shape        oimo_rigid_body_add_shape
 #define oimo_rigidbody_remove_shape     oimo_rigid_body_remove_shape
 #define oimo_rigidbody_update_mass      oimo_rigid_body_update_mass
 
-// World function aliases
+
 #define oimo_world_add_rigidbody        oimo_world_add_rigid_body
 #define oimo_world_remove_rigidbody     oimo_world_remove_rigid_body
 
