@@ -108,6 +108,14 @@ class IREmitter:
     def emit_skip(self, node: Dict) -> str:
         return ""
 
+    def emit_return(self, node: Dict) -> str:
+        """Return statement: return; or return value;"""
+        children = node.get("children")
+        if children and len(children) > 0:
+            val = self.emit(children[0])
+            return f"return {val};"
+        return "return;"
+
     # =========================================================================
     # Variables
     # =========================================================================
