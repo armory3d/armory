@@ -395,21 +395,6 @@ class N64Exporter:
 
                     self.has_physics = True
 
-                # Get parent name for hierarchy (only mesh parents supported)
-                parent_name = None
-                world_offset = None
-                if obj.parent and obj.parent.type == 'MESH':
-                    parent_name = arm.utils.safesrc(obj.parent.name)
-                    # World-space offset: child_world - parent_world
-                    # This avoids needing to rotate by parent rotation at runtime
-                    child_world = obj.matrix_world.to_translation()
-                    parent_world = obj.parent.matrix_world.to_translation()
-                    world_offset = [
-                        child_world.x - parent_world.x,
-                        child_world.y - parent_world.y,
-                        child_world.z - parent_world.z
-                    ]
-
                 obj_data = {
                     "name": arm.utils.safesrc(obj.name),
                     "mesh": f'MODEL_{mesh_name.upper()}',
@@ -420,9 +405,7 @@ class N64Exporter:
                     "bounds_center": bounds_center,
                     "bounds_radius": bounds_radius,
                     "traits": obj_traits,
-                    "is_static": True,  # Will be computed after trait_info is loaded
-                    "parent": parent_name,
-                    "local_offset": world_offset  # Actually world-space offset for simple position following
+                    "is_static": True  # Will be computed after trait_info is loaded
                 }
 
                 if rigid_body_data is not None:
@@ -672,9 +655,6 @@ class N64Exporter:
     def write_scene_c(self, scene):
         scene_name = arm.utils.safesrc(scene.name).lower()
         scene_data = self.scene_data[scene_name]
-
-        # Sort objects topologically so parents come before children
-        scene_data['objects'] = n64_utils.topological_sort_objects(scene_data['objects'])
 
         clear_color = scene_data['world']['clear_color']
         ambient_color = scene_data['world']['ambient_color']

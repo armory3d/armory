@@ -108,14 +108,6 @@ class IREmitter:
     def emit_skip(self, node: Dict) -> str:
         return ""
 
-    def emit_return(self, node: Dict) -> str:
-        """Return statement: return; or return value;"""
-        children = node.get("children")
-        if children and len(children) > 0:
-            val = self.emit(children[0])
-            return f"return {val};"
-        return "return;"
-
     # =========================================================================
     # Variables
     # =========================================================================
@@ -341,8 +333,7 @@ class IREmitter:
         # Coordinate conversion: Blender XYZ → N64 XZ-Y
         if method == "translate" and len(arg_strs) >= 3:
             x, y, z = arg_strs[0], arg_strs[1], arg_strs[2]
-            # Use it_translate_local to move relative to parent's orientation
-            return f"it_translate_local({obj}, g_scene_objects, {x}, {z}, -({y}));"
+            return f"it_translate(&{obj}->transform, {x}, {z}, -({y}));"
 
         if method == "rotate":
             # rotate(axis: Vec4, angle: Float) - axis is a Vec4, extract xyz components
@@ -1028,9 +1019,6 @@ def generate_object_block(objects: List[Dict], trait_info: dict, scene_name: str
     """Generate C code for all objects in a scene."""
     lines = []
 
-    # Build name → index map for parent lookups
-    name_to_index = {obj['name']: i for i, obj in enumerate(objects)}
-
     for i, obj in enumerate(objects):
         prefix = f'objects[{i}]'
         is_static = obj.get("is_static", False)
@@ -1047,19 +1035,6 @@ def generate_object_block(objects: List[Dict], trait_info: dict, scene_name: str
         lines.append(f'    {prefix}.bounds_center = {_fmt_vec3(bc)};')
         lines.append(f'    {prefix}.bounds_radius = {br:.6f}f;')
         lines.append(f'    {prefix}.rigid_body = NULL;')
-
-        # Parent-child hierarchy (positions only)
-        parent_name = obj.get("parent")
-        local_offset = obj.get("local_offset")
-        if parent_name and parent_name in name_to_index and local_offset:
-            parent_idx = name_to_index[parent_name]
-            # Convert local offset from Blender to N64 coordinates
-            n64_offset = convert_vec3_list(local_offset)
-            lines.append(f'    {prefix}.parent_index = {parent_idx};')
-            lines.append(f'    {prefix}.local_offset = (T3DVec3){{{{{n64_offset[0]:.6f}f, {n64_offset[1]:.6f}f, {n64_offset[2]:.6f}f}}}};')
-        else:
-            lines.append(f'    {prefix}.parent_index = -1;')
-            lines.append(f'    {prefix}.local_offset = (T3DVec3){{{{0.0f, 0.0f, 0.0f}}}};')
 
         lines.extend(generate_trait_block(prefix, obj.get("traits", []), trait_info, scene_name))
     return '\n'.join(lines)

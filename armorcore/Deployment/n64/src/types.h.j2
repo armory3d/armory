@@ -57,8 +57,6 @@ typedef struct ArmObject {{
     T3DVec3 bounds_center;
     float bounds_radius;
     struct OimoRigidBody *rigid_body;
-    int16_t parent_index;      // Index of parent object (-1 = no parent)
-    T3DVec3 local_offset;      // Position offset from parent (in N64 coords)
     uint8_t trait_count;
     ArmTrait *traits;
 }} ArmObject;
