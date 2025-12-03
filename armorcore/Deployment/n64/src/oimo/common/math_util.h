@@ -91,4 +91,22 @@ static inline OimoScalar oimo_lerp(OimoScalar a, OimoScalar b, OimoScalar t) {
     return a + (b - a) * t;
 }
 
+// Fast inverse square root (Quake III style) - useful for normalizing vectors
+// Avoids expensive division and sqrt on N64
+// Uses union to avoid strict-aliasing violations
+static inline float oimo_fast_inv_sqrt(float x) {
+    union { float f; int i; } conv;
+    float xhalf = 0.5f * x;
+    conv.f = x;
+    conv.i = 0x5f375a86 - (conv.i >> 1);  // Magic number for float
+    conv.f = conv.f * (1.5f - xhalf * conv.f * conv.f);  // One Newton-Raphson iteration
+    return conv.f;
+}
+
+// Fast approximate sqrt using fast_inv_sqrt
+static inline float oimo_fast_sqrt(float x) {
+    if (x <= 0.0f) return 0.0f;
+    return x * oimo_fast_inv_sqrt(x);
+}
+
 #endif // OIMO_COMMON_MATH_UTIL_H

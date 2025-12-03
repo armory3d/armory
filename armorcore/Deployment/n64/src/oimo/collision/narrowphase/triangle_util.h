@@ -3,10 +3,22 @@
 #define OIMO_COLLISION_NARROWPHASE_TRIANGLE_UTIL_H
 
 #include "../../common/vec3.h"
+#include "../../common/math_util.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// Quick signed distance from point to triangle plane
+// Returns positive if on normal side, negative if behind
+static inline float oimo_point_plane_distance(
+    const OimoVec3* p,
+    const OimoVec3* tri_v0,
+    const OimoVec3* tri_normal
+) {
+    OimoVec3 to_point = oimo_vec3_sub(*p, *tri_v0);
+    return oimo_vec3_dot(to_point, *tri_normal);
+}
 
 // Find closest point on triangle to a point (Barycentric method)
 static inline OimoVec3 oimo_closest_point_on_triangle(

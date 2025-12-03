@@ -106,7 +106,7 @@ static inline void oimo_closest_points_segments(
     *closest2 = oimo_vec3_add(p3, oimo_vec3_scale(d2, t));
 }
 
-// Detect capsule vs mesh collision
+// Detect capsule vs mesh collision (optimized for N64)
 static inline void oimo_capsule_mesh_detector_detect(
     OimoCapsuleMeshDetector* detector,
     OimoDetectorResult* result,
@@ -119,6 +119,8 @@ static inline void oimo_capsule_mesh_detector_detect(
 
     OimoScalar radius = capsule->radius;
     OimoScalar half_height = capsule->halfHeight;
+    float radius_sq = radius * radius;
+    float max_extent = radius + half_height;  // For early-out
 
     // Get capsule axis in world space (local Y axis)
     OimoVec3 axis_world = oimo_vec3(
@@ -144,7 +146,7 @@ static inline void oimo_capsule_mesh_detector_detect(
     OimoVec3 cap_p2_local = oimo_mat3_mul_vec3(&mesh_rot_inv, p2_to_mesh);
 
     // Build query AABB in mesh local space
-    float query_extent = radius + half_height + 0.01f;
+    float query_extent = max_extent + 0.01f;
     OimoAabb query_aabb;
     query_aabb.min.x = capsule_local.x - query_extent;
     query_aabb.min.y = capsule_local.y - query_extent;
@@ -157,8 +159,8 @@ static inline void oimo_capsule_mesh_detector_detect(
     OimoBvhQueryResult bvh_result;
     oimo_static_mesh_query_triangles(mesh, &query_aabb, &bvh_result);
 
-    // Find deepest penetration
-    float min_dist = 1e30f;
+    // Find deepest penetration using squared distances to avoid sqrt in loop
+    float min_dist_sq = 1e30f;
     OimoVec3 best_closest_capsule = oimo_vec3_zero();
     OimoVec3 best_closest_tri = oimo_vec3_zero();
     OimoVec3 best_normal = oimo_vec3(0, 1, 0);
@@ -169,7 +171,13 @@ static inline void oimo_capsule_mesh_detector_detect(
         const OimoTriangle* tri = oimo_static_mesh_get_triangle(mesh, tri_idx);
         if (!tri) continue;
 
-        // Test capsule axis against triangle edges
+        // EARLY OUT: Quick plane distance check using capsule center
+        float plane_dist = oimo_point_plane_distance(&capsule_local, &tri->v0, &tri->normal);
+        if (plane_dist > max_extent || plane_dist < -max_extent) {
+            continue;
+        }
+
+        // Test capsule axis against triangle edges using squared distances for speed
         // Edge 0: v0 -> v1
         {
             OimoVec3 closest_cap, closest_edge;
@@ -179,9 +187,9 @@ static inline void oimo_capsule_mesh_detector_detect(
                 &closest_cap, &closest_edge
             );
             OimoVec3 diff = oimo_vec3_sub(closest_cap, closest_edge);
-            float dist = oimo_vec3_len(diff);
-            if (dist < min_dist && dist < radius) {
-                min_dist = dist;
+            float dist_sq = oimo_vec3_dot(diff, diff);
+            if (dist_sq < min_dist_sq && dist_sq < radius_sq) {
+                min_dist_sq = dist_sq;
                 best_closest_capsule = closest_cap;
                 best_closest_tri = closest_edge;
                 best_normal = tri->normal;
@@ -197,9 +205,9 @@ static inline void oimo_capsule_mesh_detector_detect(
                 &closest_cap, &closest_edge
             );
             OimoVec3 diff = oimo_vec3_sub(closest_cap, closest_edge);
-            float dist = oimo_vec3_len(diff);
-            if (dist < min_dist && dist < radius) {
-                min_dist = dist;
+            float dist_sq = oimo_vec3_dot(diff, diff);
+            if (dist_sq < min_dist_sq && dist_sq < radius_sq) {
+                min_dist_sq = dist_sq;
                 best_closest_capsule = closest_cap;
                 best_closest_tri = closest_edge;
                 best_normal = tri->normal;
@@ -215,9 +223,9 @@ static inline void oimo_capsule_mesh_detector_detect(
                 &closest_cap, &closest_edge
             );
             OimoVec3 diff = oimo_vec3_sub(closest_cap, closest_edge);
-            float dist = oimo_vec3_len(diff);
-            if (dist < min_dist && dist < radius) {
-                min_dist = dist;
+            float dist_sq = oimo_vec3_dot(diff, diff);
+            if (dist_sq < min_dist_sq && dist_sq < radius_sq) {
+                min_dist_sq = dist_sq;
                 best_closest_capsule = closest_cap;
                 best_closest_tri = closest_edge;
                 best_normal = tri->normal;
@@ -231,9 +239,9 @@ static inline void oimo_capsule_mesh_detector_detect(
                 &cap_p1_local, &tri->v0, &tri->v1, &tri->v2
             );
             OimoVec3 diff = oimo_vec3_sub(cap_p1_local, closest);
-            float dist = oimo_vec3_len(diff);
-            if (dist < min_dist && dist < radius) {
-                min_dist = dist;
+            float dist_sq = oimo_vec3_dot(diff, diff);
+            if (dist_sq < min_dist_sq && dist_sq < radius_sq) {
+                min_dist_sq = dist_sq;
                 best_closest_capsule = cap_p1_local;
                 best_closest_tri = closest;
                 best_normal = tri->normal;
@@ -246,9 +254,9 @@ static inline void oimo_capsule_mesh_detector_detect(
                 &cap_p2_local, &tri->v0, &tri->v1, &tri->v2
             );
             OimoVec3 diff = oimo_vec3_sub(cap_p2_local, closest);
-            float dist = oimo_vec3_len(diff);
-            if (dist < min_dist && dist < radius) {
-                min_dist = dist;
+            float dist_sq = oimo_vec3_dot(diff, diff);
+            if (dist_sq < min_dist_sq && dist_sq < radius_sq) {
+                min_dist_sq = dist_sq;
                 best_closest_capsule = cap_p2_local;
                 best_closest_tri = closest;
                 best_normal = tri->normal;
@@ -260,9 +268,9 @@ static inline void oimo_capsule_mesh_detector_detect(
         {
             OimoVec3 closest = oimo_closest_point_on_segment(tri->v0, cap_p1_local, cap_p2_local);
             OimoVec3 diff = oimo_vec3_sub(closest, tri->v0);
-            float dist = oimo_vec3_len(diff);
-            if (dist < min_dist && dist < radius) {
-                min_dist = dist;
+            float dist_sq = oimo_vec3_dot(diff, diff);
+            if (dist_sq < min_dist_sq && dist_sq < radius_sq) {
+                min_dist_sq = dist_sq;
                 best_closest_capsule = closest;
                 best_closest_tri = tri->v0;
                 best_normal = tri->normal;
@@ -272,9 +280,9 @@ static inline void oimo_capsule_mesh_detector_detect(
         {
             OimoVec3 closest = oimo_closest_point_on_segment(tri->v1, cap_p1_local, cap_p2_local);
             OimoVec3 diff = oimo_vec3_sub(closest, tri->v1);
-            float dist = oimo_vec3_len(diff);
-            if (dist < min_dist && dist < radius) {
-                min_dist = dist;
+            float dist_sq = oimo_vec3_dot(diff, diff);
+            if (dist_sq < min_dist_sq && dist_sq < radius_sq) {
+                min_dist_sq = dist_sq;
                 best_closest_capsule = closest;
                 best_closest_tri = tri->v1;
                 best_normal = tri->normal;
@@ -284,9 +292,9 @@ static inline void oimo_capsule_mesh_detector_detect(
         {
             OimoVec3 closest = oimo_closest_point_on_segment(tri->v2, cap_p1_local, cap_p2_local);
             OimoVec3 diff = oimo_vec3_sub(closest, tri->v2);
-            float dist = oimo_vec3_len(diff);
-            if (dist < min_dist && dist < radius) {
-                min_dist = dist;
+            float dist_sq = oimo_vec3_dot(diff, diff);
+            if (dist_sq < min_dist_sq && dist_sq < radius_sq) {
+                min_dist_sq = dist_sq;
                 best_closest_capsule = closest;
                 best_closest_tri = tri->v2;
                 best_normal = tri->normal;
@@ -298,13 +306,15 @@ static inline void oimo_capsule_mesh_detector_detect(
     // No collision
     if (best_triangle < 0) return;
 
-    // Compute penetration and normal
+    // Compute penetration and normal using fast inverse sqrt
+    OimoVec3 diff = oimo_vec3_sub(best_closest_capsule, best_closest_tri);
+    float inv_dist = oimo_fast_inv_sqrt(min_dist_sq);
+    float min_dist = min_dist_sq * inv_dist;  // Actual distance
     float depth = radius - min_dist;
 
     OimoVec3 normal_local;
-    if (min_dist > 1e-6f) {
-        OimoVec3 diff = oimo_vec3_sub(best_closest_capsule, best_closest_tri);
-        normal_local = oimo_vec3_scale(diff, 1.0f / min_dist);
+    if (min_dist_sq > 1e-6f) {
+        normal_local = oimo_vec3_scale(diff, inv_dist);
     } else {
         normal_local = best_normal;
     }
