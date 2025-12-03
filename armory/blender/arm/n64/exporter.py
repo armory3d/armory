@@ -359,10 +359,13 @@ class N64Exporter:
                         "mass": rb_mass,
                         "friction": rb.friction,
                         "restitution": rb.restitution,
+                        "linear_damping": rb.linear_damping,
+                        "angular_damping": rb.angular_damping,
                         "collision_group": col_group,
                         "collision_mask": col_mask,
                         "is_trigger": getattr(obj, 'arm_rb_trigger', False),
-                        "is_kinematic": rb.kinematic
+                        "is_kinematic": rb.kinematic,
+                        "use_deactivation": rb.use_deactivation
                     }
 
                     if rb_shape == "sphere":

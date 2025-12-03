@@ -1045,10 +1045,19 @@ def generate_physics_block(objects: List[Dict], world_data: dict) -> str:
             continue
 
         prefix = f'objects[{i}]'
+        obj_name = obj.get("name", f"object_{i}")
+
+        # Extract all physics parameters
         mass = rb.get("mass", 1.0)
         friction = rb.get("friction", 0.5)
         restitution = rb.get("restitution", 0.0)
+        linear_damping = rb.get("linear_damping", 0.04)
+        angular_damping = rb.get("angular_damping", 0.1)
         is_kinematic = rb.get("is_kinematic", False)
+        is_trigger = rb.get("is_trigger", False)
+        use_deactivation = rb.get("use_deactivation", True)
+        col_group = rb.get("collision_group", 1)
+        col_mask = rb.get("collision_mask", 1)
 
         # Determine rigid body type:
         # - mass == 0 means static (Blender PASSIVE type)
@@ -1063,20 +1072,31 @@ def generate_physics_block(objects: List[Dict], world_data: dict) -> str:
 
         shape = rb.get("shape", "box")
 
-        lines.append(f'    // Rigid body for {obj.get("name", f"object_{i}")}')
+        lines.append(f'    // Rigid body for {obj_name}')
+        lines.append('    {')
+        lines.append(f'        PhysicsBodyParams params = physics_body_params_default();')
+        lines.append(f'        params.mass = {mass:.6f}f;')
+        lines.append(f'        params.friction = {friction:.6f}f;')
+        lines.append(f'        params.restitution = {restitution:.6f}f;')
+        lines.append(f'        params.linear_damping = {linear_damping:.6f}f;')
+        lines.append(f'        params.angular_damping = {angular_damping:.6f}f;')
+        lines.append(f'        params.collision_group = {col_group};')
+        lines.append(f'        params.collision_mask = {col_mask};')
+        lines.append(f'        params.animated = {"true" if is_kinematic else "false"};')
+        lines.append(f'        params.trigger = {"true" if is_trigger else "false"};')
+        lines.append(f'        params.use_deactivation = {"true" if use_deactivation else "false"};')
 
         if shape == "box":
-            # Exporter provides half_extents directly
             half_extents = rb.get("half_extents", [0.5, 0.5, 0.5])
             hx, hy, hz = half_extents[0], half_extents[1], half_extents[2]
-            lines.append(f'    physics_create_box(&{prefix}, {rb_type}, {hx:.6f}f, {hy:.6f}f, {hz:.6f}f, {mass:.6f}f, {friction:.6f}f, {restitution:.6f}f);')
+            lines.append(f'        physics_create_box_full(&{prefix}, {rb_type}, {hx:.6f}f, {hy:.6f}f, {hz:.6f}f, &params);')
         elif shape == "sphere":
             r = rb.get("radius", 0.5)
-            lines.append(f'    physics_create_sphere(&{prefix}, {rb_type}, {r:.6f}f, {mass:.6f}f, {friction:.6f}f, {restitution:.6f}f);')
+            lines.append(f'        physics_create_sphere_full(&{prefix}, {rb_type}, {r:.6f}f, &params);')
         elif shape == "capsule":
             r = rb.get("radius", 0.5)
             hh = rb.get("half_height", 0.5)
-            lines.append(f'    physics_create_capsule(&{prefix}, {rb_type}, {r:.6f}f, {hh:.6f}f, {mass:.6f}f, {friction:.6f}f, {restitution:.6f}f);')
+            lines.append(f'        physics_create_capsule_full(&{prefix}, {rb_type}, {r:.6f}f, {hh:.6f}f, &params);')
         elif shape == "mesh":
             mesh_data = rb.get("mesh_data", {})
             vertices = mesh_data.get("vertices", [])
@@ -1084,36 +1104,29 @@ def generate_physics_block(objects: List[Dict], world_data: dict) -> str:
             num_vertices = mesh_data.get("num_vertices", len(vertices))
             index_count = len(indices)
 
-            # Collision groups
-            col_group = rb.get("collision_group", 1)
-            col_mask = rb.get("collision_mask", 1)
-
             if vertices and indices:
-                obj_name = obj.get("name", f"mesh_{i}")
                 # Generate static arrays using OimoVec3 for vertices
-                lines.append(f'    static OimoVec3 {obj_name}_col_verts[] = {{')
+                lines.append(f'        static OimoVec3 {obj_name}_col_verts[] = {{')
                 for v_idx, v in enumerate(vertices):
                     comma = ',' if v_idx < len(vertices) - 1 else ''
-                    lines.append(f'        {{{v[0]:.6f}f, {v[1]:.6f}f, {v[2]:.6f}f}}{comma}')
-                lines.append('    };')
-                # Use int16_t for indices
-                lines.append(f'    static int16_t {obj_name}_col_indices[] = {{')
-                # Output indices in groups of 6 for readability
+                    lines.append(f'            {{{v[0]:.6f}f, {v[1]:.6f}f, {v[2]:.6f}f}}{comma}')
+                lines.append('        };')
+                lines.append(f'        static int16_t {obj_name}_col_indices[] = {{')
                 for t_idx in range(0, len(indices), 6):
                     end_idx = min(t_idx + 6, len(indices))
                     idx_str = ', '.join(str(indices[j]) for j in range(t_idx, end_idx))
                     comma = ',' if end_idx < len(indices) else ''
-                    lines.append(f'        {idx_str}{comma}')
-                lines.append('    };')
-                lines.append(f'    physics_create_mesh(&{prefix}, {obj_name}_col_verts, {obj_name}_col_indices, {num_vertices}, {index_count}, {friction:.6f}f, {restitution:.6f}f, {col_group}, {col_mask});')
+                    lines.append(f'            {idx_str}{comma}')
+                lines.append('        };')
+                lines.append(f'        physics_create_mesh_full(&{prefix}, {obj_name}_col_verts, {obj_name}_col_indices, {num_vertices}, {index_count}, &params);')
             else:
                 # Fallback to box if mesh data is missing
-                lines.append(f'    physics_create_box(&{prefix}, {rb_type}, 0.5f, 0.5f, 0.5f, 0.0f, {friction:.6f}f, {restitution:.6f}f);')
+                lines.append(f'        physics_create_box_full(&{prefix}, {rb_type}, 0.5f, 0.5f, 0.5f, &params);')
         else:
             # Default to box
-            hx, hy, hz = 0.5, 0.5, 0.5
-            lines.append(f'    physics_create_box(&{prefix}, {rb_type}, {hx:.6f}f, {hy:.6f}f, {hz:.6f}f, {mass:.6f}f, {friction:.6f}f, {restitution:.6f}f);')
+            lines.append(f'        physics_create_box_full(&{prefix}, {rb_type}, 0.5f, 0.5f, 0.5f, &params);')
 
+        lines.append('    }')
         lines.append('')
 
     return '\n'.join(lines)

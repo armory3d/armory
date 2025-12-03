@@ -12,6 +12,38 @@ extern "C" {
 // Maximum static mesh colliders (separate from body pool due to different memory management)
 #define MAX_MESH_COLLIDERS 8
 
+// Physics body parameters (matches Blender's rigid body settings)
+typedef struct PhysicsBodyParams {
+    float mass;
+    float friction;
+    float restitution;
+    float linear_damping;
+    float angular_damping;
+    float angular_friction;      // Rotation inertia (0.1 default)
+    int collision_group;         // Collision group bitmask
+    int collision_mask;          // Collision mask bitmask
+    bool animated;               // If true, use KINEMATIC type
+    bool trigger;                // If true, shape is sensor only
+    bool use_deactivation;       // Enable/disable sleeping
+} PhysicsBodyParams;
+
+// Default physics parameters (matches Blender defaults)
+static inline PhysicsBodyParams physics_body_params_default(void) {
+    PhysicsBodyParams p;
+    p.mass = 1.0f;
+    p.friction = 0.5f;
+    p.restitution = 0.0f;
+    p.linear_damping = 0.04f;
+    p.angular_damping = 0.1f;
+    p.angular_friction = 0.1f;
+    p.collision_group = 1;
+    p.collision_mask = 1;
+    p.animated = false;
+    p.trigger = false;
+    p.use_deactivation = true;
+    return p;
+}
+
 // World management
 void physics_init(void);
 void physics_shutdown(void);
@@ -25,9 +57,15 @@ OimoWorld* physics_get_world(void);
 void physics_set_gravity(float x, float y, float z);
 OimoVec3 physics_get_gravity(void);
 
-// Body creation (type: OIMO_RIGID_BODY_STATIC, DYNAMIC, KINEMATIC)
-// Full versions with collision group/mask
-// Returns true on success, false if pool exhausted
+// Body creation with full parameters
+bool physics_create_box_full(ArmObject* obj, int type, float hx, float hy, float hz,
+                             const PhysicsBodyParams* params);
+bool physics_create_sphere_full(ArmObject* obj, int type, float radius,
+                                const PhysicsBodyParams* params);
+bool physics_create_capsule_full(ArmObject* obj, int type, float radius, float half_height,
+                                 const PhysicsBodyParams* params);
+
+// Extended versions with collision group/mask (legacy compatibility)
 bool physics_create_box_ex(ArmObject* obj, int type, float hx, float hy, float hz,
                            float mass, float friction, float restitution,
                            int collision_group, int collision_mask);
@@ -48,6 +86,12 @@ bool physics_create_mesh(ArmObject* obj,
                          int vertex_count, int index_count,
                          float friction, float restitution,
                          int collision_group, int collision_mask);
+
+// Static mesh with full parameters
+bool physics_create_mesh_full(ArmObject* obj,
+                              const OimoVec3* vertices, const int16_t* indices,
+                              int vertex_count, int index_count,
+                              const PhysicsBodyParams* params);
 
 // Convenience wrappers with default collision group=1, mask=1
 static inline bool physics_create_box(ArmObject* obj, int type, float hx, float hy, float hz,
@@ -86,6 +130,39 @@ void physics_set_contact_callback(PhysicsContactCallback callback, void* user_da
 
 // Get contacts for a specific rigid body (returns count, fills contacts array up to max_contacts)
 int physics_get_contacts(OimoRigidBody* rb, PhysicsContactPair* contacts, int max_contacts);
+
+// Damping setters
+static inline void physics_set_linear_damping(OimoRigidBody* rb, float damping) {
+    if (rb) rb->_linearDamping = damping;
+}
+
+static inline void physics_set_angular_damping(OimoRigidBody* rb, float damping) {
+    if (rb) rb->_angularDamping = damping;
+}
+
+static inline float physics_get_linear_damping(const OimoRigidBody* rb) {
+    return rb ? rb->_linearDamping : 0.0f;
+}
+
+static inline float physics_get_angular_damping(const OimoRigidBody* rb) {
+    return rb ? rb->_angularDamping : 0.0f;
+}
+
+// Trigger (sensor) mode
+static inline void physics_set_trigger(OimoRigidBody* rb, int is_trigger) {
+    if (rb && rb->_shapeList) {
+        rb->_shapeList->_isTrigger = is_trigger;
+    }
+}
+
+static inline int physics_is_trigger(const OimoRigidBody* rb) {
+    return (rb && rb->_shapeList) ? rb->_shapeList->_isTrigger : 0;
+}
+
+// Gravity scale
+static inline void physics_set_gravity_scale(OimoRigidBody* rb, float scale) {
+    if (rb) rb->_gravityScale = scale;
+}
 
 // Rigid body helpers
 static inline void physics_apply_force(OimoRigidBody* rb, const OimoVec3* force) {
