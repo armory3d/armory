@@ -20,6 +20,86 @@ static inline float oimo_point_plane_distance(
     return oimo_vec3_dot(to_point, *tri_normal);
 }
 
+// Closest point on line segment
+static inline OimoVec3 oimo_closest_point_on_segment(OimoVec3 p, OimoVec3 a, OimoVec3 b) {
+    OimoVec3 ab = oimo_vec3_sub(b, a);
+    OimoVec3 ap = oimo_vec3_sub(p, a);
+
+    float ab_len_sq = oimo_vec3_dot(ab, ab);
+    if (ab_len_sq < 1e-10f) return a;
+
+    float t = oimo_vec3_dot(ap, ab) / ab_len_sq;
+    if (t < 0.0f) t = 0.0f;
+    if (t > 1.0f) t = 1.0f;
+
+    return oimo_vec3_add(a, oimo_vec3_scale(ab, t));
+}
+
+// Closest points between two line segments
+static inline void oimo_closest_points_segments(
+    OimoVec3 p1, OimoVec3 p2, OimoVec3 p3, OimoVec3 p4,
+    OimoVec3* closest1, OimoVec3* closest2
+) {
+    OimoVec3 d1 = oimo_vec3_sub(p2, p1);
+    OimoVec3 d2 = oimo_vec3_sub(p4, p3);
+    OimoVec3 r = oimo_vec3_sub(p1, p3);
+
+    float a = oimo_vec3_dot(d1, d1);
+    float e = oimo_vec3_dot(d2, d2);
+    float f = oimo_vec3_dot(d2, r);
+
+    float s, t;
+
+    if (a <= 1e-6f && e <= 1e-6f) {
+        *closest1 = p1;
+        *closest2 = p3;
+        return;
+    }
+
+    if (a <= 1e-6f) {
+        s = 0.0f;
+        t = f / e;
+        if (t < 0.0f) t = 0.0f;
+        if (t > 1.0f) t = 1.0f;
+    } else {
+        float c = oimo_vec3_dot(d1, r);
+        if (e <= 1e-6f) {
+            t = 0.0f;
+            s = -c / a;
+            if (s < 0.0f) s = 0.0f;
+            if (s > 1.0f) s = 1.0f;
+        } else {
+            float b = oimo_vec3_dot(d1, d2);
+            float denom = a * e - b * b;
+
+            if (denom != 0.0f) {
+                s = (b * f - c * e) / denom;
+                if (s < 0.0f) s = 0.0f;
+                if (s > 1.0f) s = 1.0f;
+            } else {
+                s = 0.0f;
+            }
+
+            t = (b * s + f) / e;
+
+            if (t < 0.0f) {
+                t = 0.0f;
+                s = -c / a;
+                if (s < 0.0f) s = 0.0f;
+                if (s > 1.0f) s = 1.0f;
+            } else if (t > 1.0f) {
+                t = 1.0f;
+                s = (b - c) / a;
+                if (s < 0.0f) s = 0.0f;
+                if (s > 1.0f) s = 1.0f;
+            }
+        }
+    }
+
+    *closest1 = oimo_vec3_add(p1, oimo_vec3_scale(d1, s));
+    *closest2 = oimo_vec3_add(p3, oimo_vec3_scale(d2, t));
+}
+
 // Find closest point on triangle to a point (Barycentric method)
 static inline OimoVec3 oimo_closest_point_on_triangle(
     const OimoVec3* p,

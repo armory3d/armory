@@ -5,12 +5,12 @@
 #include "detector.h"
 #include "detector_result.h"
 #include "triangle_util.h"
+#include "mesh_contact.h"
 #include "../geometry/sphere_geometry.h"
 #include "../geometry/static_mesh_geometry.h"
 #include "../broadphase/bvh.h"
 #include "../../common/transform.h"
 #include "../../common/math_util.h"
-#include <math.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,19 +61,9 @@ static inline void oimo_sphere_mesh_detector_detect(
 
     if (bvh_result.count == 0) return;
 
-    // Single pass: find contacts and track the best normal
-    const int MAX_CONTACTS = 4;
-    float max_depth = 0.0f;
-    OimoVec3 primary_normal_local = {0, 1, 0};
-    bool has_contact = false;
-
-    // Temporary storage for contacts
-    struct {
-        OimoVec3 closest;
-        float depth;
-        int tri_idx;
-    } contacts[4];
-    int contact_count = 0;
+    // Initialize contact storage
+    OimoMeshContactStorage storage;
+    oimo_mesh_contact_storage_init(&storage);
 
     for (int i = 0; i < bvh_result.count; i++) {
         int tri_idx = bvh_result.triangles[i];
@@ -99,50 +89,29 @@ static inline void oimo_sphere_mesh_detector_detect(
             float dist = dist_sq * inv_dist;
             float depth = radius - dist;
 
-            // Track primary normal (deepest)
-            if (depth > max_depth) {
-                max_depth = depth;
-                has_contact = true;
-                if (dist_sq > 1e-6f) {
-                    primary_normal_local = oimo_vec3_scale(diff, inv_dist);
-                } else {
-                    primary_normal_local = tri->normal;
-                }
+            OimoVec3 normal_dir;
+            if (dist_sq > 1e-6f) {
+                normal_dir = oimo_vec3_scale(diff, inv_dist);
+            } else {
+                normal_dir = tri->normal;
             }
 
-            // Store contact
-            if (contact_count < MAX_CONTACTS) {
-                contacts[contact_count].closest = closest;
-                contacts[contact_count].depth = depth;
-                contacts[contact_count].tri_idx = tri_idx;
-                contact_count++;
-            } else {
-                // Replace shallowest
-                int shallowest = 0;
-                for (int j = 1; j < MAX_CONTACTS; j++) {
-                    if (contacts[j].depth < contacts[shallowest].depth) {
-                        shallowest = j;
-                    }
-                }
-                if (depth > contacts[shallowest].depth) {
-                    contacts[shallowest].closest = closest;
-                    contacts[shallowest].depth = depth;
-                    contacts[shallowest].tri_idx = tri_idx;
-                }
-            }
+            oimo_mesh_contact_storage_add(&storage, &closest, &normal_dir, depth, tri_idx);
         }
     }
 
-    if (!has_contact) return;
+    if (!storage.has_contact) return;
 
     // Transform primary normal to world space and set it
-    OimoVec3 normal_world = oimo_mat3_mul_vec3(&tf_mesh->rotation, primary_normal_local);
+    OimoVec3 normal_world = oimo_mat3_mul_vec3(&tf_mesh->rotation, storage.primary_normal);
     oimo_detector_set_normal(&detector->base, result, &normal_world);
 
     // Add all stored contacts
-    for (int i = 0; i < contact_count; i++) {
+    for (int i = 0; i < storage.count; i++) {
+        OimoMeshContact* c = &storage.contacts[i];
+
         // Contact point on mesh (in world space)
-        OimoVec3 closest_world = oimo_mat3_mul_vec3(&tf_mesh->rotation, contacts[i].closest);
+        OimoVec3 closest_world = oimo_mat3_mul_vec3(&tf_mesh->rotation, c->closest);
         OimoVec3 mesh_contact = oimo_vec3_add(closest_world, tf_mesh->position);
 
         // Contact point on sphere (in world space)
@@ -150,7 +119,7 @@ static inline void oimo_sphere_mesh_detector_detect(
         OimoVec3 sphere_contact = oimo_vec3_add(sphere_world, sphere_contact_offset);
 
         oimo_detector_add_point(&detector->base, result, &sphere_contact, &mesh_contact,
-            contacts[i].depth, contacts[i].tri_idx);
+            c->depth, c->tri_idx);
     }
 }
 

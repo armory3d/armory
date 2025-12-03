@@ -5,12 +5,12 @@
 #include "detector.h"
 #include "detector_result.h"
 #include "triangle_util.h"
+#include "mesh_contact.h"
 #include "../geometry/box_geometry.h"
 #include "../geometry/static_mesh_geometry.h"
 #include "../broadphase/bvh.h"
 #include "../../common/transform.h"
 #include "../../common/math_util.h"
-#include <math.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -100,20 +100,9 @@ static inline void oimo_box_mesh_detector_detect(
 
     if (bvh_result.count == 0) return;
 
-    // Single pass: find contacts and track the best normal
-    const int MAX_CONTACTS = 4;
-    float max_depth = 0.0f;
-    OimoVec3 primary_normal_local = oimo_vec3(0, 1, 0);
-    bool has_contact = false;
-
-    // Temporary storage for contacts (to avoid second pass)
-    struct {
-        OimoVec3 closest;
-        OimoVec3 normal_dir;
-        float depth;
-        int tri_idx;
-    } contacts[4];
-    int contact_count = 0;
+    // Initialize contact storage
+    OimoMeshContactStorage storage;
+    oimo_mesh_contact_storage_init(&storage);
 
     for (int t = 0; t < bvh_result.count; t++) {
         int tri_idx = bvh_result.triangles[t];
@@ -159,59 +148,32 @@ static inline void oimo_box_mesh_detector_detect(
         // Check if penetrating
         if (dist < effective_radius) {
             float depth = effective_radius - dist;
-
-            // Track primary normal (deepest penetration)
-            if (depth > max_depth) {
-                max_depth = depth;
-                primary_normal_local = normal_dir;
-                has_contact = true;
-            }
-
-            // Store contact if we have room
-            if (contact_count < MAX_CONTACTS) {
-                contacts[contact_count].closest = closest;
-                contacts[contact_count].normal_dir = normal_dir;
-                contacts[contact_count].depth = depth;
-                contacts[contact_count].tri_idx = tri_idx;
-                contact_count++;
-            } else {
-                // Replace the shallowest contact if this one is deeper
-                int shallowest = 0;
-                for (int i = 1; i < MAX_CONTACTS; i++) {
-                    if (contacts[i].depth < contacts[shallowest].depth) {
-                        shallowest = i;
-                    }
-                }
-                if (depth > contacts[shallowest].depth) {
-                    contacts[shallowest].closest = closest;
-                    contacts[shallowest].normal_dir = normal_dir;
-                    contacts[shallowest].depth = depth;
-                    contacts[shallowest].tri_idx = tri_idx;
-                }
-            }
+            oimo_mesh_contact_storage_add(&storage, &closest, &normal_dir, depth, tri_idx);
         }
     }
 
-    if (!has_contact) return;
+    if (!storage.has_contact) return;
 
     // Transform primary normal to world space
-    OimoVec3 normal_world = oimo_mat3_mul_vec3(&tf_mesh->rotation, primary_normal_local);
+    OimoVec3 normal_world = oimo_mat3_mul_vec3(&tf_mesh->rotation, storage.primary_normal);
     oimo_detector_set_normal(&detector->base, result, &normal_world);
 
     // Add all stored contacts
-    for (int i = 0; i < contact_count; i++) {
+    for (int i = 0; i < storage.count; i++) {
+        OimoMeshContact* c = &storage.contacts[i];
+
         // Mesh contact point (in world space)
-        OimoVec3 closest_world = oimo_mat3_mul_vec3(&tf_mesh->rotation, contacts[i].closest);
+        OimoVec3 closest_world = oimo_mat3_mul_vec3(&tf_mesh->rotation, c->closest);
         closest_world = oimo_vec3_add(closest_world, tf_mesh->position);
 
         // Box contact point: support point in -normal direction
-        OimoVec3 neg_normal_local = oimo_vec3_scale(contacts[i].normal_dir, -1.0f);
+        OimoVec3 neg_normal_local = oimo_vec3_scale(c->normal_dir, -1.0f);
         OimoVec3 box_contact = oimo_box_support_point_cached(&axes, &box_center_local, &neg_normal_local);
         box_contact = oimo_mat3_mul_vec3(&tf_mesh->rotation, box_contact);
         box_contact = oimo_vec3_add(box_contact, tf_mesh->position);
 
         oimo_detector_add_point(&detector->base, result,
-            &box_contact, &closest_world, contacts[i].depth, contacts[i].tri_idx);
+            &box_contact, &closest_world, c->depth, c->tri_idx);
     }
 }
 
