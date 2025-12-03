@@ -1,7 +1,12 @@
 // physics.c - Mini-engine physics implementation
 #include "physics.h"
+#include "engine.h"
+#if ENGINE_ENABLE_PHYSICS_DEBUG
+#include "physics_debug.h"
+#endif
 #include "utils.h"
 #include "oimo/collision/geometry/static_mesh_geometry.h"
+#include <t3d/t3d.h>
 #include <string.h>
 
 #define MAX_PHYSICS_BODIES {max_physics_bodies}

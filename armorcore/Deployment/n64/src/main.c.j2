@@ -11,6 +11,9 @@
 #include "iron/trait_events.h"
 #if ENGINE_ENABLE_PHYSICS
 #include "physics.h"
+#if ENGINE_ENABLE_PHYSICS_DEBUG
+#include "physics_debug.h"
+#endif
 #endif
 
 #define FIXED_TIMESTEP ({fixed_timestep}f)
@@ -27,6 +30,11 @@ int main(void)
 {{
     engine_init();
     trait_events_init();
+#if ENGINE_ENABLE_PHYSICS && ENGINE_ENABLE_PHYSICS_DEBUG
+    physics_debug_init();
+    physics_debug_set_mode({physics_debug_mode});
+    physics_debug_enable(true);
+#endif
 
     T3DViewport viewport = t3d_viewport_create_buffered(FB_COUNT);
 

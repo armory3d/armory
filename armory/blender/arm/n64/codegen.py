@@ -1039,6 +1039,15 @@ def generate_physics_block(objects: List[Dict], world_data: dict) -> str:
     lines.append(f'    physics_set_gravity({n64_gx:.6f}f, {n64_gy:.6f}f, {n64_gz:.6f}f);')
     lines.append('')
 
+    # Physics debug drawing (from Blender's Debug Drawing panel)
+    debug_mode = world_data.get("physics_debug_mode", 0)
+    if debug_mode != 0:
+        lines.append(f'    // Physics debug drawing (from Blender Debug Drawing panel)')
+        lines.append(f'    physics_debug_init();')
+        lines.append(f'    physics_debug_set_mode({debug_mode});')
+        lines.append(f'    physics_debug_enable(true);')
+        lines.append('')
+
     for i, obj in enumerate(objects):
         rb = obj.get("rigid_body")
         if rb is None:

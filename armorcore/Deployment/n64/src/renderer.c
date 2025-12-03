@@ -4,9 +4,17 @@
 #include <t3d/t3dmath.h>
 #include <t3d/t3dmodel.h>
 
+#include "engine.h"
 #include "types.h"
 #include "utils.h"
 #include "iron/system/input.h"
+
+#if ENGINE_ENABLE_PHYSICS
+#include "physics.h"
+#if ENGINE_ENABLE_PHYSICS_DEBUG
+#include "physics_debug.h"
+#endif
+#endif
 
 static int frameIdx = 0;
 
@@ -63,7 +71,9 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
     frameIdx = (frameIdx + 1) % FB_COUNT;
     renderer_update_objects(scene);
 
-    rdpq_attach(display_get(), display_get_zbuf());
+    // Get surface BEFORE rdpq_attach - we need this reference for debug drawing later
+    surface_t *surface = display_get();
+    rdpq_attach(surface, display_get_zbuf());
     t3d_frame_start();
     t3d_viewport_attach(viewport);
 
@@ -129,8 +139,6 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
     }
     t3d_matrix_pop(1);
 
-    rdpq_sync_pipe();
-
 #ifdef ARM_DEBUG_HUD
     rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 200, 220, "FPS: %.2f", display_get_fps());
     rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 200, 230, "Obj: %d/%d (S:%d)", visible_count, scene->object_count, scene->static_count);
@@ -147,7 +155,15 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
     rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 10, 40, "L:%d R:%d", input_down(N64_BTN_L), input_down(N64_BTN_R));
 #endif
 
-    rdpq_detach_show();
+    // Physics debug drawing after GPU work is complete
+    {
+        rdpq_detach_wait();
+
+#if ENGINE_ENABLE_PHYSICS && ENGINE_ENABLE_PHYSICS_DEBUG
+        physics_debug_draw(surface, viewport, physics_get_world());
+#endif
+        display_show(surface);
+    }
 }
 
 void renderer_build_static_dpl(ArmScene *scene)

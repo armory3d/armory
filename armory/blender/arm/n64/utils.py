@@ -48,6 +48,27 @@ N64_CONFIG = {
     'max_button_subscribers': 16,   # Max traits subscribed to a single button event
 }
 
+
+def get_physics_debug_mode() -> int:
+    """Calculate physics debug mode flags from Blender settings.
+
+    Returns a bitmask matching the PhysicsDebugMode enum in physics_debug.h.
+    """
+    wrd = bpy.data.worlds.get('Arm')
+    if wrd is None:
+        return 0
+
+    debug_mode = 0
+    debug_mode |= 1 if getattr(wrd, 'arm_physics_dbg_draw_wireframe', False) else 0
+    debug_mode |= 2 if getattr(wrd, 'arm_physics_dbg_draw_aabb', False) else 0
+    debug_mode |= 8 if getattr(wrd, 'arm_physics_dbg_draw_contact_points', False) else 0
+    debug_mode |= 2048 if getattr(wrd, 'arm_physics_dbg_draw_constraints', False) else 0
+    debug_mode |= 4096 if getattr(wrd, 'arm_physics_dbg_draw_constraint_limits', False) else 0
+    debug_mode |= 16384 if getattr(wrd, 'arm_physics_dbg_draw_normals', False) else 0
+    debug_mode |= 32768 if getattr(wrd, 'arm_physics_dbg_draw_axis_gizmo', False) else 0
+    debug_mode |= 65536 if getattr(wrd, 'arm_physics_dbg_draw_raycast', False) else 0
+    return debug_mode
+
 def get_config(key, default=None):
     """Get N64 config value."""
     return N64_CONFIG.get(key, default)

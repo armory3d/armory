@@ -11,6 +11,9 @@
 
 #if ENGINE_ENABLE_PHYSICS
 #include "../physics.h"
+#if ENGINE_ENABLE_PHYSICS_DEBUG
+#include "../physics_debug.h"
+#endif
 #endif
 
 extern rspq_block_t *models_get_dpl(ModelId id);

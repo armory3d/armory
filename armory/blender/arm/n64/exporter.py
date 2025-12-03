@@ -167,11 +167,25 @@ class N64Exporter:
         if hasattr(scene, 'gravity'):
             gravity = [scene.gravity[0], scene.gravity[1], scene.gravity[2]]
 
+        # Get physics debug draw mode from Armory settings
+        wrd = bpy.data.worlds['Arm']
+        debug_draw_mode = 0
+        if wrd.arm_physics != 'Disabled':
+            debug_draw_mode = 1 if wrd.arm_physics_dbg_draw_wireframe else 0
+            debug_draw_mode |= 2 if wrd.arm_physics_dbg_draw_aabb else 0
+            debug_draw_mode |= 8 if wrd.arm_physics_dbg_draw_contact_points else 0
+            debug_draw_mode |= 2048 if wrd.arm_physics_dbg_draw_constraints else 0
+            debug_draw_mode |= 4096 if wrd.arm_physics_dbg_draw_constraint_limits else 0
+            debug_draw_mode |= 16384 if wrd.arm_physics_dbg_draw_normals else 0
+            debug_draw_mode |= 32768 if wrd.arm_physics_dbg_draw_axis_gizmo else 0
+            debug_draw_mode |= 65536 if wrd.arm_physics_dbg_draw_raycast else 0
+
         self.scene_data[scene_name] = {
             "world": {
                 "clear_color": n64_utils.get_clear_color(scene),
                 "ambient_color": list(scene.fast64.renderSettings.ambientColor),
-                "gravity": gravity
+                "gravity": gravity,
+                "physics_debug_mode": debug_draw_mode
             },
             "cameras": [],
             "lights": [],
@@ -417,8 +431,16 @@ class N64Exporter:
 
         # Physics source files (only if physics is used)
         # Note: oimo is header-only, only physics.c and geometry.c need compilation
+        # physics_debug.c is only included if debug drawing is enabled
         if self.has_physics:
-            physics_sources = '''src +=\\
+            physics_debug_mode = n64_utils.get_physics_debug_mode()
+            if physics_debug_mode > 0:
+                physics_sources = '''src +=\\
+    src/physics.c \\
+    src/physics_debug.c \\
+    src/oimo/collision/geometry/geometry.c'''
+            else:
+                physics_sources = '''src +=\\
     src/physics.c \\
     src/oimo/collision/geometry/geometry.c'''
         else:
@@ -497,13 +519,16 @@ class N64Exporter:
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
 
+        # Calculate physics debug mode from Blender settings
+        physics_debug_mode = n64_utils.get_physics_debug_mode()
+
         output = tmpl_content.format(
-            enable_physics=1 if self.has_physics else 0
+            enable_physics=1 if self.has_physics else 0,
+            enable_physics_debug=1 if physics_debug_mode > 0 else 0
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
             f.write(output)
-
 
     def write_physics(self):
         """Copy physics engine files if physics is enabled."""
@@ -526,6 +551,11 @@ class N64Exporter:
         # Copy physics header
         n64_utils.copy_src('physics.h', 'src')
 
+        # Copy physics debug drawing files only if debug is enabled
+        if n64_utils.get_physics_debug_mode() > 0:
+            n64_utils.copy_src('physics_debug.h', 'src')
+            n64_utils.copy_src('physics_debug.c', 'src')
+
         # Copy oimo library (header-only physics engine)
         n64_utils.copy_dir('oimo', 'src')
 
@@ -541,9 +571,13 @@ class N64Exporter:
         # Get physics fixed timestep from Armory settings (default 0.02 = 50Hz)
         fixed_timestep = getattr(wrd, 'arm_physics_fixed_step', 0.02)
 
+        # Get physics debug mode
+        physics_debug_mode = n64_utils.get_physics_debug_mode()
+
         output = tmpl_content.format(
             initial_scene_id=f'SCENE_{arm.utils.safesrc(wrd.arm_exporterlist[wrd.arm_exporterlist_index].arm_project_scene.name).upper()}',
-            fixed_timestep=fixed_timestep
+            fixed_timestep=fixed_timestep,
+            physics_debug_mode=physics_debug_mode
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
