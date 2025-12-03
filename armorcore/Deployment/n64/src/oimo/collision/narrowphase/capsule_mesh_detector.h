@@ -159,9 +159,9 @@ static inline void oimo_capsule_mesh_detector_detect(
 
     // Find deepest penetration
     float min_dist = 1e30f;
-    OimoVec3 best_closest_capsule;
-    OimoVec3 best_closest_tri;
-    OimoVec3 best_normal;
+    OimoVec3 best_closest_capsule = oimo_vec3_zero();
+    OimoVec3 best_closest_tri = oimo_vec3_zero();
+    OimoVec3 best_normal = oimo_vec3(0, 1, 0);
     int best_triangle = -1;
 
     for (int i = 0; i < bvh_result.count; i++) {
@@ -170,21 +170,52 @@ static inline void oimo_capsule_mesh_detector_detect(
         if (!tri) continue;
 
         // Test capsule axis against triangle edges
-        OimoVec3 edges[3][2] = {
-            {tri->v0, tri->v1}, {tri->v1, tri->v2}, {tri->v2, tri->v0}
-        };
-
-        for (int e = 0; e < 3; e++) {
+        // Edge 0: v0 -> v1
+        {
             OimoVec3 closest_cap, closest_edge;
             oimo_closest_points_segments(
                 cap_p1_local, cap_p2_local,
-                edges[e][0], edges[e][1],
+                tri->v0, tri->v1,
                 &closest_cap, &closest_edge
             );
-
             OimoVec3 diff = oimo_vec3_sub(closest_cap, closest_edge);
             float dist = oimo_vec3_len(diff);
-
+            if (dist < min_dist && dist < radius) {
+                min_dist = dist;
+                best_closest_capsule = closest_cap;
+                best_closest_tri = closest_edge;
+                best_normal = tri->normal;
+                best_triangle = tri_idx;
+            }
+        }
+        // Edge 1: v1 -> v2
+        {
+            OimoVec3 closest_cap, closest_edge;
+            oimo_closest_points_segments(
+                cap_p1_local, cap_p2_local,
+                tri->v1, tri->v2,
+                &closest_cap, &closest_edge
+            );
+            OimoVec3 diff = oimo_vec3_sub(closest_cap, closest_edge);
+            float dist = oimo_vec3_len(diff);
+            if (dist < min_dist && dist < radius) {
+                min_dist = dist;
+                best_closest_capsule = closest_cap;
+                best_closest_tri = closest_edge;
+                best_normal = tri->normal;
+                best_triangle = tri_idx;
+            }
+        }
+        // Edge 2: v2 -> v0
+        {
+            OimoVec3 closest_cap, closest_edge;
+            oimo_closest_points_segments(
+                cap_p1_local, cap_p2_local,
+                tri->v2, tri->v0,
+                &closest_cap, &closest_edge
+            );
+            OimoVec3 diff = oimo_vec3_sub(closest_cap, closest_edge);
+            float dist = oimo_vec3_len(diff);
             if (dist < min_dist && dist < radius) {
                 min_dist = dist;
                 best_closest_capsule = closest_cap;
@@ -194,19 +225,31 @@ static inline void oimo_capsule_mesh_detector_detect(
             }
         }
 
-        // Test capsule endpoints against triangle face
-        OimoVec3 cap_points[2] = { cap_p1_local, cap_p2_local };
-        for (int p = 0; p < 2; p++) {
+        // Test capsule endpoint 1 against triangle face
+        {
             OimoVec3 closest = oimo_closest_point_on_triangle(
-                &cap_points[p], &tri->v0, &tri->v1, &tri->v2
+                &cap_p1_local, &tri->v0, &tri->v1, &tri->v2
             );
-
-            OimoVec3 diff = oimo_vec3_sub(cap_points[p], closest);
+            OimoVec3 diff = oimo_vec3_sub(cap_p1_local, closest);
             float dist = oimo_vec3_len(diff);
-
             if (dist < min_dist && dist < radius) {
                 min_dist = dist;
-                best_closest_capsule = cap_points[p];
+                best_closest_capsule = cap_p1_local;
+                best_closest_tri = closest;
+                best_normal = tri->normal;
+                best_triangle = tri_idx;
+            }
+        }
+        // Test capsule endpoint 2 against triangle face
+        {
+            OimoVec3 closest = oimo_closest_point_on_triangle(
+                &cap_p2_local, &tri->v0, &tri->v1, &tri->v2
+            );
+            OimoVec3 diff = oimo_vec3_sub(cap_p2_local, closest);
+            float dist = oimo_vec3_len(diff);
+            if (dist < min_dist && dist < radius) {
+                min_dist = dist;
+                best_closest_capsule = cap_p2_local;
                 best_closest_tri = closest;
                 best_normal = tri->normal;
                 best_triangle = tri_idx;
@@ -214,17 +257,38 @@ static inline void oimo_capsule_mesh_detector_detect(
         }
 
         // Test triangle vertices against capsule axis
-        OimoVec3 tri_verts[3] = { tri->v0, tri->v1, tri->v2 };
-        for (int v = 0; v < 3; v++) {
-            OimoVec3 closest = oimo_closest_point_on_segment(tri_verts[v], cap_p1_local, cap_p2_local);
-
-            OimoVec3 diff = oimo_vec3_sub(closest, tri_verts[v]);
+        {
+            OimoVec3 closest = oimo_closest_point_on_segment(tri->v0, cap_p1_local, cap_p2_local);
+            OimoVec3 diff = oimo_vec3_sub(closest, tri->v0);
             float dist = oimo_vec3_len(diff);
-
             if (dist < min_dist && dist < radius) {
                 min_dist = dist;
                 best_closest_capsule = closest;
-                best_closest_tri = tri_verts[v];
+                best_closest_tri = tri->v0;
+                best_normal = tri->normal;
+                best_triangle = tri_idx;
+            }
+        }
+        {
+            OimoVec3 closest = oimo_closest_point_on_segment(tri->v1, cap_p1_local, cap_p2_local);
+            OimoVec3 diff = oimo_vec3_sub(closest, tri->v1);
+            float dist = oimo_vec3_len(diff);
+            if (dist < min_dist && dist < radius) {
+                min_dist = dist;
+                best_closest_capsule = closest;
+                best_closest_tri = tri->v1;
+                best_normal = tri->normal;
+                best_triangle = tri_idx;
+            }
+        }
+        {
+            OimoVec3 closest = oimo_closest_point_on_segment(tri->v2, cap_p1_local, cap_p2_local);
+            OimoVec3 diff = oimo_vec3_sub(closest, tri->v2);
+            float dist = oimo_vec3_len(diff);
+            if (dist < min_dist && dist < radius) {
+                min_dist = dist;
+                best_closest_capsule = closest;
+                best_closest_tri = tri->v2;
                 best_normal = tri->normal;
                 best_triangle = tri_idx;
             }

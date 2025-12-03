@@ -88,12 +88,12 @@ class N64Exporter:
         assets_dir = f'{build_dir}/n64/assets'
 
         self.exported_meshes = {}
-        n64_utils.deselect_from_all_viewlayers()
 
         for scene in bpy.data.scenes:
             if scene.library:
                 continue
 
+            n64_utils.deselect_from_all_viewlayers()
             main_scene = bpy.context.scene
             main_view_layer = bpy.context.view_layer
 
