@@ -1,3 +1,22 @@
+/**
+ * N64 Engine Type System
+ *
+ * Haxe/Armory → C type mapping:
+ *   Vec2, Vec3, Vec4    → ArmVec2, ArmVec3, ArmVec4 (value types)
+ *   Object              → ArmObject* (pointer)
+ *   Transform           → ArmTransform (embedded in ArmObject)
+ *   Camera, Light       → ArmCamera*, ArmLight* (pointers)
+ *   Scene               → ArmScene (global)
+ *   Float, Int, Bool    → float, int32_t, bool
+ *   String              → const char*
+ *
+ * Coordinate conversion (Blender Z-up → N64 Y-up):
+ *   Blender (x, y, z) → N64 (x, z, -y)
+ *
+ * Traits are compiled to C functions, not runtime objects.
+ * Physics uses Oimo port (OimoRigidBody, OimoVec3).
+ */
+
 #pragma once
 
 #include <stdbool.h>

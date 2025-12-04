@@ -146,21 +146,25 @@ class N64Exporter:
             bpy.context.window.view_layer = main_view_layer
 
 
-    def build_scene_data(self, scene):
-        scene_name = arm.utils.safesrc(scene.name).lower()
-
-        # Extract scene-level traits with per-instance property values
-        scene_traits = []
-        if hasattr(scene, 'arm_traitlist'):
-            for trait in scene.arm_traitlist:
+    def _extract_traits(self, obj) -> list:
+        """Extract trait list from a Blender object/scene with property values."""
+        traits = []
+        if hasattr(obj, 'arm_traitlist'):
+            for trait in obj.arm_traitlist:
                 if trait.enabled_prop and trait.class_name_prop:
                     prop_data = n64_utils.extract_blender_trait_props(trait)
-                    scene_traits.append({
+                    traits.append({
                         "class_name": trait.class_name_prop,
                         "type": trait.type_prop,
                         "props": prop_data['values'],
                         "type_overrides": prop_data['types']
                     })
+        return traits
+
+
+    def build_scene_data(self, scene):
+        scene_name = arm.utils.safesrc(scene.name).lower()
+        scene_traits = self._extract_traits(scene)
 
         # Get gravity from scene (Blender's scene.gravity is the actual gravity vector)
         gravity = [0.0, -9.81, 0.0]  # Default gravity
@@ -168,22 +172,18 @@ class N64Exporter:
             gravity = [scene.gravity[0], scene.gravity[1], scene.gravity[2]]
 
         # Get physics debug draw mode from Armory settings
-        wrd = bpy.data.worlds['Arm']
-        debug_draw_mode = 0
-        if wrd.arm_physics != 'Disabled':
-            debug_draw_mode = 1 if wrd.arm_physics_dbg_draw_wireframe else 0
-            debug_draw_mode |= 2 if wrd.arm_physics_dbg_draw_aabb else 0
-            debug_draw_mode |= 8 if wrd.arm_physics_dbg_draw_contact_points else 0
-            debug_draw_mode |= 2048 if wrd.arm_physics_dbg_draw_constraints else 0
-            debug_draw_mode |= 4096 if wrd.arm_physics_dbg_draw_constraint_limits else 0
-            debug_draw_mode |= 16384 if wrd.arm_physics_dbg_draw_normals else 0
-            debug_draw_mode |= 32768 if wrd.arm_physics_dbg_draw_axis_gizmo else 0
-            debug_draw_mode |= 65536 if wrd.arm_physics_dbg_draw_raycast else 0
+        debug_draw_mode = n64_utils.get_physics_debug_mode()
+
+        # Safe access to Fast64 ambient color with fallback
+        try:
+            ambient_color = list(scene.fast64.renderSettings.ambientColor)
+        except (AttributeError, KeyError):
+            ambient_color = [0.2, 0.2, 0.2]  # Default ambient
 
         self.scene_data[scene_name] = {
             "world": {
                 "clear_color": n64_utils.get_clear_color(scene),
-                "ambient_color": list(scene.fast64.renderSettings.ambientColor),
+                "ambient_color": ambient_color,
                 "gravity": gravity,
                 "physics_debug_mode": debug_draw_mode
             },
@@ -205,19 +205,6 @@ class N64Exporter:
                 sensor = max(obj.data.sensor_width, obj.data.sensor_height)
                 cam_fov = math.degrees(2 * math.atan((sensor * 0.5) / obj.data.lens))
 
-                # Extract traits from camera
-                cam_traits = []
-                if hasattr(obj, 'arm_traitlist'):
-                    for trait in obj.arm_traitlist:
-                        if trait.enabled_prop and trait.class_name_prop:
-                            prop_data = n64_utils.extract_blender_trait_props(trait)
-                            cam_traits.append({
-                                "class_name": trait.class_name_prop,
-                                "type": trait.type_prop,
-                                "props": prop_data['values'],
-                                "type_overrides": prop_data['types']
-                            })
-
                 self.scene_data[scene_name]["cameras"].append({
                     "name": arm.utils.safesrc(obj.name),
                     "pos": list(obj.matrix_world.to_translation()),  # World position (flattened)
@@ -225,34 +212,24 @@ class N64Exporter:
                     "fov": cam_fov,
                     "near": obj.data.clip_start,
                     "far": obj.data.clip_end,
-                    "traits": cam_traits
+                    "traits": self._extract_traits(obj)
                 })
             elif obj.type == 'LIGHT':  # TODO: support multiple light types [Point and Sun]
                 # Raw Blender direction - codegen.py will transform and normalize
                 light_dir = obj.rotation_euler.to_matrix().col[2]
 
-                # Extract traits from light
-                light_traits = []
-                if hasattr(obj, 'arm_traitlist'):
-                    for trait in obj.arm_traitlist:
-                        if trait.enabled_prop and trait.class_name_prop:
-                            prop_data = n64_utils.extract_blender_trait_props(trait)
-                            light_traits.append({
-                                "class_name": trait.class_name_prop,
-                                "type": trait.type_prop,
-                                "props": prop_data['values'],
-                                "type_overrides": prop_data['types']
-                            })
-
                 self.scene_data[scene_name]["lights"].append({
                     "name": arm.utils.safesrc(obj.name),
-                    "pos": list(obj.matrix_world.to_translation()),  # World position (flattened)
+                    "pos": list(obj.matrix_world.to_translation()),
                     "color": list(obj.data.color),
                     "dir": list(light_dir),
-                    "traits": light_traits
+                    "traits": self._extract_traits(obj)
                 })
             elif obj.type == 'MESH':
                 mesh = obj.data
+                if mesh not in self.exported_meshes:
+                    log.warn(f'Object "{obj.name}": mesh not exported, skipping')
+                    continue
                 mesh_name = self.exported_meshes[mesh]
 
                 # Raw Blender coordinates - codegen.py will transform later
@@ -278,19 +255,6 @@ class N64Exporter:
                 bounds_radius = math.sqrt(
                     half_extents[0]**2 + half_extents[1]**2 + half_extents[2]**2
                 )
-
-                # Extract traits from object with their per-instance property values
-                obj_traits = []
-                if hasattr(obj, 'arm_traitlist'):
-                    for trait in obj.arm_traitlist:
-                        if trait.enabled_prop and trait.class_name_prop:
-                            prop_data = n64_utils.extract_blender_trait_props(trait)
-                            obj_traits.append({
-                                "class_name": trait.class_name_prop,
-                                "type": trait.type_prop,
-                                "props": prop_data['values'],
-                                "type_overrides": prop_data['types']
-                            })
 
                 # Extract rigid body data (N64 supports box, sphere, and capsule)
                 rigid_body_data = None
@@ -398,14 +362,14 @@ class N64Exporter:
                 obj_data = {
                     "name": arm.utils.safesrc(obj.name),
                     "mesh": f'MODEL_{mesh_name.upper()}',
-                    "pos": list(obj.matrix_world.to_translation()),  # World position (flattened)
-                    "rot": [quat.x, quat.y, quat.z, quat.w],  # Quaternion XYZW
+                    "pos": list(obj.matrix_world.to_translation()),
+                    "rot": [quat.x, quat.y, quat.z, quat.w],
                     "scale": list(obj.scale),
                     "visible": not obj.hide_render,
                     "bounds_center": bounds_center,
                     "bounds_radius": bounds_radius,
-                    "traits": obj_traits,
-                    "is_static": True  # Will be computed after trait_info is loaded
+                    "traits": self._extract_traits(obj),
+                    "is_static": True  # Computed after trait_info is loaded
                 }
 
                 if rigid_body_data is not None:
@@ -459,14 +423,14 @@ class N64Exporter:
 
 
     def write_types(self):
-        wrd = bpy.data.worlds['Arm']
         tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'types.h.j2')
         out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'types.h')
 
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
 
-        debug_hud_define = '\n#define ARM_DEBUG_HUD' if wrd.arm_debug_console else ''
+        wrd = bpy.data.worlds.get('Arm')
+        debug_hud_define = '\n#define ARM_DEBUG_HUD' if wrd and wrd.arm_debug_console else ''
         output = tmpl_content.format(debug_hud_define=debug_hud_define)
 
         with open(out_path, 'w', encoding='utf-8') as f:
@@ -813,7 +777,7 @@ class N64Exporter:
             try:
                 proc = subprocess.run(
                     [
-                        rf'{msys2_executable}',
+                        msys2_executable,
                         '--login',
                         '-c',
                         (
@@ -894,10 +858,7 @@ class N64Exporter:
         rom_path = os.path.join(arm.utils.build_dir(), 'n64', f'{arm.utils.safestr(wrd.arm_project_name)}.z64')
 
         subprocess.Popen(
-            [
-                rf'{ares_emulator_executable}',
-                rf'{rom_path}'
-            ],
+            [ares_emulator_executable, rom_path],
             stdout=None,
             stderr=None,
             text=True

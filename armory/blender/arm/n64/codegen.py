@@ -47,6 +47,7 @@ from typing import Dict, List, Any, Optional
 
 from arm.n64.utils import (
     convert_vec3_list, convert_quat_list, convert_scale_list,
+    c_vec3_convert, c_oimo_vec3,
     SCALE_FACTOR
 )
 
@@ -300,17 +301,17 @@ class IREmitter:
         obj = "((ArmObject*)obj)"
 
         if method == "translate" and len(arg_strs) >= 3:
-            x, y, z = arg_strs[0], arg_strs[1], arg_strs[2]
-            return f"it_translate(&{obj}->transform, {x}, {z}, -({y}));"
+            nx, ny, nz = c_vec3_convert(arg_strs[0], arg_strs[1], arg_strs[2])
+            return f"it_translate(&{obj}->transform, {nx}, {ny}, {nz});"
 
         if method == "rotate" and len(arg_strs) >= 2:
             axis, angle = arg_strs[0], arg_strs[1]
-            ax, ay, az = f"({axis}).x", f"({axis}).y", f"({axis}).z"
-            return f"it_rotate_axis_global(&{obj}->transform, {ax}, {az}, -({ay}), {angle});"
+            nx, ny, nz = c_vec3_convert(f"({axis}).x", f"({axis}).y", f"({axis}).z")
+            return f"it_rotate_axis_global(&{obj}->transform, {nx}, {ny}, {nz}, {angle});"
 
         if method == "setLoc" and len(arg_strs) >= 3:
-            x, y, z = arg_strs[0], arg_strs[1], arg_strs[2]
-            return f"it_set_loc(&{obj}->transform, {x}, {z}, -({y}));"
+            nx, ny, nz = c_vec3_convert(arg_strs[0], arg_strs[1], arg_strs[2])
+            return f"it_set_loc(&{obj}->transform, {nx}, {ny}, {nz});"
 
         return ""
 
@@ -337,16 +338,16 @@ class IREmitter:
         arg_strs = [self.emit(a) for a in args if self.emit(a)]
 
         if method == "applyForce" and arg_strs:
-            vec_expr = arg_strs[0]
-            return f"{{ OimoVec3 _force = (OimoVec3){{{vec_expr}.x, {vec_expr}.z, -({vec_expr}.y)}}; physics_apply_force({obj}->rigid_body, &_force); }}"
+            vec = c_oimo_vec3(arg_strs[0])
+            return f"{{ OimoVec3 _force = {vec}; physics_apply_force({obj}->rigid_body, &_force); }}"
 
         if method == "applyImpulse" and arg_strs:
-            vec_expr = arg_strs[0]
-            return f"{{ OimoVec3 _impulse = (OimoVec3){{{vec_expr}.x, {vec_expr}.z, -({vec_expr}.y)}}; physics_apply_impulse({obj}->rigid_body, &_impulse); }}"
+            vec = c_oimo_vec3(arg_strs[0])
+            return f"{{ OimoVec3 _impulse = {vec}; physics_apply_impulse({obj}->rigid_body, &_impulse); }}"
 
         if method == "setLinearVelocity" and arg_strs:
-            vec_expr = arg_strs[0]
-            return f"{{ OimoVec3 _vel = (OimoVec3){{{vec_expr}.x, {vec_expr}.z, -({vec_expr}.y)}}; physics_set_linear_velocity({obj}->rigid_body, &_vel); }}"
+            vec = c_oimo_vec3(arg_strs[0])
+            return f"{{ OimoVec3 _vel = {vec}; physics_set_linear_velocity({obj}->rigid_body, &_vel); }}"
 
         if method == "getLinearVelocity":
             return f"physics_get_linear_velocity({obj}->rigid_body)"
@@ -1024,10 +1025,8 @@ def generate_physics_block(objects: List[Dict], world_data: dict) -> str:
     lines = []
 
     gravity = world_data.get("gravity", [0, 0, -9.81])
-    gx, gy, gz = gravity[0], gravity[1], gravity[2]
-    # Convert Blender coords to N64: (X, Y, Z) → (X, Z, -Y)
-    n64_gx, n64_gy, n64_gz = gx, gz, -gy
-    lines.append(f'    physics_set_gravity({n64_gx:.6f}f, {n64_gy:.6f}f, {n64_gz:.6f}f);')
+    n64_gravity = convert_vec3_list(gravity)
+    lines.append(f'    physics_set_gravity({n64_gravity[0]:.6f}f, {n64_gravity[1]:.6f}f, {n64_gravity[2]:.6f}f);')
     lines.append('')
 
     # Physics debug drawing (from Blender's Debug Drawing panel)
