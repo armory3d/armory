@@ -86,6 +86,7 @@ class N64Exporter:
         os.makedirs(f'{build_dir}/n64/src/iron/system', exist_ok=True)
         os.makedirs(f'{build_dir}/n64/src/oimo', exist_ok=True)
         os.makedirs(f'{build_dir}/n64/src/scenes', exist_ok=True)
+        os.makedirs(f'{build_dir}/n64/src/system', exist_ok=True)
 
 
     def export_meshes(self):
@@ -643,8 +644,8 @@ class N64Exporter:
 
         # Copy physics debug drawing files only if debug is enabled
         if n64_utils.get_physics_debug_mode() > 0:
-            n64_utils.copy_src('physics_debug.h', 'src/debug')
-            n64_utils.copy_src('physics_debug.c', 'src/debug')
+            n64_utils.copy_src('physics_debug.h', 'src/oimo/debug')
+            n64_utils.copy_src('physics_debug.c', 'src/oimo/debug')
 
 
     def write_main(self):

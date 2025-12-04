@@ -10,10 +10,10 @@
 #include <math.h>
 
 // Include geometry headers for type casts
-#include "oimo/collision/geometry/box_geometry.h"
-#include "oimo/collision/geometry/sphere_geometry.h"
-#include "oimo/collision/geometry/capsule_geometry.h"
-#include "oimo/collision/geometry/static_mesh_geometry.h"
+#include "../collision/geometry/box_geometry.h"
+#include "../collision/geometry/sphere_geometry.h"
+#include "../collision/geometry/capsule_geometry.h"
+#include "../collision/geometry/static_mesh_geometry.h"
 
 // Global debug state
 static PhysicsDebugDraw g_debug = {0};

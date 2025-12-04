@@ -12,7 +12,7 @@
 #if ENGINE_ENABLE_PHYSICS
 #include "oimo/physics.h"
 #if ENGINE_ENABLE_PHYSICS_DEBUG
-#include "physics_debug.h"
+#include "oimo/debug/physics_debug.h"
 #endif
 #endif
 
