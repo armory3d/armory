@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Static label pool - avoids malloc() in hot paths
+static KouiLabel g_label_pool[KOUI_MAX_LABELS];
+static uint8_t g_label_pool_used = 0;
+
 // Render list - pointers to labels that should be rendered
 static KouiLabel* g_render_list[KOUI_MAX_LABELS];
 static uint8_t g_render_count = 0;
@@ -17,7 +21,9 @@ void koui_init(void)
     if (g_initialized) return;
     g_initialized = true;
 
+    g_label_pool_used = 0;
     g_render_count = 0;
+    memset(g_label_pool, 0, sizeof(g_label_pool));
     memset(g_render_list, 0, sizeof(g_render_list));
 
     // Get the first font (index 0) as default for Koui labels
@@ -33,9 +39,9 @@ void koui_init(void)
 
 KouiLabel* koui_create_label(const char *text)
 {
-    // Allocate label (owned by caller, typically trait data)
-    KouiLabel *label = malloc(sizeof(KouiLabel));
-    if (!label) return NULL;
+    // Allocate from static pool - no malloc!
+    if (g_label_pool_used >= KOUI_MAX_LABELS) return NULL;
+    KouiLabel *label = &g_label_pool[g_label_pool_used++];
 
     label->text = text;
     label->pos_x = 0;
@@ -74,8 +80,16 @@ void koui_remove_label(KouiLabel *label)
         }
     }
 
-    // Free the label memory
-    free(label);
+    // Note: Label stays in pool until scene reset (no free needed)
+}
+
+void koui_clear(void)
+{
+    // Reset label pool and render list (call on scene change)
+    g_label_pool_used = 0;
+    g_render_count = 0;
+    memset(g_label_pool, 0, sizeof(g_label_pool));
+    memset(g_render_list, 0, sizeof(g_render_list));
 }
 
 void koui_label_set_position(KouiLabel *label, int16_t x, int16_t y)

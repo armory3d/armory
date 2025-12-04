@@ -1,7 +1,18 @@
 /**
  * N64 Engine Type System
+ * =======================
  *
- * Haxe/Armory → C type mapping:
+ * COORDINATE SYSTEM
+ * -----------------
+ * Blender uses Z-up, N64/T3D uses Y-up. Conversion is automatic:
+ *   Blender (x, y, z) → N64 (x, z, -y)
+ *
+ * Scale factor: Blender units * 0.015625 = N64 units (1/64 scale)
+ *   - 1 Blender unit = 64 N64 units
+ *   - Typical N64 world scale: -500 to +500 units
+ *
+ * TYPE MAPPING (Haxe/Armory → C)
+ * ------------------------------
  *   Vec2, Vec3, Vec4    → ArmVec2, ArmVec3, ArmVec4 (value types)
  *   Object              → ArmObject* (pointer)
  *   Transform           → ArmTransform (embedded in ArmObject)
@@ -10,11 +21,34 @@
  *   Float, Int, Bool    → float, int32_t, bool
  *   String              → const char*
  *
- * Coordinate conversion (Blender Z-up → N64 Y-up):
- *   Blender (x, y, z) → N64 (x, z, -y)
+ * MEMORY LIMITS (N64 Hardware)
+ * ----------------------------
+ *   Total RAM:           4 MB (with Expansion Pak), 8 MB addressable
+ *   Heap available:      ~380 KB typical after engine + assets
+ *   Stack size:          8 KB default
+ *   Uncached memory:     Limited - used for DMA, display lists
  *
- * Traits are compiled to C functions, not runtime objects.
- * Physics uses Oimo port (OimoRigidBody, OimoVec3).
+ *   Recommended limits:
+ *     - Objects per scene:     64-128 max
+ *     - Traits per object:     2-4 max
+ *     - Vertices per model:    500-2000 (depending on complexity)
+ *     - Textures:              64x64 or 32x32 preferred
+ *
+ * PHYSICS LIMITS (OimoPhysics)
+ * ----------------------------
+ *   MAX_PHYSICS_BODIES:       32 default (configurable in config.py)
+ *   MAX_CONTACT_BODIES:       16 default
+ *   MAX_CONTACT_SUBSCRIBERS:  4 per body default
+ *
+ *   Collision shapes: box, sphere, capsule, mesh (static only)
+ *   Body types: static, dynamic, kinematic, trigger
+ *
+ * PERFORMANCE NOTES
+ * -----------------
+ *   - Traits are compiled to C functions, not runtime objects
+ *   - Static objects are batched into combined display lists
+ *   - Transform matrices only recomputed when dirty flag set
+ *   - Frustum culling uses cached world-space bounds
  */
 
 #pragma once
@@ -67,17 +101,35 @@ typedef struct {{
     uint8_t dirty;
 }} ArmTransform;
 
+/**
+ * ArmObject - Core entity type
+ *
+ * Field layout optimized for cache:
+ *   - Hot data first (accessed every frame): transform, visibility, matrices
+ *   - Cold data after (accessed occasionally): bounds, physics, traits
+ *
+ * Cached world bounds are updated when transform.dirty > 0, avoiding
+ * redundant calculations during frustum culling.
+ */
 typedef struct ArmObject {{
-    ArmTransform transform;
-    rspq_block_t *dpl;
-    T3DMat4FP *model_mat;
-    bool visible;
-    bool is_static;
-    T3DVec3 bounds_center;
-    float bounds_radius;
-    struct OimoRigidBody *rigid_body;
-    uint8_t trait_count;
-    ArmTrait *traits;
+    // === HOT DATA (accessed every frame) ===
+    ArmTransform transform;       // 44 bytes: position, rotation, scale
+    T3DMat4FP *model_mat;         // 4 bytes: matrix for rendering
+    rspq_block_t *dpl;            // 4 bytes: display list pointer
+    bool visible;                 // 1 byte
+    bool is_static;               // 1 byte
+    uint8_t trait_count;          // 1 byte
+    uint8_t _pad;                 // 1 byte (alignment)
+
+    // === CACHED BOUNDS (updated when dirty) ===
+    T3DVec3 cached_world_center;  // 12 bytes: world-space center for culling
+    float cached_world_radius;    // 4 bytes: world-space radius for culling
+
+    // === COLD DATA (accessed occasionally) ===
+    T3DVec3 bounds_center;        // 12 bytes: local-space center
+    float bounds_radius;          // 4 bytes: local-space radius
+    struct OimoRigidBody *rigid_body;  // 4 bytes
+    ArmTrait *traits;             // 4 bytes
 }} ArmObject;
 
 typedef struct ArmLight {{

@@ -18,6 +18,8 @@ extern "C" {{
  *   - btn_<button>_started  - Button just pressed this frame
  *   - btn_<button>_released - Button just released this frame
  *   - btn_<button>_down     - Button held down
+ *
+ * Performance: Uses bitmask to skip buttons with no subscribers.
  */
 
 // Maximum traits that can subscribe to a single button event
@@ -46,6 +48,9 @@ typedef struct {{
 // Global event state
 typedef struct {{
     ButtonEventSubs buttons[N64_BTN_COUNT];
+    uint16_t has_started_subs;   // Bitmask: which buttons have started subscribers
+    uint16_t has_released_subs;  // Bitmask: which buttons have released subscribers
+    uint16_t has_down_subs;      // Bitmask: which buttons have down subscribers
 }} TraitEventState;
 
 // Initialize event system (call once at startup)

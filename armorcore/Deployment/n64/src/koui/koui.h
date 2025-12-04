@@ -23,6 +23,9 @@ typedef struct {
 // Initialize Koui UI system
 void koui_init(void);
 
+// Clear all labels and reset pool (call on scene change)
+void koui_clear(void);
+
 // Label management
 KouiLabel* koui_create_label(const char *text);  // Create label (not added to scene)
 void koui_add_label(KouiLabel *label);            // Add label to render list

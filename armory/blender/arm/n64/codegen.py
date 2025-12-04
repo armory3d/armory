@@ -998,8 +998,18 @@ def generate_object_block(objects: List[Dict], trait_info: dict, scene_name: str
 
         bc = obj.get("bounds_center", [0, 0, 0])
         br = obj.get("bounds_radius", 1.0)
+        pos = obj["pos"]
+        scale = obj["scale"]
         lines.append(f'    {prefix}.bounds_center = {_fmt_vec3(bc)};')
         lines.append(f'    {prefix}.bounds_radius = {br:.6f}f;')
+
+        # Initialize cached world bounds (will be updated when transform.dirty > 0)
+        world_center = [pos[0] + bc[0], pos[1] + bc[1], pos[2] + bc[2]]
+        max_scale = max(scale[0], scale[1], scale[2])
+        world_radius = br * max_scale
+        lines.append(f'    {prefix}.cached_world_center = {_fmt_vec3(world_center)};')
+        lines.append(f'    {prefix}.cached_world_radius = {world_radius:.6f}f;')
+
         lines.append(f'    {prefix}.rigid_body = NULL;')
 
         lines.extend(generate_trait_block(prefix, obj.get("traits", []), trait_info, scene_name))

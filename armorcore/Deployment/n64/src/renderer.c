@@ -61,6 +61,18 @@ void renderer_update_objects(ArmScene *scene)
             obj->transform.loc.v
         );
 
+        // Update cached world-space bounds for frustum culling
+        // Only computed when transform is dirty, saving per-frame calculations
+        obj->cached_world_center = (T3DVec3){{
+            obj->transform.loc.v[0] + obj->bounds_center.v[0],
+            obj->transform.loc.v[1] + obj->bounds_center.v[1],
+            obj->transform.loc.v[2] + obj->bounds_center.v[2]
+        }};
+        float max_scale = obj->transform.scale.v[0];
+        if (obj->transform.scale.v[1] > max_scale) max_scale = obj->transform.scale.v[1];
+        if (obj->transform.scale.v[2] > max_scale) max_scale = obj->transform.scale.v[2];
+        obj->cached_world_radius = obj->bounds_radius * max_scale;
+
         obj->transform.dirty--;
     }
 }
@@ -117,18 +129,8 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
             continue;
         }
 
-        T3DVec3 world_center = {{
-            obj->transform.loc.v[0] + obj->bounds_center.v[0],
-            obj->transform.loc.v[1] + obj->bounds_center.v[1],
-            obj->transform.loc.v[2] + obj->bounds_center.v[2]
-        }};
-
-        float max_scale = obj->transform.scale.v[0];
-        if (obj->transform.scale.v[1] > max_scale) max_scale = obj->transform.scale.v[1];
-        if (obj->transform.scale.v[2] > max_scale) max_scale = obj->transform.scale.v[2];
-        float world_radius = obj->bounds_radius * max_scale;
-
-        if (!t3d_frustum_vs_sphere(frustum, &world_center, world_radius)) {
+        // Use cached world bounds - updated only when transform.dirty > 0
+        if (!t3d_frustum_vs_sphere(frustum, &obj->cached_world_center, obj->cached_world_radius)) {
             continue;
         }
 
