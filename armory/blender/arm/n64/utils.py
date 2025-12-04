@@ -15,7 +15,7 @@ import arm.log as log
 # Coordinate Conversion: Blender (X,Y,Z) → N64 (X,Z,-Y)
 # =============================================================================
 
-SCALE_FACTOR: float = 0.015
+SCALE_FACTOR: float = 0.015625  # 1/64 - Blender scale 1.0 → N64 scale 0.015625
 
 # Python value conversion
 def convert_vec3_list(vec: List[float]) -> List[float]:
@@ -26,20 +26,6 @@ def convert_quat_list(quat: List[float]) -> List[float]:
 
 def convert_scale_list(vec: List[float], factor: float = SCALE_FACTOR) -> List[float]:
     return [vec[0] * factor, vec[2] * factor, vec[1] * factor]
-
-# C expression conversion
-def c_vec3_convert(x: str, y: str, z: str) -> tuple:
-    return (x, z, f"-({y})")
-
-def c_vec3_expr(x: str, y: str, z: str, convert: bool = True) -> str:
-    if convert:
-        x, y, z = c_vec3_convert(x, y, z)
-    return f"{{{x}, {y}, {z}}}"
-
-def c_oimo_vec3(vec_expr: str, convert: bool = True) -> str:
-    if convert:
-        return f"(OimoVec3){{{vec_expr}.x, {vec_expr}.z, -({vec_expr}.y)}}"
-    return f"(OimoVec3){{{vec_expr}.x, {vec_expr}.y, {vec_expr}.z}}"
 
 def c_float(value) -> str:
     f = float(value)

@@ -203,15 +203,6 @@ class IREmitter:
             target = self.emit(children[0])
             value = self.emit(children[1])
             if target and value:
-                # Special case: transform.scale is an array, use it_set_scale()
-                # Apply SCALE_FACTOR since Blender scale 1.0 != N64 scale 1.0
-                # Coordinate conversion: Blender (x, y, z) → N64 (x, z, y) for scale
-                if "->transform.scale" in target:
-                    # Extract the object part (e.g., "((ArmObject*)obj)")
-                    obj_part = target.replace("->transform.scale", "")
-                    # value should be an ArmVec3 compound literal like (ArmVec3){x, y, z}
-                    # Convert: Blender (x, y, z) → N64 (x, z, y) and multiply by SCALE_FACTOR
-                    return f"it_set_scale(&{obj_part}->transform, ({value}).x * {SCALE_FACTOR}f, ({value}).z * {SCALE_FACTOR}f, ({value}).y * {SCALE_FACTOR}f);"
                 return f"{target} = {value};"
         return ""
 

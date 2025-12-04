@@ -647,7 +647,19 @@ class TraitExtractor {
                 if (op == OpAssign) {
                     // Check if assigning to transform.loc/rot/scale (mutating transform)
                     checkTransformMutation(e1);
-                    { type: "assign", children: [exprToIR(e1), exprToIR(e2)] };
+
+                    // Special case: transform.scale = value -> emit transform_call with it_set_scale()
+                    if (isTransformScaleAssign(e1)) {
+                        var valueIR = exprToIR(e2);
+                        // Swizzle: Blender (x, y, z) → N64 (x, z, y) and multiply by SCALE_FACTOR (0.015625 = 1/64)
+                        {
+                            type: "transform_call",
+                            c_code: "it_set_scale(&((ArmObject*)obj)->transform, ({0}).x * 0.015625f, ({0}).z * 0.015625f, ({0}).y * 0.015625f);",
+                            args: [valueIR]
+                        };
+                    } else {
+                        { type: "assign", children: [exprToIR(e1), exprToIR(e2)] };
+                    }
                 } else if (op == OpAdd) {
                     // Check if this is string concatenation
                     var leftType = getExprType(e1);
@@ -760,6 +772,20 @@ class TraitExtractor {
                 }
             default:
         }
+    }
+
+    // Check if expression is assignment to transform.scale (needs special handling)
+    function isTransformScaleAssign(expr:Expr):Bool {
+        switch (expr.expr) {
+            case EField(obj, "scale"):
+                switch (obj.expr) {
+                    case EField(_, "transform"), EConst(CIdent("transform")):
+                        return true;
+                    default:
+                }
+            default:
+        }
+        return false;
     }
 
     function convertFieldAccess(obj:Expr, field:String):IRNode {
@@ -1158,10 +1184,10 @@ class TraitExtractor {
                      : "{ float _l=sqrtf({v}.x*{v}.x+{v}.y*{v}.y); if(_l>0.0f){ {vraw}.x/=_l; {vraw}.y/=_l; } }";
             case "clone":
                 // Clone creates a copy - type depends on target
-                // Special case: transform.scale is stored with SCALE_FACTOR (0.015), so multiply by ~64 to get Blender values
+                // Special case: transform.scale is stored with SCALE_FACTOR (1/64), so multiply by 64 to get Blender values
                 var isScaleClone = (objIR.type == "field" && objIR.value == "transform.scale");
                 if (isScaleClone) {
-                    // Inverse of SCALE_FACTOR (0.015) ≈ 66.67, but we use 64 for consistency
+                    // Inverse of SCALE_FACTOR (0.015625 = 1/64) = 64
                     if (cType == "ArmVec4") "(" + cType + "){{v}.x*64.0f, {v}.y*64.0f, {v}.z*64.0f, 1.0f}";
                     else if (cType == "ArmVec3") "(" + cType + "){{v}.x*64.0f, {v}.y*64.0f, {v}.z*64.0f}";
                     else "(" + cType + "){{v}.x*64.0f, {v}.y*64.0f}";
