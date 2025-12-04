@@ -1,12 +1,12 @@
 // physics.c - Mini-engine physics implementation
 #include "physics.h"
-#include "physics_events.h"
-#include "engine.h"
+#include "../events/physics_events.h"
+#include "../engine.h"
 #if ENGINE_ENABLE_PHYSICS_DEBUG
-#include "physics_debug.h"
+#include "debug/physics_debug.h"
 #endif
-#include "utils.h"
-#include "oimo/collision/geometry/static_mesh_geometry.h"
+#include "../utils.h"
+#include "collision/geometry/static_mesh_geometry.h"
 #include <t3d/t3d.h>
 #include <string.h>
 

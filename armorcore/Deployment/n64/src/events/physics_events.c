@@ -1,6 +1,6 @@
 // physics_events.c - Per-object physics contact event subscriptions
 #include "physics_events.h"
-#include "physics.h"
+#include "../oimo/physics.h"
 #include <string.h>
 
 // Static storage for body contact subscriptions

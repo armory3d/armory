@@ -7,7 +7,7 @@
 #include "data/models.h"
 #include "iron/system/input.h"
 #if ENGINE_ENABLE_PHYSICS
-#include "physics.h"
+#include "oimo/physics.h"
 #endif
 
 void engine_init(void)

@@ -10,7 +10,7 @@
 #include "iron/system/input.h"
 
 #if ENGINE_ENABLE_PHYSICS
-#include "physics.h"
+#include "oimo/physics.h"
 #if ENGINE_ENABLE_PHYSICS_DEBUG
 #include "physics_debug.h"
 #endif

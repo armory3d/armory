@@ -1,8 +1,8 @@
 // physics.h - Mini-engine physics wrapper
 #pragma once
 
-#include "types.h"
-#include "oimo/oimo.h"
+#include "../types.h"
+#include "oimo.h"
 
 #ifdef __cplusplus
 extern "C" {

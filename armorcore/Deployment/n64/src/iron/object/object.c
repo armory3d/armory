@@ -3,8 +3,8 @@
 #include "../../engine.h"
 
 #if ENGINE_ENABLE_PHYSICS
-#include "../../physics.h"
-#include "../../physics_events.h"
+#include "../../events/physics_events.h"
+#include "../../oimo/physics.h"
 #endif
 
 void object_remove(ArmObject* obj)
