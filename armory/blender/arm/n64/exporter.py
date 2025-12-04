@@ -80,6 +80,7 @@ class N64Exporter:
         os.makedirs(f'{build_dir}/n64/assets', exist_ok=True)
         os.makedirs(f'{build_dir}/n64/src', exist_ok=True)
         os.makedirs(f'{build_dir}/n64/src/data', exist_ok=True)
+        os.makedirs(f'{build_dir}/n64/src/events', exist_ok=True)
         os.makedirs(f'{build_dir}/n64/src/iron', exist_ok=True)
         os.makedirs(f'{build_dir}/n64/src/iron/object', exist_ok=True)
         os.makedirs(f'{build_dir}/n64/src/iron/system', exist_ok=True)
@@ -405,11 +406,13 @@ class N64Exporter:
             if physics_debug_mode > 0:
                 physics_sources = '''src +=\\
     src/physics.c \\
+    src/physics_events.c \\
     src/physics_debug.c \\
     src/oimo/collision/geometry/geometry.c'''
             else:
                 physics_sources = '''src +=\\
     src/physics.c \\
+    src/physics_events.c \\
     src/oimo/collision/geometry/geometry.c'''
         else:
             physics_sources = '# No physics'
@@ -616,6 +619,26 @@ class N64Exporter:
         # Copy physics header
         n64_utils.copy_src('physics.h', 'src')
 
+        # Render physics_events.h template
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'physics_events.h.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'physics_events.h')
+
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
+
+        max_contact_subscribers = n64_utils.get_config('max_contact_subscribers', 4)
+        max_contact_bodies = n64_utils.get_config('max_contact_bodies', 16)
+        output = tmpl_content.format(
+            max_contact_subscribers=max_contact_subscribers,
+            max_contact_bodies=max_contact_bodies
+        )
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
+
+        # Copy physics_events.c
+        n64_utils.copy_src('physics_events.c', 'src')
+
         # Copy physics debug drawing files only if debug is enabled
         if n64_utils.get_physics_debug_mode() > 0:
             n64_utils.copy_src('physics_debug.h', 'src')
@@ -745,6 +768,7 @@ class N64Exporter:
             object_count=len(scene_data['objects']),
             objects_block=codegen.generate_object_block(scene_data['objects'], self.trait_info, scene_name),
             physics_block=codegen.generate_physics_block(scene_data['objects'], scene_data['world']),
+            contact_subs_block=codegen.generate_contact_subscriptions_block(scene_data['objects'], self.trait_info),
             scene_trait_count=len(scene_traits),
             scene_traits_block=codegen.generate_scene_traits_block(scene_traits, self.trait_info, scene_name)
         )
@@ -825,8 +849,8 @@ class N64Exporter:
 
     def write_iron(self):
         # Render trait_events.h template
-        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'iron', 'trait_events.h.j2')
-        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'iron', 'trait_events.h')
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'events', 'trait_events.h.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'events', 'trait_events.h')
 
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
@@ -837,9 +861,11 @@ class N64Exporter:
         with open(out_path, 'w', encoding='utf-8') as f:
             f.write(output)
 
-        n64_utils.copy_src('iron/trait_events.c', 'src')
+        n64_utils.copy_src('events/trait_events.c', 'src')
         n64_utils.copy_src('iron/object/transform.h', 'src')
         n64_utils.copy_src('iron/object/transform.c', 'src')
+        n64_utils.copy_src('iron/object/object.h', 'src')
+        n64_utils.copy_src('iron/object/object.c', 'src')
         n64_utils.copy_src('iron/system/input.c', 'src')
         n64_utils.copy_src('iron/system/input.h', 'src')
 

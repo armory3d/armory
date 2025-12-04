@@ -1,5 +1,5 @@
 #include "trait_events.h"
-#include "system/input.h"
+#include "../iron/system/input.h"
 #include <string.h>
 
 static TraitEventState g_events;

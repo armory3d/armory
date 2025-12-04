@@ -40,6 +40,8 @@ def c_float(value) -> str:
 N64_CONFIG = {
     'max_physics_bodies': 32,
     'max_button_subscribers': 16,
+    'max_contact_subscribers': 4,   # Max handlers per rigid body
+    'max_contact_bodies': 16,       # Max rigid bodies with contact subscriptions
 }
 
 def get_physics_debug_mode() -> int:

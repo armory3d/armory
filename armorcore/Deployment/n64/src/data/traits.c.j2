@@ -3,13 +3,15 @@
 #include "../types.h"
 #include "../engine.h"
 #include "../utils.h"
+#include "../events/trait_events.h"
 #include "../iron/object/transform.h"
+#include "../iron/object/object.h"
 #include "../iron/system/input.h"
-#include "../iron/trait_events.h"
 #include <math.h>
 
 #if ENGINE_ENABLE_PHYSICS
 #include "../physics.h"
+#include "../physics_events.h"
 #endif
 
 #if ENGINE_ENABLE_UI

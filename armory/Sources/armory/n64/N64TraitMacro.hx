@@ -182,6 +182,12 @@ typedef ButtonEventMeta = {
     event_type: String       // "started", "released", or "down"
 }
 
+typedef ContactEventMeta = {
+    event_name: String,      // Handler function name, e.g., "onContact"
+    handler_name: String,    // Full C handler name, e.g., "arm_player_player_contact_onContact"
+    subscribe: Bool          // true for notifyOnContact, false for removeContact
+}
+
 typedef TraitMeta = {
     uses_input: Bool,
     uses_transform: Bool,
@@ -190,7 +196,8 @@ typedef TraitMeta = {
     uses_physics: Bool,
     uses_ui: Bool,             // True if trait uses Koui UI elements
     buttons_used: Array<String>,
-    button_events: Array<ButtonEventMeta>  // structured button event info
+    button_events: Array<ButtonEventMeta>,  // structured button event info
+    contact_events: Array<ContactEventMeta> // physics contact subscriptions
 }
 
 typedef TraitIR = {
@@ -320,6 +327,7 @@ class TraitExtractor {
     var events:Map<String, Array<IRNode>>;
     var meta:TraitMeta;
     var localVarTypes:Map<String, String>;  // Track local variable types
+    var cName:String;  // C-safe name for this trait
 
     public function new(className:String, modulePath:String, fields:Array<Field>) {
         this.className = className;
@@ -338,8 +346,18 @@ class TraitExtractor {
             uses_physics: false,
             uses_ui: false,
             buttons_used: [],
-            button_events: []
+            button_events: [],
+            contact_events: []
         };
+
+        // Generate C-safe name early so it's available during extraction
+        var moduleParts = modulePath.split(".");
+        var lastModulePart = moduleParts[moduleParts.length - 1];
+        if (lastModulePart.toLowerCase() == className.toLowerCase()) {
+            this.cName = modulePath.replace(".", "_").toLowerCase();
+        } else {
+            this.cName = (modulePath.replace(".", "_") + "_" + className).toLowerCase();
+        }
     }
 
     public function extract():TraitIR {
@@ -378,24 +396,13 @@ class TraitExtractor {
             extractEvents("on_remove", lifecycles.remove);
         }
 
-        // Generate C-safe name
-        // Avoid duplication if className is already the last part of modulePath
-        // e.g., "arm.Rotator" + "Rotator" should become "arm_rotator", not "arm_rotator_rotator"
-        var moduleParts = modulePath.split(".");
-        var lastModulePart = moduleParts[moduleParts.length - 1];
-        var cName:String;
-        if (lastModulePart.toLowerCase() == className.toLowerCase()) {
-            // Class name matches module name, just use module path
-            cName = modulePath.replace(".", "_");
-        } else {
-            // Class name differs, append it
-            cName = modulePath.replace(".", "_") + "_" + className;
-        }
+        // Generate C-safe name is now done in constructor
+        // cName is available as this.cName
 
         return {
             name: className,
             module: modulePath,
-            cName: cName.toLowerCase(),
+            cName: cName,
             needsData: memberNames.length > 0,
             members: members,
             events: events,
@@ -941,7 +948,14 @@ class TraitExtractor {
                     }
                 }
 
-                // SECOND: Check if this is a physics method call on any object (rigid_body.applyForce, body.applyForce, etc.)
+                // SECOND: Check for physics contact subscription methods
+                // rb.notifyOnContact(handler) or rb.removeContact(handler)
+                if (method == "notifyOnContact" || method == "removeContact") {
+                    meta.uses_physics = true;
+                    return convertContactSubscription(method, args, params);
+                }
+
+                // THIRD: Check if this is a physics method call on any object (rigid_body.applyForce, body.applyForce, etc.)
                 var physicsMethods = ["applyForce", "applyImpulse", "setLinearVelocity", "getLinearVelocity",
                                       "setAngularVelocity", "getAngularVelocity", "setLinearFactor", "setAngularFactor"];
                 if (Lambda.has(physicsMethods, method)) {
@@ -961,6 +975,7 @@ class TraitExtractor {
 
                     // transform.translate(...) -> it_translate(...)
                     case EField(_, "transform"), EConst(CIdent("transform")):
+                        meta.uses_transform = true;
                         meta.uses_transform = true;
                         return convertTransformCall(method, args);
 
@@ -1144,6 +1159,76 @@ class TraitExtractor {
             object: objIR,
             args: args
         };
+    }
+
+    // =========================================================================
+    // Contact subscription - notifyOnContact(handler), removeContact(handler)
+    // Records metadata for Python to emit subscription calls at init time
+    // =========================================================================
+
+    function convertContactSubscription(method:String, args:Array<IRNode>, params:Array<Expr>):IRNode {
+        // Extract handler function name from first argument
+        // e.g., rb.notifyOnContact(onContact) -> handler = "onContact"
+        if (params.length == 0) return { type: "skip" };
+
+        var handlerName:String = null;
+        switch (params[0].expr) {
+            case EConst(CIdent(name)):
+                handlerName = name;
+            case EField(_, name):
+                handlerName = name;
+            default:
+        }
+
+        if (handlerName == null) return { type: "skip" };
+
+        // Record the handler method for extraction
+        // The handler will be extracted as a contact event (similar to button events)
+        var isSubscribe = (method == "notifyOnContact");
+
+        // Build full C handler name: {c_name}_contact_{handlerName}
+        var fullHandlerName = cName + "_contact_" + handlerName;
+
+        meta.contact_events.push({
+            event_name: handlerName,
+            handler_name: fullHandlerName,
+            subscribe: isSubscribe
+        });
+
+        // If subscribing, extract the handler method body as an event
+        if (isSubscribe && methodMap.exists(handlerName)) {
+            var func = methodMap.get(handlerName);
+            if (!events.exists("contact_" + handlerName)) {
+                events.set("contact_" + handlerName, []);
+                extractContactHandler(handlerName, func, events.get("contact_" + handlerName));
+            }
+        }
+
+        // Return a no-op - the actual subscription is done at init time by Python
+        return { type: "skip" };
+    }
+
+    function extractContactHandler(name:String, func:Function, eventNodes:Array<IRNode>):Void {
+        // Contact handlers have signature: function onContact(body: RigidBody)
+        // We need to convert this to the C handler signature: (obj, data, other)
+        // The "body" parameter becomes "other" ArmObject in C
+
+        if (func.expr == null) return;
+
+        switch (func.expr.expr) {
+            case EBlock(exprs):
+                for (expr in exprs) {
+                    var node = exprToIR(expr);
+                    if (node != null && node.type != "skip") {
+                        eventNodes.push(node);
+                    }
+                }
+            default:
+                var node = exprToIR(func.expr);
+                if (node != null && node.type != "skip") {
+                    eventNodes.push(node);
+                }
+        }
     }
 
     // =========================================================================

@@ -3,6 +3,7 @@
 // contact.h
 // 1:1 port from OimoPhysics Contact.hx
 
+#include <stdbool.h>
 #include "../common/vec3.h"
 #include "../collision/narrowphase/detector.h"
 #include "../collision/narrowphase/detector_result.h"
@@ -41,6 +42,7 @@ typedef struct OimoContact {
     OimoPgsContactConstraintSolver _solver;
 
     bool _touching;
+    bool _triggering;  // True if either shape is a trigger
 } OimoContact;
 
 static inline void oimo_contact_init(OimoContact* c) {
@@ -61,6 +63,7 @@ static inline void oimo_contact_init(OimoContact* c) {
     oimo_contact_constraint_init(&c->_contactConstraint, &c->_manifold);
     oimo_pgs_contact_solver_init(&c->_solver, &c->_contactConstraint);
     c->_touching = false;
+    c->_triggering = false;
 }
 
 // Attach contact to shapes
@@ -70,6 +73,7 @@ static inline void oimo_contact_attach(OimoContact* c, OimoShape* s1, OimoShape*
     c->_b1 = s1->_rigidBody;
     c->_b2 = s2->_rigidBody;
     c->_touching = false;
+    c->_triggering = false;
     c->_detector = detector;
 
     // Attach links to rigid bodies
@@ -144,6 +148,7 @@ static inline void oimo_contact_detach(OimoContact* c) {
     c->_b1 = NULL;
     c->_b2 = NULL;
     c->_touching = false;
+    c->_triggering = false;
 
     oimo_manifold_clear(&c->_manifold);
     c->_detector = NULL;
@@ -179,9 +184,12 @@ static inline void oimo_contact_update_manifold_with_matrix(
         }
 
         c->_touching = true;
+        // 1:1 from OimoPhysics: _triggering = _touching && (_s1._isTrigger || _s2._isTrigger)
+        c->_triggering = (c->_s1->_isTrigger || c->_s2->_isTrigger);
     } else {
         oimo_manifold_clear(&c->_manifold);
         c->_touching = false;
+        c->_triggering = false;
     }
 }
 

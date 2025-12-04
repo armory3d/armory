@@ -1,5 +1,6 @@
 // physics.c - Mini-engine physics implementation
 #include "physics.h"
+#include "physics_events.h"
 #include "engine.h"
 #if ENGINE_ENABLE_PHYSICS_DEBUG
 #include "physics_debug.h"
@@ -79,6 +80,9 @@ void physics_init(void) {{
     memset(g_mesh_shapes, 0, sizeof(g_mesh_shapes));
     memset(g_mesh_used, 0, sizeof(g_mesh_used));
 
+    // Contact event subscriptions
+    physics_contact_init();
+
     OimoVec3 gravity = oimo_vec3(0.0f, -9.80665f, 0.0f);
     oimo_world_init(&g_world, &gravity);
 
@@ -94,6 +98,9 @@ void physics_shutdown(void) {{
 
 void physics_reset(void) {{
     if (!g_initialized) return;
+
+    // Clear contact subscriptions
+    physics_contact_clear();
 
     // Remove regular bodies
     for (int i = 0; i < MAX_PHYSICS_BODIES; i++) {{
@@ -120,7 +127,10 @@ void physics_step(float dt) {{
     if (!g_initialized || g_paused) return;
     oimo_world_step(&g_world, dt);
 
-    // Process contact callbacks if registered
+    // Dispatch per-body contact subscriptions
+    physics_contact_dispatch();
+
+    // Process global contact callbacks if registered
     if (g_contact_callback) {{
         OimoContact* contact = g_world._contactManager._contactList;
         while (contact != NULL) {{

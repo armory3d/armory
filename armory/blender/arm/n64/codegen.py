@@ -489,11 +489,14 @@ class IREmitter:
 # =============================================================================
 
 class TraitCodeGenerator:
-    """Generates C code for a single trait from IR."""
+    """Generates C code for a single trait from IR.
+
+    Pure 1:1 emitter - all data comes from macro-generated IR.
+    """
 
     def __init__(self, name: str, ir: Dict, type_overrides: Dict = None):
         self.name = name
-        self.c_name = ir.get("c_name", name.lower())
+        self.c_name = ir.get("c_name", "")  # Must be provided by macro
         self.members = ir.get("members", [])
         self.events = ir.get("events", {})
         self.meta = ir.get("meta", {})
@@ -551,6 +554,15 @@ class TraitCodeGenerator:
                 decls.append(f"void {self.c_name}_{event_name}(void* obj, void* data, float dt);")
         return decls
 
+    def generate_contact_event_declarations(self) -> List[str]:
+        """Generate declarations for contact event handlers."""
+        decls = []
+        for event_name in self.events.keys():
+            if event_name.startswith("contact_"):
+                # Contact events use PhysicsContactHandler signature: (obj, data, other)
+                decls.append(f"void {self.c_name}_{event_name}(void* obj, void* data, ArmObject* other);")
+        return decls
+
     def generate_all_event_implementations(self) -> str:
         """Generate C implementations for all event handlers."""
         impl_lines = [f"// ========== {self.name} =========="]
@@ -601,6 +613,17 @@ class TraitCodeGenerator:
                 event_nodes = self.events.get(event_name, [])
                 body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
                 impl_lines.append(f"void {self.c_name}_{event_name}(void* obj, void* data, float dt) {{")
+                impl_lines.append(body)
+                impl_lines.append("}")
+                impl_lines.append("")
+
+        # Contact events - PhysicsContactHandler signature: (obj, data, other)
+        for event_name in self.events.keys():
+            if event_name.startswith("contact_"):
+                event_nodes = self.events.get(event_name, [])
+                body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
+                impl_lines.append(f"void {self.c_name}_{event_name}(void* obj, void* data, ArmObject* other) {{")
+                impl_lines.append(f"    (void)other;  // Available as 'other' in body if needed")
                 impl_lines.append(body)
                 impl_lines.append("}")
                 impl_lines.append("")
@@ -806,6 +829,7 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
 
         trait_declarations.extend(gen.generate_lifecycle_declarations())
         event_handler_declarations.extend(gen.generate_button_event_declarations())
+        event_handler_declarations.extend(gen.generate_contact_event_declarations())
 
         # Implementation data
         trait_implementations.append(gen.generate_all_event_implementations())
@@ -866,9 +890,11 @@ def generate_transform_block(prefix: str, pos: List[float],
 
 def generate_trait_block(prefix: str, traits: List[Dict],
                          trait_info: dict, scene_name: str) -> List[str]:
-    """Generate C code for trait initialization on an object."""
+    """Generate C code for trait initialization on an object.
+
+    Pure 1:1 emitter - all data comes from macro-generated trait_info.
+    """
     from arm.n64 import utils as n64_utils
-    import arm.utils
 
     lines = []
     lines.append(f'    {prefix}.trait_count = {len(traits)};')
@@ -879,11 +905,9 @@ def generate_trait_block(prefix: str, traits: List[Dict],
         for t_idx, trait in enumerate(traits):
             trait_class = trait["class_name"]
 
-            # Get trait IR for c_name and button events
+            # Get trait IR - must exist, macro provides all data
             trait_ir = trait_info.get("traits", {}).get(trait_class, {})
-            # Use c_name from IR (e.g., "arm_player_player") for function names
-            c_name = trait_ir.get("c_name", arm.utils.safesrc(trait_class).lower())
-            events = trait_ir.get("events", {})
+            c_name = trait_ir.get("c_name", "")
             meta = trait_ir.get("meta", {})
 
             # Lifecycle hooks - use the full c_name
@@ -917,6 +941,9 @@ def generate_trait_block(prefix: str, traits: List[Dict],
                 data_ptr = f"{prefix}.traits[{t_idx}].data"
 
                 lines.append(f'    trait_events_subscribe_{event_type}({c_button}, {handler_name}, {obj_ptr}, {data_ptr});')
+
+            # Note: Contact event subscriptions are generated separately in generate_contact_subscriptions_block
+            # after physics bodies are created
     else:
         lines.append(f'    {prefix}.traits = NULL;')
 
@@ -1090,8 +1117,50 @@ def generate_physics_block(objects: List[Dict], world_data: dict) -> str:
     return '\n'.join(lines)
 
 
+def generate_contact_subscriptions_block(objects: List[Dict], trait_info: dict) -> str:
+    """Generate physics contact subscription calls after physics bodies exist.
+
+    This must be called AFTER physics bodies are created, so the rigid_body
+    pointers are valid when subscribing.
+
+    Pure 1:1 emitter - handler_name comes directly from macro's contact_events.
+    """
+    lines = []
+    has_subscriptions = False
+
+    for i, obj in enumerate(objects):
+        traits = obj.get("traits", [])
+        prefix = f'objects[{i}]'
+
+        for t_idx, trait in enumerate(traits):
+            trait_class = trait["class_name"]
+            trait_ir = trait_info.get("traits", {}).get(trait_class, {})
+            meta = trait_ir.get("meta", {})
+
+            for contact_evt in meta.get("contact_events", []):
+                handler_name = contact_evt.get("handler_name", "")
+                is_subscribe = contact_evt.get("subscribe", True)
+
+                if is_subscribe and handler_name:
+                    if not has_subscriptions:
+                        lines.append('    // Physics contact event subscriptions')
+                        has_subscriptions = True
+
+                    obj_ptr = f"&{prefix}" if not prefix.startswith("&") else prefix
+                    data_ptr = f"{prefix}.traits[{t_idx}].data"
+                    lines.append(f'    physics_contact_subscribe({prefix}.rigid_body, {handler_name}, {obj_ptr}, {data_ptr});')
+
+    if not has_subscriptions:
+        return ""
+
+    return '\n'.join(lines)
+
+
 def generate_scene_traits_block(traits: List[Dict], trait_info: dict, scene_name: str) -> str:
-    """Generate C code for scene-level traits."""
+    """Generate C code for scene-level traits.
+
+    Pure 1:1 emitter - all data comes from macro-generated trait_info.
+    """
     if not traits:
         return "    // No scene-level traits"
 
@@ -1100,13 +1169,10 @@ def generate_scene_traits_block(traits: List[Dict], trait_info: dict, scene_name
 
     for i, trait in enumerate(traits):
         trait_class = trait["class_name"]
-        import arm.utils
 
-        # Get trait IR for c_name and button events
+        # Get trait IR - must exist, macro provides all data
         trait_ir = trait_info.get("traits", {}).get(trait_class, {})
-        # Use c_name from IR (e.g., "arm_level_level") for function names
-        c_name = trait_ir.get("c_name", arm.utils.safesrc(trait_class).lower())
-        events = trait_ir.get("events", {})
+        c_name = trait_ir.get("c_name", "")
         meta = trait_ir.get("meta", {})
 
         lines.append(f'    scene_traits[{i}].on_ready = {c_name}_on_ready;')

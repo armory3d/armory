@@ -192,7 +192,9 @@ static inline void oimo_world_build_island(OimoWorld* world, OimoRigidBody* base
             OimoContactConstraint* cc = &contact->_contactConstraint;
             OimoPgsContactConstraintSolver* solver = &contact->_solver;
 
-            if (oimo_contact_constraint_is_touching(cc) && !solver->_addedToIsland) {
+            // 1:1 from OimoPhysics: skip triggers - they detect contact but don't generate collision response
+            bool isTrigger = (contact->_s1->_isTrigger || contact->_s2->_isTrigger);
+            if (!isTrigger && oimo_contact_constraint_is_touching(cc) && !solver->_addedToIsland) {
                 oimo_island_add_solver(&world->_island, solver, cc->_positionCorrectionAlgorithm);
 
                 OimoRigidBody* other = cl->_other;
