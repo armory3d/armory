@@ -23,12 +23,16 @@ The IR schema (version 1):
   }
 
 IRNode types:
-  Literals: int, float, string, bool, null
-  Variables: member, ident, field
+  Literals: int, float, string, bool, null, skip
+  Variables: member, ident, field, gamepad_stick
   Operators: assign, binop, unop
-  Control: if, block
-  Calls: call (with target: Scene, Transform, Math, Input)
+  Control: if, block, var, return
+  Calls: call, scene_call, transform_call, math_call, input_call, physics_call, vec_call
   Constructors: new
+
+TraitMeta fields:
+  uses_input, uses_transform, mutates_transform, uses_time, uses_physics,
+  buttons_used: [str], button_events: [{event_name, button, c_button, event_type}]
 """
 
 import json
@@ -107,14 +111,6 @@ class IREmitter:
 
     def emit_skip(self, node: Dict) -> str:
         return ""
-
-    def emit_return(self, node: Dict) -> str:
-        """Return statement: return; or return value;"""
-        children = node.get("children")
-        if children and len(children) > 0:
-            val = self.emit(children[0])
-            return f"return {val};"
-        return "return;"
 
     # =========================================================================
     # Variables
@@ -256,6 +252,15 @@ class IREmitter:
             if val:
                 return f"{ctype} {name} = {val};"
         return f"{ctype} {name};"
+
+    def emit_return(self, node: Dict) -> str:
+        """Return statement: return value; or just return;"""
+        children = node.get("children", [])
+        if children and len(children) > 0:
+            val = self.emit(children[0])
+            if val:
+                return f"return {val};"
+        return "return;"
 
     # =========================================================================
     # Function Calls - All semantic decisions made by macro
@@ -491,16 +496,19 @@ class IREmitter:
     # =========================================================================
 
     def emit_new(self, node: Dict) -> str:
-        """Constructor calls: new Vec3(x, y, z)"""
+        """Constructor calls: new Vec3(x, y, z) or new Vec4(x, y, z, w)"""
         type_name = node.get("value", "")
         args = node.get("args", [])
         arg_strs = [self.emit(a) for a in args]
 
         if type_name == "Vec4":
-            # Vec4 treated as Vec3 (xyz components, ignore w)
+            # Vec4 with 4 args: full quaternion/4D vector
+            if len(arg_strs) >= 4:
+                return f"(ArmVec4){{{arg_strs[0]}, {arg_strs[1]}, {arg_strs[2]}, {arg_strs[3]}}}"
+            # Vec4 with 3 args: treat as Vec3 position (w=1.0 for homogeneous coords)
             if len(arg_strs) >= 3:
-                return f"(ArmVec3){{{arg_strs[0]}, {arg_strs[1]}, {arg_strs[2]}}}"
-            return "(ArmVec3){0, 0, 0}"
+                return f"(ArmVec4){{{arg_strs[0]}, {arg_strs[1]}, {arg_strs[2]}, 1.0f}}"
+            return "(ArmVec4){0, 0, 0, 1.0f}"
 
         if type_name == "Vec3":
             if len(arg_strs) >= 3:
