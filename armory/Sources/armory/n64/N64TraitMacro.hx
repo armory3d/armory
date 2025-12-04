@@ -1458,28 +1458,30 @@ class TraitExtractor {
     }
 
     // =========================================================================
-    // Math call conversion - Math.sin() -> sinf(), etc.
+    // Math call conversion - Math.sin() -> fm_sinf(), etc.
+    // Uses libdragon's fast math functions where available (16x faster)
     // =========================================================================
 
     function convertMathCall(method:String, args:Array<IRNode>):IRNode {
         // Map Haxe Math methods to C math.h functions
+        // Use libdragon's fm_* functions for sin/cos/atan2 (much faster on N64)
         var cFunc = switch (method) {
-            case "sin": "sinf";
-            case "cos": "cosf";
+            case "sin": "fm_sinf";      // ~50 ticks vs ~800 ticks for sinf
+            case "cos": "fm_cosf";      // ~50 ticks vs ~800 ticks for cosf
             case "tan": "tanf";
             case "asin": "asinf";
             case "acos": "acosf";
             case "atan": "atanf";
-            case "atan2": "atan2f";
+            case "atan2": "fm_atan2f";  // libdragon fast version
             case "sqrt": "sqrtf";
             case "pow": "powf";
             case "abs": "fabsf";
-            case "floor": "floorf";
+            case "floor": "fm_floorf"; // libdragon fast version
             case "ceil": "ceilf";
             case "round": "roundf";
             case "min": "fminf";
             case "max": "fmaxf";
-            case "exp": "expf";
+            case "exp": "fm_exp";       // libdragon fast version (~3% error)
             case "log": "logf";
             default: method;
         };

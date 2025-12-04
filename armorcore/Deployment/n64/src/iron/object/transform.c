@@ -1,7 +1,7 @@
 #include "transform.h"
 #include "../../types.h"
 #include <t3d/t3dmath.h>
-#include <math.h>
+#include <fmath.h>
 
 void it_translate(ArmTransform *t, float x, float y, float z)
 {
@@ -58,9 +58,11 @@ void it_set_rot(ArmTransform *t, float x, float y, float z, float w)
 void it_set_rot_euler(ArmTransform *t, float x, float y, float z)
 {
 	// Convert Euler angles (radians) to quaternion
-	float cx = cosf(x * 0.5f), sx = sinf(x * 0.5f);
-	float cy = cosf(y * 0.5f), sy = sinf(y * 0.5f);
-	float cz = cosf(z * 0.5f), sz = sinf(z * 0.5f);
+	// Use libdragon's fm_sincosf for ~16x speedup over sinf/cosf
+	float sx, cx, sy, cy, sz, cz;
+	fm_sincosf(x * 0.5f, &sx, &cx);
+	fm_sincosf(y * 0.5f, &sy, &cy);
+	fm_sincosf(z * 0.5f, &sz, &cz);
 
 	t->rot.w = cx * cy * cz + sx * sy * sz;
 	t->rot.x = sx * cy * cz - cx * sy * sz;
