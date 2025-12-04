@@ -8,9 +8,11 @@ type resolution, and event extraction happen in the Haxe macro
 Pipeline:
   Haxe Macro (all semantics) → JSON IR → codegen.py (1:1 emit) → C code
 
-EXCEPTION: Coordinate conversion (Blender→N64) happens here because IR args
-are expressions, not values. The swizzle (x,y,z)→(x,z,-y) is applied during
-C emission in emit_transform_call, emit_physics_call, and emit_assign.
+Coordinate conversion for trait code (e.g., swizzle x,y,z → x,z,-y) and
+scale factors (0.015625 for Blender→N64, 64.0 for N64→Blender) are handled
+entirely in the Haxe macro via the c_code field. The emit_* functions only
+substitute placeholders like {0}, {1}, {v}, {obj}. The convert_* functions
+in utils.py handle static scene data export only.
 
 The IR schema (version 1):
   {
