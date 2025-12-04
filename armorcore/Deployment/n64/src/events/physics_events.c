@@ -118,6 +118,12 @@ void physics_contact_dispatch(void)
             ArmObject* obj1 = (ArmObject*)rb1->userData;
             ArmObject* obj2 = (ArmObject*)rb2->userData;
 
+            // Skip if either object has been marked for removal
+            if (!obj1 || !obj2 || obj1->is_removed || obj2->is_removed) {
+                contact = contact->_next;
+                continue;
+            }
+
             // Dispatch to body1's subscribers with body2 as "other"
             BodyContactSubs* subs1 = find_body_subs(rb1);
             if (subs1) {

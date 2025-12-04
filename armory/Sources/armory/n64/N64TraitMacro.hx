@@ -1020,7 +1020,7 @@ class TraitExtractor {
                 switch (obj.expr) {
                     // Scene.setActive("Level_02") -> scene_switch_to(SCENE_X)
                     case EConst(CIdent("Scene")):
-                        return convertSceneCall(method, args);
+                        return convertSceneCall(method, args, params);
 
                     // Koui.init(callback), Koui.add(label), Koui.remove(label), Koui.render(g2)
                     case EConst(CIdent("Koui")):
@@ -1385,28 +1385,130 @@ class TraitExtractor {
     // Scene call conversion - Scene.setActive() -> scene_switch_to()
     // =========================================================================
 
-    function convertSceneCall(method:String, args:Array<IRNode>):IRNode {
-        if (method == "setActive" && args.length > 0) {
-            var arg = args[0];
-            // If it's a string literal, convert to enum directly at compile time
-            if (arg.type == "string") {
-                var sceneName = Std.string(arg.value).toUpperCase();
-                return {
-                    type: "scene_call",
-                    method: "setActive",
-                    c_code: 'scene_switch_to(SCENE_$sceneName)'
-                };
+    function convertSceneCall(method:String, args:Array<IRNode>, rawParams:Array<Expr>):IRNode {
+        if (method == "setActive" && rawParams.length > 0) {
+            // Try to extract constant scene name first
+            var result = analyzeSceneArg(rawParams[0]);
+
+            switch (result.kind) {
+                case "constant":
+                    // Compile-time known scene: Scene.setActive("Level_01")
+                    var sceneNameUpper = result.value.toUpperCase();
+                    return {
+                        type: "scene_call",
+                        method: "setActive",
+                        c_code: 'scene_switch_to(SCENE_$sceneNameUpper)'
+                    };
+
+                case "current_scene":
+                    // Scene.active.raw.name -> restart current scene
+                    return {
+                        type: "scene_call",
+                        method: "setActive",
+                        c_code: 'scene_switch_to(scene_get_current_id())'
+                    };
+
+                case "member_string":
+                    // Member variable of type String: Scene.setActive(nextLevel)
+                    // Runtime lookup by name - pass member node so Python emits correctly
+                    return {
+                        type: "scene_call",
+                        method: "setActive",
+                        args: [{ type: "member", value: result.value }]
+                    };
+
+                case "expression":
+                    // Fallback: convert the expression to IR and let codegen handle it
+                    // This generates scene_switch_to_by_name with the expression
+                    return {
+                        type: "scene_call",
+                        method: "setActive",
+                        args: args  // Pass the converted argument
+                    };
             }
-            // For sprintf (string concatenation), member, or other expressions,
-            // use runtime helper that maps string -> SceneId
-            // This handles: Scene.setActive("Level_" + Std.string(num))
-            return {
-                type: "scene_call",
-                method: "setActive",
-                args: args
-            };
         }
         return { type: "skip" };
+    }
+
+    /**
+     * Analyze Scene.setActive argument and classify it:
+     * - "constant": compile-time string literal, value = the scene name
+     * - "current_scene": Scene.active.raw.name pattern
+     * - "member_string": identifier that's a String member variable, value = member name
+     * - "expression": anything else, needs runtime lookup
+     */
+    function analyzeSceneArg(expr:Expr):{ kind:String, value:String } {
+        if (expr == null) return { kind: "expression", value: null };
+
+        switch (expr.expr) {
+            // Direct string literal: "Level_01"
+            case EConst(CString(s)):
+                return { kind: "constant", value: s };
+
+            // Identifier - could be a member variable
+            case EConst(CIdent(name)):
+                if (members.exists(name)) {
+                    var member = members.get(name);
+                    // Check type - String members use runtime lookup
+                    if (member.haxeType == "String") {
+                        return { kind: "member_string", value: name };
+                    }
+                    // SceneId type might have constant default
+                    if (member.haxeType == "SceneId" || member.haxeType == "TSceneFormat" || member.haxeType == "SceneFormat") {
+                        var sceneName = extractSceneFromIRNode(member.defaultValue);
+                        if (sceneName != null) {
+                            return { kind: "constant", value: sceneName };
+                        }
+                    }
+                }
+                return { kind: "expression", value: null };
+
+            // Field access chain: Scene.active.raw.name, myScene.raw.name, etc.
+            case EField(innerExpr, fieldName):
+                if (fieldName == "name") {
+                    // Check for .raw.name pattern
+                    switch (innerExpr.expr) {
+                        case EField(innerInner, "raw"):
+                            // Could be Scene.active.raw or memberVar.raw
+                            switch (innerInner.expr) {
+                                case EField(sceneExpr, "active"):
+                                    // Check if it's Scene.active
+                                    switch (sceneExpr.expr) {
+                                        case EConst(CIdent("Scene")):
+                                            return { kind: "current_scene", value: null };
+                                        default:
+                                    }
+                                case EConst(CIdent(memberName)):
+                                    // memberVar.raw.name - check if it's a member
+                                    if (members.exists(memberName)) {
+                                        var member = members.get(memberName);
+                                        var sceneName = extractSceneFromIRNode(member.defaultValue);
+                                        if (sceneName != null) {
+                                            return { kind: "constant", value: sceneName };
+                                        }
+                                    }
+                                default:
+                            }
+                        default:
+                    }
+                }
+                return { kind: "expression", value: null };
+
+            default:
+                return { kind: "expression", value: null };
+        }
+    }
+
+    function extractSceneFromIRNode(node:IRNode):Null<String> {
+        if (node == null) return null;
+        if (node.type == "string" && node.value != null) {
+            return Std.string(node.value);
+        }
+        if (node.type == "ident" && node.value != null) {
+            // Could be a scene enum like Level_01
+            return Std.string(node.value);
+        }
+        return null;
     }
 
     // =========================================================================

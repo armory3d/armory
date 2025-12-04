@@ -13,11 +13,13 @@
 #endif
 
 static ArmScene g_scenes[SCENE_COUNT];
+static SceneId g_current_scene = SCENE_COUNT;
 static SceneId g_pending_scene = SCENE_COUNT;
 
 void scene_init(SceneId id)
 {{
     if (id >= SCENE_COUNT) return;
+    g_current_scene = id;
 
     switch (id) {{
 {scene_init_switch_cases}
@@ -298,6 +300,7 @@ SceneId scene_get_id_by_name(const char *name)
     return SCENE_COUNT; // Not found
 }}
 
+SceneId scene_get_current_id(void) {{ return g_current_scene; }}
 SceneId scene_get_pending(void) {{ return g_pending_scene; }}
 void scene_switch_to(SceneId id) {{ g_pending_scene = id; }}
 void scene_clear_pending(void) {{ g_pending_scene = SCENE_COUNT; }}

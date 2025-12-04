@@ -321,6 +321,7 @@ class IREmitter:
             return node["c_code"] + ";"
         args = node.get("args", [])
         if args:
+            # Runtime lookup by name string
             scene_expr = self.emit(args[0])
             return f"scene_switch_to(scene_get_id_by_name({scene_expr}));"
         return ""
@@ -1193,22 +1194,33 @@ def generate_physics_block(objects: List[Dict], world_data: dict) -> str:
         restitution = rb.get("restitution", 0.0)
         linear_damping = rb.get("linear_damping", 0.04)
         angular_damping = rb.get("angular_damping", 0.1)
-        is_kinematic = rb.get("is_kinematic", False)
         is_trigger = rb.get("is_trigger", False)
         use_deactivation = rb.get("use_deactivation", True)
         col_group = rb.get("collision_group", 1)
         col_mask = rb.get("collision_mask", 1)
 
-        # Determine rigid body type:
-        # - mass == 0 means static (Blender PASSIVE type)
-        # - is_kinematic means kinematic
-        # - otherwise dynamic
-        if mass == 0.0:
-            rb_type = "OIMO_RIGID_BODY_STATIC"
-        elif is_kinematic:
-            rb_type = "OIMO_RIGID_BODY_KINEMATIC"
-        else:
-            rb_type = "OIMO_RIGID_BODY_DYNAMIC"
+        # Blender rigid body properties
+        blender_type = rb.get("rb_type", "ACTIVE")  # 'PASSIVE' or 'ACTIVE'
+        is_animated = rb.get("is_animated", False)   # Animated checkbox
+        is_dynamic = rb.get("is_dynamic", True)      # Dynamic checkbox
+
+        # Determine Oimo rigid body type:
+        # Passive -> Static
+        # Passive + Animated -> Kinematic
+        # Active -> Kinematic
+        # Active + Animated -> Kinematic
+        # Active + Animated + Dynamic -> Kinematic
+        # Active + Dynamic -> Dynamic
+        if blender_type == "PASSIVE":
+            if is_animated:
+                rb_type = "OIMO_RIGID_BODY_KINEMATIC"
+            else:
+                rb_type = "OIMO_RIGID_BODY_STATIC"
+        else:  # ACTIVE
+            if is_dynamic and not is_animated:
+                rb_type = "OIMO_RIGID_BODY_DYNAMIC"
+            else:
+                rb_type = "OIMO_RIGID_BODY_KINEMATIC"
 
         shape = rb.get("shape", "box")
 
@@ -1222,7 +1234,7 @@ def generate_physics_block(objects: List[Dict], world_data: dict) -> str:
         lines.append(f'        params.angular_damping = {angular_damping:.6f}f;')
         lines.append(f'        params.collision_group = {col_group};')
         lines.append(f'        params.collision_mask = {col_mask};')
-        lines.append(f'        params.animated = {"true" if is_kinematic else "false"};')
+        lines.append(f'        params.animated = {"true" if is_animated else "false"};')
         lines.append(f'        params.trigger = {"true" if is_trigger else "false"};')
         lines.append(f'        params.use_deactivation = {"true" if use_deactivation else "false"};')
 

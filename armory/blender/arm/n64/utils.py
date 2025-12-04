@@ -264,12 +264,23 @@ def compute_static_flags(scene_data: dict, trait_info: dict) -> None:
     for scene in scene_data.values():
         for obj in scene.get("objects", []):
             rb = obj.get("rigid_body")
-            has_dynamic_physics = rb and rb.get("mass", 0.0) > 0.0
+            # Object is NOT static if:
+            # - It has kinematic or dynamic physics (anything except pure Passive)
+            # - Passive + Animated = Kinematic (not static)
+            # - Active (any combo) = Kinematic or Dynamic (not static)
+            if rb:
+                blender_type = rb.get("rb_type", "ACTIVE")
+                is_animated = rb.get("is_animated", False)
+                # Only pure Passive (no Animated) is static for physics
+                is_physics_static = (blender_type == "PASSIVE" and not is_animated)
+            else:
+                is_physics_static = True  # No rigid body = static
+
             any_trait_mutates = any(
                 trait_mutates_transform(t.get("class_name", ""))
                 for t in obj.get("traits", [])
             )
-            obj["is_static"] = not has_dynamic_physics and not any_trait_mutates
+            obj["is_static"] = is_physics_static and not any_trait_mutates
 
 
 # =============================================================================

@@ -349,7 +349,9 @@ class N64Exporter:
                         "collision_group": col_group,
                         "collision_mask": col_mask,
                         "is_trigger": getattr(obj, 'arm_rb_trigger', False),
-                        "is_kinematic": rb.kinematic,
+                        "rb_type": rb.type,  # 'PASSIVE' or 'ACTIVE'
+                        "is_animated": rb.kinematic,  # Animated checkbox
+                        "is_dynamic": rb.enabled,  # Dynamic checkbox
                         "use_deactivation": rb.use_deactivation
                     }
 
