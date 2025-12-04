@@ -47,7 +47,6 @@ from typing import Dict, List, Optional
 
 from arm.n64.utils import (
     convert_vec3_list, convert_quat_list, convert_scale_list,
-    c_vec3_convert, c_oimo_vec3,
     SCALE_FACTOR
 )
 
@@ -334,53 +333,23 @@ class IREmitter:
         return ""
 
     def emit_transform_call(self, node: Dict) -> str:
-        """Transform calls. Coord conversion: Blender (X,Y,Z) → N64 (X,Z,-Y)"""
-        method = node.get("method", "")
+        """Transform calls - substitute placeholders in macro-provided c_code."""
+        c_code = node.get("c_code", "")
+        if not c_code:
+            return ""
+
         args = node.get("args", [])
-        arg_strs = [self.emit(a) for a in args if self.emit(a)]
-        obj = "((ArmObject*)obj)"
+        arg_strs = [self.emit(a) for a in args]
 
-        if method == "translate" and len(arg_strs) >= 3:
-            nx, ny, nz = c_vec3_convert(arg_strs[0], arg_strs[1], arg_strs[2])
-            return f"it_translate(&{obj}->transform, {nx}, {ny}, {nz});"
+        # Substitute {0}, {1}, {2}, etc. with emitted args
+        # Provide default "1.0f" for missing optional args (e.g., move scale)
+        for i in range(10):
+            placeholder = "{" + str(i) + "}"
+            if placeholder in c_code:
+                val = arg_strs[i] if i < len(arg_strs) else "1.0f"
+                c_code = c_code.replace(placeholder, val)
 
-        if method == "rotate" and len(arg_strs) >= 2:
-            axis, angle = arg_strs[0], arg_strs[1]
-            nx, ny, nz = c_vec3_convert(f"({axis}).x", f"({axis}).y", f"({axis}).z")
-            return f"it_rotate_axis_global(&{obj}->transform, {nx}, {ny}, {nz}, {angle});"
-
-        if method == "move" and len(arg_strs) >= 1:
-            axis = arg_strs[0]
-            scale = arg_strs[1] if len(arg_strs) >= 2 else "1.0f"
-            nx, ny, nz = c_vec3_convert(f"({axis}).x", f"({axis}).y", f"({axis}).z")
-            return f"it_move(&{obj}->transform, {nx}, {ny}, {nz}, {scale});"
-
-        if method == "setRotation" and len(arg_strs) >= 3:
-            # Euler angles - coordinate conversion for rotations
-            return f"it_set_rot_euler(&{obj}->transform, {arg_strs[0]}, {arg_strs[2]}, -({arg_strs[1]}));"
-
-        if method == "look":
-            return f"{{ T3DVec3 _dir; it_look(&{obj}->transform, &_dir); _dir; }}"
-
-        if method == "right":
-            return f"{{ T3DVec3 _dir; it_right(&{obj}->transform, &_dir); _dir; }}"
-
-        if method == "up":
-            return f"{{ T3DVec3 _dir; it_up(&{obj}->transform, &_dir); _dir; }}"
-
-        if method == "worldx":
-            return f"it_world_x(&{obj}->transform)"
-
-        if method == "worldy":
-            return f"it_world_z(&{obj}->transform)"  # Blender Y -> N64 Z
-
-        if method == "worldz":
-            return f"(-it_world_y(&{obj}->transform))"  # Blender Z -> N64 -Y
-
-        if method == "reset":
-            return f"it_reset(&{obj}->transform);"
-
-        return ""
+        return c_code
 
     def emit_math_call(self, node: Dict) -> str:
         """Math.sin() -> sinf(), etc."""
@@ -394,32 +363,26 @@ class IREmitter:
         return node.get("c_code", "0")
 
     def emit_physics_call(self, node: Dict) -> str:
-        """Physics calls. Coord conversion: Blender (X,Y,Z) → N64 (X,Z,-Y)"""
-        method = node.get("method", "")
+        """Physics calls - substitute placeholders in macro-provided c_code."""
+        c_code = node.get("c_code", "")
+        if not c_code:
+            return ""
+
         obj_node = node.get("object")
         args = node.get("args", [])
 
-        obj = self.emit(obj_node) if obj_node else ""
-        if not obj:
-            obj = "((ArmObject*)obj)"
-        arg_strs = [self.emit(a) for a in args if self.emit(a)]
+        # Get object expression
+        obj = self.emit(obj_node) if obj_node else "((ArmObject*)obj)"
 
-        if method == "applyForce" and arg_strs:
-            vec = c_oimo_vec3(arg_strs[0])
-            return f"{{ OimoVec3 _force = {vec}; physics_apply_force({obj}->rigid_body, &_force); }}"
+        # Emit args
+        arg_strs = [self.emit(a) for a in args]
 
-        if method == "applyImpulse" and arg_strs:
-            vec = c_oimo_vec3(arg_strs[0])
-            return f"{{ OimoVec3 _impulse = {vec}; physics_apply_impulse({obj}->rigid_body, &_impulse); }}"
+        # Substitute {obj} and {0}, {1}, etc.
+        c_code = c_code.replace("{obj}", obj)
+        for i, arg in enumerate(arg_strs):
+            c_code = c_code.replace("{" + str(i) + "}", arg)
 
-        if method == "setLinearVelocity" and arg_strs:
-            vec = c_oimo_vec3(arg_strs[0])
-            return f"{{ OimoVec3 _vel = {vec}; physics_set_linear_velocity({obj}->rigid_body, &_vel); }}"
-
-        if method == "getLinearVelocity":
-            return f"physics_get_linear_velocity({obj}->rigid_body)"
-
-        return ""
+        return c_code
 
     def emit_koui_call(self, node: Dict) -> str:
         """Koui UI calls - pure 1:1 translation from macro-provided c_func."""
@@ -464,87 +427,37 @@ class IREmitter:
         return f'debugf("{", ".join(["%s"] * len(arg_strs))}\\n", {", ".join(arg_strs)})'
 
     def emit_object_call(self, node: Dict) -> str:
-        """object.remove() -> object_remove()"""
-        method = node.get("method", "")
-        if method == "remove":
-            return "object_remove((ArmObject*)obj)"
-        return ""
+        """Object calls - return macro-provided c_code."""
+        return node.get("c_code", "")
 
     def emit_vec_call(self, node: Dict) -> str:
-        """Vec calls - type info from macro."""
-        method = node.get("method", "")
+        """Vec calls - substitute placeholders in macro-provided c_code."""
+        c_code = node.get("c_code", "")
+        if not c_code:
+            return ""
+
         obj_node = node.get("object")
         args = node.get("args", [])
-        props = node.get("props", {})
 
-        # Use macro-provided type info
-        vec_type = props.get("vecType", "Vec2")
-        c_type = props.get("cType", "ArmVec2")
-        is_3d = props.get("is3D", False)
-
+        # Get the vector object
         obj = self.emit(obj_node) if obj_node else ""
         if not obj:
             return ""
 
-        arg_strs = [self.emit(a) for a in args if self.emit(a)]
+        # Emit args
+        arg_strs = [self.emit(a) for a in args]
+
+        # Determine if we need parentheses around obj
         is_compound = obj.startswith("(Arm")
         v = f"({obj})" if is_compound else obj
 
-        if method == "length":
-            if is_3d:
-                return f"sqrtf({v}.x*{v}.x + {v}.y*{v}.y + {v}.z*{v}.z)"
-            return f"sqrtf({v}.x*{v}.x + {v}.y*{v}.y)"
+        # Substitute placeholders
+        c_code = c_code.replace("{v}", v)
+        c_code = c_code.replace("{vraw}", obj)  # Raw var name for normalize
+        for i, arg in enumerate(arg_strs):
+            c_code = c_code.replace("{" + str(i) + "}", arg)
 
-        if method == "mult" and arg_strs:
-            s = arg_strs[0]
-            if is_3d:
-                return f"(ArmVec3){{{v}.x*({s}), {v}.y*({s}), {v}.z*({s})}}"
-            return f"(ArmVec2){{{v}.x*({s}), {v}.y*({s})}}"
-
-        if method == "add" and arg_strs:
-            o = f"({arg_strs[0]})" if arg_strs[0].startswith("(Arm") else arg_strs[0]
-            if is_3d:
-                return f"(ArmVec3){{{v}.x+{o}.x, {v}.y+{o}.y, {v}.z+{o}.z}}"
-            return f"(ArmVec2){{{v}.x+{o}.x, {v}.y+{o}.y}}"
-
-        if method == "sub" and arg_strs:
-            o = f"({arg_strs[0]})" if arg_strs[0].startswith("(Arm") else arg_strs[0]
-            if is_3d:
-                return f"(ArmVec3){{{v}.x-{o}.x, {v}.y-{o}.y, {v}.z-{o}.z}}"
-            return f"(ArmVec2){{{v}.x-{o}.x, {v}.y-{o}.y}}"
-
-        if method == "dot" and arg_strs:
-            o = f"({arg_strs[0]})" if arg_strs[0].startswith("(Arm") else arg_strs[0]
-            if is_3d:
-                return f"({v}.x*{o}.x + {v}.y*{o}.y + {v}.z*{o}.z)"
-            return f"({v}.x*{o}.x + {v}.y*{o}.y)"
-
-        if method == "normalize":
-            if is_compound:
-                return ""  # cannot normalize compound literal inline
-            if is_3d:
-                return f"{{ float _l=sqrtf({v}.x*{v}.x+{v}.y*{v}.y+{v}.z*{v}.z); if(_l>0.0f){{ {obj}.x/=_l; {obj}.y/=_l; {obj}.z/=_l; }} }}"
-            return f"{{ float _l=sqrtf({v}.x*{v}.x+{v}.y*{v}.y); if(_l>0.0f){{ {obj}.x/=_l; {obj}.y/=_l; }} }}"
-
-        # clone() - use exact C type from macro
-        # When cloning transform.scale, divide by SCALE_FACTOR to get logical Blender-space values
-        if method == "clone":
-            is_transform_scale = (obj_node and obj_node.get("type") == "field" and
-                                  obj_node.get("value") == "transform.scale")
-            if is_transform_scale:
-                inv_scale = 1.0 / SCALE_FACTOR
-                if c_type == "ArmVec4":
-                    return f"(ArmVec4){{{v}.x*{inv_scale}f, {v}.y*{inv_scale}f, {v}.z*{inv_scale}f, 1.0f}}"
-                if c_type == "ArmVec3":
-                    return f"(ArmVec3){{{v}.x*{inv_scale}f, {v}.y*{inv_scale}f, {v}.z*{inv_scale}f}}"
-            else:
-                if c_type == "ArmVec4":
-                    return f"(ArmVec4){{{v}.x, {v}.y, {v}.z, 1.0f}}"
-                if c_type == "ArmVec3":
-                    return f"(ArmVec3){{{v}.x, {v}.y, {v}.z}}"
-            return f"(ArmVec2){{{v}.x, {v}.y}}"
-
-        return ""
+        return c_code
 
     # =========================================================================
     # Constructors

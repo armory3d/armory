@@ -1089,26 +1089,43 @@ class TraitExtractor {
     }
 
     // =========================================================================
-    // Physics call conversion - emit ready-to-use C
+    // Physics call conversion - emit ready-to-use C with placeholders
+    // Placeholders: {obj} = object, {0}, {1}, etc. = args
+    // Coord conversion: Blender (X,Y,Z) → N64 (X,Z,-Y)
     // =========================================================================
 
     function convertPhysicsCall(method:String, objIR:IRNode, args:Array<IRNode>):IRNode {
-        // Physics calls become direct C function calls
-        // The object's rigid_body field is accessed, and vec args are passed by pointer
+        // Physics calls use OimoVec3 which needs coordinate swizzle
+        // Template uses {obj} for object and {0} for first arg (vec)
+        var c_code = switch (method) {
+            case "applyForce":
+                "{ OimoVec3 _f = (OimoVec3){({0}).x, ({0}).z, -({0}).y}; physics_apply_force({obj}->rigid_body, &_f); }";
+            case "applyImpulse":
+                "{ OimoVec3 _i = (OimoVec3){({0}).x, ({0}).z, -({0}).y}; physics_apply_impulse({obj}->rigid_body, &_i); }";
+            case "setLinearVelocity":
+                "{ OimoVec3 _v = (OimoVec3){({0}).x, ({0}).z, -({0}).y}; physics_set_linear_velocity({obj}->rigid_body, &_v); }";
+            case "getLinearVelocity":
+                "physics_get_linear_velocity({obj}->rigid_body)";
+            default:
+                null;
+        };
+
+        if (c_code == null) return { type: "skip" };
+
         return {
             type: "physics_call",
-            method: method,
+            c_code: c_code,
             object: objIR,
             args: args
         };
     }
 
     // =========================================================================
-    // Vec call conversion - emit ready-to-use C
+    // Vec call conversion - emit ready-to-use C with placeholders
+    // Placeholders: {v} = vector object, {0}, {1} = args
     // =========================================================================
 
     function convertVecCall(method:String, objIR:IRNode, args:Array<IRNode>, vecType:String):IRNode {
-        // Vec method calls become inline C expressions
         // Determine C type based on Haxe type
         var cType = switch (vecType) {
             case "Vec4": "ArmVec4";
@@ -1117,9 +1134,51 @@ class TraitExtractor {
         };
         var is3D = (vecType == "Vec3" || vecType == "Vec4");
 
+        // Template uses {v} for vector, {0} for first arg
+        var c_code = switch (method) {
+            case "length":
+                is3D ? "sqrtf({v}.x*{v}.x + {v}.y*{v}.y + {v}.z*{v}.z)"
+                     : "sqrtf({v}.x*{v}.x + {v}.y*{v}.y)";
+            case "mult":
+                is3D ? "(" + cType + "){{v}.x*({0}), {v}.y*({0}), {v}.z*({0})}"
+                     : "(" + cType + "){{v}.x*({0}), {v}.y*({0})}";
+            case "add":
+                is3D ? "(" + cType + "){{v}.x+({0}).x, {v}.y+({0}).y, {v}.z+({0}).z}"
+                     : "(" + cType + "){{v}.x+({0}).x, {v}.y+({0}).y}";
+            case "sub":
+                is3D ? "(" + cType + "){{v}.x-({0}).x, {v}.y-({0}).y, {v}.z-({0}).z}"
+                     : "(" + cType + "){{v}.x-({0}).x, {v}.y-({0}).y}";
+            case "dot":
+                is3D ? "({v}.x*({0}).x + {v}.y*({0}).y + {v}.z*({0}).z)"
+                     : "({v}.x*({0}).x + {v}.y*({0}).y)";
+            case "normalize":
+                // Note: normalize modifies in-place, needs the original var name
+                // We use {vraw} placeholder for unparenthesized var
+                is3D ? "{ float _l=sqrtf({v}.x*{v}.x+{v}.y*{v}.y+{v}.z*{v}.z); if(_l>0.0f){ {vraw}.x/=_l; {vraw}.y/=_l; {vraw}.z/=_l; } }"
+                     : "{ float _l=sqrtf({v}.x*{v}.x+{v}.y*{v}.y); if(_l>0.0f){ {vraw}.x/=_l; {vraw}.y/=_l; } }";
+            case "clone":
+                // Clone creates a copy - type depends on target
+                // Special case: transform.scale is stored with SCALE_FACTOR (0.015), so multiply by ~64 to get Blender values
+                var isScaleClone = (objIR.type == "field" && objIR.value == "transform.scale");
+                if (isScaleClone) {
+                    // Inverse of SCALE_FACTOR (0.015) ≈ 66.67, but we use 64 for consistency
+                    if (cType == "ArmVec4") "(" + cType + "){{v}.x*64.0f, {v}.y*64.0f, {v}.z*64.0f, 1.0f}";
+                    else if (cType == "ArmVec3") "(" + cType + "){{v}.x*64.0f, {v}.y*64.0f, {v}.z*64.0f}";
+                    else "(" + cType + "){{v}.x*64.0f, {v}.y*64.0f}";
+                } else {
+                    if (cType == "ArmVec4") "(" + cType + "){{v}.x, {v}.y, {v}.z, 1.0f}";
+                    else if (cType == "ArmVec3") "(" + cType + "){{v}.x, {v}.y, {v}.z}";
+                    else "(" + cType + "){{v}.x, {v}.y}";
+                }
+            default:
+                null;
+        };
+
+        if (c_code == null) return { type: "skip" };
+
         return {
             type: "vec_call",
-            method: method,
+            c_code: c_code,
             object: objIR,
             args: args,
             props: {
@@ -1239,9 +1298,50 @@ class TraitExtractor {
             method == "reset") {
             meta.mutates_transform = true;
         }
+
+        // Template uses {0}, {1}, {2} for args
+        // Coord conversion: Blender (X,Y,Z) → N64 (X,Z,-Y)
+        var c_code = switch (method) {
+            case "translate":
+                // translate(x, y, z) -> it_translate(transform, x, z, -y)
+                "it_translate(&((ArmObject*)obj)->transform, {0}, {2}, -({1}));";
+            case "rotate":
+                // rotate(axis, angle) -> it_rotate_axis_global(transform, axis.x, axis.z, -axis.y, angle)
+                "it_rotate_axis_global(&((ArmObject*)obj)->transform, ({0}).x, ({0}).z, -({0}).y, {1});";
+            case "move":
+                // move(axis, ?scale) -> it_move(transform, axis.x, axis.z, -axis.y, scale)
+                "it_move(&((ArmObject*)obj)->transform, ({0}).x, ({0}).z, -({0}).y, {1});";
+            case "setRotation":
+                // setRotation(x, y, z) -> it_set_rot_euler(transform, x, z, -y)
+                "it_set_rot_euler(&((ArmObject*)obj)->transform, {0}, {2}, -({1}));";
+            case "look":
+                "{ T3DVec3 _dir; it_look(&((ArmObject*)obj)->transform, &_dir); _dir; }";
+            case "right":
+                "{ T3DVec3 _dir; it_right(&((ArmObject*)obj)->transform, &_dir); _dir; }";
+            case "up":
+                "{ T3DVec3 _dir; it_up(&((ArmObject*)obj)->transform, &_dir); _dir; }";
+            case "worldx":
+                "it_world_x(&((ArmObject*)obj)->transform)";
+            case "worldy":
+                // Blender Y -> N64 Z
+                "it_world_z(&((ArmObject*)obj)->transform)";
+            case "worldz":
+                // Blender Z -> N64 -Y
+                "(-it_world_y(&((ArmObject*)obj)->transform))";
+            case "reset":
+                "it_reset(&((ArmObject*)obj)->transform);";
+            case "buildMatrix":
+                // N64 uses dirty flag system - just mark as dirty, matrix rebuilds automatically
+                "((ArmObject*)obj)->transform.dirty = 1;";
+            default:
+                null;
+        };
+
+        if (c_code == null) return { type: "skip" };
+
         return {
             type: "transform_call",
-            method: method,
+            c_code: c_code,
             args: args
         };
     }
@@ -1350,8 +1450,8 @@ class TraitExtractor {
     function convertObjectCall(method:String, args:Array<IRNode>):IRNode {
         return switch (method) {
             case "remove":
-                // object.remove() -> mark object for removal
-                { type: "object_call", method: "remove" };
+                // object.remove() -> object_remove((ArmObject*)obj)
+                { type: "object_call", c_code: "object_remove((ArmObject*)obj)" };
             case "getTrait", "addTrait", "removeTrait":
                 // Trait system not supported on N64 - skip silently
                 { type: "skip" };
