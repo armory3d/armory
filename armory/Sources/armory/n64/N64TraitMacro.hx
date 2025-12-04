@@ -188,6 +188,17 @@ typedef ContactEventMeta = {
     subscribe: Bool          // true for notifyOnContact, false for removeContact
 }
 
+typedef SignalMeta = {
+    name: String,            // Signal member name, e.g., "onDeath"
+    arg_types: Array<String>, // C types for emit args, e.g., ["int32_t", "ArmObject*"]
+    max_subs: Int            // Max subscribers, default 16, configurable via @:n64MaxSubs(N)
+}
+
+typedef SignalHandlerMeta = {
+    handler_name: String,    // Function name used as callback, e.g., "onEnemyDeath"
+    signal_name: String      // Which signal it connects to, e.g., "onDeath"
+}
+
 typedef TraitMeta = {
     uses_input: Bool,
     uses_transform: Bool,
@@ -197,7 +208,10 @@ typedef TraitMeta = {
     uses_ui: Bool,             // True if trait uses Koui UI elements
     buttons_used: Array<String>,
     button_events: Array<ButtonEventMeta>,  // structured button event info
-    contact_events: Array<ContactEventMeta> // physics contact subscriptions
+    contact_events: Array<ContactEventMeta>, // physics contact subscriptions
+    signals: Array<SignalMeta>, // per-instance signal declarations
+    signal_handlers: Array<SignalHandlerMeta>, // functions used as signal callbacks
+    global_signals: Array<String> // global signals used (e.g., "g_gameevents_gemCollected")
 }
 
 typedef TraitIR = {
@@ -327,6 +341,7 @@ class TraitExtractor {
     var events:Map<String, Array<IRNode>>;
     var meta:TraitMeta;
     var localVarTypes:Map<String, String>;  // Track local variable types
+    var memberTypes:Map<String, String>;    // Track member types for signal detection
     var cName:String;  // C-safe name for this trait
 
     public function new(className:String, modulePath:String, fields:Array<Field>) {
@@ -338,6 +353,7 @@ class TraitExtractor {
         this.methodMap = new Map();
         this.events = new Map();
         this.localVarTypes = new Map();
+        this.memberTypes = new Map();
         this.meta = {
             uses_input: false,
             uses_transform: false,
@@ -347,7 +363,10 @@ class TraitExtractor {
             uses_ui: false,
             buttons_used: [],
             button_events: [],
-            contact_events: []
+            contact_events: [],
+            signals: [],
+            signal_handlers: [],
+            global_signals: []
         };
 
         // Generate C-safe name early so it's available during extraction
@@ -365,10 +384,36 @@ class TraitExtractor {
         for (field in fields) {
             switch (field.kind) {
                 case FVar(t, e):
-                    var member = extractMember(field.name, t, e);
-                    if (member != null) {
-                        members.set(field.name, member);
-                        memberNames.push(field.name);
+                    var haxeType = t != null ? complexTypeToString(t) : "Dynamic";
+                    memberTypes.set(field.name, haxeType);
+
+                    // Signal members are tracked separately, not as regular data members
+                    if (haxeType == "Signal") {
+                        // Check for @:n64MaxSubs(N) metadata, default to 16
+                        var maxSubs = 16;
+                        if (field.meta != null) {
+                            for (m in field.meta) {
+                                if (m.name == ":n64MaxSubs" || m.name == "n64MaxSubs") {
+                                    if (m.params != null && m.params.length > 0) {
+                                        switch (m.params[0].expr) {
+                                            case EConst(CInt(v)): maxSubs = Std.parseInt(v);
+                                            default:
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        meta.signals.push({
+                            name: field.name,
+                            arg_types: [],  // Will be populated when emit() is detected
+                            max_subs: maxSubs
+                        });
+                    } else {
+                        var member = extractMember(field.name, t, e);
+                        if (member != null) {
+                            members.set(field.name, member);
+                            memberNames.push(field.name);
+                        }
                     }
                 case FFun(func):
                     methodMap.set(field.name, func);
@@ -843,7 +888,7 @@ class TraitExtractor {
 
     /**
      * Unified type inference from Haxe expressions.
-     * Returns the Haxe type name (Int, Float, String, Vec2, Label, etc.) or "Dynamic" if unknown.
+     * Returns the Haxe type name (Int, Float, String, Vec2, Label, Signal, etc.) or "Dynamic" if unknown.
      */
     function getExprType(e:Expr):String {
         if (e == null) return "Dynamic";
@@ -863,6 +908,10 @@ class TraitExtractor {
                 if (localVarTypes.exists(name)) {
                     return localVarTypes.get(name);
                 }
+                // Check memberTypes first (includes Signal and all member types)
+                if (memberTypes.exists(name)) {
+                    return memberTypes.get(name);
+                }
                 if (members.exists(name)) {
                     return members.get(name).haxeType;
                 }
@@ -873,6 +922,10 @@ class TraitExtractor {
                 // this.member or object.member
                 switch (innerObj.expr) {
                     case EConst(CIdent("this")), EConst(CIdent("object")):
+                        // Check memberTypes first (includes Signal)
+                        if (memberTypes.exists(field)) {
+                            return memberTypes.get(field);
+                        }
                         if (members.exists(field)) {
                             return members.get(field).haxeType;
                         }
@@ -1021,8 +1074,36 @@ class TraitExtractor {
                         return { type: "skip" };
 
                     default:
-                        // Check if this is a Label method call
+                        // Check if this is a Signal method call (connect/disconnect/emit)
+                        // First try getExprType, then check memberTypes directly
                         var objType = getExprType(obj);
+                        if (objType == "Signal") {
+                            return convertSignalCall(method, obj, args, params);
+                        }
+                        // Direct check: if method is connect/disconnect/emit and obj is a member
+                        if (method == "connect" || method == "disconnect" || method == "emit") {
+                            var memberName = switch (obj.expr) {
+                                case EConst(CIdent(name)): name;
+                                case EField(_, fieldName): fieldName;
+                                default: null;
+                            };
+                            if (memberName != null && memberTypes.exists(memberName) && memberTypes.get(memberName) == "Signal") {
+                                return convertSignalCall(method, obj, args, params);
+                            }
+                            // Check for global signal pattern: GameEvents.signalName.method()
+                            // or SomeClass.signalName.method()
+                            switch (obj.expr) {
+                                case EField(classExpr, signalName):
+                                    switch (classExpr.expr) {
+                                        case EConst(CIdent(className)):
+                                            // This is ClassName.signalName.method() - global signal
+                                            return convertGlobalSignalCall(method, className, signalName, args, params);
+                                        default:
+                                    }
+                                default:
+                            }
+                        }
+                        // Check if this is a Label method call
                         if (objType == "Label") {
                             return convertLabelCall(method, exprToIR(obj), args);
                         }
@@ -1392,6 +1473,230 @@ class TraitExtractor {
 
             default:
                 return { type: "skip" };
+        }
+    }
+
+    // =========================================================================
+    // Signal call conversion - signal.connect(), signal.disconnect(), signal.emit()
+    // Per-instance signals with max 4 subscribers
+    // =========================================================================
+
+    function convertSignalCall(method:String, signalExpr:Expr, args:Array<IRNode>, params:Array<Expr>):IRNode {
+        // Get the signal member name from the expression
+        var signalName = switch (signalExpr.expr) {
+            case EConst(CIdent(name)): name;
+            case EField(_, fieldName): fieldName;
+            default: null;
+        };
+
+        if (signalName == null) {
+            return { type: "skip" };
+        }
+
+        switch (method) {
+            case "connect":
+                // signal.connect(callback) -> signal_connect(&data->signalName, callback, obj, data)
+                // The callback should be a function reference
+                if (params.length > 0) {
+                    var callbackName = extractFunctionRef(params[0]);
+                    if (callbackName != null) {
+                        // Track this handler for declaration generation
+                        addSignalHandler(callbackName, signalName);
+                        return {
+                            type: "signal_call",
+                            value: "connect",
+                            props: {
+                                signal_name: signalName,
+                                callback: callbackName
+                            }
+                        };
+                    }
+                }
+                return { type: "skip" };
+
+            case "disconnect":
+                // signal.disconnect(callback) -> signal_disconnect(&data->signalName, callback)
+                if (params.length > 0) {
+                    var callbackName = extractFunctionRef(params[0]);
+                    if (callbackName != null) {
+                        return {
+                            type: "signal_call",
+                            value: "disconnect",
+                            props: {
+                                signal_name: signalName,
+                                callback: callbackName
+                            }
+                        };
+                    }
+                }
+                return { type: "skip" };
+
+            case "emit":
+                // signal.emit(arg1, arg2, ...) -> signal_emit(&data->signalName, obj, arg1, arg2, ...)
+                // Track arg types for this signal
+                updateSignalArgTypes(signalName, params);
+                return {
+                    type: "signal_call",
+                    value: "emit",
+                    props: {
+                        signal_name: signalName
+                    },
+                    args: args
+                };
+
+            default:
+                return { type: "skip" };
+        }
+    }
+
+    function convertGlobalSignalCall(method:String, className:String, signalName:String, args:Array<IRNode>, params:Array<Expr>):IRNode {
+        // Handle global/static signals: GameEvents.gemCollected.emit()
+        // These are stored as global ArmSignal structs: g_classname_signalname
+
+        var globalSignalName = 'g_${className.toLowerCase()}_$signalName';
+
+        // Track this global signal for declaration generation
+        if (!Lambda.has(meta.global_signals, globalSignalName)) {
+            meta.global_signals.push(globalSignalName);
+        }
+
+        switch (method) {
+            case "connect":
+                if (params.length > 0) {
+                    var callbackName = extractFunctionRef(params[0]);
+                    if (callbackName != null) {
+                        addSignalHandler(callbackName, signalName);
+                        return {
+                            type: "global_signal_call",
+                            value: "connect",
+                            props: {
+                                global_signal: globalSignalName,
+                                callback: callbackName
+                            }
+                        };
+                    }
+                }
+                return { type: "skip" };
+
+            case "disconnect":
+                if (params.length > 0) {
+                    var callbackName = extractFunctionRef(params[0]);
+                    if (callbackName != null) {
+                        return {
+                            type: "global_signal_call",
+                            value: "disconnect",
+                            props: {
+                                global_signal: globalSignalName,
+                                callback: callbackName
+                            }
+                        };
+                    }
+                }
+                return { type: "skip" };
+
+            case "emit":
+                return {
+                    type: "global_signal_call",
+                    value: "emit",
+                    props: {
+                        global_signal: globalSignalName
+                    },
+                    args: args
+                };
+
+            default:
+                return { type: "skip" };
+        }
+    }
+
+    function extractFunctionRef(e:Expr):String {
+        // Extract function name from expression like `onEnemyDeath` or `this.onEnemyDeath`
+        return switch (e.expr) {
+            case EConst(CIdent(name)): name;
+            case EField(_, fieldName): fieldName;
+            default: null;
+        };
+    }
+
+    function updateSignalArgTypes(signalName:String, params:Array<Expr>):Void {
+        // Find the signal in meta and update its arg_types based on emit() call
+        for (signal in meta.signals) {
+            if (signal.name == signalName) {
+                // Only update if not already populated (first emit() wins)
+                if (signal.arg_types.length == 0) {
+                    for (param in params) {
+                        var haxeType = inferExprType(param);
+                        var cType = TypeMap.getCType(haxeType);
+                        signal.arg_types.push(cType);
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    function inferExprType(e:Expr):String {
+        // Infer the Haxe type of an expression for signal arg typing
+        return switch (e.expr) {
+            case EConst(CInt(_)): "Int";
+            case EConst(CFloat(_)): "Float";
+            case EConst(CString(_)): "String";
+            case EConst(CIdent("true")), EConst(CIdent("false")): "Bool";
+            case EConst(CIdent("object")), EConst(CIdent("this")): "ArmObject";
+            case EConst(CIdent(name)):
+                // Check local vars first, then members
+                if (localVarTypes.exists(name)) localVarTypes.get(name);
+                else if (members.exists(name)) members.get(name).haxeType;
+                else "Dynamic";
+            case EField(obj, field):
+                // Could be object.transform, etc. - simplified for now
+                "Dynamic";
+            default: "Dynamic";
+        };
+    }
+
+    function addSignalHandler(handlerName:String, signalName:String):Void {
+        // Check if already tracked
+        for (h in meta.signal_handlers) {
+            if (h.handler_name == handlerName) return;
+        }
+
+        // Track this handler
+        meta.signal_handlers.push({
+            handler_name: handlerName,
+            signal_name: signalName
+        });
+
+        // Extract the handler method body as an event
+        if (methodMap.exists(handlerName)) {
+            var func = methodMap.get(handlerName);
+            if (!events.exists("signal_" + handlerName)) {
+                events.set("signal_" + handlerName, []);
+                extractSignalHandler(handlerName, func, events.get("signal_" + handlerName));
+            }
+        }
+    }
+
+    function extractSignalHandler(name:String, func:Function, eventNodes:Array<IRNode>):Void {
+        // Signal handlers have signature matching ArmSignalHandler:
+        // void (*)(void* sender, void* a0, void* a1, void* a2, void* a3)
+        // The first param in Haxe is typically (sender: ArmObject) or similar
+
+        if (func.expr == null) return;
+
+        switch (func.expr.expr) {
+            case EBlock(exprs):
+                for (expr in exprs) {
+                    var node = exprToIR(expr);
+                    if (node != null && node.type != "skip") {
+                        eventNodes.push(node);
+                    }
+                }
+            default:
+                var node = exprToIR(func.expr);
+                if (node != null && node.type != "skip") {
+                    eventNodes.push(node);
+                }
         }
     }
 

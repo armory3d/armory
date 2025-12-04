@@ -2,6 +2,7 @@
 #include "physics.h"
 #include "../events/physics_events.h"
 #include "../engine.h"
+#include "../iron/object/object.h"
 #if ENGINE_ENABLE_PHYSICS_DEBUG
 #include "debug/physics_debug.h"
 #endif
@@ -129,6 +130,9 @@ void physics_step(float dt) {{
 
     // Dispatch per-body contact subscriptions
     physics_contact_dispatch();
+
+    // Process deferred object removals after contact dispatch is complete
+    object_process_removals();
 
     // Process global contact callbacks if registered
     if (g_contact_callback) {{

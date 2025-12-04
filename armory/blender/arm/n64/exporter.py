@@ -870,6 +870,11 @@ class N64Exporter:
         n64_utils.copy_src('iron/system/input.h', 'src')
 
 
+    def write_signal(self):
+        n64_utils.copy_src('signal.c', 'src/system')
+        n64_utils.copy_src('signal.h', 'src/system')
+
+
     def reset_materials_to_bsdf(self):
         """Reset materials back to BSDF format (requires Fast64 addon)."""
         try:
@@ -964,6 +969,7 @@ class N64Exporter:
 
         self.write_scenes()
         self.write_iron()
+        self.write_signal()
 
         self.reset_materials_to_bsdf()
         log.info('Info: N64 export completed.')

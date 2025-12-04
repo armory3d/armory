@@ -43,6 +43,11 @@ void renderer_update_objects(ArmScene *scene)
     for (uint16_t i = 0; i < scene->object_count; i++) {
         ArmObject *obj = &scene->objects[i];
 
+        // Skip removed objects
+        if (obj->is_removed) {
+            continue;
+        }
+
         if (obj->transform.dirty == 0) {
             continue;
         }

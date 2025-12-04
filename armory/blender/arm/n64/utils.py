@@ -137,19 +137,26 @@ def get_trait(trait_info: dict, trait_class: str) -> dict:
     return trait_info.get("traits", {}).get(trait_class, {})
 
 def trait_needs_data(trait_info: dict, trait_class: str) -> bool:
-    return len(get_trait(trait_info, trait_class).get("members", [])) > 0
+    """Check if a trait needs a data struct (has members or signals)."""
+    trait = get_trait(trait_info, trait_class)
+    has_members = len(trait.get("members", [])) > 0
+    has_signals = len(trait.get("meta", {}).get("signals", [])) > 0
+    return has_members or has_signals
 
 def build_trait_initializer(trait_info: dict, trait_class: str, current_scene: str,
                             instance_props: dict = None, type_overrides: dict = None) -> str:
     trait = get_trait(trait_info, trait_class)
     members = trait.get("members", [])
-    if not members:
+    signals = trait.get("meta", {}).get("signals", [])
+
+    if not members and not signals:
         return ""
 
     init_fields = []
     instance_props = instance_props or {}
     type_overrides = type_overrides or {}
 
+    # Initialize regular members
     for member in members:
         member_name = member.get("name", "")
         if not member_name:
@@ -160,6 +167,12 @@ def build_trait_initializer(trait_info: dict, trait_class: str, current_scene: s
         else:
             c_value = extract_default_value(member.get("default_value"), member_ctype)
         init_fields.append(f'.{member_name} = {c_value}')
+
+    # Initialize signals with zeroed state (no subscribers)
+    for sig in signals:
+        sig_name = sig.get("name", "")
+        if sig_name:
+            init_fields.append(f'.{sig_name} = {{0}}')
 
     return ', '.join(init_fields)
 

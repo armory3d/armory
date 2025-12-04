@@ -9,7 +9,11 @@
 
 void object_remove(ArmObject* obj)
 {
-    if (!obj) return;
+    if (!obj || obj->is_removed) return;
+
+    // Mark as removed immediately - physics dispatch checks this
+    obj->is_removed = true;
+    obj->visible = false;
 
     // Call all trait on_remove callbacks
     for (int i = 0; i < obj->trait_count; i++) {
@@ -28,7 +32,12 @@ void object_remove(ArmObject* obj)
     }
 #endif
 
-    // Hide the object and clear traits
-    obj->visible = false;
+    // Clear traits
     obj->trait_count = 0;
+}
+
+void object_process_removals(void)
+{
+    // No-op - removals are now immediate
+    // Kept for API compatibility
 }

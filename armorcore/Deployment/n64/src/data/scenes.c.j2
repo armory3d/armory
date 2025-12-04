@@ -49,6 +49,7 @@ void scene_on_ready(SceneId id)
 	}}
 	if (s->objects) {{
 		for (uint16_t i = 0; i < s->object_count; i++) {{
+			if (s->objects[i].is_removed) continue;
 			for (uint8_t t = 0; t < s->objects[i].trait_count; t++) {{
 				if (s->objects[i].traits[t].on_ready) s->objects[i].traits[t].on_ready(&s->objects[i], s->objects[i].traits[t].data);
 			}}
@@ -79,6 +80,7 @@ void scene_on_fixed_update(SceneId id, float dt)
 	}}
 	if (s->objects) {{
 		for (uint16_t i = 0; i < s->object_count; i++) {{
+			if (s->objects[i].is_removed) continue;
 			for (uint8_t t = 0; t < s->objects[i].trait_count; t++) {{
 				if (s->objects[i].traits[t].on_fixed_update) s->objects[i].traits[t].on_fixed_update(&s->objects[i], dt, s->objects[i].traits[t].data);
 			}}
@@ -92,6 +94,7 @@ void scene_sync_physics(SceneId id)
 	ArmScene *s = &g_scenes[id];
 	if (s->objects) {{
 		for (uint16_t i = 0; i < s->object_count; i++) {{
+			if (s->objects[i].is_removed) continue;
 			physics_sync_object(&s->objects[i]);
 		}}
 	}}
@@ -123,6 +126,7 @@ void scene_on_update(SceneId id, float dt)
 	}}
 	if (s->objects) {{
 		for (uint16_t i = 0; i < s->object_count; i++) {{
+			if (s->objects[i].is_removed) continue;
 			for (uint8_t t = 0; t < s->objects[i].trait_count; t++) {{
 				if (s->objects[i].traits[t].on_update) s->objects[i].traits[t].on_update(&s->objects[i], dt, s->objects[i].traits[t].data);
 			}}
@@ -153,6 +157,7 @@ void scene_on_late_update(SceneId id, float dt)
 	}}
 	if (s->objects) {{
 		for (uint16_t i = 0; i < s->object_count; i++) {{
+			if (s->objects[i].is_removed) continue;
 			for (uint8_t t = 0; t < s->objects[i].trait_count; t++) {{
 				if (s->objects[i].traits[t].on_late_update) s->objects[i].traits[t].on_late_update(&s->objects[i], dt, s->objects[i].traits[t].data);
 			}}

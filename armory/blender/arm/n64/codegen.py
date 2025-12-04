@@ -401,6 +401,104 @@ class IREmitter:
 
         return f"{c_func}({', '.join(arg_strs)})"
 
+    def emit_signal_call(self, node: Dict) -> str:
+        """Signal calls - connect/disconnect/emit on per-instance signals.
+
+        Generates calls to signal_* functions that operate on ArmSignal structs
+        stored in trait data.
+        """
+        action = node.get("value", "")  # "connect", "disconnect", or "emit"
+        props = node.get("props", {})
+        signal_name = props.get("signal_name", "")
+
+        if not signal_name:
+            return ""
+
+        # Signal is stored in trait data: data->signalName
+        signal_ptr = f"&(({self.data_type}*)data)->{signal_name}"
+
+        if action == "connect":
+            callback = props.get("callback", "")
+            if callback:
+                # signal_connect(signal, handler, obj, data)
+                # The callback function must be defined - use c_name prefix
+                handler_name = f"{self.c_name}_{callback}"
+                return f"signal_connect({signal_ptr}, {handler_name}, obj, data);"
+            return ""
+
+        elif action == "disconnect":
+            callback = props.get("callback", "")
+            if callback:
+                handler_name = f"{self.c_name}_{callback}"
+                return f"signal_disconnect({signal_ptr}, {handler_name});"
+            return ""
+
+        elif action == "emit":
+            args = node.get("args", [])
+            arg_strs = [self.emit(a) for a in args]
+            arg_count = len(arg_strs)
+
+            # Use convenience macros for correct argument count (max 4 args)
+            if arg_count == 0:
+                return f"signal_emit0({signal_ptr}, obj);"
+            elif arg_count == 1:
+                return f"signal_emit1({signal_ptr}, obj, {arg_strs[0]});"
+            elif arg_count == 2:
+                return f"signal_emit2({signal_ptr}, obj, {arg_strs[0]}, {arg_strs[1]});"
+            elif arg_count == 3:
+                return f"signal_emit3({signal_ptr}, obj, {arg_strs[0]}, {arg_strs[1]}, {arg_strs[2]});"
+            else:
+                # 4 or more args - use first 4
+                return f"signal_emit4({signal_ptr}, obj, {arg_strs[0]}, {arg_strs[1]}, {arg_strs[2]}, {arg_strs[3]});"
+
+        return ""
+
+    def emit_global_signal_call(self, node: Dict) -> str:
+        """Global signal calls - GameEvents.signalName.connect/emit/disconnect.
+
+        Global signals are stored as extern ArmSignal structs.
+        """
+        action = node.get("value", "")
+        props = node.get("props", {})
+        global_signal = props.get("global_signal", "")
+
+        if not global_signal:
+            return ""
+
+        signal_ptr = f"&{global_signal}"
+
+        if action == "connect":
+            callback = props.get("callback", "")
+            if callback:
+                handler_name = f"{self.c_name}_{callback}"
+                return f"signal_connect({signal_ptr}, {handler_name}, obj, data);"
+            return ""
+
+        elif action == "disconnect":
+            callback = props.get("callback", "")
+            if callback:
+                handler_name = f"{self.c_name}_{callback}"
+                return f"signal_disconnect({signal_ptr}, {handler_name});"
+            return ""
+
+        elif action == "emit":
+            args = node.get("args", [])
+            arg_strs = [self.emit(a) for a in args]
+            arg_count = len(arg_strs)
+
+            if arg_count == 0:
+                return f"signal_emit0({signal_ptr}, obj);"
+            elif arg_count == 1:
+                return f"signal_emit1({signal_ptr}, obj, {arg_strs[0]});"
+            elif arg_count == 2:
+                return f"signal_emit2({signal_ptr}, obj, {arg_strs[0]}, {arg_strs[1]});"
+            elif arg_count == 3:
+                return f"signal_emit3({signal_ptr}, obj, {arg_strs[0]}, {arg_strs[1]}, {arg_strs[2]});"
+            else:
+                return f"signal_emit4({signal_ptr}, obj, {arg_strs[0]}, {arg_strs[1]}, {arg_strs[2]}, {arg_strs[3]});"
+
+        return ""
+
     def emit_cast_call(self, node: Dict) -> str:
         """Std.int() -> (int32_t)value"""
         cast = node.get("value", "(int32_t)")
@@ -516,15 +614,26 @@ class TraitCodeGenerator:
         return ctype
 
     def generate_data_struct(self) -> str:
-        """Generate the data struct for trait members."""
-        if not self.members:
+        """Generate the data struct for trait members and signals."""
+        signals = self.meta.get("signals", [])
+
+        if not self.members and not signals:
             return ""
 
         lines = [f"typedef struct {{"]
+
+        # Regular members
         for m in self.members:
             ctype = self._get_member_ctype(m)
             name = m.get("name", "unknown")
             lines.append(f"    {ctype} {name};")
+
+        # Signal members - each signal is an ArmSignal struct
+        for sig in signals:
+            sig_name = sig.get("name", "")
+            if sig_name:
+                lines.append(f"    ArmSignal {sig_name};")
+
         lines.append(f"}} {self.name}Data;")
 
         return "\n".join(lines)
@@ -561,6 +670,16 @@ class TraitCodeGenerator:
             if event_name.startswith("contact_"):
                 # Contact events use PhysicsContactHandler signature: (obj, data, other)
                 decls.append(f"void {self.c_name}_{event_name}(void* obj, void* data, ArmObject* other);")
+        return decls
+
+    def generate_signal_handler_declarations(self) -> List[str]:
+        """Generate declarations for signal handler callbacks - reads from events."""
+        decls = []
+        for event_name in self.events.keys():
+            if event_name.startswith("signal_"):
+                handler_name = event_name[7:]  # Strip "signal_" prefix
+                # ArmSignalHandler signature: void (*)(void* obj, void* data, void* arg0, void* arg1, void* arg2, void* arg3)
+                decls.append(f"void {self.c_name}_{handler_name}(void* obj, void* data, void* arg0, void* arg1, void* arg2, void* arg3);")
         return decls
 
     def generate_all_event_implementations(self) -> str:
@@ -624,6 +743,18 @@ class TraitCodeGenerator:
                 body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
                 impl_lines.append(f"void {self.c_name}_{event_name}(void* obj, void* data, ArmObject* other) {{")
                 impl_lines.append(f"    (void)other;  // Available as 'other' in body if needed")
+                impl_lines.append(body)
+                impl_lines.append("}")
+                impl_lines.append("")
+
+        # Signal handler events - ArmSignalHandler signature: (obj, data, arg0, arg1, arg2, arg3)
+        for event_name in self.events.keys():
+            if event_name.startswith("signal_"):
+                event_nodes = self.events.get(event_name, [])
+                body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
+                handler_name = event_name[7:]  # Strip "signal_" prefix
+                impl_lines.append(f"void {self.c_name}_{handler_name}(void* obj, void* data, void* arg0, void* arg1, void* arg2, void* arg3) {{")
+                impl_lines.append(f"    (void)arg0; (void)arg1; (void)arg2; (void)arg3;  // Signal args")
                 impl_lines.append(body)
                 impl_lines.append("}")
                 impl_lines.append("")
@@ -815,6 +946,7 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
     trait_declarations = []
     event_handler_declarations = []
     trait_implementations = []
+    global_signals = set()  # Collect unique global signals
 
     # Track features across all traits
     all_features = {'has_ui': False, 'has_physics': False}
@@ -830,6 +962,12 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
         trait_declarations.extend(gen.generate_lifecycle_declarations())
         event_handler_declarations.extend(gen.generate_button_event_declarations())
         event_handler_declarations.extend(gen.generate_contact_event_declarations())
+        event_handler_declarations.extend(gen.generate_signal_handler_declarations())
+
+        # Collect global signals from this trait
+        meta = trait_ir.get("meta", {})
+        for gs in meta.get("global_signals", []):
+            global_signals.add(gs)
 
         # Implementation data
         trait_implementations.append(gen.generate_all_event_implementations())
@@ -850,11 +988,17 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
             if "Koui" in ctype or "Label" in ctype:
                 all_features['has_ui'] = True
 
+    # Generate global signal declarations with explicit zero initialization
+    global_signal_decls = []
+    for gs in sorted(global_signals):
+        global_signal_decls.append(f"ArmSignal {gs} = {{0}};")
+
     template_data = {
         "trait_data_structs": "\n\n".join(trait_data_structs),
         "trait_declarations": "\n".join(trait_declarations),
         "event_handler_declarations": "\n".join(event_handler_declarations),
         "trait_implementations": "\n".join(trait_implementations),
+        "global_signals": "\n".join(global_signal_decls),
     }
 
     return template_data, all_features
@@ -995,6 +1139,7 @@ def generate_object_block(objects: List[Dict], trait_info: dict, scene_name: str
         lines.append(f'    {prefix}.model_mat = malloc_uncached(sizeof(T3DMat4FP) * {mat_count});')
         lines.append(f'    {prefix}.visible = {str(obj["visible"]).lower()};')
         lines.append(f'    {prefix}.is_static = {str(is_static).lower()};')
+        lines.append(f'    {prefix}.is_removed = false;')
 
         bc = obj.get("bounds_center", [0, 0, 0])
         br = obj.get("bounds_radius", 1.0)
