@@ -309,9 +309,36 @@ class IREmitter:
             nx, ny, nz = c_vec3_convert(f"({axis}).x", f"({axis}).y", f"({axis}).z")
             return f"it_rotate_axis_global(&{obj}->transform, {nx}, {ny}, {nz}, {angle});"
 
-        if method == "setLoc" and len(arg_strs) >= 3:
-            nx, ny, nz = c_vec3_convert(arg_strs[0], arg_strs[1], arg_strs[2])
-            return f"it_set_loc(&{obj}->transform, {nx}, {ny}, {nz});"
+        if method == "move" and len(arg_strs) >= 1:
+            axis = arg_strs[0]
+            scale = arg_strs[1] if len(arg_strs) >= 2 else "1.0f"
+            nx, ny, nz = c_vec3_convert(f"({axis}).x", f"({axis}).y", f"({axis}).z")
+            return f"it_move(&{obj}->transform, {nx}, {ny}, {nz}, {scale});"
+
+        if method == "setRotation" and len(arg_strs) >= 3:
+            # Euler angles - coordinate conversion for rotations
+            return f"it_set_rot_euler(&{obj}->transform, {arg_strs[0]}, {arg_strs[2]}, -({arg_strs[1]}));"
+
+        if method == "look":
+            return f"{{ T3DVec3 _dir; it_look(&{obj}->transform, &_dir); _dir; }}"
+
+        if method == "right":
+            return f"{{ T3DVec3 _dir; it_right(&{obj}->transform, &_dir); _dir; }}"
+
+        if method == "up":
+            return f"{{ T3DVec3 _dir; it_up(&{obj}->transform, &_dir); _dir; }}"
+
+        if method == "worldx":
+            return f"it_world_x(&{obj}->transform)"
+
+        if method == "worldy":
+            return f"it_world_z(&{obj}->transform)"  # Blender Y -> N64 Z
+
+        if method == "worldz":
+            return f"(-it_world_y(&{obj}->transform))"  # Blender Z -> N64 -Y
+
+        if method == "reset":
+            return f"it_reset(&{obj}->transform);"
 
         return ""
 
