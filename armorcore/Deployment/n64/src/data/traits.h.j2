@@ -2,8 +2,13 @@
 
 #include "scenes.h"
 #include "../types.h"
+#include "../engine.h"
 #include "../iron/trait_events.h"
 #include "../iron/system/input.h"
+
+#if ENGINE_ENABLE_UI
+#include "../koui/koui.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {{

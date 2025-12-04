@@ -143,11 +143,11 @@ class N64TraitMacro {
         if (node.args != null && node.args.length > 0) {
             obj.args = [for (a in node.args) serializeIRNode(a)];
         }
-        if (node.target != null) obj.target = node.target;
         if (node.method != null) obj.method = node.method;
         if (node.object != null) obj.object = serializeIRNode(node.object);
         if (node.props != null) obj.props = node.props;
         if (node.c_code != null) obj.c_code = node.c_code;
+        if (node.c_func != null) obj.c_func = node.c_func;
 
         return obj;
     }
@@ -162,11 +162,11 @@ typedef IRNode = {
     ?value: Dynamic,
     ?children: Array<IRNode>,
     ?args: Array<IRNode>,
-    ?target: String,
     ?method: String,
     ?object: IRNode,
     ?props: Dynamic,
-    ?c_code: String
+    ?c_code: String,
+    ?c_func: String  // Direct C function name for 1:1 translation
 }
 
 typedef MemberIR = {
@@ -188,6 +188,7 @@ typedef TraitMeta = {
     mutates_transform: Bool,   // True if trait modifies transform (translate, rotate, etc.)
     uses_time: Bool,
     uses_physics: Bool,
+    uses_ui: Bool,             // True if trait uses Koui UI elements
     buttons_used: Array<String>,
     button_events: Array<ButtonEventMeta>  // structured button event info
 }
@@ -221,6 +222,8 @@ class TypeMap {
         "Vec2" => "ArmVec2",
         "Vec3" => "ArmVec3",
         "Vec4" => "ArmVec4",
+        // Koui UI elements
+        "Label" => "KouiLabel*",
     ];
 
     public static function getCType(haxeType:String):String {
@@ -291,6 +294,7 @@ class SkipList {
     public static var classes:Map<String, Bool> = [
         "PhysicsWorld" => true, "RigidBody" => true,
         "Tween" => true, "Audio" => true, "Network" => true,
+        "Graphics" => true,  // kha.graphics2.Graphics - not available on N64
     ];
 
     public static function shouldSkipMember(name:String):Bool {
@@ -332,6 +336,7 @@ class TraitExtractor {
             mutates_transform: false,
             uses_time: false,
             uses_physics: false,
+            uses_ui: false,
             buttons_used: [],
             button_events: []
         };
@@ -643,6 +648,17 @@ class TraitExtractor {
                     // Check if assigning to transform.loc/rot/scale (mutating transform)
                     checkTransformMutation(e1);
                     { type: "assign", children: [exprToIR(e1), exprToIR(e2)] };
+                } else if (op == OpAdd) {
+                    // Check if this is string concatenation
+                    var leftType = getExprType(e1);
+                    var rightType = getExprType(e2);
+                    if (leftType == "String" || rightType == "String") {
+                        // String concatenation - use helper class
+                        var builder = new StringConcatBuilder(members, localVarTypes, exprToIR, getExprType);
+                        builder.build(e1, e2);
+                    } else {
+                        { type: "binop", value: opStr, children: [exprToIR(e1), exprToIR(e2)] };
+                    }
                 } else {
                     { type: "binop", value: opStr, children: [exprToIR(e1), exprToIR(e2)] };
                 }
@@ -665,11 +681,7 @@ class TraitExtractor {
 
             // New
             case ENew(tp, params):
-                {
-                    type: "new",
-                    value: tp.name,
-                    args: [for (p in params) exprToIR(p)]
-                };
+                convertNew(tp, params);
 
             // Block
             case EBlock(exprs):
@@ -683,7 +695,7 @@ class TraitExtractor {
             case EVars(vars):
                 var varDecls:Array<IRNode> = [];
                 for (v in vars) {
-                    var varType = v.type != null ? complexTypeToString(v.type) : inferType(v.expr);
+                    var varType = v.type != null ? complexTypeToString(v.type) : getExprType(v.expr);
                     var ctype = TypeMap.getCType(varType);
                     if (ctype == null) ctype = "float"; // fallback for unknown types
                     // Track this local variable's type
@@ -705,41 +717,6 @@ class TraitExtractor {
             default:
                 { type: "skip" };
         };
-    }
-
-    function inferType(e:Expr):String {
-        if (e == null) return "Dynamic";
-        switch (e.expr) {
-            case ENew(tp, _): return tp.name;
-            case EConst(CInt(_)): return "Int";
-            case EConst(CFloat(_)): return "Float";
-            case EConst(CString(_)): return "String";
-            case EField(innerObj, field):
-                // gamepad.leftStick / gamepad.rightStick -> Vec2
-                switch (innerObj.expr) {
-                    case EConst(CIdent("gamepad")):
-                        if (field == "leftStick" || field == "rightStick") {
-                            return "Vec2";
-                        }
-                    default:
-                }
-                return "Dynamic";
-            case ECall(callExpr, _):
-                // Try to infer return type from method calls
-                switch (callExpr.expr) {
-                    case EField(obj, method):
-                        // Vec method calls return Vec
-                        var objType = inferType(obj);
-                        if (StringTools.startsWith(objType, "Vec")) {
-                            if (method == "mult" || method == "add" || method == "sub" || method == "normalize") {
-                                return objType;
-                            }
-                        }
-                    default:
-                }
-                return "Dynamic";
-            default: return "Dynamic";
-        }
     }
 
     function resolveIdent(name:String):IRNode {
@@ -808,6 +785,21 @@ class TraitExtractor {
             default:
         }
 
+        // Check if this is a Label field access (label.text, label.posX, etc.)
+        var objType = getExprType(obj);
+        if (objType == "Label") {
+            meta.uses_ui = true;
+            // Map Koui property names to C struct field names
+            var cField = switch (field) {
+                case "posX": "pos_x";
+                case "posY": "pos_y";
+                case "text": "text";
+                case "visible": "visible";
+                default: field;
+            };
+            return { type: "label_field", object: exprToIR(obj), value: cField };
+        }
+
         // Vec3 component access
         if (field == "x" || field == "y" || field == "z") {
             return { type: "field", object: exprToIR(obj), value: field };
@@ -816,32 +808,40 @@ class TraitExtractor {
         return { type: "field", object: exprToIR(obj), value: field };
     }
 
+    /**
+     * Unified type inference from Haxe expressions.
+     * Returns the Haxe type name (Int, Float, String, Vec2, Label, etc.) or "Dynamic" if unknown.
+     */
     function getExprType(e:Expr):String {
-        if (e == null) return null;
+        if (e == null) return "Dynamic";
 
-        // Try to infer type from expression
         switch (e.expr) {
-            case ENew(tp, _):
-                return tp.name;  // new Vec3() -> "Vec3"
+            // Literals
+            case EConst(CInt(_)): return "Int";
+            case EConst(CFloat(_)): return "Float";
+            case EConst(CString(_)): return "String";
 
+            // Constructor: new Vec3() -> "Vec3"
+            case ENew(tp, _):
+                return tp.name;
+
+            // Identifier: variable or member
             case EConst(CIdent(name)):
-                // Check local variables first
                 if (localVarTypes.exists(name)) {
                     return localVarTypes.get(name);
                 }
-                // Check if it's a member with known type
                 if (members.exists(name)) {
-                    var m = members.get(name);
-                    return m.haxeType;
+                    return members.get(name).haxeType;
                 }
+                return "Dynamic";
 
+            // Field access
             case EField(innerObj, field):
-                // this.memberName or object.memberName -> get member type
+                // this.member or object.member
                 switch (innerObj.expr) {
                     case EConst(CIdent("this")), EConst(CIdent("object")):
                         if (members.exists(field)) {
-                            var m = members.get(field);
-                            return m.haxeType;
+                            return members.get(field).haxeType;
                         }
                     default:
                 }
@@ -849,29 +849,29 @@ class TraitExtractor {
                 // gamepad.leftStick / gamepad.rightStick -> Vec2
                 switch (innerObj.expr) {
                     case EConst(CIdent("gamepad")):
-                        if (field == "leftStick" || field == "rightStick") {
-                            return "Vec2";
-                        }
-                    // object.transform.loc/rot/scale -> Vec4
-                    case EField(_, "transform"):
-                        if (field == "loc" || field == "scale" || field == "rot") {
-                            return "Vec4";
-                        }
-                    // transform.loc/rot/scale (direct access)
-                    case EConst(CIdent("transform")):
-                        if (field == "loc" || field == "scale" || field == "rot") {
-                            return "Vec4";
-                        }
+                        if (field == "leftStick" || field == "rightStick") return "Vec2";
+                    // transform.loc/rot/scale -> Vec4
+                    case EField(_, "transform"), EConst(CIdent("transform")):
+                        if (field == "loc" || field == "scale" || field == "rot") return "Vec4";
                     default:
                 }
+                return "Dynamic";
 
+            // Method calls
             case ECall(callExpr, _):
-                // Vec method calls return Vec type
                 switch (callExpr.expr) {
                     case EField(obj, method):
+                        // Std.string/int/parseFloat
+                        switch (obj.expr) {
+                            case EConst(CIdent("Std")):
+                                if (method == "string") return "String";
+                                if (method == "int") return "Int";
+                                if (method == "parseFloat") return "Float";
+                            default:
+                        }
+                        // Vec method calls return same Vec type
                         var objType = getExprType(obj);
                         if (objType != null && StringTools.startsWith(objType, "Vec")) {
-                            // mult, add, sub, normalize, clone return the same Vec type
                             if (method == "mult" || method == "add" || method == "sub" ||
                                 method == "normalize" || method == "clone" || method == "cross") {
                                 return objType;
@@ -879,14 +879,23 @@ class TraitExtractor {
                         }
                     default:
                 }
+                return "Dynamic";
 
+            // Binary operations
+            case EBinop(OpAdd, e1, e2):
+                var t1 = getExprType(e1);
+                var t2 = getExprType(e2);
+                if (t1 == "String" || t2 == "String") return "String";
+                if (t1 == "Float" || t2 == "Float") return "Float";
+                return "Int";
+
+            // Parentheses
             case EParenthesis(inner):
-                // Unwrap parentheses
                 return getExprType(inner);
 
             default:
+                return "Dynamic";
         }
-        return null;
     }
 
     function convertCall(callExpr:Expr, params:Array<Expr>):IRNode {
@@ -919,6 +928,10 @@ class TraitExtractor {
                     // Scene.setActive("Level_02") -> scene_switch_to(SCENE_X)
                     case EConst(CIdent("Scene")):
                         return convertSceneCall(method, args);
+
+                    // Koui.init(callback), Koui.add(label), Koui.remove(label), Koui.render(g2)
+                    case EConst(CIdent("Koui")):
+                        return convertKouiStaticCall(method, args, params);
 
                     // transform.translate(...) -> it_translate(...)
                     case EField(_, "transform"), EConst(CIdent("transform")):
@@ -967,10 +980,14 @@ class TraitExtractor {
                         return { type: "skip" };
 
                     default:
+                        // Check if this is a Label method call
+                        var objType = getExprType(obj);
+                        if (objType == "Label") {
+                            return convertLabelCall(method, exprToIR(obj), args);
+                        }
                         // Fallback: generic call with object
                         return {
                             type: "call",
-                            target: "unknown",
                             method: method,
                             object: exprToIR(obj),
                             args: args
@@ -979,9 +996,11 @@ class TraitExtractor {
 
             case EConst(CIdent(funcName)):
                 // Skip lifecycle registration calls - they're handled by scanForLifecycles
+                // notifyOnRender2D is skipped entirely - N64 doesn't have 2D graphics layer
                 if (funcName == "notifyOnInit" || funcName == "notifyOnUpdate" ||
                     funcName == "notifyOnFixedUpdate" || funcName == "notifyOnLateUpdate" ||
-                    funcName == "notifyOnRemove" || funcName == "notifyOnAdd") {
+                    funcName == "notifyOnRemove" || funcName == "notifyOnAdd" ||
+                    funcName == "notifyOnRender2D" || funcName == "notifyOnRender") {
                     return { type: "skip" };
                 }
 
@@ -1003,6 +1022,33 @@ class TraitExtractor {
             default:
                 return { type: "skip" };
         }
+    }
+
+    // =========================================================================
+    // New expression conversion - handles constructor calls
+    // =========================================================================
+
+    function convertNew(tp:TypePath, params:Array<Expr>):IRNode {
+        var typeName = tp.name;
+        var args = [for (p in params) exprToIR(p)];
+
+        // Check for Koui UI elements
+        if (typeName == "Label") {
+            meta.uses_ui = true;
+            // Label constructor: new Label(text) -> koui_create_label(text)
+            return {
+                type: "koui_call",
+                c_func: "koui_create_label",
+                args: args
+            };
+        }
+
+        // Default: generic new expression
+        return {
+            type: "new",
+            value: typeName,
+            args: args
+        };
     }
 
     function binopToString(op:Binop):String {
@@ -1091,7 +1137,7 @@ class TraitExtractor {
     function convertSceneCall(method:String, args:Array<IRNode>):IRNode {
         if (method == "setActive" && args.length > 0) {
             var arg = args[0];
-            // If it's a string literal, convert to enum directly
+            // If it's a string literal, convert to enum directly at compile time
             if (arg.type == "string") {
                 var sceneName = Std.string(arg.value).toUpperCase();
                 return {
@@ -1100,8 +1146,9 @@ class TraitExtractor {
                     c_code: 'scene_switch_to(SCENE_$sceneName)'
                 };
             }
-            // For any other expression (variable, member, concatenation, etc.),
+            // For sprintf (string concatenation), member, or other expressions,
             // use runtime helper that maps string -> SceneId
+            // This handles: Scene.setActive("Level_" + Std.string(num))
             return {
                 type: "scene_call",
                 method: "setActive",
@@ -1109,6 +1156,73 @@ class TraitExtractor {
             };
         }
         return { type: "skip" };
+    }
+
+    // =========================================================================
+    // Koui static call conversion - Koui.init(), Koui.add(), Koui.remove(), Koui.render()
+    // =========================================================================
+
+    function convertKouiStaticCall(method:String, args:Array<IRNode>, rawParams:Array<Expr>):IRNode {
+        meta.uses_ui = true;
+
+        switch (method) {
+            case "init":
+                // Koui.init(callback) - extract callback body, emit statements inline
+                // The callback runs immediately on N64 since we don't have async loading
+                if (rawParams.length > 0) {
+                    var callback = resolveCallback(rawParams[0]);
+                    if (callback != null) {
+                        // Return block of statements from callback
+                        return exprToIR(callback);
+                    }
+                }
+                return { type: "skip" };
+
+            case "add":
+                // Koui.add(label) -> koui_add_label(label)
+                return {
+                    type: "koui_call",
+                    c_func: "koui_add_label",
+                    args: args
+                };
+
+            case "render":
+                // Koui.render(g2) - skip, handled in main loop
+                return { type: "skip" };
+
+            case "remove":
+                // Koui.remove(label) -> koui_remove_label(label)
+                return {
+                    type: "koui_call",
+                    c_func: "koui_remove_label",
+                    args: args
+                };
+
+            default:
+                return { type: "skip" };
+        }
+    }
+
+    // =========================================================================
+    // Label method call conversion - label.setPosition(), label.setText(), etc.
+    // =========================================================================
+
+    function convertLabelCall(method:String, objIR:IRNode, args:Array<IRNode>):IRNode {
+        meta.uses_ui = true;
+
+        switch (method) {
+            case "setPosition":
+                // label.setPosition(x, y) -> koui_label_set_position(label, x, y)
+                return {
+                    type: "koui_call",
+                    c_func: "koui_label_set_position",
+                    object: objIR,
+                    args: args
+                };
+
+            default:
+                return { type: "skip" };
+        }
     }
 
     // =========================================================================
@@ -1209,8 +1323,21 @@ class TraitExtractor {
             case "parseFloat":
                 { type: "math_call", value: "strtof", args: args };  // Note: strtof needs NULL as 2nd arg
             case "string":
-                // String conversion not directly supported on N64
-                { type: "skip" };
+                // Std.string(value) used standalone (not in concatenation)
+                // In a + expression, StringConcatBuilder handles this
+                // For standalone use, emit sprintf with single arg
+                if (args.length > 0) {
+                    var argType = args[0].type;
+                    var format = switch (argType) {
+                        case "float": "%.2f";
+                        case "int": "%d";
+                        case "member": "%d";  // Assume int for members
+                        default: "%d";
+                    };
+                    { type: "sprintf", value: format, args: args };
+                } else {
+                    { type: "string", value: "" };
+                }
             default:
                 { type: "skip" };
         };

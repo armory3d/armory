@@ -15,6 +15,10 @@
 #include "physics_debug.h"
 #endif
 #endif
+#if ENGINE_ENABLE_UI
+#include "data/fonts.h"
+#include "koui/koui.h"
+#endif
 
 #define FIXED_TIMESTEP ({fixed_timestep}f)
 
@@ -34,6 +38,10 @@ int main(void)
     physics_debug_init();
     physics_debug_set_mode({physics_debug_mode});
     physics_debug_enable(true);
+#endif
+#if ENGINE_ENABLE_UI
+    fonts_init();
+    koui_init();
 #endif
 
     T3DViewport viewport = t3d_viewport_create_buffered(FB_COUNT);
@@ -87,6 +95,10 @@ int main(void)
 
         renderer_begin_frame(&viewport, scene);
         renderer_draw_scene(&viewport, scene);
+#if ENGINE_ENABLE_UI
+        koui_render();
+#endif
+        renderer_end_frame(&viewport);
 
         // Build static display list after initial frames (matrices computed for all buffers)
         if (frame_count == STATIC_DPL_BUILD_FRAME) {{
@@ -97,6 +109,9 @@ int main(void)
         }}
     }}
 
+#if ENGINE_ENABLE_UI
+    fonts_shutdown();
+#endif
     engine_shutdown();
     return 0;
 }}

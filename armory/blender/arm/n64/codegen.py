@@ -43,7 +43,7 @@ TraitMeta fields:
 import json
 import os
 import math
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Optional
 
 from arm.n64.utils import (
     convert_vec3_list, convert_quat_list, convert_scale_list,
@@ -86,9 +86,15 @@ class IREmitter:
         return [c for c in (self.emit(n) for n in nodes) if c]
 
     def emit_statements(self, nodes: List[Dict], indent: str = "    ") -> str:
-        """Emit list of nodes as statements."""
+        """Emit list of nodes as statements, adding semicolons where needed."""
         lines = self.emit_list(nodes)
-        return "\n".join(f"{indent}{line}" for line in lines)
+        result = []
+        for line in lines:
+            # Add semicolon if line doesn't end with ; or } or is empty
+            if line and not line.rstrip().endswith((';', '}', '{')):
+                line = line + ';'
+            result.append(f"{indent}{line}")
+        return "\n".join(result)
 
     # =========================================================================
     # Literals
@@ -108,6 +114,23 @@ class IREmitter:
     def emit_string(self, node: Dict) -> str:
         val = node.get("value", "")
         return f'"{val}"' if val else "NULL"
+
+    def emit_sprintf(self, node: Dict) -> str:
+        """Pre-built sprintf from macro: { type: "sprintf", value: "format", args: [...] }
+        The macro has already built the format string and collected typed args.
+        We just translate to C."""
+        format_str = node.get("value", "")
+        args = node.get("args", [])
+
+        if not args:
+            # No args, just a literal string
+            return f'"{format_str}"'
+
+        # Emit each argument
+        arg_codes = [self.emit(arg) for arg in args]
+        args_str = ", ".join(arg_codes)
+
+        return f'_str_concat("{format_str}", {args_str})'
 
     def emit_bool(self, node: Dict) -> str:
         return "true" if node.get("value", False) else "false"
@@ -154,6 +177,15 @@ class IREmitter:
             return f"{obj}->{field}"
 
         return f"({obj}).{field}"
+
+    def emit_label_field(self, node: Dict) -> str:
+        """Label field access: label->pos_x, label->text, etc.
+        The macro has already mapped Koui names (posX) to C names (pos_x)."""
+        obj = self.emit(node.get("object"))
+        field = node.get("value", "")
+        if obj and field:
+            return f"{obj}->{field}"
+        return ""
 
     def emit_gamepad_stick(self, node: Dict) -> str:
         """Gamepad stick access: returns ArmVec2 with x,y from input functions."""
@@ -242,9 +274,17 @@ class IREmitter:
         return result
 
     def emit_block(self, node: Dict) -> str:
-        """Block of statements."""
+        """Block of statements - emit as statements with semicolons."""
         children = node.get("children", [])
-        return "\n".join(self.emit_list(children))
+        # Use emit_statements logic but without extra indent (caller handles indent)
+        lines = self.emit_list(children)
+        result = []
+        for line in lines:
+            # Add semicolon if line doesn't end with ; or } or {
+            if line and not line.rstrip().endswith((';', '}', '{')):
+                line = line + ';'
+            result.append(line)
+        return "\n".join(result)
 
     def emit_var(self, node: Dict) -> str:
         """Local variable declaration: ctype name = value;"""
@@ -380,6 +420,30 @@ class IREmitter:
             return f"physics_get_linear_velocity({obj}->rigid_body)"
 
         return ""
+
+    def emit_koui_call(self, node: Dict) -> str:
+        """Koui UI calls - pure 1:1 translation from macro-provided c_func."""
+        c_func = node.get("c_func", "")
+        args = node.get("args", [])
+        obj_node = node.get("object")
+
+        if not c_func:
+            print("[N64 codegen] WARNING: koui_call missing c_func")
+            return ""
+
+        # Build argument list: object first (if present), then args
+        arg_strs = []
+        if obj_node:
+            obj = self.emit(obj_node)
+            if obj:
+                arg_strs.append(obj)
+
+        for a in args:
+            emitted = self.emit(a)
+            if emitted:
+                arg_strs.append(emitted)
+
+        return f"{c_func}({', '.join(arg_strs)})"
 
     def emit_cast_call(self, node: Dict) -> str:
         """Std.int() -> (int32_t)value"""
@@ -639,102 +703,6 @@ class TraitCodeGenerator:
 
 
 # =============================================================================
-# Integration with Blender Export
-# =============================================================================
-
-def get_default_value_c(member: Dict) -> str:
-    """Get C literal for member default value."""
-    default = member.get("default_value")
-    ctype = member.get("ctype", "float")
-
-    if default is None:
-        # Sensible defaults by type
-        if ctype == "float":
-            return "0.0f"
-        if ctype in ("int32_t", "int"):
-            return "0"
-        if ctype == "bool":
-            return "false"
-        if ctype == "const char*":
-            return "NULL"
-        if ctype == "SceneId":
-            return "SCENE_UNKNOWN"
-        if "Vec" in ctype:
-            return "{0}"
-        return "0"
-
-    # Use emitter to convert IR node to C
-    emitter = IREmitter("", "", [])
-    return emitter.emit(default) or "0"
-
-
-def generate_trait_init(trait_name: str, members: List[Dict],
-                        blender_overrides: Dict) -> str:
-    """
-    Generate trait initialization code.
-
-    Args:
-        trait_name: Name of the trait class
-        members: List of member dicts from IR
-        blender_overrides: Values from Blender scene export
-
-    Returns:
-        C initialization code
-    """
-    if not members:
-        return f"    // {trait_name}: no data to initialize"
-
-    data_type = f"{trait_name}Data"
-    lines = [f"    {data_type}* data = ({data_type}*)trait_alloc(sizeof({data_type}));"]
-
-    for m in members:
-        name = m.get("name")
-        ctype = m.get("ctype", "float")
-
-        # Use Blender override if present, else default from macro
-        if name in blender_overrides:
-            value = format_blender_value(blender_overrides[name], ctype)
-        else:
-            value = get_default_value_c(m)
-
-        lines.append(f"    data->{name} = {value};")
-
-    return "\n".join(lines)
-
-
-def format_blender_value(value: Any, ctype: str) -> str:
-    """Format a Blender export value to C literal."""
-    if value is None:
-        return get_default_value_c({"ctype": ctype})
-
-    if ctype == "float":
-        return f"{float(value)}f"
-
-    if ctype in ("int32_t", "int"):
-        return str(int(value))
-
-    if ctype == "bool":
-        return "true" if value else "false"
-
-    if ctype == "const char*":
-        return f'"{value}"' if value else "NULL"
-
-    if ctype == "SceneId":
-        # Convert scene name to enum
-        if isinstance(value, str):
-            return f"SCENE_{value.upper().replace(' ', '_')}"
-        return "SCENE_UNKNOWN"
-
-    if "Vec3" in ctype and isinstance(value, (list, tuple)) and len(value) >= 3:
-        return f"(ArmVec3){{{value[0]}f, {value[1]}f, {value[2]}f}}"
-
-    if "Vec2" in ctype and isinstance(value, (list, tuple)) and len(value) >= 2:
-        return f"(ArmVec2){{{value[0]}f, {value[1]}f}}"
-
-    return str(value)
-
-
-# =============================================================================
 # JSON Loading Utilities
 # =============================================================================
 
@@ -833,6 +801,9 @@ def write_traits_files(type_overrides: dict = None):
 
     Args:
         type_overrides: Optional dict of {trait_name: {member_name: ctype}} overrides
+
+    Returns:
+        dict with feature flags: {'has_ui': bool, 'has_physics': bool}
     """
     import arm.utils
 
@@ -842,14 +813,14 @@ def write_traits_files(type_overrides: dict = None):
 
     if not traits:
         print("[N64] No traits to generate")
-        return
+        return {'has_ui': False, 'has_physics': False}
 
     data_dir = os.path.join(build_dir, "n64", "src", "data")
     os.makedirs(data_dir, exist_ok=True)
     tmpl_dir = os.path.join(arm.utils.get_n64_deployment_path(), "src", "data")
 
-    # Generate template substitution data
-    template_data = _prepare_traits_template_data(traits, type_overrides)
+    # Generate template substitution data and detect features
+    template_data, features = _prepare_traits_template_data(traits, type_overrides)
 
     # Generate traits.h from template
     h_tmpl_path = os.path.join(tmpl_dir, "traits.h.j2")
@@ -870,17 +841,54 @@ def write_traits_files(type_overrides: dict = None):
         f.write(c_content)
 
     print(f"[N64] Generated {h_path} and {c_path}")
+    return features
 
 
-def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> dict:
+def _detect_features_in_nodes(nodes) -> dict:
+    """Recursively scan IR nodes for feature usage (UI, physics, etc.)."""
+    features = {'has_ui': False, 'has_physics': False}
+
+    def scan(node):
+        if not node or not isinstance(node, dict):
+            return
+        node_type = node.get("type", "")
+        if node_type == "koui_call" or node_type == "label_field":
+            features['has_ui'] = True
+        elif node_type == "physics_call":
+            features['has_physics'] = True
+
+        # Recursively scan children and args
+        for child in node.get("children", []):
+            scan(child)
+        for arg in node.get("args", []):
+            scan(arg)
+        if node.get("object"):
+            scan(node["object"])
+
+    if isinstance(nodes, list):
+        for n in nodes:
+            scan(n)
+    elif isinstance(nodes, dict):
+        scan(nodes)
+
+    return features
+
+
+def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> tuple:
     """Prepare data for traits.h.j2 and traits.c.j2 templates.
 
     Uses TraitCodeGenerator for each trait to avoid code duplication.
+
+    Returns:
+        tuple of (template_data dict, features dict)
     """
     trait_data_structs = []
     trait_declarations = []
     event_handler_declarations = []
     trait_implementations = []
+
+    # Track features across all traits
+    all_features = {'has_ui': False, 'has_physics': False}
 
     for trait_name, trait_ir in traits.items():
         gen = TraitCodeGenerator(trait_name, trait_ir, type_overrides)
@@ -896,12 +904,30 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
         # Implementation data
         trait_implementations.append(gen.generate_all_event_implementations())
 
-    return {
+        # Detect features in events
+        events = trait_ir.get("events", {})
+        for event_name, event_nodes in events.items():
+            node_features = _detect_features_in_nodes(event_nodes)
+            if node_features['has_ui']:
+                all_features['has_ui'] = True
+            if node_features['has_physics']:
+                all_features['has_physics'] = True
+
+        # Check members for UI types (e.g., KouiLabel*)
+        members = trait_ir.get("members", [])
+        for m in members:
+            ctype = m.get("ctype", "")
+            if "Koui" in ctype or "Label" in ctype:
+                all_features['has_ui'] = True
+
+    template_data = {
         "trait_data_structs": "\n\n".join(trait_data_structs),
         "trait_declarations": "\n".join(trait_declarations),
         "event_handler_declarations": "\n".join(event_handler_declarations),
         "trait_implementations": "\n".join(trait_implementations),
     }
+
+    return template_data, all_features
 
 
 # =============================================================================

@@ -47,6 +47,38 @@ static inline bool position_in_bounds(float x, float y, float z) {
            fabsf(z) <= PHYSICS_WORLD_BOUNDS;
 }
 
+// =========================================================================
+// String formatting utilities for UI text
+// =========================================================================
+
+#include <stdio.h>
+
+// Static buffer for string formatting (single-threaded, so this is safe)
+// Multiple calls will overwrite previous values - copy if needed
+#define STR_FMT_BUFFER_SIZE 64
+#define STR_FMT_BUFFER_COUNT 4
+static char _str_fmt_buffers[STR_FMT_BUFFER_COUNT][STR_FMT_BUFFER_SIZE];
+static int _str_fmt_buffer_idx = 0;
+
+/**
+ * Get next string buffer (rotates through available buffers)
+ */
+static inline char* _str_get_buffer(void) {
+    char* buf = _str_fmt_buffers[_str_fmt_buffer_idx];
+    _str_fmt_buffer_idx = (_str_fmt_buffer_idx + 1) % STR_FMT_BUFFER_COUNT;
+    return buf;
+}
+
+/**
+ * Format string with sprintf. Returns pointer to static buffer.
+ * Usage: _str_concat("Score: %d", score)
+ */
+#define _str_concat(fmt, ...) ({ \
+    char* _buf = _str_get_buffer(); \
+    snprintf(_buf, STR_FMT_BUFFER_SIZE, fmt, ##__VA_ARGS__); \
+    _buf; \
+})
+
 #ifdef __cplusplus
 }
 #endif

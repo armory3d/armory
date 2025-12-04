@@ -168,9 +168,9 @@ def build_trait_initializer(trait_info: dict, trait_class: str, current_scene: s
             continue
         member_ctype = type_overrides.get(member_name, member.get("ctype", "float"))
         if member_name in instance_props:
-            c_value = _to_c_literal(instance_props[member_name], member_ctype)
+            c_value = to_c_literal(instance_props[member_name], member_ctype)
         else:
-            c_value = _extract_default_value(member.get("default_value"), member_ctype)
+            c_value = extract_default_value(member.get("default_value"), member_ctype)
         init_fields.append(f'.{member_name} = {c_value}')
 
     return ', '.join(init_fields)
@@ -180,9 +180,10 @@ def build_trait_initializer(trait_info: dict, trait_class: str, current_scene: s
 # C Literal Helpers
 # =============================================================================
 
-def _extract_default_value(node, member_ctype: str) -> str:
+def extract_default_value(node, member_ctype: str) -> str:
+    """Convert an IR node to a C literal string."""
     if node is None:
-        return _get_type_default(member_ctype)
+        return get_type_default(member_ctype)
 
     if isinstance(node, dict):
         node_type = node.get("type", "")
@@ -204,11 +205,11 @@ def _extract_default_value(node, member_ctype: str) -> str:
             return _extract_vec_constructor(value, node.get("args", []))
 
     if isinstance(node, (int, float, str, bool)):
-        return _to_c_literal(node, member_ctype)
-    return _get_type_default(member_ctype)
+        return to_c_literal(node, member_ctype)
+    return get_type_default(member_ctype)
 
 def _extract_vec_constructor(type_name: str, args: list) -> str:
-    def arg(i): return _extract_default_value(args[i], "float") if i < len(args) else "0.0f"
+    def arg(i): return extract_default_value(args[i], "float") if i < len(args) else "0.0f"
     if type_name == "Vec4":
         return f"(ArmVec4){{{arg(0)}, {arg(1)}, {arg(2)}, {arg(3)}}}"
     elif type_name == "Vec3":
@@ -217,17 +218,20 @@ def _extract_vec_constructor(type_name: str, args: list) -> str:
         return f"(ArmVec2){{{arg(0)}, {arg(1)}}}"
     return "0"
 
-_TYPE_DEFAULTS = {
+TYPE_DEFAULTS = {
     "float": "0.0f", "int32_t": "0", "int": "0", "bool": "false",
     "const char*": "NULL", "SceneId": "SCENE_UNKNOWN",
     "ArmVec2": "(ArmVec2){0, 0}", "ArmVec3": "(ArmVec3){0, 0, 0}",
     "ArmVec4": "(ArmVec4){0, 0, 0, 0}", "void*": "NULL",
+    "KouiLabel*": "NULL",
 }
 
-def _get_type_default(ctype: str) -> str:
-    return _TYPE_DEFAULTS.get(ctype, "0")
+def get_type_default(ctype: str) -> str:
+    """Get the default C literal for a given C type."""
+    return TYPE_DEFAULTS.get(ctype, "0")
 
-def _to_c_literal(value, ctype: str) -> str:
+def to_c_literal(value, ctype: str) -> str:
+    """Convert a Python value to a C literal string."""
     if ctype == "float":
         return c_float(value)
     elif ctype in ("int32_t", "int"):

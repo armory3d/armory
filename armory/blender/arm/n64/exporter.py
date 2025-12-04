@@ -1,6 +1,7 @@
 import os
 import subprocess
 import math
+import shutil
 import bpy
 
 import arm
@@ -25,8 +26,10 @@ class N64Exporter:
     def __init__(self):
         self.scene_data = {}
         self.exported_meshes = {}
+        self.exported_fonts = {}    # Track exported fonts: {font_name: font_path}
         self.trait_info = {}        # Trait metadata from macro JSON
         self.has_physics = False    # Track if any rigid bodies are exported
+        self.has_ui = False         # Track if any UI elements are used
 
 
     @classmethod
@@ -411,11 +414,20 @@ class N64Exporter:
         else:
             physics_sources = '# No physics'
 
+        # UI source files (only if Koui UI elements are used)
+        if self.has_ui:
+            koui_sources = '''src +=\\
+    src/koui/koui.c \\
+    src/data/fonts.c'''
+        else:
+            koui_sources = '# No UI'
+
         output = tmpl_content.format(
             tiny3d_path=os.path.join(arm.utils.get_sdk_path(), 'lib', 'tiny3d').replace('\\', '/'),
             game_title=arm.utils.safestr(wrd.arm_project_name),
             scene_files=scene_files,
-            physics_sources=physics_sources
+            physics_sources=physics_sources,
+            koui_sources=koui_sources
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
@@ -439,7 +451,14 @@ class N64Exporter:
     def write_traits(self):
         # Collect all type overrides from all trait instances across all scenes
         type_overrides = self._collect_type_overrides()
-        codegen.write_traits_files(type_overrides)
+        features = codegen.write_traits_files(type_overrides)
+
+        # Update feature flags based on trait analysis
+        if features:
+            if features.get('has_ui'):
+                self.has_ui = True
+            if features.get('has_physics'):
+                self.has_physics = True
 
     def _collect_type_overrides(self) -> dict:
         """Collect all type overrides from trait instances across all scenes.
@@ -489,7 +508,88 @@ class N64Exporter:
 
         output = tmpl_content.format(
             enable_physics=1 if self.has_physics else 0,
-            enable_physics_debug=1 if physics_debug_mode > 0 else 0
+            enable_physics_debug=1 if physics_debug_mode > 0 else 0,
+            enable_ui=1 if self.has_ui else 0
+        )
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
+
+    def write_koui(self):
+        """Copy Koui UI wrapper files if UI is used."""
+        if not self.has_ui:
+            return
+
+        # Copy koui directory
+        n64_utils.copy_dir('koui', 'src')
+
+    def write_fonts(self):
+        """Copy font files and generate fonts.c/fonts.h if UI is used."""
+        if not self.has_ui:
+            return
+
+        # Copy font files from project's Assets folder to n64/assets
+        project_assets = os.path.join(arm.utils.get_fp(), 'Assets')
+        n64_assets = os.path.join(arm.utils.build_dir(), 'n64', 'assets')
+        os.makedirs(n64_assets, exist_ok=True)
+
+        if os.path.exists(project_assets):
+            import glob
+            # Search recursively in Assets and all subdirectories
+            fonts = glob.glob(os.path.join(project_assets, '**', '*.ttf'), recursive=True)
+            for i, font_path in enumerate(fonts):
+                font_basename = os.path.splitext(os.path.basename(font_path))[0]
+                # Store with index
+                self.exported_fonts[font_basename] = font_basename
+                # Copy with original name
+                dst = os.path.join(n64_assets, f'{font_basename}.ttf')
+                shutil.copy(font_path, dst)
+                log.info(f'Copied font: {font_basename}.ttf')
+
+        # Generate fonts.c and fonts.h
+        if self.exported_fonts:
+            self.write_fonts_c()
+            self.write_fonts_h()
+
+    def write_fonts_c(self):
+        """Generate fonts.c from template."""
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'data', 'fonts.c.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'data', 'fonts.c')
+
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
+
+        lines = []
+        for font_name in self.exported_fonts.values():
+            lines.append(f'    "rom:/{font_name}.font64"')
+        font_paths = ',\n'.join(lines)
+
+        output = tmpl_content.format(
+            font_paths=font_paths,
+            font_count=len(self.exported_fonts)
+        )
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
+
+    def write_fonts_h(self):
+        """Generate fonts.h from template."""
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'data', 'fonts.h.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'data', 'fonts.h')
+
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
+
+        lines = []
+        for i, font_name in enumerate(self.exported_fonts.values()):
+            # Create a safe enum name (uppercase, replace special chars with _)
+            enum_name = font_name.upper().replace('-', '_').replace(' ', '_')
+            lines.append(f'    FONT_{enum_name} = {i},')
+        font_enum_entries = '\n'.join(lines)
+
+        output = tmpl_content.format(
+            font_enum_entries=font_enum_entries,
+            font_count=len(self.exported_fonts)
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
@@ -807,7 +907,7 @@ class N64Exporter:
     def export(self):
         self.trait_info = codegen.get_trait_info()
         if not self.trait_info.get('traits'):
-            log.warn("No traits found in macro JSON. Make sure to compile with arm_target_n64 defined.")
+            log.warn("No traits found in n64_traits.json. Make sure arm_target_n64 is defined during build.")
 
         self.convert_materials_to_f3d()
 
@@ -823,16 +923,20 @@ class N64Exporter:
         # Compute is_static for all objects after trait_info is loaded
         n64_utils.compute_static_flags(self.scene_data, self.trait_info)
 
+        # Write traits FIRST to detect feature usage (UI, physics from traits)
+        self.write_traits()
+
         self.write_makefile()
         self.write_types()
         self.write_engine()
         self.write_physics()
+        self.write_koui()
+        self.write_fonts()
         self.write_main()
         self.write_models()
         self.write_renderer()
 
         self.write_scenes()
-        self.write_traits()
         self.write_iron()
 
         self.reset_materials_to_bsdf()
