@@ -1,5 +1,4 @@
-#ifndef OIMO_COLLISION_NARROWPHASE_DETECTOR_RESULT_H
-#define OIMO_COLLISION_NARROWPHASE_DETECTOR_RESULT_H
+#pragma once
 
 #include "../../common/vec3.h"
 #include "../../common/setting.h"
@@ -91,4 +90,3 @@ static inline bool oimo_detector_result_add_point(
 }
 #endif
 
-#endif // OIMO_COLLISION_NARROWPHASE_DETECTOR_RESULT_H

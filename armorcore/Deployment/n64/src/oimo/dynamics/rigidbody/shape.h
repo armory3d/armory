@@ -1,5 +1,4 @@
-#ifndef OIMO_DYNAMICS_RIGIDBODY_SHAPE_H
-#define OIMO_DYNAMICS_RIGIDBODY_SHAPE_H
+#pragma once
 
 #include "../../common/transform.h"
 #include "../../collision/geometry/geometry.h"
@@ -176,4 +175,3 @@ static inline OimoShape* oimo_shape_get_next(const OimoShape* shape) {
     return shape->_next;
 }
 
-#endif // OIMO_DYNAMICS_RIGIDBODY_SHAPE_H

@@ -1,7 +1,7 @@
+#pragma once
+
 // contact_constraint.h
 // 1:1 port from OimoPhysics ContactConstraint.hx
-#ifndef OIMO_DYNAMICS_CONSTRAINT_CONTACT_CONTACT_CONSTRAINT_H
-#define OIMO_DYNAMICS_CONSTRAINT_CONTACT_CONTACT_CONSTRAINT_H
 
 #include "../../../common/vec3.h"
 #include "../../../common/mat3.h"
@@ -218,5 +218,3 @@ static inline OimoShape* oimo_contact_constraint_get_shape2(const OimoContactCon
 static inline OimoManifold* oimo_contact_constraint_get_manifold(const OimoContactConstraint* cc) {
     return cc->_manifold;
 }
-
-#endif // OIMO_DYNAMICS_CONSTRAINT_CONTACT_CONTACT_CONSTRAINT_H

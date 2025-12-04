@@ -1,7 +1,7 @@
+#pragma once
+
 // contact_solver_mass_data_row.h
 // 1:1 port from OimoPhysics ContactSolverMassDataRow.hx
-#ifndef OIMO_DYNAMICS_CONSTRAINT_SOLVER_CONTACT_SOLVER_MASS_DATA_ROW_H
-#define OIMO_DYNAMICS_CONSTRAINT_SOLVER_CONTACT_SOLVER_MASS_DATA_ROW_H
 
 #include "../../../common/vec3.h"
 
@@ -55,5 +55,3 @@ static inline OimoContactSolverMassDataRow oimo_contact_solver_mass_data_row_cre
     row.massTB11 = 0.0f;
     return row;
 }
-
-#endif // OIMO_DYNAMICS_CONSTRAINT_SOLVER_CONTACT_SOLVER_MASS_DATA_ROW_H

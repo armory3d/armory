@@ -10,10 +10,9 @@
  * - Body axes/gizmos
  */
 
-#ifndef PHYSICS_DEBUG_H
-#define PHYSICS_DEBUG_H
+#pragma once
 
-#include <stdbool.h>
+#include <libdragon.h>
 #include <stdint.h>
 #include <libdragon.h>
 #include <t3d/t3d.h>
@@ -104,4 +103,3 @@ void physics_debug_draw(surface_t* surface, T3DViewport* viewport, OimoWorld* wo
 }
 #endif
 
-#endif // PHYSICS_DEBUG_H

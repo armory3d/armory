@@ -1,5 +1,4 @@
-#ifndef OIMO_DYNAMICS_RIGIDBODY_MASS_DATA_H
-#define OIMO_DYNAMICS_RIGIDBODY_MASS_DATA_H
+#pragma once
 
 #include "../../common/mat3.h"
 
@@ -19,4 +18,3 @@ static inline OimoMassData oimo_mass_data(void) {
     return md;
 }
 
-#endif // OIMO_DYNAMICS_RIGIDBODY_MASS_DATA_H

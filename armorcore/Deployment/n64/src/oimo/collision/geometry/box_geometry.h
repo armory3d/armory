@@ -1,5 +1,4 @@
-#ifndef OIMO_COLLISION_GEOMETRY_BOX_GEOMETRY_H
-#define OIMO_COLLISION_GEOMETRY_BOX_GEOMETRY_H
+#pragma once
 
 #include "../../common/setting.h"
 #include "../../common/math_util.h"
@@ -286,4 +285,3 @@ static inline OimoVec3 oimo_box_geometry_get_vertex_world(
     return oimo_transform_point(tf, &local);
 }
 
-#endif // OIMO_COLLISION_GEOMETRY_BOX_GEOMETRY_H

@@ -1,7 +1,7 @@
+#pragma once
+
 // contact_solver_info_row.h
 // 1:1 port from OimoPhysics ContactSolverInfoRow.hx
-#ifndef OIMO_DYNAMICS_CONSTRAINT_INFO_CONTACT_SOLVER_INFO_ROW_H
-#define OIMO_DYNAMICS_CONSTRAINT_INFO_CONTACT_SOLVER_INFO_ROW_H
 
 #include "../jacobian_row.h"
 #include "../../contact/contact_impulse.h"
@@ -37,5 +37,3 @@ static inline void oimo_contact_solver_info_row_clear(OimoContactSolverInfoRow* 
     row->friction = 0.0f;
     row->impulse = NULL;
 }
-
-#endif // OIMO_DYNAMICS_CONSTRAINT_INFO_CONTACT_SOLVER_INFO_ROW_H

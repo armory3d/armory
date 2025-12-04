@@ -1,5 +1,4 @@
-#ifndef OIMO_DYNAMICS_RIGIDBODY_RIGID_BODY_CONFIG_H
-#define OIMO_DYNAMICS_RIGIDBODY_RIGID_BODY_CONFIG_H
+#pragma once
 
 #include "../../common/vec3.h"
 #include "../../common/mat3.h"
@@ -40,4 +39,3 @@ static inline OimoRigidBodyConfig oimo_rigid_body_config(void) {
     return config;
 }
 
-#endif // OIMO_DYNAMICS_RIGIDBODY_RIGID_BODY_CONFIG_H

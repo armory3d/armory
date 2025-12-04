@@ -1,5 +1,4 @@
-#ifndef OIMO_COMMON_VEC3_H
-#define OIMO_COMMON_VEC3_H
+#pragma once
 
 #include "setting.h"
 #include "math_util.h"
@@ -242,4 +241,3 @@ static inline OimoScalar oimo_vec3_distance_sq(OimoVec3 v1, OimoVec3 v2) {
     return oimo_vec3_len_sq(diff);
 }
 
-#endif // OIMO_COMMON_VEC3_H

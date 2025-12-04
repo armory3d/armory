@@ -1,6 +1,6 @@
+#pragma once
+
 // mesh_contact.h - Shared contact storage for mesh collision detectors
-#ifndef OIMO_COLLISION_NARROWPHASE_MESH_CONTACT_H
-#define OIMO_COLLISION_NARROWPHASE_MESH_CONTACT_H
 
 #include "../../common/vec3.h"
 
@@ -79,5 +79,3 @@ static inline void oimo_mesh_contact_storage_add(
 #ifdef __cplusplus
 }
 #endif
-
-#endif // OIMO_COLLISION_NARROWPHASE_MESH_CONTACT_H

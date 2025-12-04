@@ -1,6 +1,5 @@
 // physics.h - Mini-engine physics wrapper
-#ifndef PHYSICS_H
-#define PHYSICS_H
+#pragma once
 
 #include "types.h"
 #include "oimo/oimo.h"
@@ -211,4 +210,3 @@ static inline void physics_set_mass(OimoRigidBody* rb, float mass) {
 }
 #endif
 
-#endif // PHYSICS_H

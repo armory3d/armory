@@ -1,5 +1,4 @@
-#ifndef OIMO_DYNAMICS_RIGIDBODY_RIGID_BODY_H
-#define OIMO_DYNAMICS_RIGIDBODY_RIGID_BODY_H
+#pragma once
 
 #include "../../common/vec3.h"
 #include "../../common/mat3.h"
@@ -594,4 +593,3 @@ static inline void oimo_rigid_body_remove_shape(OimoRigidBody* rb, OimoShape* sh
 #define oimo_rigidbody_get_type              oimo_rigid_body_get_type
 #define oimo_rigidbody_set_type              oimo_rigid_body_set_type
 
-#endif // OIMO_DYNAMICS_RIGIDBODY_RIGID_BODY_H

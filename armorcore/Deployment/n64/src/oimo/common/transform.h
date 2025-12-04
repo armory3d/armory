@@ -1,5 +1,4 @@
-#ifndef OIMO_COMMON_TRANSFORM_H
-#define OIMO_COMMON_TRANSFORM_H
+#pragma once
 
 #include "setting.h"
 #include "vec3.h"
@@ -182,4 +181,3 @@ static inline OimoVec3 oimo_transform_get_z_axis(const OimoTransform* tf) {
     return oimo_mat3_get_col(&tf->rotation, 2);
 }
 
-#endif // OIMO_COMMON_TRANSFORM_H

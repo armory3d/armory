@@ -1,5 +1,4 @@
-#ifndef OIMO_DYNAMICS_WORLD_H
-#define OIMO_DYNAMICS_WORLD_H
+#pragma once
 
 #include "../common/vec3.h"
 #include "../common/setting.h"
@@ -328,4 +327,3 @@ static inline void oimo_world_set_num_position_iterations(OimoWorld* world, int 
     world->_numPositionIterations = iterations;
 }
 
-#endif // OIMO_DYNAMICS_WORLD_H

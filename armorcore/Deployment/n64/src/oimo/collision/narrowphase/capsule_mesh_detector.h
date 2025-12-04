@@ -1,6 +1,6 @@
+#pragma once
+
 // capsule_mesh_detector.h - Capsule vs Static Mesh collision detection (Optimized for N64)
-#ifndef OIMO_COLLISION_NARROWPHASE_CAPSULE_MESH_DETECTOR_H
-#define OIMO_COLLISION_NARROWPHASE_CAPSULE_MESH_DETECTOR_H
 
 #include "detector.h"
 #include "detector_result.h"
@@ -221,5 +221,3 @@ static inline void oimo_capsule_mesh_detector_detect(
 #ifdef __cplusplus
 }
 #endif
-
-#endif // OIMO_COLLISION_NARROWPHASE_CAPSULE_MESH_DETECTOR_H

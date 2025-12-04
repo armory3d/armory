@@ -1,5 +1,4 @@
-#ifndef OIMO_COLLISION_BROADPHASE_PROXY_H
-#define OIMO_COLLISION_BROADPHASE_PROXY_H
+#pragma once
 
 #include "../geometry/aabb.h"
 #include "../../common/vec3.h"
@@ -50,4 +49,3 @@ static inline void oimo_proxy_get_fat_aabb_to(const OimoProxy* proxy, OimoAabb* 
     aabb->max = proxy->_aabbMax;
 }
 
-#endif // OIMO_COLLISION_BROADPHASE_PROXY_H

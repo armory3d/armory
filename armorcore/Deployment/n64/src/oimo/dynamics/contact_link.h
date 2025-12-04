@@ -1,7 +1,7 @@
+#pragma once
+
 // contact_link.h
 // 1:1 port from OimoPhysics ContactLink.hx
-#ifndef OIMO_DYNAMICS_CONTACT_LINK_H
-#define OIMO_DYNAMICS_CONTACT_LINK_H
 
 // Forward declarations
 struct OimoContact;
@@ -38,5 +38,3 @@ static inline OimoContactLink* oimo_contact_link_get_prev(const OimoContactLink*
 static inline OimoContactLink* oimo_contact_link_get_next(const OimoContactLink* link) {
     return link->_next;
 }
-
-#endif // OIMO_DYNAMICS_CONTACT_LINK_H

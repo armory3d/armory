@@ -1,5 +1,4 @@
-#ifndef OIMO_COLLISION_BROADPHASE_BRUTEFORCE_BROADPHASE_H
-#define OIMO_COLLISION_BROADPHASE_BRUTEFORCE_BROADPHASE_H
+#pragma once
 
 #include "broadphase.h"
 
@@ -99,4 +98,3 @@ static inline void oimo_bruteforce_aabb_test(
     }
 }
 
-#endif // OIMO_COLLISION_BROADPHASE_BRUTEFORCE_BROADPHASE_H

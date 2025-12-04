@@ -1,5 +1,4 @@
-#ifndef OIMO_COLLISION_GEOMETRY_GEOMETRY_H
-#define OIMO_COLLISION_GEOMETRY_GEOMETRY_H
+#pragma once
 
 #include "../../common/setting.h"
 #include "../../common/vec3.h"
@@ -60,5 +59,3 @@ int oimo_geometry_ray_cast(
     const OimoTransform* tf,
     OimoRayCastHit* hit
 );
-
-#endif

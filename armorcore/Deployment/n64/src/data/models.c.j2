@@ -52,6 +52,10 @@ T3DModel *models_get(ModelId id)
     if (!e->loaded) {{
         const char *path = MODEL_PATHS[id];
         e->model = t3d_model_load(path);
+        if (!e->model) {{
+            debugf("Failed to load model: %s\n", path);
+            return NULL;
+        }}
 		rspq_block_begin();
 		t3d_model_draw(e->model);
 		e->dpl = rspq_block_end();

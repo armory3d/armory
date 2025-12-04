@@ -1,8 +1,8 @@
+#pragma once
+
 // pgs_contact_constraint_solver.h
 // 1:1 port from OimoPhysics PgsContactConstraintSolver.hx
 // Projected Gauss-Seidel (Sequential Impulse) solver
-#ifndef OIMO_DYNAMICS_CONSTRAINT_SOLVER_PGS_CONTACT_CONSTRAINT_SOLVER_H
-#define OIMO_DYNAMICS_CONSTRAINT_SOLVER_PGS_CONTACT_CONSTRAINT_SOLVER_H
 
 #include "../../../../common/vec3.h"
 #include "../../../../common/mat3.h"
@@ -416,5 +416,3 @@ static inline void oimo_pgs_contact_solver_post_solve(OimoPgsContactConstraintSo
 
     oimo_contact_constraint_sync_manifold(solver->constraint);
 }
-
-#endif // OIMO_DYNAMICS_CONSTRAINT_SOLVER_PGS_CONTACT_CONSTRAINT_SOLVER_H

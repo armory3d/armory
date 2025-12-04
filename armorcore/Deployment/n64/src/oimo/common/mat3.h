@@ -1,5 +1,4 @@
-#ifndef OIMO_COMMON_MAT3_H
-#define OIMO_COMMON_MAT3_H
+#pragma once
 
 #include "setting.h"
 #include "math_util.h"
@@ -295,4 +294,3 @@ static inline OimoMat3 oimo_mat3_diagonal(OimoScalar d00, OimoScalar d11, OimoSc
     };
 }
 
-#endif // OIMO_COMMON_MAT3_H

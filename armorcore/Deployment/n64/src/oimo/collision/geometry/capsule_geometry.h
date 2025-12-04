@@ -1,5 +1,4 @@
-#ifndef OIMO_COLLISION_GEOMETRY_CAPSULE_GEOMETRY_H
-#define OIMO_COLLISION_GEOMETRY_CAPSULE_GEOMETRY_H
+#pragma once
 
 #include "../../common/setting.h"
 #include "../../common/math_util.h"
@@ -246,4 +245,3 @@ static inline int oimo_capsule_geometry_ray_cast(
     return 1;
 }
 
-#endif // OIMO_COLLISION_GEOMETRY_CAPSULE_GEOMETRY_H

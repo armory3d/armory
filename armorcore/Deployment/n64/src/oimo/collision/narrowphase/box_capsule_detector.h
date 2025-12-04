@@ -1,5 +1,4 @@
-#ifndef OIMO_COLLISION_NARROWPHASE_BOX_CAPSULE_DETECTOR_H
-#define OIMO_COLLISION_NARROWPHASE_BOX_CAPSULE_DETECTOR_H
+#pragma once
 
 #include "detector.h"
 #include "detector_result.h"
@@ -240,4 +239,3 @@ static inline void oimo_box_capsule_detector_detect(
 }
 #endif
 
-#endif // OIMO_COLLISION_NARROWPHASE_BOX_CAPSULE_DETECTOR_H

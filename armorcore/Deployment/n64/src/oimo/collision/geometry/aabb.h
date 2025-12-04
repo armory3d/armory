@@ -1,5 +1,4 @@
-#ifndef OIMO_COLLISION_GEOMETRY_AABB_H
-#define OIMO_COLLISION_GEOMETRY_AABB_H
+#pragma once
 
 #include "../../common/setting.h"
 #include "../../common/vec3.h"
@@ -270,4 +269,3 @@ static inline void oimo_aabb_merge(OimoAabb* result, const OimoAabb* a, const Oi
     result->max.z = oimo_max(a->max.z, b->max.z);
 }
 
-#endif // OIMO_COLLISION_GEOMETRY_AABB_H

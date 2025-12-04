@@ -1,5 +1,4 @@
-#ifndef OIMO_COMMON_QUAT_H
-#define OIMO_COMMON_QUAT_H
+#pragma once
 
 #include "setting.h"
 #include "math_util.h"
@@ -315,4 +314,3 @@ static inline OimoVec3 oimo_quat_rotate_vec3(const OimoQuat* q, const OimoVec3* 
     };
 }
 
-#endif // OIMO_COMMON_QUAT_H

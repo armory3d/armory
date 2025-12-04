@@ -1,7 +1,7 @@
+#pragma once
+
 // jacobian_row.h
 // 1:1 port from OimoPhysics JacobianRow.hx
-#ifndef OIMO_DYNAMICS_CONSTRAINT_INFO_JACOBIAN_ROW_H
-#define OIMO_DYNAMICS_CONSTRAINT_INFO_JACOBIAN_ROW_H
 
 #include "../../../common/vec3.h"
 
@@ -27,5 +27,3 @@ static inline void oimo_jacobian_row_clear(OimoJacobianRow* row) {
     row->ang1 = oimo_vec3_zero();
     row->ang2 = oimo_vec3_zero();
 }
-
-#endif // OIMO_DYNAMICS_CONSTRAINT_INFO_JACOBIAN_ROW_H

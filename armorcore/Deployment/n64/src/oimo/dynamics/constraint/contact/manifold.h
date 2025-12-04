@@ -1,7 +1,7 @@
+#pragma once
+
 // manifold.h
 // 1:1 port from OimoPhysics Manifold.hx
-#ifndef OIMO_DYNAMICS_CONSTRAINT_CONTACT_MANIFOLD_H
-#define OIMO_DYNAMICS_CONSTRAINT_CONTACT_MANIFOLD_H
 
 #include "../../../common/vec3.h"
 #include "../../../common/mat3.h"
@@ -129,5 +129,3 @@ static inline int oimo_manifold_get_num_points(const OimoManifold* m) {
 static inline OimoManifoldPoint* oimo_manifold_get_points(OimoManifold* m) {
     return m->_points;
 }
-
-#endif // OIMO_DYNAMICS_CONSTRAINT_CONTACT_MANIFOLD_H

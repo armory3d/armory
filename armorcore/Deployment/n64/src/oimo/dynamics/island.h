@@ -1,7 +1,7 @@
+#pragma once
+
 // island.h
 // 1:1 port from OimoPhysics Island.hx
-#ifndef OIMO_DYNAMICS_ISLAND_H
-#define OIMO_DYNAMICS_ISLAND_H
 
 #include "../common/vec3.h"
 #include "../common/mat3.h"
@@ -259,5 +259,3 @@ static inline void oimo_island_step(
         oimo_rigid_body_sync_shapes(island->rigidBodies[i]);
     }
 }
-
-#endif // OIMO_DYNAMICS_ISLAND_H

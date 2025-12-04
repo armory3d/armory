@@ -1,7 +1,7 @@
+#pragma once
+
 // position_correction_algorithm.h
 // 1:1 port from OimoPhysics PositionCorrectionAlgorithm.hx
-#ifndef OIMO_DYNAMICS_CONSTRAINT_POSITION_CORRECTION_ALGORITHM_H
-#define OIMO_DYNAMICS_CONSTRAINT_POSITION_CORRECTION_ALGORITHM_H
 
 // Baumgarte stabilization - fastest but introduces extra energy
 #define OIMO_POSITION_CORRECTION_BAUMGARTE 0
@@ -11,5 +11,3 @@
 
 // Nonlinear Gauss-Seidel - slow but stable
 #define OIMO_POSITION_CORRECTION_NGS 2
-
-#endif // OIMO_DYNAMICS_CONSTRAINT_POSITION_CORRECTION_ALGORITHM_H

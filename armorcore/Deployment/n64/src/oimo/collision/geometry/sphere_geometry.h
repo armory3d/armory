@@ -1,5 +1,4 @@
-#ifndef OIMO_COLLISION_GEOMETRY_SPHERE_GEOMETRY_H
-#define OIMO_COLLISION_GEOMETRY_SPHERE_GEOMETRY_H
+#pragma once
 
 #include "../../common/setting.h"
 #include "../../common/math_util.h"
@@ -148,4 +147,3 @@ static inline OimoVec3 oimo_sphere_geometry_support_local(
     return oimo_vec3_zero();
 }
 
-#endif // OIMO_COLLISION_GEOMETRY_SPHERE_GEOMETRY_H

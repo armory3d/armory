@@ -1,7 +1,7 @@
+#pragma once
+
 // contact_solver_info.h
 // 1:1 port from OimoPhysics ContactSolverInfo.hx
-#ifndef OIMO_DYNAMICS_CONSTRAINT_INFO_CONTACT_SOLVER_INFO_H
-#define OIMO_DYNAMICS_CONSTRAINT_INFO_CONTACT_SOLVER_INFO_H
 
 #include "../../../../common/setting.h"
 #include "contact_solver_info_row.h"
@@ -26,5 +26,3 @@ static inline OimoContactSolverInfo oimo_contact_solver_info_create(void) {
     }
     return info;
 }
-
-#endif // OIMO_DYNAMICS_CONSTRAINT_INFO_CONTACT_SOLVER_INFO_H

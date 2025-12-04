@@ -1,5 +1,4 @@
-#ifndef OIMO_COLLISION_NARROWPHASE_DETECTOR_H
-#define OIMO_COLLISION_NARROWPHASE_DETECTOR_H
+#pragma once
 
 #include "detector_result.h"
 #include "../geometry/geometry.h"
@@ -69,6 +68,3 @@ static inline void oimo_detector_add_point(
 #ifdef __cplusplus
 }
 #endif
-
-#endif
-

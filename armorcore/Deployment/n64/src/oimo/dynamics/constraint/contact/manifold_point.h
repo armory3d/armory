@@ -1,7 +1,7 @@
+#pragma once
+
 // manifold_point.h
 // 1:1 port from OimoPhysics ManifoldPoint.hx
-#ifndef OIMO_DYNAMICS_CONSTRAINT_CONTACT_MANIFOLD_POINT_H
-#define OIMO_DYNAMICS_CONSTRAINT_CONTACT_MANIFOLD_POINT_H
 
 #include "../../../common/vec3.h"
 #include "../../../common/mat3.h"
@@ -146,5 +146,3 @@ static inline OimoScalar oimo_manifold_point_get_binormal_impulse(const OimoMani
 static inline bool oimo_manifold_point_is_enabled(const OimoManifoldPoint* mp) {
     return !mp->_disabled;
 }
-
-#endif // OIMO_DYNAMICS_CONSTRAINT_CONTACT_MANIFOLD_POINT_H

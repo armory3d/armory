@@ -1,5 +1,4 @@
-#ifndef OIMO_COLLISION_GEOMETRY_GEOMETRY_TYPE_H
-#define OIMO_COLLISION_GEOMETRY_GEOMETRY_TYPE_H
+#pragma once
 
 typedef enum OimoGeometryType {
     OIMO_GEOMETRY_SPHERE  = 0,
@@ -32,4 +31,3 @@ static inline const char* oimo_geometry_type_name(OimoGeometryType type) {
     }
 }
 
-#endif // OIMO_COLLISION_GEOMETRY_GEOMETRY_TYPE_H

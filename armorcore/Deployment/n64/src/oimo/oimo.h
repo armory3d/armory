@@ -1,5 +1,4 @@
-#ifndef OIMO_OIMO_H
-#define OIMO_OIMO_H
+#pragma once
 
 #include "common/setting.h"
 #include "common/math_util.h"
@@ -79,5 +78,3 @@ static inline OimoShapeConfig oimo_shape_config_default(void) {
 
 #define oimo_world_add_rigidbody        oimo_world_add_rigid_body
 #define oimo_world_remove_rigidbody     oimo_world_remove_rigid_body
-
-#endif

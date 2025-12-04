@@ -1,7 +1,7 @@
+#pragma once
+
 // manifold_updater.h
 // 1:1 port from OimoPhysics ManifoldUpdater.hx
-#ifndef OIMO_DYNAMICS_CONSTRAINT_CONTACT_MANIFOLD_UPDATER_H
-#define OIMO_DYNAMICS_CONSTRAINT_CONTACT_MANIFOLD_UPDATER_H
 
 #include "../../../common/vec3.h"
 #include "../../../common/mat3.h"
@@ -267,5 +267,3 @@ static inline void oimo_manifold_updater_incremental_update(
         }
     }
 }
-
-#endif // OIMO_DYNAMICS_CONSTRAINT_CONTACT_MANIFOLD_UPDATER_H

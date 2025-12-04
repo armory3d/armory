@@ -1,5 +1,4 @@
-#ifndef OIMO_DYNAMICS_RIGIDBODY_SHAPE_CONFIG_H
-#define OIMO_DYNAMICS_RIGIDBODY_SHAPE_CONFIG_H
+#pragma once
 
 #include "../../common/vec3.h"
 #include "../../common/mat3.h"
@@ -38,4 +37,3 @@ static inline OimoShapeConfig oimo_shape_config(void) {
     return config;
 }
 
-#endif // OIMO_DYNAMICS_RIGIDBODY_SHAPE_CONFIG_H

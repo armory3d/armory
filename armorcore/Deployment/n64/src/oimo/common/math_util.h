@@ -1,5 +1,4 @@
-#ifndef OIMO_COMMON_MATH_UTIL_H
-#define OIMO_COMMON_MATH_UTIL_H
+#pragma once
 
 #include "setting.h"
 #include <libdragon.h>
@@ -109,4 +108,3 @@ static inline float oimo_fast_sqrt(float x) {
     return x * oimo_fast_inv_sqrt(x);
 }
 
-#endif // OIMO_COMMON_MATH_UTIL_H

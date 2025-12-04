@@ -1,5 +1,4 @@
-#ifndef OIMO_COMMON_SETTING_H
-#define OIMO_COMMON_SETTING_H
+#pragma once
 
 // Using float with libdragon fastmath. Can be changed to fixed-point later.
 typedef float OimoScalar;
@@ -41,4 +40,3 @@ typedef float OimoScalar;
 #define OIMO_DEFAULT_GRAVITY_Y     -9.80665f
 #define OIMO_DEFAULT_GRAVITY_Z     0.0f
 
-#endif // OIMO_COMMON_SETTING_H

@@ -1,5 +1,4 @@
-#ifndef OIMO_COLLISION_BROADPHASE_BROADPHASE_H
-#define OIMO_COLLISION_BROADPHASE_BROADPHASE_H
+#pragma once
 
 #include "broadphase_type.h"
 #include "proxy.h"
@@ -274,4 +273,3 @@ static inline int oimo_aabb_segment_test(
     return 1;
 }
 
-#endif // OIMO_COLLISION_BROADPHASE_BROADPHASE_H

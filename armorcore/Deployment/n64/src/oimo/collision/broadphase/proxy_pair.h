@@ -1,5 +1,4 @@
-#ifndef OIMO_COLLISION_BROADPHASE_PROXY_PAIR_H
-#define OIMO_COLLISION_BROADPHASE_PROXY_PAIR_H
+#pragma once
 
 #include "proxy.h"
 
@@ -28,4 +27,3 @@ static inline OimoProxyPair* oimo_proxy_pair_get_next(const OimoProxyPair* pair)
     return pair->_next;
 }
 
-#endif // OIMO_COLLISION_BROADPHASE_PROXY_PAIR_H

@@ -1,5 +1,4 @@
-#ifndef OIMO_DYNAMICS_TIME_STEP_H
-#define OIMO_DYNAMICS_TIME_STEP_H
+#pragma once
 
 // TimeStep holds simulation timing information
 typedef struct OimoTimeStep {
@@ -16,4 +15,3 @@ static inline OimoTimeStep oimo_time_step_create(void) {
     return ts;
 }
 
-#endif // OIMO_DYNAMICS_TIME_STEP_H

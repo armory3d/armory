@@ -1,6 +1,6 @@
+#pragma once
+
 // bvh.h - Simple BVH for static mesh triangle queries (N64 optimized)
-#ifndef OIMO_COLLISION_BROADPHASE_BVH_H
-#define OIMO_COLLISION_BROADPHASE_BVH_H
 
 #include "../geometry/aabb.h"
 #include "../../common/vec3.h"
@@ -281,5 +281,3 @@ static inline void oimo_bvh_query(
 #ifdef __cplusplus
 }
 #endif
-
-#endif // OIMO_COLLISION_BROADPHASE_BVH_H

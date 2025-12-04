@@ -1,5 +1,4 @@
-#ifndef OIMO_COLLISION_NARROWPHASE_SPHERE_CAPSULE_DETECTOR_H
-#define OIMO_COLLISION_NARROWPHASE_SPHERE_CAPSULE_DETECTOR_H
+#pragma once
 
 #include "detector.h"
 #include "detector_result.h"
@@ -142,4 +141,3 @@ static inline void oimo_sphere_capsule_detector_detect(
 }
 #endif
 
-#endif // OIMO_COLLISION_NARROWPHASE_SPHERE_CAPSULE_DETECTOR_H

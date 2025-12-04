@@ -1,5 +1,4 @@
-#ifndef OIMO_COLLISION_NARROWPHASE_COLLISION_MATRIX_H
-#define OIMO_COLLISION_NARROWPHASE_COLLISION_MATRIX_H
+#pragma once
 
 #include "detector.h"
 #include "detector_result.h"
@@ -336,4 +335,3 @@ static inline OimoDetectorType oimo_collision_matrix_get_detector_type(int geom_
 }
 #endif
 
-#endif // OIMO_COLLISION_NARROWPHASE_COLLISION_MATRIX_H

@@ -1,7 +1,7 @@
+#pragma once
+
 // contact_impulse.h
 // 1:1 port from OimoPhysics ContactImpulse.hx
-#ifndef OIMO_DYNAMICS_CONSTRAINT_CONTACT_IMPULSE_H
-#define OIMO_DYNAMICS_CONSTRAINT_CONTACT_IMPULSE_H
 
 #include "../../../common/vec3.h"
 
@@ -37,5 +37,3 @@ static inline void oimo_contact_impulse_copy_from(OimoContactImpulse* dst, const
     dst->impulseB = src->impulseB;
     dst->impulseL = src->impulseL;
 }
-
-#endif // OIMO_DYNAMICS_CONSTRAINT_CONTACT_IMPULSE_H

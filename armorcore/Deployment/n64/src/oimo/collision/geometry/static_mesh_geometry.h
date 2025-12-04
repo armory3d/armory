@@ -1,6 +1,6 @@
+#pragma once
+
 // static_mesh_geometry.h - Static triangle mesh collision geometry with BVH
-#ifndef OIMO_COLLISION_GEOMETRY_STATIC_MESH_GEOMETRY_H
-#define OIMO_COLLISION_GEOMETRY_STATIC_MESH_GEOMETRY_H
 
 #include "geometry.h"
 #include "../broadphase/bvh.h"
@@ -288,5 +288,3 @@ static inline bool oimo_static_mesh_ray_cast(
 #ifdef __cplusplus
 }
 #endif
-
-#endif // OIMO_COLLISION_GEOMETRY_STATIC_MESH_GEOMETRY_H

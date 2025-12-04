@@ -1,7 +1,7 @@
+#pragma once
+
 // contact.h
 // 1:1 port from OimoPhysics Contact.hx
-#ifndef OIMO_DYNAMICS_CONTACT_H
-#define OIMO_DYNAMICS_CONTACT_H
 
 #include "../common/vec3.h"
 #include "../collision/narrowphase/detector.h"
@@ -208,5 +208,3 @@ static inline OimoContact* oimo_contact_get_next(const OimoContact* c) {
 static inline OimoContact* oimo_contact_get_prev(const OimoContact* c) {
     return c->_prev;
 }
-
-#endif // OIMO_DYNAMICS_CONTACT_H

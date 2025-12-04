@@ -1,6 +1,6 @@
+#pragma once
+
 // triangle_util.h - Shared triangle utility functions for mesh collision
-#ifndef OIMO_COLLISION_NARROWPHASE_TRIANGLE_UTIL_H
-#define OIMO_COLLISION_NARROWPHASE_TRIANGLE_UTIL_H
 
 #include "../../common/vec3.h"
 #include "../../common/math_util.h"
@@ -167,5 +167,3 @@ static inline OimoVec3 oimo_closest_point_on_triangle(
 #ifdef __cplusplus
 }
 #endif
-
-#endif // OIMO_COLLISION_NARROWPHASE_TRIANGLE_UTIL_H

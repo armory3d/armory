@@ -1,5 +1,4 @@
-#ifndef OIMO_COLLISION_NARROWPHASE_BOX_BOX_DETECTOR_H
-#define OIMO_COLLISION_NARROWPHASE_BOX_BOX_DETECTOR_H
+#pragma once
 
 #include "detector.h"
 #include "detector_result.h"
@@ -803,7 +802,3 @@ static inline void oimo_box_box_detector_detect(
 #ifdef __cplusplus
 }
 #endif
-
-#endif // OIMO_COLLISION_NARROWPHASE_BOX_BOX_DETECTOR_H
-
-

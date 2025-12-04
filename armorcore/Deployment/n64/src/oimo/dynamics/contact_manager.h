@@ -1,7 +1,7 @@
+#pragma once
+
 // contact_manager.h
 // 1:1 port from OimoPhysics ContactManager.hx
-#ifndef OIMO_DYNAMICS_CONTACT_MANAGER_H
-#define OIMO_DYNAMICS_CONTACT_MANAGER_H
 
 #include <libdragon.h>
 #include "../collision/broadphase/broadphase.h"
@@ -256,5 +256,3 @@ static inline int oimo_contact_manager_get_num_contacts(const OimoContactManager
 static inline OimoContact* oimo_contact_manager_get_contact_list(const OimoContactManager* cm) {
     return cm->_contactList;
 }
-
-#endif // OIMO_DYNAMICS_CONTACT_MANAGER_H
