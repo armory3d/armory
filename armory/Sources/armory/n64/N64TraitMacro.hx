@@ -817,10 +817,13 @@ class TraitExtractor {
     }
 
     function getExprType(e:Expr):String {
+        if (e == null) return null;
+
         // Try to infer type from expression
         switch (e.expr) {
             case ENew(tp, _):
                 return tp.name;  // new Vec3() -> "Vec3"
+
             case EConst(CIdent(name)):
                 // Check local variables first
                 if (localVarTypes.exists(name)) {
@@ -831,47 +834,56 @@ class TraitExtractor {
                     var m = members.get(name);
                     return m.haxeType;
                 }
+
             case EField(innerObj, field):
+                // this.memberName or object.memberName -> get member type
+                switch (innerObj.expr) {
+                    case EConst(CIdent("this")), EConst(CIdent("object")):
+                        if (members.exists(field)) {
+                            var m = members.get(field);
+                            return m.haxeType;
+                        }
+                    default:
+                }
+
                 // gamepad.leftStick / gamepad.rightStick -> Vec2
                 switch (innerObj.expr) {
                     case EConst(CIdent("gamepad")):
                         if (field == "leftStick" || field == "rightStick") {
                             return "Vec2";
                         }
-                    // object.transform.loc/rot/scale -> Vec4 (Iron uses Vec4 for all transform components)
+                    // object.transform.loc/rot/scale -> Vec4
                     case EField(_, "transform"):
-                        if (field == "loc" || field == "scale") {
+                        if (field == "loc" || field == "scale" || field == "rot") {
                             return "Vec4";
                         }
-                        if (field == "rot") {
-                            return "Vec4";  // Quaternion as Vec4
-                        }
-                    default:
-                }
-                // Also check for transform.x where transform is accessed directly
-                switch (innerObj.expr) {
+                    // transform.loc/rot/scale (direct access)
                     case EConst(CIdent("transform")):
-                        if (field == "loc" || field == "scale") {
-                            return "Vec4";
-                        }
-                        if (field == "rot") {
+                        if (field == "loc" || field == "scale" || field == "rot") {
                             return "Vec4";
                         }
                     default:
                 }
+
             case ECall(callExpr, _):
                 // Vec method calls return Vec type
                 switch (callExpr.expr) {
                     case EField(obj, method):
                         var objType = getExprType(obj);
                         if (objType != null && StringTools.startsWith(objType, "Vec")) {
-                            // mult, add, sub, normalize return the same Vec type
-                            if (method == "mult" || method == "add" || method == "sub" || method == "normalize") {
+                            // mult, add, sub, normalize, clone return the same Vec type
+                            if (method == "mult" || method == "add" || method == "sub" ||
+                                method == "normalize" || method == "clone" || method == "cross") {
                                 return objType;
                             }
                         }
                     default:
                 }
+
+            case EParenthesis(inner):
+                // Unwrap parentheses
+                return getExprType(inner);
+
             default:
         }
         return null;
@@ -882,6 +894,27 @@ class TraitExtractor {
 
         switch (callExpr.expr) {
             case EField(obj, method):
+                // FIRST: Check if this is a Vec method call (before specific object checks)
+                // This handles cases like gamepad.leftStick.mult() where the object
+                // is a complex expression that getExprType can resolve
+                var vecMethods = ["mult", "add", "sub", "dot", "normalize", "length", "clone", "cross", "set", "setFrom"];
+                if (Lambda.has(vecMethods, method)) {
+                    var objType = getExprType(obj);
+                    if (objType != null && StringTools.startsWith(objType, "Vec")) {
+                        var objIR = exprToIR(obj);
+                        return convertVecCall(method, objIR, args, objType);
+                    }
+                }
+
+                // SECOND: Check if this is a physics method call on any object (rigid_body.applyForce, body.applyForce, etc.)
+                var physicsMethods = ["applyForce", "applyImpulse", "setLinearVelocity", "getLinearVelocity",
+                                      "setAngularVelocity", "getAngularVelocity", "setLinearFactor", "setAngularFactor"];
+                if (Lambda.has(physicsMethods, method)) {
+                    meta.uses_physics = true;
+                    // For N64, physics always applies to the current object
+                    return convertPhysicsCall(method, { type: "ident", value: "object" }, args);
+                }
+
                 switch (obj.expr) {
                     // Scene.setActive("Level_02") -> scene_switch_to(SCENE_X)
                     case EConst(CIdent("Scene")):
@@ -910,19 +943,31 @@ class TraitExtractor {
                         }
                         return convertInputCall(method, args);
 
-                    // object.physics.applyForce(...) -> emit ready C call
+                    // object.physics.applyForce(...) -> physics call on object
                     case EField(innerObj, "physics"):
                         meta.uses_physics = true;
                         var objIR = exprToIR(innerObj);
                         return convertPhysicsCall(method, objIR, args);
 
+                    // physics.applyForce(...) -> physics call on self (this.physics)
+                    case EConst(CIdent("physics")):
+                        meta.uses_physics = true;
+                        return convertPhysicsCall(method, { type: "ident", value: "object" }, args);
+
+                    // Std.int(), Std.parseFloat(), etc. -> type casts
+                    case EConst(CIdent("Std")):
+                        return convertStdCall(method, args);
+
+                    // object.remove(), object.getTrait(), etc. -> object lifecycle
+                    case EConst(CIdent("object")), EConst(CIdent("this")):
+                        return convertObjectCall(method, args);
+
+                    // Unsupported APIs - explicitly skip with no codegen fallback
+                    case EConst(CIdent("Audio")), EConst(CIdent("Tween")), EConst(CIdent("Network")):
+                        return { type: "skip" };
+
                     default:
-                        // Check if it's a Vec method call
-                        var objType = getExprType(obj);
-                        if (objType != null && StringTools.startsWith(objType, "Vec")) {
-                            var objIR = exprToIR(obj);
-                            return convertVecCall(method, objIR, args, objType);
-                        }
+                        // Fallback: generic call with object
                         return {
                             type: "call",
                             target: "unknown",
@@ -939,6 +984,20 @@ class TraitExtractor {
                     funcName == "notifyOnRemove" || funcName == "notifyOnAdd") {
                     return { type: "skip" };
                 }
+
+                // trace() -> debugf() for N64 debug output
+                if (funcName == "trace") {
+                    return { type: "debug_call", args: args };
+                }
+
+                // Physics methods called directly (applyForce, applyImpulse, etc.)
+                var physicsMethods = ["applyForce", "applyImpulse", "setLinearVelocity", "getLinearVelocity",
+                                      "setAngularVelocity", "getAngularVelocity", "setLinearFactor", "setAngularFactor"];
+                if (Lambda.has(physicsMethods, funcName)) {
+                    meta.uses_physics = true;
+                    return convertPhysicsCall(funcName, { type: "ident", value: "object" }, args);
+                }
+
                 return { type: "call", method: funcName, args: args };
 
             default:
@@ -1136,6 +1195,45 @@ class TraitExtractor {
             type: "input_call",
             c_code: cCode,
             method: method
+        };
+    }
+
+    // =========================================================================
+    // Std call conversion - Std.int() -> (int32_t), Std.parseFloat() -> strtof()
+    // =========================================================================
+
+    function convertStdCall(method:String, args:Array<IRNode>):IRNode {
+        return switch (method) {
+            case "int":
+                { type: "cast_call", value: "(int32_t)", args: args };
+            case "parseFloat":
+                { type: "math_call", value: "strtof", args: args };  // Note: strtof needs NULL as 2nd arg
+            case "string":
+                // String conversion not directly supported on N64
+                { type: "skip" };
+            default:
+                { type: "skip" };
+        };
+    }
+
+    // =========================================================================
+    // Object call conversion - object.remove(), object.getTrait(), etc.
+    // =========================================================================
+
+    function convertObjectCall(method:String, args:Array<IRNode>):IRNode {
+        return switch (method) {
+            case "remove":
+                // object.remove() -> mark object for removal
+                { type: "object_call", method: "remove" };
+            case "getTrait", "addTrait", "removeTrait":
+                // Trait system not supported on N64 - skip silently
+                { type: "skip" };
+            case "getChildren", "getChild":
+                // Children access not yet supported - skip
+                { type: "skip" };
+            default:
+                // Unknown object method - skip to avoid codegen fallback
+                { type: "skip" };
         };
     }
 }

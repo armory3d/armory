@@ -2,11 +2,15 @@
 N64 Code Generator - Thin IR→C Emitter.
 
 This module provides pure 1:1 IR→C mapping. All semantic analysis,
-type resolution, coordinate swizzling, and event extraction happen
-in the Haxe macro (N64TraitMacro.hx).
+type resolution, and event extraction happen in the Haxe macro
+(N64TraitMacro.hx).
 
 Pipeline:
   Haxe Macro (all semantics) → JSON IR → codegen.py (1:1 emit) → C code
+
+EXCEPTION: Coordinate conversion (Blender→N64) happens here because IR args
+are expressions, not values. The swizzle (x,y,z)→(x,z,-y) is applied during
+C emission in emit_transform_call, emit_physics_call, and emit_assign.
 
 The IR schema (version 1):
   {
@@ -22,12 +26,13 @@ The IR schema (version 1):
     }
   }
 
-IRNode types:
+IRNode types (1:1 with emit_* handlers):
   Literals: int, float, string, bool, null, skip
   Variables: member, ident, field, gamepad_stick
   Operators: assign, binop, unop
   Control: if, block, var, return
   Calls: call, scene_call, transform_call, math_call, input_call, physics_call, vec_call
+  Utility: cast_call, debug_call, object_call
   Constructors: new
 
 TraitMeta fields:
@@ -263,73 +268,24 @@ class IREmitter:
         return "return;"
 
     # =========================================================================
-    # Function Calls - All semantic decisions made by macro
+    # Function Calls
     # =========================================================================
 
     def emit_call(self, node: Dict) -> str:
-        """Generic function call - fallback for unknown calls."""
+        """Unhandled call - add pattern to macro."""
         method = node.get("method", "")
         args = node.get("args", [])
-        obj_node = node.get("object")
         arg_strs = [self.emit(a) for a in args if self.emit(a)]
 
-        # If there's an object, try to handle known method patterns
-        if obj_node:
-            obj = self.emit(obj_node)
-            if obj:
-                # Vec methods - delegate to vec_call handler
-                vec_methods = {"mult", "add", "sub", "dot", "normalize", "length", "clone"}
-                if method in vec_methods:
-                    vec_node = {
-                        "method": method,
-                        "object": obj_node,
-                        "args": args,
-                        "props": {"vecType": "Vec2"}
-                    }
-                    result = self.emit_vec_call(vec_node)
-                    if result:
-                        return result
-
-                # Physics methods
-                physics_methods = {"applyForce", "applyImpulse", "setLinearVelocity", "getLinearVelocity"}
-                if method in physics_methods:
-                    physics_node = {
-                        "method": method,
-                        "object": obj_node,
-                        "args": args
-                    }
-                    result = self.emit_physics_call(physics_node)
-                    if result:
-                        return result
-
-        # Physics methods with no/skipped object - use self object
-        physics_methods = {"applyForce", "applyImpulse", "setLinearVelocity", "getLinearVelocity"}
-        if method in physics_methods:
-            physics_node = {
-                "method": method,
-                "object": {"type": "ident", "value": "object"},
-                "args": args
-            }
-            result = self.emit_physics_call(physics_node)
-            if result:
-                return result
-
-        # Standard function call
         if method:
+            print(f"[N64 codegen] WARNING: Unhandled call '{method}' - add to macro")
             return f"{method}({', '.join(arg_strs)})"
         return ""
 
     def emit_scene_call(self, node: Dict) -> str:
-        """Scene.setActive() -> scene_switch_to()
-
-        - String literal: macro provides c_code with SCENE_XXX enum (fast path)
-        - Any other expression: use runtime helper scene_get_id_by_name()
-        """
-        # Fast path: macro resolved literal to enum
+        """Scene.setActive() -> scene_switch_to()"""
         if "c_code" in node:
             return node["c_code"] + ";"
-
-        # Runtime path: use helper to map string -> SceneId
         args = node.get("args", [])
         if args:
             scene_expr = self.emit(args[0])
@@ -337,32 +293,20 @@ class IREmitter:
         return ""
 
     def emit_transform_call(self, node: Dict) -> str:
-        """Transform calls with coordinate conversion Blender→N64."""
+        """Transform calls. Coord conversion: Blender (X,Y,Z) → N64 (X,Z,-Y)"""
         method = node.get("method", "")
         args = node.get("args", [])
         arg_strs = [self.emit(a) for a in args if self.emit(a)]
         obj = "((ArmObject*)obj)"
 
-        # Coordinate conversion: Blender XYZ → N64 XZ-Y
         if method == "translate" and len(arg_strs) >= 3:
             x, y, z = arg_strs[0], arg_strs[1], arg_strs[2]
             return f"it_translate(&{obj}->transform, {x}, {z}, -({y}));"
 
-        if method == "rotate":
-            # rotate(axis: Vec4, angle: Float) - axis is a Vec4, extract xyz components
-            # Use global rotation (it_rotate_axis_global) for world-space rotation
-            if len(arg_strs) >= 2:
-                axis = arg_strs[0]  # Vec4 member like xRot
-                angle = arg_strs[1]
-                # Extract axis components and convert Blender→N64: (x,y,z) → (x,z,-y)
-                ax = f"({axis}).x"
-                ay = f"({axis}).y"
-                az = f"({axis}).z"
-                return f"it_rotate_axis_global(&{obj}->transform, {ax}, {az}, -({ay}), {angle});"
-            elif len(arg_strs) >= 4:
-                # Legacy: 4 separate args (ax, ay, az, angle)
-                ax, ay, az, angle = arg_strs[0], arg_strs[1], arg_strs[2], arg_strs[3]
-                return f"it_rotate_axis_global(&{obj}->transform, {ax}, {az}, -({ay}), {angle});"
+        if method == "rotate" and len(arg_strs) >= 2:
+            axis, angle = arg_strs[0], arg_strs[1]
+            ax, ay, az = f"({axis}).x", f"({axis}).y", f"({axis}).z"
+            return f"it_rotate_axis_global(&{obj}->transform, {ax}, {az}, -({ay}), {angle});"
 
         if method == "setLoc" and len(arg_strs) >= 3:
             x, y, z = arg_strs[0], arg_strs[1], arg_strs[2]
@@ -371,33 +315,28 @@ class IREmitter:
         return ""
 
     def emit_math_call(self, node: Dict) -> str:
-        """Math calls - function name already resolved by macro."""
+        """Math.sin() -> sinf(), etc."""
         c_func = node.get("value", "")
         args = node.get("args", [])
         arg_strs = [self.emit(a) for a in args if self.emit(a)]
         return f"{c_func}({', '.join(arg_strs)})"
 
     def emit_input_call(self, node: Dict) -> str:
-        """Input calls - macro provides ready-to-use C code."""
+        """Input calls - macro provides C code."""
         return node.get("c_code", "0")
 
     def emit_physics_call(self, node: Dict) -> str:
-        """Physics calls - resolved by macro."""
+        """Physics calls. Coord conversion: Blender (X,Y,Z) → N64 (X,Z,-Y)"""
         method = node.get("method", "")
         obj_node = node.get("object")
         args = node.get("args", [])
 
         obj = self.emit(obj_node) if obj_node else ""
-        # If object is empty (from skip node) or missing, use self object
         if not obj:
             obj = "((ArmObject*)obj)"
         arg_strs = [self.emit(a) for a in args if self.emit(a)]
 
-        # Coordinate conversion: Blender (Z-up) → N64 (Y-up)
-        # Blender (x, y, z) → N64 (x, z, -y)
-
         if method == "applyForce" and arg_strs:
-            # physics_apply_force expects const OimoVec3* - pass address of compound literal
             vec_expr = arg_strs[0]
             return f"{{ OimoVec3 _force = (OimoVec3){{{vec_expr}.x, {vec_expr}.z, -({vec_expr}.y)}}; physics_apply_force({obj}->rigid_body, &_force); }}"
 
@@ -410,9 +349,33 @@ class IREmitter:
             return f"{{ OimoVec3 _vel = (OimoVec3){{{vec_expr}.x, {vec_expr}.z, -({vec_expr}.y)}}; physics_set_linear_velocity({obj}->rigid_body, &_vel); }}"
 
         if method == "getLinearVelocity":
-            # Returns OimoVec3 (structurally identical to ArmVec3: {x, y, z})
             return f"physics_get_linear_velocity({obj}->rigid_body)"
 
+        return ""
+
+    def emit_cast_call(self, node: Dict) -> str:
+        """Std.int() -> (int32_t)value"""
+        cast = node.get("value", "(int32_t)")
+        args = node.get("args", [])
+        if args:
+            return f"{cast}({self.emit(args[0])})"
+        return ""
+
+    def emit_debug_call(self, node: Dict) -> str:
+        """trace() -> debugf()"""
+        args = node.get("args", [])
+        if not args:
+            return 'debugf("")'
+        arg_strs = [self.emit(a) for a in args if self.emit(a)]
+        if len(arg_strs) == 1:
+            return f'debugf("%s\\n", {arg_strs[0]})'
+        return f'debugf("{", ".join(["%s"] * len(arg_strs))}\\n", {", ".join(arg_strs)})'
+
+    def emit_object_call(self, node: Dict) -> str:
+        """object.remove() -> object_remove()"""
+        method = node.get("method", "")
+        if method == "remove":
+            return "object_remove((ArmObject*)obj)"
         return ""
 
     def emit_vec_call(self, node: Dict) -> str:
