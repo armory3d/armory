@@ -66,8 +66,147 @@ static T3DViewport *g_viewport = NULL;
 // Cached frustum pointer for per-shape culling
 static const T3DFrustum *g_frustum = NULL;
 
-// RDP mode initialized flag
-static bool g_rdp_mode_set = false;
+// =============================================================================
+// Color Conversion (must be before line batching)
+// =============================================================================
+
+/**
+ * Convert RGBA5551 to color_t for RDP
+ */
+static inline color_t rgba5551_to_color(uint16_t c)
+{
+    uint8_t r = ((c >> 11) & 0x1F) << 3;
+    uint8_t g = ((c >> 6) & 0x1F) << 3;
+    uint8_t b = ((c >> 1) & 0x1F) << 3;
+    return RGBA32(r, g, b, 255);
+}
+
+// =============================================================================
+// Line Bucket System - O(1) color batching using separate buffers per color
+// =============================================================================
+
+// Number of distinct colors we support
+#define NUM_COLOR_BUCKETS 10
+
+// Color bucket indices
+#define BUCKET_WIREFRAME_ACTIVE   0
+#define BUCKET_WIREFRAME_SLEEPING 1
+#define BUCKET_WIREFRAME_STATIC   2
+#define BUCKET_AABB               3
+#define BUCKET_CONTACT_POINT      4
+#define BUCKET_CONTACT_NORMAL     5
+#define BUCKET_FACE_NORMAL        6
+#define BUCKET_AXIS_X             7
+#define BUCKET_AXIS_Y             8
+#define BUCKET_AXIS_Z             9
+
+// Lines per bucket (distribute MAX_LINES across buckets)
+#define LINES_PER_BUCKET (MAX_LINES_PER_FRAME / NUM_COLOR_BUCKETS)
+
+// Batched line structure (screen space, ready to draw)
+typedef struct {
+    int16_t x0, y0, x1, y1;
+} BatchedLine;
+
+// Line buckets - one array per color
+static BatchedLine g_buckets[NUM_COLOR_BUCKETS][LINES_PER_BUCKET];
+static int g_bucket_counts[NUM_COLOR_BUCKETS] = {0};
+
+// Color lookup for each bucket (set during init)
+static uint16_t g_bucket_colors[NUM_COLOR_BUCKETS];
+
+/**
+ * Get bucket index for a color (returns -1 if not found)
+ */
+static inline int get_bucket_for_color(uint16_t color)
+{
+    for (int i = 0; i < NUM_COLOR_BUCKETS; i++) {
+        if (g_bucket_colors[i] == color) return i;
+    }
+    return BUCKET_WIREFRAME_ACTIVE;  // Fallback
+}
+
+/**
+ * Add a 2D line to the appropriate color bucket
+ */
+static void batch_line(int x0, int y0, int x1, int y1, uint16_t color)
+{
+    // Early reject lines completely off screen
+    int w = (int)g_screen_w;
+    int h = (int)g_screen_h;
+
+    if ((x0 > w + SCREEN_MARGIN && x1 > w + SCREEN_MARGIN) ||
+        (y0 > h + SCREEN_MARGIN && y1 > h + SCREEN_MARGIN) ||
+        (x0 < -SCREEN_MARGIN && x1 < -SCREEN_MARGIN) ||
+        (y0 < -SCREEN_MARGIN && y1 < -SCREEN_MARGIN)) {
+        return;
+    }
+
+    int bucket = get_bucket_for_color(color);
+    if (g_bucket_counts[bucket] >= LINES_PER_BUCKET) return;
+
+    BatchedLine *line = &g_buckets[bucket][g_bucket_counts[bucket]++];
+    line->x0 = (int16_t)x0;
+    line->y0 = (int16_t)y0;
+    line->x1 = (int16_t)x1;
+    line->y1 = (int16_t)y1;
+}
+
+/**
+ * Fast inverse square root (Quake III style)
+ * Avoids expensive sqrtf() per line
+ * Uses union for type-punning to avoid strict-aliasing violations
+ */
+static inline float fast_inv_sqrt(float x)
+{
+    union { float f; int32_t i; } conv;
+    float xhalf = 0.5f * x;
+    conv.f = x;
+    conv.i = 0x5f3759df - (conv.i >> 1);
+    conv.f = conv.f * (1.5f - xhalf * conv.f * conv.f);  // One Newton-Raphson iteration
+    return conv.f;
+}
+
+/**
+ * Flush all color buckets to RDP
+ * One rdpq_set_prim_color() per bucket instead of per line
+ */
+static void flush_line_buckets(void)
+{
+    for (int bucket = 0; bucket < NUM_COLOR_BUCKETS; bucket++) {
+        int count = g_bucket_counts[bucket];
+        if (count == 0) continue;
+
+        // Set color once for entire bucket
+        rdpq_set_prim_color(rgba5551_to_color(g_bucket_colors[bucket]));
+
+        BatchedLine *lines = g_buckets[bucket];
+        for (int i = 0; i < count; i++) {
+            BatchedLine *line = &lines[i];
+
+            float dx = (float)(line->x1 - line->x0);
+            float dy = (float)(line->y1 - line->y0);
+            float len_sq = dx * dx + dy * dy;
+            if (len_sq < 0.001f) continue;
+
+            // Use fast inverse sqrt instead of sqrtf + division
+            float inv_len = fast_inv_sqrt(len_sq);
+            float px = -dy * inv_len * 0.5f;
+            float py = dx * inv_len * 0.5f;
+
+            // Two triangles forming a thin quad (line)
+            float v0[] = { (float)line->x0 - px, (float)line->y0 - py };
+            float v1[] = { (float)line->x0 + px, (float)line->y0 + py };
+            float v2[] = { (float)line->x1 + px, (float)line->y1 + py };
+            float v3[] = { (float)line->x1 - px, (float)line->y1 - py };
+
+            rdpq_triangle(&TRIFMT_FILL, v0, v1, v2);
+            rdpq_triangle(&TRIFMT_FILL, v0, v2, v3);
+        }
+
+        g_bucket_counts[bucket] = 0;
+    }
+}
 
 // =============================================================================
 // Initialization
@@ -94,17 +233,6 @@ static void init_circle_lut(void)
 // =============================================================================
 
 /**
- * Convert RGBA5551 to color_t for RDP
- */
-static inline color_t rgba5551_to_color(uint16_t c)
-{
-    uint8_t r = ((c >> 11) & 0x1F) << 3;
-    uint8_t g = ((c >> 6) & 0x1F) << 3;
-    uint8_t b = ((c >> 1) & 0x1F) << 3;
-    return RGBA32(r, g, b, 255);
-}
-
-/**
  * Check if float is valid (not NaN, not Inf, within reasonable range)
  * Uses isfinite() which is the proper C99 way to check for valid floats.
  */
@@ -120,49 +248,12 @@ static inline bool is_valid_float(float f)
 }
 
 /**
- * Draw 2D line using RDP hardware (degenerate triangle)
- * Uses rdpq_triangle for hardware-accelerated line rendering
+ * Draw 2D line - adds to color bucket for deferred rendering
  */
 static void debugDrawLine(int x0, int y0, int x1, int y1, uint16_t color)
 {
-    // Enforce per-frame line budget to prevent slowdown/crashes
-    if (g_lines_this_frame >= MAX_LINES_PER_FRAME) return;
-
     g_lines_this_frame++;
-
-    // Early reject lines completely off screen (with margin)
-    int w = (int)g_screen_w;
-    int h = (int)g_screen_h;
-
-    if ((x0 > w + SCREEN_MARGIN && x1 > w + SCREEN_MARGIN) ||
-        (y0 > h + SCREEN_MARGIN && y1 > h + SCREEN_MARGIN) ||
-        (x0 < -SCREEN_MARGIN && x1 < -SCREEN_MARGIN) ||
-        (y0 < -SCREEN_MARGIN && y1 < -SCREEN_MARGIN)) {
-        return;
-    }
-
-    // Set color for this line
-    rdpq_set_prim_color(rgba5551_to_color(color));
-
-    // Draw line as a thin triangle (degenerate triangle with 1 pixel offset)
-    // Create a perpendicular offset for line thickness
-    float dx = (float)(x1 - x0);
-    float dy = (float)(y1 - y0);
-    float len = sqrtf(dx * dx + dy * dy);
-    if (len < 0.001f) return;  // Skip zero-length lines
-
-    // Perpendicular unit vector scaled by half line width (0.5 pixel)
-    float px = -dy / len * 0.5f;
-    float py = dx / len * 0.5f;
-
-    // Two triangles forming a thin quad (line)
-    float v0[] = { (float)x0 - px, (float)y0 - py };
-    float v1[] = { (float)x0 + px, (float)y0 + py };
-    float v2[] = { (float)x1 + px, (float)y1 + py };
-    float v3[] = { (float)x1 - px, (float)y1 - py };
-
-    rdpq_triangle(&TRIFMT_FILL, v0, v1, v2);
-    rdpq_triangle(&TRIFMT_FILL, v0, v2, v3);
+    batch_line(x0, y0, x1, y1, color);
 }
 
 /**
@@ -740,7 +831,11 @@ void physics_debug_init(void)
     g_screen_h = 0;
     g_viewport = NULL;
     g_frustum = NULL;
-    g_rdp_mode_set = false;
+
+    // Clear bucket counts
+    for (int i = 0; i < NUM_COLOR_BUCKETS; i++) {
+        g_bucket_counts[i] = 0;
+    }
 
     // Default colors (bright, easily visible)
     g_debug.colors.wireframe_active   = RGBA5551(0, 31, 0);   // Green
@@ -753,6 +848,18 @@ void physics_debug_init(void)
     g_debug.colors.axis_x             = RGBA5551(31, 0, 0);   // Red
     g_debug.colors.axis_y             = RGBA5551(0, 31, 0);   // Green
     g_debug.colors.axis_z             = RGBA5551(0, 0, 31);   // Blue
+
+    // Set up bucket color lookup table
+    g_bucket_colors[BUCKET_WIREFRAME_ACTIVE]   = g_debug.colors.wireframe_active;
+    g_bucket_colors[BUCKET_WIREFRAME_SLEEPING] = g_debug.colors.wireframe_sleeping;
+    g_bucket_colors[BUCKET_WIREFRAME_STATIC]   = g_debug.colors.wireframe_static;
+    g_bucket_colors[BUCKET_AABB]               = g_debug.colors.aabb;
+    g_bucket_colors[BUCKET_CONTACT_POINT]      = g_debug.colors.contact_point;
+    g_bucket_colors[BUCKET_CONTACT_NORMAL]     = g_debug.colors.contact_normal;
+    g_bucket_colors[BUCKET_FACE_NORMAL]        = g_debug.colors.face_normal;
+    g_bucket_colors[BUCKET_AXIS_X]             = g_debug.colors.axis_x;
+    g_bucket_colors[BUCKET_AXIS_Y]             = g_debug.colors.axis_y;
+    g_bucket_colors[BUCKET_AXIS_Z]             = g_debug.colors.axis_z;
 
     // Pre-compute circle LUT
     init_circle_lut();
@@ -786,6 +893,9 @@ void physics_debug_draw(T3DViewport *viewport, OimoWorld *world)
 
     // Reset per-frame state
     g_lines_this_frame = 0;
+    for (int i = 0; i < NUM_COLOR_BUCKETS; i++) {
+        g_bucket_counts[i] = 0;
+    }
     g_viewport = viewport;
     g_frustum = &viewport->viewFrustum;  // Cache frustum for shape culling
     g_screen_w = display_get_width();
@@ -862,6 +972,9 @@ void physics_debug_draw(T3DViewport *viewport, OimoWorld *world)
             contact_count++;
         }
     }
+
+    // Flush all color buckets to RDP (one color change per bucket)
+    flush_line_buckets();
 
     // Sync before finishing debug drawing
     rdpq_sync_pipe();
