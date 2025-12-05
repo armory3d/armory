@@ -2,6 +2,7 @@
 #pragma once
 
 #include "../../types.h"
+#include "../../data/scenes.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,6 +17,12 @@ extern "C" {
  * Safe to call multiple times. Memory cleanup happens during scene_clear().
  */
 void object_remove(ArmObject* obj);
+
+/**
+ * Remove an object and recycle its slot back to the pool.
+ * Use this version when you want the slot to be available for scene_alloc_object().
+ */
+void object_remove_and_recycle(ArmObject* obj, SceneId scene_id);
 
 /**
  * Process all queued object removals.

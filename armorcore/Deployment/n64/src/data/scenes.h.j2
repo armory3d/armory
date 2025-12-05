@@ -31,6 +31,16 @@ void scene_clear_pending(void);
 
 ArmScene *scene_get(SceneId id);
 
+// Object pool management
+// Recycle a removed object's slot back to the pool for reuse
+void scene_recycle_object(SceneId id, ArmObject *obj);
+
+// Allocate an object slot from the pool (returns NULL if pool exhausted)
+ArmObject *scene_alloc_object(SceneId id);
+
+// Get count of active (non-removed) objects
+uint16_t scene_get_active_count(SceneId id);
+
 #ifdef __cplusplus
 }}
 #endif

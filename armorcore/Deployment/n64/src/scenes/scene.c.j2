@@ -51,8 +51,38 @@ void scene_{scene_name}_init(ArmScene *scene)
     static ArmObject objects[{object_count}];
     scene->objects = objects;
     scene->object_count = {object_count};
+    scene->active_count = {object_count};  // All objects start active
+
+    // Initialize object pool free list (for runtime recycling)
+    static uint16_t free_list[{object_count}];
+    scene->free_list = free_list;
+    scene->free_count = 0;  // No free slots initially
+    scene->free_capacity = {object_count};
+
+    // Initialize active objects list (objects with traits that need updates)
+    static uint16_t active_objects[{object_count}];
+    scene->active_objects = active_objects;
+    scene->active_trait_count = 0;
 
 {objects_block}
+
+    // Build active objects list and lifecycle flags after objects are initialized
+    for (uint16_t i = 0; i < scene->object_count; i++) {{
+        ArmObject *obj = &scene->objects[i];
+        if (obj->trait_count > 0 && !obj->is_removed) {{
+            // Compute lifecycle flags from traits
+            obj->lifecycle_flags = 0;
+            for (uint8_t t = 0; t < obj->trait_count; t++) {{
+                if (obj->traits[t].on_fixed_update) obj->lifecycle_flags |= ARM_LIFECYCLE_FIXED_UPDATE;
+                if (obj->traits[t].on_update) obj->lifecycle_flags |= ARM_LIFECYCLE_UPDATE;
+                if (obj->traits[t].on_late_update) obj->lifecycle_flags |= ARM_LIFECYCLE_LATE_UPDATE;
+            }}
+            // Add to active list if has any update callbacks
+            if (obj->lifecycle_flags != 0) {{
+                scene->active_objects[scene->active_trait_count++] = i;
+            }}
+        }}
+    }}
 
 #if ENGINE_ENABLE_PHYSICS
 {physics_block}
@@ -60,5 +90,6 @@ void scene_{scene_name}_init(ArmScene *scene)
 #endif
 
     scene->trait_count = {scene_trait_count};
+    scene->lifecycle_flags = 0;
 {scene_traits_block}
 }}

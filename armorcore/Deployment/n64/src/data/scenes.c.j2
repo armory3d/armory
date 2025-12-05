@@ -63,28 +63,38 @@ void scene_on_fixed_update(SceneId id, float dt)
 {{
 	ArmScene *s = &g_scenes[id];
 
+	// Scene-level traits
 	for (uint8_t i = 0; i < s->trait_count; i++) {{
 		if (s->traits[i].on_fixed_update) s->traits[i].on_fixed_update(s, dt, s->traits[i].data);
 	}}
+
+	// Cameras (usually 1, direct iteration is fine)
 	if (s->cameras) {{
 		for (uint8_t i = 0; i < s->camera_count; i++) {{
+			if (!(s->cameras[i].lifecycle_flags & ARM_LIFECYCLE_FIXED_UPDATE)) continue;
 			for (uint8_t t = 0; t < s->cameras[i].trait_count; t++) {{
 				if (s->cameras[i].traits[t].on_fixed_update) s->cameras[i].traits[t].on_fixed_update(&s->cameras[i], dt, s->cameras[i].traits[t].data);
 			}}
 		}}
 	}}
+
+	// Lights (usually few, direct iteration is fine)
 	if (s->lights) {{
 		for (uint8_t i = 0; i < s->light_count; i++) {{
+			if (!(s->lights[i].lifecycle_flags & ARM_LIFECYCLE_FIXED_UPDATE)) continue;
 			for (uint8_t t = 0; t < s->lights[i].trait_count; t++) {{
 				if (s->lights[i].traits[t].on_fixed_update) s->lights[i].traits[t].on_fixed_update(&s->lights[i], dt, s->lights[i].traits[t].data);
 			}}
 		}}
 	}}
-	if (s->objects) {{
-		for (uint16_t i = 0; i < s->object_count; i++) {{
-			if (s->objects[i].is_removed) continue;
-			for (uint8_t t = 0; t < s->objects[i].trait_count; t++) {{
-				if (s->objects[i].traits[t].on_fixed_update) s->objects[i].traits[t].on_fixed_update(&s->objects[i], dt, s->objects[i].traits[t].data);
+
+	// Objects - use active list for O(active) instead of O(total)
+	if (s->active_objects && s->active_trait_count > 0) {{
+		for (uint16_t i = 0; i < s->active_trait_count; i++) {{
+			ArmObject *obj = &s->objects[s->active_objects[i]];
+			if (obj->is_removed || !(obj->lifecycle_flags & ARM_LIFECYCLE_FIXED_UPDATE)) continue;
+			for (uint8_t t = 0; t < obj->trait_count; t++) {{
+				if (obj->traits[t].on_fixed_update) obj->traits[t].on_fixed_update(obj, dt, obj->traits[t].data);
 			}}
 		}}
 	}}
@@ -109,28 +119,38 @@ void scene_on_update(SceneId id, float dt)
 {{
 	ArmScene *s = &g_scenes[id];
 
+	// Scene-level traits
 	for (uint8_t i = 0; i < s->trait_count; i++) {{
 		if (s->traits[i].on_update) s->traits[i].on_update(s, dt, s->traits[i].data);
 	}}
+
+	// Cameras
 	if (s->cameras) {{
 		for (uint8_t i = 0; i < s->camera_count; i++) {{
+			if (!(s->cameras[i].lifecycle_flags & ARM_LIFECYCLE_UPDATE)) continue;
 			for (uint8_t t = 0; t < s->cameras[i].trait_count; t++) {{
 				if (s->cameras[i].traits[t].on_update) s->cameras[i].traits[t].on_update(&s->cameras[i], dt, s->cameras[i].traits[t].data);
 			}}
 		}}
 	}}
+
+	// Lights
 	if (s->lights) {{
 		for (uint8_t i = 0; i < s->light_count; i++) {{
+			if (!(s->lights[i].lifecycle_flags & ARM_LIFECYCLE_UPDATE)) continue;
 			for (uint8_t t = 0; t < s->lights[i].trait_count; t++) {{
 				if (s->lights[i].traits[t].on_update) s->lights[i].traits[t].on_update(&s->lights[i], dt, s->lights[i].traits[t].data);
 			}}
 		}}
 	}}
-	if (s->objects) {{
-		for (uint16_t i = 0; i < s->object_count; i++) {{
-			if (s->objects[i].is_removed) continue;
-			for (uint8_t t = 0; t < s->objects[i].trait_count; t++) {{
-				if (s->objects[i].traits[t].on_update) s->objects[i].traits[t].on_update(&s->objects[i], dt, s->objects[i].traits[t].data);
+
+	// Objects - use active list
+	if (s->active_objects && s->active_trait_count > 0) {{
+		for (uint16_t i = 0; i < s->active_trait_count; i++) {{
+			ArmObject *obj = &s->objects[s->active_objects[i]];
+			if (obj->is_removed || !(obj->lifecycle_flags & ARM_LIFECYCLE_UPDATE)) continue;
+			for (uint8_t t = 0; t < obj->trait_count; t++) {{
+				if (obj->traits[t].on_update) obj->traits[t].on_update(obj, dt, obj->traits[t].data);
 			}}
 		}}
 	}}
@@ -140,28 +160,38 @@ void scene_on_late_update(SceneId id, float dt)
 {{
 	ArmScene *s = &g_scenes[id];
 
+	// Scene-level traits
 	for (uint8_t i = 0; i < s->trait_count; i++) {{
 		if (s->traits[i].on_late_update) s->traits[i].on_late_update(s, dt, s->traits[i].data);
 	}}
+
+	// Cameras
 	if (s->cameras) {{
 		for (uint8_t i = 0; i < s->camera_count; i++) {{
+			if (!(s->cameras[i].lifecycle_flags & ARM_LIFECYCLE_LATE_UPDATE)) continue;
 			for (uint8_t t = 0; t < s->cameras[i].trait_count; t++) {{
 				if (s->cameras[i].traits[t].on_late_update) s->cameras[i].traits[t].on_late_update(&s->cameras[i], dt, s->cameras[i].traits[t].data);
 			}}
 		}}
 	}}
+
+	// Lights
 	if (s->lights) {{
 		for (uint8_t i = 0; i < s->light_count; i++) {{
+			if (!(s->lights[i].lifecycle_flags & ARM_LIFECYCLE_LATE_UPDATE)) continue;
 			for (uint8_t t = 0; t < s->lights[i].trait_count; t++) {{
 				if (s->lights[i].traits[t].on_late_update) s->lights[i].traits[t].on_late_update(&s->lights[i], dt, s->lights[i].traits[t].data);
 			}}
 		}}
 	}}
-	if (s->objects) {{
-		for (uint16_t i = 0; i < s->object_count; i++) {{
-			if (s->objects[i].is_removed) continue;
-			for (uint8_t t = 0; t < s->objects[i].trait_count; t++) {{
-				if (s->objects[i].traits[t].on_late_update) s->objects[i].traits[t].on_late_update(&s->objects[i], dt, s->objects[i].traits[t].data);
+
+	// Objects - use active list
+	if (s->active_objects && s->active_trait_count > 0) {{
+		for (uint16_t i = 0; i < s->active_trait_count; i++) {{
+			ArmObject *obj = &s->objects[s->active_objects[i]];
+			if (obj->is_removed || !(obj->lifecycle_flags & ARM_LIFECYCLE_LATE_UPDATE)) continue;
+			for (uint8_t t = 0; t < obj->trait_count; t++) {{
+				if (obj->traits[t].on_late_update) obj->traits[t].on_late_update(obj, dt, obj->traits[t].data);
 			}}
 		}}
 	}}
@@ -275,7 +305,14 @@ void scene_clear(SceneId id)
 	s->light_count = 0;
 	s->objects = NULL;
 	s->object_count = 0;
+	s->active_count = 0;
+	s->free_list = NULL;
+	s->free_count = 0;
+	s->free_capacity = 0;
+	s->active_objects = NULL;
+	s->active_trait_count = 0;
     s->trait_count = 0;
+    s->lifecycle_flags = 0;
 }}
 
 ArmScene *scene_get(SceneId id)
@@ -304,3 +341,56 @@ SceneId scene_get_current_id(void) {{ return g_current_scene; }}
 SceneId scene_get_pending(void) {{ return g_pending_scene; }}
 void scene_switch_to(SceneId id) {{ g_pending_scene = id; }}
 void scene_clear_pending(void) {{ g_pending_scene = SCENE_COUNT; }}
+
+// =============================================================================
+// Object Pool Management
+// =============================================================================
+
+void scene_recycle_object(SceneId id, ArmObject *obj)
+{{
+    if (id >= SCENE_COUNT) return;
+    ArmScene *s = &g_scenes[id];
+
+    if (!obj || !s->free_list) return;
+
+    // Find object index in the array
+    ptrdiff_t idx = obj - s->objects;
+    if (idx < 0 || idx >= s->object_count) return;
+
+    // Add to free list if there's room
+    if (s->free_count < s->free_capacity) {{
+        s->free_list[s->free_count++] = (uint16_t)idx;
+        s->active_count--;
+    }}
+}}
+
+ArmObject *scene_alloc_object(SceneId id)
+{{
+    if (id >= SCENE_COUNT) return NULL;
+    ArmScene *s = &g_scenes[id];
+
+    if (!s->free_list || s->free_count == 0) {{
+        debugf("Scene: object pool exhausted\\n");
+        return NULL;
+    }}
+
+    // Pop from free list (LIFO for cache locality)
+    uint16_t idx = s->free_list[--s->free_count];
+    ArmObject *obj = &s->objects[idx];
+
+    // Reset object to clean state
+    memset(obj, 0, sizeof(ArmObject));
+    obj->visible = true;
+    obj->transform.scale = (T3DVec3){{{{1.0f, 1.0f, 1.0f}}}};
+    obj->transform.rot = (T3DQuat){{{{0.0f, 0.0f, 0.0f, 1.0f}}}};
+    obj->transform.dirty = TRANSFORM_DIRTY_FRAMES;
+
+    s->active_count++;
+    return obj;
+}}
+
+uint16_t scene_get_active_count(SceneId id)
+{{
+    if (id >= SCENE_COUNT) return 0;
+    return g_scenes[id].active_count;
+}}

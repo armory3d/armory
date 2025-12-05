@@ -18,8 +18,10 @@ void models_shutdown(void);
 T3DModel *models_get(ModelId id);
 rspq_block_t *models_get_dpl(ModelId id);
 
-void models_unload(ModelId id);
-void models_unload_all(void);  // Unload all models to free memory
+void models_release(ModelId id);          // Release a reference to a model
+void models_unload(ModelId id);           // Force unload a model
+void models_unload_unused(void);          // Unload models with zero references
+void models_unload_all(void);             // Unload all models to free memory
 
 #ifdef __cplusplus
 }}

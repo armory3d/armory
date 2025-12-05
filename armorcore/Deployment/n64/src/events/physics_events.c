@@ -103,6 +103,9 @@ void physics_contact_unsubscribe_all(void* obj)
 
 void physics_contact_dispatch(void)
 {
+    // Fast path: skip entirely if no bodies have contact subscriptions
+    if (g_body_sub_count == 0) return;
+
     // Called after physics step
     // Iterate all touching contacts and dispatch to subscribed handlers
     OimoWorld* world = physics_get_world();
@@ -115,6 +118,17 @@ void physics_contact_dispatch(void)
             // Get both bodies' ArmObject pointers
             OimoRigidBody* rb1 = contact->_b1;
             OimoRigidBody* rb2 = contact->_b2;
+
+            // Early exit: check if either body has subscribers before getting objects
+            BodyContactSubs* subs1 = find_body_subs(rb1);
+            BodyContactSubs* subs2 = find_body_subs(rb2);
+
+            // Skip this contact if neither body has subscribers
+            if (!subs1 && !subs2) {
+                contact = contact->_next;
+                continue;
+            }
+
             ArmObject* obj1 = (ArmObject*)rb1->userData;
             ArmObject* obj2 = (ArmObject*)rb2->userData;
 
@@ -125,7 +139,6 @@ void physics_contact_dispatch(void)
             }
 
             // Dispatch to body1's subscribers with body2 as "other"
-            BodyContactSubs* subs1 = find_body_subs(rb1);
             if (subs1) {
                 for (int i = 0; i < subs1->count; i++) {
                     subs1->subs[i].handler(subs1->subs[i].obj, subs1->subs[i].data, obj2);
@@ -133,7 +146,6 @@ void physics_contact_dispatch(void)
             }
 
             // Dispatch to body2's subscribers with body1 as "other"
-            BodyContactSubs* subs2 = find_body_subs(rb2);
             if (subs2) {
                 for (int i = 0; i < subs2->count; i++) {
                     subs2->subs[i].handler(subs2->subs[i].obj, subs2->subs[i].data, obj1);

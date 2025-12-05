@@ -174,13 +174,23 @@ typedef struct ArmObject {{
     float bounds_radius;          // 4 bytes: local-space radius
     struct OimoRigidBody *rigid_body;  // 4 bytes
     ArmTrait *traits;             // 4 bytes
+
+    // === LIFECYCLE FLAGS (bitmask for fast dispatch) ===
+    // Bit 0: has on_fixed_update, Bit 1: has on_update, Bit 2: has on_late_update
+    uint8_t lifecycle_flags;      // 1 byte
 }} ArmObject;
+
+// Lifecycle flag bits
+#define ARM_LIFECYCLE_FIXED_UPDATE (1 << 0)
+#define ARM_LIFECYCLE_UPDATE       (1 << 1)
+#define ARM_LIFECYCLE_LATE_UPDATE  (1 << 2)
 
 typedef struct ArmLight {{
     ArmTransform transform;
     uint8_t color[4];
     T3DVec3 dir;
     uint8_t trait_count;
+    uint8_t lifecycle_flags;
     ArmTrait *traits;
 }} ArmLight;
 
@@ -191,6 +201,7 @@ typedef struct ArmCamera {{
     float near;
     float far;
     uint8_t trait_count;
+    uint8_t lifecycle_flags;
     ArmTrait *traits;
 }} ArmCamera;
 
@@ -209,12 +220,24 @@ typedef struct ArmScene {{
     uint8_t light_count;
     ArmLight *lights;
 
-    uint16_t object_count;
+    uint16_t object_count;        // Total slots in object array
+    uint16_t active_count;        // Number of active (non-removed) objects
     ArmObject *objects;
     uint16_t static_count;        // Number of static objects
     rspq_block_t *static_dpl;     // Combined display list for static objects
 
+    // Object pool recycling - free list for removed object slots
+    uint16_t *free_list;          // Array of free slot indices
+    uint16_t free_count;          // Number of free slots available
+    uint16_t free_capacity;       // Maximum slots (same as object_count)
+
+    // Active object tracking - indices of objects that need lifecycle updates
+    // Avoids iterating entire object array when most objects have no traits
+    uint16_t *active_objects;     // Array of object indices with active traits
+    uint16_t active_trait_count;  // Count of objects with traits
+
     uint8_t trait_count;
+    uint8_t lifecycle_flags;      // Scene-level trait lifecycle flags
     ArmTrait *traits;
 }} ArmScene;
 

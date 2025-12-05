@@ -1029,6 +1029,7 @@ def generate_trait_block(prefix: str, traits: List[Dict],
 
     lines = []
     lines.append(f'    {prefix}.trait_count = {len(traits)};')
+    lines.append(f'    {prefix}.lifecycle_flags = 0;')
 
     if len(traits) > 0:
         lines.append(f'    {prefix}.traits = malloc(sizeof(ArmTrait) * {len(traits)});')
