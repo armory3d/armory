@@ -1,411 +1,522 @@
 /**
  * Physics Debug Drawing for N64
- * Uses T3D's viewport projection and CPU software line drawing
- * Based on tiny3d's debugDraw.h example approach
+ * Software rendering version - reliable on real hardware
+ *
+ * Uses libdragon's graphics_draw_line() for CPU-based Bresenham rendering.
+ * This avoids RDP state conflicts that cause freezes on real hardware.
  */
 
 #include "physics_debug.h"
 #include <libdragon.h>
+#include <graphics.h>
 #include <t3d/t3d.h>
 #include <math.h>
+#include <stdint.h>
+#include <stdbool.h>
 
-// Include geometry headers for type casts
+// Geometry headers
 #include "../collision/geometry/box_geometry.h"
 #include "../collision/geometry/sphere_geometry.h"
 #include "../collision/geometry/capsule_geometry.h"
 #include "../collision/geometry/static_mesh_geometry.h"
 
-// Global debug state
-static PhysicsDebugDraw g_debug = {0};
+// =============================================================================
+// Configuration Constants
+// =============================================================================
 
-// Pre-computed unit circle points for wireframe spheres/capsules
 #define CIRCLE_SEGMENTS 8
-static float circle_sin[CIRCLE_SEGMENTS + 1];
-static float circle_cos[CIRCLE_SEGMENTS + 1];
-static bool circle_lut_initialized = false;
-
-// RGBA5551 color helpers
 #define RGBA5551(r, g, b) (((r) << 11) | ((g) << 6) | ((b) << 1) | 1)
 
-/**
- * Initialize circle lookup tables
- */
-static void init_circle_lut(void) {
-    if (circle_lut_initialized) return;
+// Safety limits to prevent crashes and RDP command buffer overflow
+#define MAX_BODIES_PER_FRAME      256
+#define MAX_SHAPES_PER_BODY       16
+#define MAX_CONTACTS_PER_FRAME    128
+#define MAX_CONTACT_POINTS        4
+#define MAX_LINES_PER_FRAME       2000
+#define MAX_MESH_TRIANGLES        400
+#define MAX_NORMAL_TRIANGLES      100
 
+// Screen bounds for clipping (with margin for off-screen rejection)
+#define SCREEN_MARGIN             100
+#define MAX_SCREEN_WIDTH          640
+#define MAX_SCREEN_HEIGHT         480
+
+// Precomputed step for capsule vertical lines (avoids division in loop)
+#define CAPSULE_VERT_STEP         (CIRCLE_SEGMENTS / 4)
+
+// =============================================================================
+// Global State
+// =============================================================================
+
+static PhysicsDebugDraw g_debug = {0};
+
+// Pre-computed circle LUT for sphere/capsule rendering
+static float g_circle_sin[CIRCLE_SEGMENTS + 1];
+static float g_circle_cos[CIRCLE_SEGMENTS + 1];
+static bool g_circle_lut_ready = false;
+
+// Per-frame state
+static int g_lines_this_frame = 0;
+static uint32_t g_screen_w = 0;
+static uint32_t g_screen_h = 0;
+static surface_t *g_surface = NULL;
+static T3DViewport *g_viewport = NULL;
+
+// Cached frustum pointer for per-shape culling
+static const T3DFrustum *g_frustum = NULL;
+
+// =============================================================================
+// Initialization
+// =============================================================================
+
+/**
+ * Initialize circle lookup tables for sphere/capsule rendering
+ */
+static void init_circle_lut(void)
+{
+    if (g_circle_lut_ready) return;
+
+    const float PI2 = 6.28318530718f;
     for (int i = 0; i <= CIRCLE_SEGMENTS; i++) {
-        float angle = (float)i / CIRCLE_SEGMENTS * 2.0f * 3.14159265f;
-        circle_sin[i] = sinf(angle);
-        circle_cos[i] = cosf(angle);
+        float angle = (float)i / CIRCLE_SEGMENTS * PI2;
+        g_circle_sin[i] = sinf(angle);
+        g_circle_cos[i] = cosf(angle);
     }
-    circle_lut_initialized = true;
+    g_circle_lut_ready = true;
+}
+
+// =============================================================================
+// Low-level Drawing Utilities
+// =============================================================================
+
+/**
+ * Convert RGBA5551 to 32-bit color for libdragon graphics.h
+ */
+static inline uint32_t rgba5551_to_color32(uint16_t c)
+{
+    uint8_t r = ((c >> 11) & 0x1F) << 3;
+    uint8_t g = ((c >> 6) & 0x1F) << 3;
+    uint8_t b = ((c >> 1) & 0x1F) << 3;
+    return graphics_make_color(r, g, b, 255);
 }
 
 /**
- * Draw a 2D line directly to framebuffer (Bresenham-style)
- * Based on tiny3d's debugDrawLine
+ * Check if float is valid (not NaN, not Inf, within reasonable range)
+ * Uses isfinite() which is the proper C99 way to check for valid floats.
  */
-static void draw_line_2d(uint16_t* fb, int px0, int py0, int px1, int py1, uint16_t color) {
-    uint32_t width = display_get_width();
-    uint32_t height = display_get_height();
+static inline bool is_valid_float(float f)
+{
+    // isfinite() returns true if f is not NaN and not Inf
+    if (!isfinite(f)) return false;
 
-    // Reject lines way off screen
-    if ((px0 < -200 || px0 > (int)width + 200) && (px1 < -200 || px1 > (int)width + 200)) return;
-    if ((py0 < -200 || py0 > (int)height + 200) && (py1 < -200 || py1 > (int)height + 200)) return;
+    // Reject extreme values that could cause projection issues
+    if (f > 1e6f || f < -1e6f) return false;
 
-    float pos[2] = {(float)px0, (float)py0};
-    int dx = px1 - px0;
-    int dy = py1 - py0;
-    int steps = abs(dx) > abs(dy) ? abs(dx) : abs(dy);
-    if (steps <= 0) return;
-
-    float xInc = (float)dx / (float)steps;
-    float yInc = (float)dy / (float)steps;
-
-    for (int i = 0; i < steps; ++i) {
-        int x = (int)pos[0];
-        int y = (int)pos[1];
-        if (y >= 0 && y < (int)height && x >= 0 && x < (int)width) {
-            fb[y * width + x] = color;
-        }
-        pos[0] += xInc;
-        pos[1] += yInc;
-    }
+    return true;
 }
 
 /**
- * Draw a 3D line using T3D viewport projection
+ * Draw 2D line using software rendering (libdragon graphics.h)
+ * Safe for real N64 hardware - no RDP state conflicts
  */
-static void draw_line_3d(uint16_t* fb, T3DViewport* vp,
-                         float x0, float y0, float z0,
-                         float x1, float y1, float z1, uint16_t color) {
-    T3DVec3 p0_world = {{x0, y0, z0}};
-    T3DVec3 p1_world = {{x1, y1, z1}};
-    T3DVec3 p0_screen, p1_screen;
+static void debugDrawLine(int x0, int y0, int x1, int y1, uint16_t color)
+{
+    // Enforce per-frame line budget to prevent slowdown/crashes
+    if (g_lines_this_frame >= MAX_LINES_PER_FRAME) return;
+    if (!g_surface) return;
 
-    t3d_viewport_calc_viewspace_pos(vp, &p0_screen, &p0_world);
-    t3d_viewport_calc_viewspace_pos(vp, &p1_screen, &p1_world);
+    g_lines_this_frame++;
 
-    // Z component is depth - reject if both points behind camera
-    if (p0_screen.v[2] < 1.0f && p1_screen.v[2] < 1.0f) {
-        draw_line_2d(fb, (int)p0_screen.v[0], (int)p0_screen.v[1],
-                     (int)p1_screen.v[0], (int)p1_screen.v[1], color);
+    // Early reject lines completely off screen (with margin)
+    int w = (int)g_screen_w;
+    int h = (int)g_screen_h;
+
+    if ((x0 > w + SCREEN_MARGIN && x1 > w + SCREEN_MARGIN) ||
+        (y0 > h + SCREEN_MARGIN && y1 > h + SCREEN_MARGIN) ||
+        (x0 < -SCREEN_MARGIN && x1 < -SCREEN_MARGIN) ||
+        (y0 < -SCREEN_MARGIN && y1 < -SCREEN_MARGIN)) {
+        return;
     }
+
+    // Draw using libdragon's CPU-based Bresenham line drawing
+    uint32_t col = rgba5551_to_color32(color);
+    graphics_draw_line(g_surface, x0, y0, x1, y1, col);
 }
 
 /**
- * Draw a box wireframe
+ * Draw 3D line projected to screen space via T3D viewport
  */
-static void draw_box_wireframe(uint16_t* fb, T3DViewport* vp,
-                               const OimoVec3* center, const OimoMat3* rot,
-                               float hx, float hy, float hz, uint16_t color) {
-    // 8 corners in local space
-    float corners[8][3] = {
-        {-hx, -hy, -hz}, {+hx, -hy, -hz}, {+hx, +hy, -hz}, {-hx, +hy, -hz},
-        {-hx, -hy, +hz}, {+hx, -hy, +hz}, {+hx, +hy, +hz}, {-hx, +hy, +hz}
+static void debugDrawLineVec3(float x0, float y0, float z0,
+                              float x1, float y1, float z1, uint16_t color)
+{
+    // Validate input coordinates
+    if (!is_valid_float(x0) || !is_valid_float(y0) || !is_valid_float(z0) ||
+        !is_valid_float(x1) || !is_valid_float(y1) || !is_valid_float(z1)) {
+        return;
+    }
+
+    if (!g_viewport) return;
+
+    T3DVec3 p0 = {{x0, y0, z0}};
+    T3DVec3 p1 = {{x1, y1, z1}};
+    T3DVec3 s0, s1;
+
+    t3d_viewport_calc_viewspace_pos(g_viewport, &s0, &p0);
+    t3d_viewport_calc_viewspace_pos(g_viewport, &s1, &p1);
+
+    // Validate projected coordinates
+    if (!is_valid_float(s0.v[0]) || !is_valid_float(s0.v[1]) || !is_valid_float(s0.v[2]) ||
+        !is_valid_float(s1.v[0]) || !is_valid_float(s1.v[1]) || !is_valid_float(s1.v[2])) {
+        return;
+    }
+
+    // Near-plane clipping: reject lines that cross or are behind the near plane.
+    // z values close to 0 or negative indicate the point is at or behind camera.
+    // Using 0.01f as minimum depth to avoid division issues in projection.
+    const float MIN_DEPTH = 0.01f;
+    if (s0.v[2] < MIN_DEPTH || s1.v[2] < MIN_DEPTH) {
+        return;
+    }
+
+    // Only draw if both points in front of camera (z < 1.0 means in view frustum)
+    if (s0.v[2] < 1.0f && s1.v[2] < 1.0f) {
+        debugDrawLine((int)s0.v[0], (int)s0.v[1], (int)s1.v[0], (int)s1.v[1], color);
+    }
+}
+
+// =============================================================================
+// Shape Drawing Functions
+// =============================================================================
+
+// Box edge indices (const - never changes)
+static const int box_edges[12][2] = {
+    {0,1}, {1,2}, {2,3}, {3,0},  // Bottom face
+    {4,5}, {5,6}, {6,7}, {7,4},  // Top face
+    {0,4}, {1,5}, {2,6}, {3,7}   // Vertical edges
+};
+
+/**
+ * Draw box wireframe (12 edges)
+ * Uses static arrays to avoid N64 stack overflow
+ */
+static void draw_box(const OimoVec3 *center,
+                     const OimoMat3 *rot, float hx, float hy, float hz, uint16_t color)
+{
+    if (!center || !rot) return;
+
+    // Static to avoid stack allocation
+    static float world[8][3];
+
+    // 8 corners - compute directly into world space
+    const float signs[8][3] = {
+        {-1, -1, -1}, {+1, -1, -1}, {+1, +1, -1}, {-1, +1, -1},
+        {-1, -1, +1}, {+1, -1, +1}, {+1, +1, +1}, {-1, +1, +1}
     };
 
-    // Transform to world space
-    float world[8][3];
     for (int i = 0; i < 8; i++) {
-        float lx = corners[i][0], ly = corners[i][1], lz = corners[i][2];
+        float lx = signs[i][0] * hx;
+        float ly = signs[i][1] * hy;
+        float lz = signs[i][2] * hz;
         world[i][0] = center->x + rot->e00*lx + rot->e01*ly + rot->e02*lz;
         world[i][1] = center->y + rot->e10*lx + rot->e11*ly + rot->e12*lz;
         world[i][2] = center->z + rot->e20*lx + rot->e21*ly + rot->e22*lz;
     }
 
-    // 12 edges
-    int edges[12][2] = {
-        {0,1}, {1,2}, {2,3}, {3,0},  // bottom
-        {4,5}, {5,6}, {6,7}, {7,4},  // top
-        {0,4}, {1,5}, {2,6}, {3,7}   // verticals
-    };
-
     for (int i = 0; i < 12; i++) {
-        int a = edges[i][0], b = edges[i][1];
-        draw_line_3d(fb, vp, world[a][0], world[a][1], world[a][2],
-                     world[b][0], world[b][1], world[b][2], color);
+        int a = box_edges[i][0], b = box_edges[i][1];
+        debugDrawLineVec3(world[a][0], world[a][1], world[a][2],
+                          world[b][0], world[b][1], world[b][2], color);
     }
 }
 
 /**
- * Draw a sphere wireframe (3 orthogonal circles aligned to body rotation)
+ * Draw sphere wireframe (3 orthogonal circles)
+ * Precomputes scaled axes to reduce FPU operations in loops
  */
-static void draw_sphere_wireframe(uint16_t* fb, T3DViewport* vp,
-                                  const OimoVec3* center, const OimoMat3* rot,
-                                  float radius, uint16_t color) {
+static void draw_sphere(const OimoVec3 *center,
+                        const OimoMat3 *rot, float radius, uint16_t color)
+{
+    if (!center || !rot || radius <= 0.0f) return;
     init_circle_lut();
 
-    // Get rotation axes
-    OimoVec3 axisX = { rot->e00, rot->e10, rot->e20 };  // Local X axis (right)
-    OimoVec3 axisY = { rot->e01, rot->e11, rot->e21 };  // Local Y axis (up)
-    OimoVec3 axisZ = { rot->e02, rot->e12, rot->e22 };  // Local Z axis (forward)
+    // Precompute scaled axes (axis * radius) - reduces multiplications in loop
+    const float axXx = rot->e00 * radius, axXy = rot->e10 * radius, axXz = rot->e20 * radius;
+    const float axYx = rot->e01 * radius, axYy = rot->e11 * radius, axYz = rot->e21 * radius;
+    const float axZx = rot->e02 * radius, axZy = rot->e12 * radius, axZz = rot->e22 * radius;
+    const float cx = center->x, cy = center->y, cz = center->z;
 
-    // XY plane circle (around Z axis)
+    // XY circle
     for (int i = 0; i < CIRCLE_SEGMENTS; i++) {
-        float c0 = circle_cos[i], s0 = circle_sin[i];
-        float c1 = circle_cos[i+1], s1 = circle_sin[i+1];
-        float x0 = center->x + radius * (c0 * axisX.x + s0 * axisY.x);
-        float y0 = center->y + radius * (c0 * axisX.y + s0 * axisY.y);
-        float z0 = center->z + radius * (c0 * axisX.z + s0 * axisY.z);
-        float x1 = center->x + radius * (c1 * axisX.x + s1 * axisY.x);
-        float y1 = center->y + radius * (c1 * axisX.y + s1 * axisY.y);
-        float z1 = center->z + radius * (c1 * axisX.z + s1 * axisY.z);
-        draw_line_3d(fb, vp, x0, y0, z0, x1, y1, z1, color);
+        float c0 = g_circle_cos[i], s0 = g_circle_sin[i];
+        float c1 = g_circle_cos[i+1], s1 = g_circle_sin[i+1];
+        debugDrawLineVec3(cx + c0*axXx + s0*axYx, cy + c0*axXy + s0*axYy, cz + c0*axXz + s0*axYz,
+                          cx + c1*axXx + s1*axYx, cy + c1*axXy + s1*axYy, cz + c1*axXz + s1*axYz, color);
     }
 
-    // XZ plane circle (around Y axis)
+    // XZ circle
     for (int i = 0; i < CIRCLE_SEGMENTS; i++) {
-        float c0 = circle_cos[i], s0 = circle_sin[i];
-        float c1 = circle_cos[i+1], s1 = circle_sin[i+1];
-        float x0 = center->x + radius * (c0 * axisX.x + s0 * axisZ.x);
-        float y0 = center->y + radius * (c0 * axisX.y + s0 * axisZ.y);
-        float z0 = center->z + radius * (c0 * axisX.z + s0 * axisZ.z);
-        float x1 = center->x + radius * (c1 * axisX.x + s1 * axisZ.x);
-        float y1 = center->y + radius * (c1 * axisX.y + s1 * axisZ.y);
-        float z1 = center->z + radius * (c1 * axisX.z + s1 * axisZ.z);
-        draw_line_3d(fb, vp, x0, y0, z0, x1, y1, z1, color);
+        float c0 = g_circle_cos[i], s0 = g_circle_sin[i];
+        float c1 = g_circle_cos[i+1], s1 = g_circle_sin[i+1];
+        debugDrawLineVec3(cx + c0*axXx + s0*axZx, cy + c0*axXy + s0*axZy, cz + c0*axXz + s0*axZz,
+                          cx + c1*axXx + s1*axZx, cy + c1*axXy + s1*axZy, cz + c1*axXz + s1*axZz, color);
     }
 
-    // YZ plane circle (around X axis)
+    // YZ circle
     for (int i = 0; i < CIRCLE_SEGMENTS; i++) {
-        float c0 = circle_cos[i], s0 = circle_sin[i];
-        float c1 = circle_cos[i+1], s1 = circle_sin[i+1];
-        float x0 = center->x + radius * (c0 * axisY.x + s0 * axisZ.x);
-        float y0 = center->y + radius * (c0 * axisY.y + s0 * axisZ.y);
-        float z0 = center->z + radius * (c0 * axisY.z + s0 * axisZ.z);
-        float x1 = center->x + radius * (c1 * axisY.x + s1 * axisZ.x);
-        float y1 = center->y + radius * (c1 * axisY.y + s1 * axisZ.y);
-        float z1 = center->z + radius * (c1 * axisY.z + s1 * axisZ.z);
-        draw_line_3d(fb, vp, x0, y0, z0, x1, y1, z1, color);
+        float c0 = g_circle_cos[i], s0 = g_circle_sin[i];
+        float c1 = g_circle_cos[i+1], s1 = g_circle_sin[i+1];
+        debugDrawLineVec3(cx + c0*axYx + s0*axZx, cy + c0*axYy + s0*axZy, cz + c0*axYz + s0*axZz,
+                          cx + c1*axYx + s1*axZx, cy + c1*axYy + s1*axZy, cz + c1*axYz + s1*axZz, color);
     }
 }
 
 /**
- * Draw a capsule wireframe
+ * Draw capsule wireframe with hemisphere caps
+ * Precomputes scaled axes to reduce FPU operations
  */
-static void draw_capsule_wireframe(uint16_t* fb, T3DViewport* vp,
-                                   const OimoVec3* center, const OimoMat3* rot,
-                                   float radius, float halfHeight, uint16_t color) {
+static void draw_capsule(const OimoVec3 *center,
+                         const OimoMat3 *rot, float radius, float halfHeight, uint16_t color)
+{
+    if (!center || !rot || radius <= 0.0f) return;
     init_circle_lut();
 
-    // Get capsule axes (Y-aligned in local space)
-    OimoVec3 up = { rot->e01, rot->e11, rot->e21 };
-    OimoVec3 right = { rot->e00, rot->e10, rot->e20 };
-    OimoVec3 forward = { rot->e02, rot->e12, rot->e22 };
+    // Precompute scaled axes (axis * radius)
+    const float rx = rot->e00 * radius, ry = rot->e10 * radius, rz = rot->e20 * radius;
+    const float ux = rot->e01 * radius, uy = rot->e11 * radius, uz = rot->e21 * radius;
+    const float fx = rot->e02 * radius, fy = rot->e12 * radius, fz = rot->e22 * radius;
 
-    // Top and bottom cap centers
-    OimoVec3 top = {
-        center->x + up.x * halfHeight,
-        center->y + up.y * halfHeight,
-        center->z + up.z * halfHeight
-    };
-    OimoVec3 bottom = {
-        center->x - up.x * halfHeight,
-        center->y - up.y * halfHeight,
-        center->z - up.z * halfHeight
-    };
+    // Precompute top and bottom centers
+    const float upx = rot->e01 * halfHeight, upy = rot->e11 * halfHeight, upz = rot->e21 * halfHeight;
+    const float tx = center->x + upx, ty = center->y + upy, tz = center->z + upz;
+    const float bx = center->x - upx, by = center->y - upy, bz = center->z - upz;
 
-    // Draw circles at top and bottom
+    // Top and bottom circles (at cylinder ends)
     for (int i = 0; i < CIRCLE_SEGMENTS; i++) {
-        float c0 = circle_cos[i], s0 = circle_sin[i];
-        float c1 = circle_cos[i+1], s1 = circle_sin[i+1];
+        float c0 = g_circle_cos[i], s0 = g_circle_sin[i];
+        float c1 = g_circle_cos[i+1], s1 = g_circle_sin[i+1];
 
         // Top circle
-        float tx0 = top.x + radius * (right.x * c0 + forward.x * s0);
-        float ty0 = top.y + radius * (right.y * c0 + forward.y * s0);
-        float tz0 = top.z + radius * (right.z * c0 + forward.z * s0);
-        float tx1 = top.x + radius * (right.x * c1 + forward.x * s1);
-        float ty1 = top.y + radius * (right.y * c1 + forward.y * s1);
-        float tz1 = top.z + radius * (right.z * c1 + forward.z * s1);
-        draw_line_3d(fb, vp, tx0, ty0, tz0, tx1, ty1, tz1, color);
-
+        debugDrawLineVec3(tx + rx*c0 + fx*s0, ty + ry*c0 + fy*s0, tz + rz*c0 + fz*s0,
+                          tx + rx*c1 + fx*s1, ty + ry*c1 + fy*s1, tz + rz*c1 + fz*s1, color);
         // Bottom circle
-        float bx0 = bottom.x + radius * (right.x * c0 + forward.x * s0);
-        float by0 = bottom.y + radius * (right.y * c0 + forward.y * s0);
-        float bz0 = bottom.z + radius * (right.z * c0 + forward.z * s0);
-        float bx1 = bottom.x + radius * (right.x * c1 + forward.x * s1);
-        float by1 = bottom.y + radius * (right.y * c1 + forward.y * s1);
-        float bz1 = bottom.z + radius * (right.z * c1 + forward.z * s1);
-        draw_line_3d(fb, vp, bx0, by0, bz0, bx1, by1, bz1, color);
+        debugDrawLineVec3(bx + rx*c0 + fx*s0, by + ry*c0 + fy*s0, bz + rz*c0 + fz*s0,
+                          bx + rx*c1 + fx*s1, by + ry*c1 + fy*s1, bz + rz*c1 + fz*s1, color);
     }
 
-    // Draw 4 vertical lines
+    // 4 vertical lines connecting top and bottom circles
+    // Using precomputed step constant instead of division
+    int idx = 0;
     for (int i = 0; i < 4; i++) {
-        int idx = i * (CIRCLE_SEGMENTS / 4);
-        float c = circle_cos[idx], s = circle_sin[idx];
-        float px = radius * (right.x * c + forward.x * s);
-        float py = radius * (right.y * c + forward.y * s);
-        float pz = radius * (right.z * c + forward.z * s);
-        draw_line_3d(fb, vp, top.x + px, top.y + py, top.z + pz,
-                     bottom.x + px, bottom.y + py, bottom.z + pz, color);
+        float c = g_circle_cos[idx], s = g_circle_sin[idx];
+        float px = rx*c + fx*s, py = ry*c + fy*s, pz = rz*c + fz*s;
+        debugDrawLineVec3(tx + px, ty + py, tz + pz, bx + px, by + py, bz + pz, color);
+        idx += CAPSULE_VERT_STEP;
+    }
+
+    // Top hemisphere cap arcs (upper half of circle)
+    const int halfSeg = CIRCLE_SEGMENTS / 2;
+    for (int i = 0; i < halfSeg; i++) {
+        float c0 = g_circle_cos[i], s0 = g_circle_sin[i];
+        float c1 = g_circle_cos[i+1], s1 = g_circle_sin[i+1];
+        // Right-up arc
+        debugDrawLineVec3(tx + rx*c0 + ux*s0, ty + ry*c0 + uy*s0, tz + rz*c0 + uz*s0,
+                          tx + rx*c1 + ux*s1, ty + ry*c1 + uy*s1, tz + rz*c1 + uz*s1, color);
+        // Forward-up arc
+        debugDrawLineVec3(tx + fx*c0 + ux*s0, ty + fy*c0 + uy*s0, tz + fz*c0 + uz*s0,
+                          tx + fx*c1 + ux*s1, ty + fy*c1 + uy*s1, tz + fz*c1 + uz*s1, color);
+    }
+
+    // Bottom hemisphere cap arcs (lower half of circle)
+    for (int i = halfSeg; i < CIRCLE_SEGMENTS; i++) {
+        float c0 = g_circle_cos[i], s0 = g_circle_sin[i];
+        float c1 = g_circle_cos[i+1], s1 = g_circle_sin[i+1];
+        // Right-up arc
+        debugDrawLineVec3(bx + rx*c0 + ux*s0, by + ry*c0 + uy*s0, bz + rz*c0 + uz*s0,
+                          bx + rx*c1 + ux*s1, by + ry*c1 + uy*s1, bz + rz*c1 + uz*s1, color);
+        // Forward-up arc
+        debugDrawLineVec3(bx + fx*c0 + ux*s0, by + fy*c0 + uy*s0, bz + fz*c0 + uz*s0,
+                          bx + fx*c1 + ux*s1, by + fy*c1 + uy*s1, bz + fz*c1 + uz*s1, color);
     }
 }
 
 /**
- * Draw a static mesh wireframe (all triangle edges)
+ * Draw AABB wireframe (12 edges)
  */
-static void draw_mesh_wireframe(uint16_t* fb, T3DViewport* vp,
-                                const OimoVec3* pos, const OimoMat3* rot,
-                                OimoStaticMeshGeometry* mesh, uint16_t color) {
-    // Transform and draw each triangle's edges
-    for (int i = 0; i < mesh->triangle_count; i++) {
-        OimoTriangle* tri = &mesh->triangles[i];
+static void draw_aabb(const OimoAabb *aabb, uint16_t color)
+{
+    if (!aabb) return;
 
-        // Transform vertices to world space
-        // v_world = pos + rot * v_local
-        OimoVec3 v0_local = tri->v0;
-        OimoVec3 v1_local = tri->v1;
-        OimoVec3 v2_local = tri->v2;
-
-        // Apply rotation (row-major multiply)
-        OimoVec3 v0_rot = {
-            rot->e00 * v0_local.x + rot->e01 * v0_local.y + rot->e02 * v0_local.z,
-            rot->e10 * v0_local.x + rot->e11 * v0_local.y + rot->e12 * v0_local.z,
-            rot->e20 * v0_local.x + rot->e21 * v0_local.y + rot->e22 * v0_local.z
-        };
-        OimoVec3 v1_rot = {
-            rot->e00 * v1_local.x + rot->e01 * v1_local.y + rot->e02 * v1_local.z,
-            rot->e10 * v1_local.x + rot->e11 * v1_local.y + rot->e12 * v1_local.z,
-            rot->e20 * v1_local.x + rot->e21 * v1_local.y + rot->e22 * v1_local.z
-        };
-        OimoVec3 v2_rot = {
-            rot->e00 * v2_local.x + rot->e01 * v2_local.y + rot->e02 * v2_local.z,
-            rot->e10 * v2_local.x + rot->e11 * v2_local.y + rot->e12 * v2_local.z,
-            rot->e20 * v2_local.x + rot->e21 * v2_local.y + rot->e22 * v2_local.z
-        };
-
-        // Translate to world position
-        OimoVec3 v0 = { pos->x + v0_rot.x, pos->y + v0_rot.y, pos->z + v0_rot.z };
-        OimoVec3 v1 = { pos->x + v1_rot.x, pos->y + v1_rot.y, pos->z + v1_rot.z };
-        OimoVec3 v2 = { pos->x + v2_rot.x, pos->y + v2_rot.y, pos->z + v2_rot.z };
-
-        // Draw the 3 edges of the triangle
-        draw_line_3d(fb, vp, v0.x, v0.y, v0.z, v1.x, v1.y, v1.z, color);
-        draw_line_3d(fb, vp, v1.x, v1.y, v1.z, v2.x, v2.y, v2.z, color);
-        draw_line_3d(fb, vp, v2.x, v2.y, v2.z, v0.x, v0.y, v0.z, color);
-    }
-}
-
-/**
- * Draw an AABB wireframe
- */
-static void draw_aabb(uint16_t* fb, T3DViewport* vp, const OimoAabb* aabb, uint16_t color) {
     float minX = aabb->min.x, minY = aabb->min.y, minZ = aabb->min.z;
     float maxX = aabb->max.x, maxY = aabb->max.y, maxZ = aabb->max.z;
 
+    // Validate AABB bounds
+    if (!is_valid_float(minX) || !is_valid_float(minY) || !is_valid_float(minZ) ||
+        !is_valid_float(maxX) || !is_valid_float(maxY) || !is_valid_float(maxZ)) {
+        return;
+    }
+
     // Bottom face
-    draw_line_3d(fb, vp, minX, minY, minZ, maxX, minY, minZ, color);
-    draw_line_3d(fb, vp, maxX, minY, minZ, maxX, minY, maxZ, color);
-    draw_line_3d(fb, vp, maxX, minY, maxZ, minX, minY, maxZ, color);
-    draw_line_3d(fb, vp, minX, minY, maxZ, minX, minY, minZ, color);
+    debugDrawLineVec3(minX, minY, minZ, maxX, minY, minZ, color);
+    debugDrawLineVec3(maxX, minY, minZ, maxX, minY, maxZ, color);
+    debugDrawLineVec3(maxX, minY, maxZ, minX, minY, maxZ, color);
+    debugDrawLineVec3(minX, minY, maxZ, minX, minY, minZ, color);
 
     // Top face
-    draw_line_3d(fb, vp, minX, maxY, minZ, maxX, maxY, minZ, color);
-    draw_line_3d(fb, vp, maxX, maxY, minZ, maxX, maxY, maxZ, color);
-    draw_line_3d(fb, vp, maxX, maxY, maxZ, minX, maxY, maxZ, color);
-    draw_line_3d(fb, vp, minX, maxY, maxZ, minX, maxY, minZ, color);
+    debugDrawLineVec3(minX, maxY, minZ, maxX, maxY, minZ, color);
+    debugDrawLineVec3(maxX, maxY, minZ, maxX, maxY, maxZ, color);
+    debugDrawLineVec3(maxX, maxY, maxZ, minX, maxY, maxZ, color);
+    debugDrawLineVec3(minX, maxY, maxZ, minX, maxY, minZ, color);
 
     // Vertical edges
-    draw_line_3d(fb, vp, minX, minY, minZ, minX, maxY, minZ, color);
-    draw_line_3d(fb, vp, maxX, minY, minZ, maxX, maxY, minZ, color);
-    draw_line_3d(fb, vp, maxX, minY, maxZ, maxX, maxY, maxZ, color);
-    draw_line_3d(fb, vp, minX, minY, maxZ, minX, maxY, maxZ, color);
+    debugDrawLineVec3(minX, minY, minZ, minX, maxY, minZ, color);
+    debugDrawLineVec3(maxX, minY, minZ, maxX, maxY, minZ, color);
+    debugDrawLineVec3(maxX, minY, maxZ, maxX, maxY, maxZ, color);
+    debugDrawLineVec3(minX, minY, maxZ, minX, maxY, maxZ, color);
 }
 
 /**
- * Draw body coordinate axes
+ * Draw body coordinate axes gizmo (XYZ colored arrows)
  */
-static void draw_body_axes(uint16_t* fb, T3DViewport* vp,
-                           const OimoVec3* center, const OimoMat3* rot, float length) {
+static void draw_axes(const OimoVec3 *center,
+                      const OimoMat3 *rot, float length)
+{
+    if (!center || !rot || length <= 0.0f) return;
     // X axis (red)
-    draw_line_3d(fb, vp, center->x, center->y, center->z,
-                 center->x + rot->e00 * length,
-                 center->y + rot->e10 * length,
-                 center->z + rot->e20 * length, g_debug.colors.axis_x);
-
+    debugDrawLineVec3(center->x, center->y, center->z,
+                      center->x + rot->e00 * length,
+                      center->y + rot->e10 * length,
+                      center->z + rot->e20 * length,
+                      g_debug.colors.axis_x);
     // Y axis (green)
-    draw_line_3d(fb, vp, center->x, center->y, center->z,
-                 center->x + rot->e01 * length,
-                 center->y + rot->e11 * length,
-                 center->z + rot->e21 * length, g_debug.colors.axis_y);
-
+    debugDrawLineVec3(center->x, center->y, center->z,
+                      center->x + rot->e01 * length,
+                      center->y + rot->e11 * length,
+                      center->z + rot->e21 * length,
+                      g_debug.colors.axis_y);
     // Z axis (blue)
-    draw_line_3d(fb, vp, center->x, center->y, center->z,
-                 center->x + rot->e02 * length,
-                 center->y + rot->e12 * length,
-                 center->z + rot->e22 * length, g_debug.colors.axis_z);
+    debugDrawLineVec3(center->x, center->y, center->z,
+                      center->x + rot->e02 * length,
+                      center->y + rot->e12 * length,
+                      center->z + rot->e22 * length,
+                      g_debug.colors.axis_z);
 }
 
 /**
- * Draw a contact point marker (small cross)
+ * Draw static mesh wireframe (triangle edges)
+ * Limited to prevent frame time overflow
  */
-static void draw_contact_point(uint16_t* fb, T3DViewport* vp, const OimoVec3* pos, uint16_t color) {
-    T3DVec3 world = {{pos->x, pos->y, pos->z}};
-    T3DVec3 screen;
-    t3d_viewport_calc_viewspace_pos(vp, &screen, &world);
+static void draw_static_mesh(const OimoVec3 *pos, const OimoMat3 *rot,
+                             OimoStaticMeshGeometry *mesh, uint16_t color)
+{
+    if (!pos || !rot || !mesh || !mesh->triangles || mesh->triangle_count <= 0) return;
 
-    if (screen.v[2] < 1.0f) {
-        int sx = (int)screen.v[0];
-        int sy = (int)screen.v[1];
-        uint32_t width = display_get_width();
-        uint32_t height = display_get_height();
+    // Limit triangles to prevent slowdown (each triangle = 3 lines)
+    int max_tris = mesh->triangle_count;
+    if (max_tris > MAX_MESH_TRIANGLES) max_tris = MAX_MESH_TRIANGLES;
 
-        // Draw a small cross
-        for (int i = -2; i <= 2; i++) {
-            if (sy >= 0 && sy < (int)height) {
-                if (sx + i >= 0 && sx + i < (int)width) fb[sy * width + sx + i] = color;
-            }
-            if (sy + i >= 0 && sy + i < (int)height) {
-                if (sx >= 0 && sx < (int)width) fb[(sy + i) * width + sx] = color;
-            }
-        }
+    for (int i = 0; i < max_tris; i++) {
+        // Check line budget before drawing (each triangle = 3 lines)
+        if (g_lines_this_frame >= MAX_LINES_PER_FRAME - 3) return;
+
+        OimoTriangle *tri = &mesh->triangles[i];
+
+        // Transform vertices to world space
+        float wx0 = pos->x + rot->e00*tri->v0.x + rot->e01*tri->v0.y + rot->e02*tri->v0.z;
+        float wy0 = pos->y + rot->e10*tri->v0.x + rot->e11*tri->v0.y + rot->e12*tri->v0.z;
+        float wz0 = pos->z + rot->e20*tri->v0.x + rot->e21*tri->v0.y + rot->e22*tri->v0.z;
+
+        float wx1 = pos->x + rot->e00*tri->v1.x + rot->e01*tri->v1.y + rot->e02*tri->v1.z;
+        float wy1 = pos->y + rot->e10*tri->v1.x + rot->e11*tri->v1.y + rot->e12*tri->v1.z;
+        float wz1 = pos->z + rot->e20*tri->v1.x + rot->e21*tri->v1.y + rot->e22*tri->v1.z;
+
+        float wx2 = pos->x + rot->e00*tri->v2.x + rot->e01*tri->v2.y + rot->e02*tri->v2.z;
+        float wy2 = pos->y + rot->e10*tri->v2.x + rot->e11*tri->v2.y + rot->e12*tri->v2.z;
+        float wz2 = pos->z + rot->e20*tri->v2.x + rot->e21*tri->v2.y + rot->e22*tri->v2.z;
+
+        // Draw the 3 edges of the triangle
+        debugDrawLineVec3(wx0, wy0, wz0, wx1, wy1, wz1, color);
+        debugDrawLineVec3(wx1, wy1, wz1, wx2, wy2, wz2, color);
+        debugDrawLineVec3(wx2, wy2, wz2, wx0, wy0, wz0, color);
+    }
+}
+
+/**
+ * Draw face normals for static mesh geometry
+ */
+static void draw_mesh_normals(const OimoVec3 *pos, const OimoMat3 *rot,
+                              OimoStaticMeshGeometry *mesh, uint16_t color)
+{
+    if (!pos || !rot || !mesh || !mesh->triangles || mesh->triangle_count <= 0) return;
+
+    // Limit triangles to prevent slowdown
+    int max_tris = mesh->triangle_count;
+    if (max_tris > MAX_NORMAL_TRIANGLES) max_tris = MAX_NORMAL_TRIANGLES;
+
+    for (int i = 0; i < max_tris; i++) {
+        OimoTriangle *tri = &mesh->triangles[i];
+
+        // Compute triangle center
+        float cx = (tri->v0.x + tri->v1.x + tri->v2.x) / 3.0f;
+        float cy = (tri->v0.y + tri->v1.y + tri->v2.y) / 3.0f;
+        float cz = (tri->v0.z + tri->v1.z + tri->v2.z) / 3.0f;
+
+        // Transform center to world space
+        float wcx = pos->x + rot->e00*cx + rot->e01*cy + rot->e02*cz;
+        float wcy = pos->y + rot->e10*cx + rot->e11*cy + rot->e12*cz;
+        float wcz = pos->z + rot->e20*cx + rot->e21*cy + rot->e22*cz;
+
+        // Transform normal to world space (rotation only)
+        float wnx = rot->e00*tri->normal.x + rot->e01*tri->normal.y + rot->e02*tri->normal.z;
+        float wny = rot->e10*tri->normal.x + rot->e11*tri->normal.y + rot->e12*tri->normal.z;
+        float wnz = rot->e20*tri->normal.x + rot->e21*tri->normal.y + rot->e22*tri->normal.z;
+
+        // Draw normal line (0.3 units long)
+        float len = 0.3f;
+        debugDrawLineVec3(wcx, wcy, wcz,
+                          wcx + wnx * len, wcy + wny * len, wcz + wnz * len, color);
     }
 }
 
 // =============================================================================
-// Public API
+// Body Drawing
 // =============================================================================
 
-void physics_debug_init(void) {
-    g_debug.mode = PHYSICS_DEBUG_NONE;
-    g_debug.enabled = false;
+/**
+ * Quick frustum cull check using shape's AABB center and approximate radius.
+ * Returns true if shape is potentially visible, false if definitely outside frustum.
+ */
+static inline bool shape_in_frustum(const OimoShape *shape)
+{
+    if (!g_frustum) return true;  // No frustum = draw everything
 
-    // Default colors (RGBA5551)
-    g_debug.colors.wireframe_active = RGBA5551(0, 31, 0);     // Green
-    g_debug.colors.wireframe_sleeping = RGBA5551(16, 16, 16); // Gray
-    g_debug.colors.wireframe_static = RGBA5551(31, 31, 0);    // Yellow
-    g_debug.colors.aabb = RGBA5551(31, 16, 0);                // Orange
-    g_debug.colors.contact_point = RGBA5551(31, 0, 0);        // Red
-    g_debug.colors.contact_normal = RGBA5551(31, 0, 31);      // Magenta
-    g_debug.colors.axis_x = RGBA5551(31, 0, 0);               // Red
-    g_debug.colors.axis_y = RGBA5551(0, 31, 0);               // Green
-    g_debug.colors.axis_z = RGBA5551(0, 0, 31);               // Blue
+    // Use AABB center as sphere center
+    const OimoAabb *aabb = &shape->_aabb;
+    T3DVec3 center = {{
+        (aabb->min.x + aabb->max.x) * 0.5f,
+        (aabb->min.y + aabb->max.y) * 0.5f,
+        (aabb->min.z + aabb->max.z) * 0.5f
+    }};
 
-    init_circle_lut();
-}
+    // Compute bounding sphere radius from AABB half-extents
+    float hx = (aabb->max.x - aabb->min.x) * 0.5f;
+    float hy = (aabb->max.y - aabb->min.y) * 0.5f;
+    float hz = (aabb->max.z - aabb->min.z) * 0.5f;
+    // Approximate: use max half-extent * sqrt(3) ≈ 1.73, but 2.0 is safer
+    float maxH = hx;
+    if (hy > maxH) maxH = hy;
+    if (hz > maxH) maxH = hz;
+    float radius = maxH * 1.8f;
 
-void physics_debug_set_mode(PhysicsDebugMode mode) {
-    g_debug.mode = mode;
-}
-
-void physics_debug_enable(bool enabled) {
-    g_debug.enabled = enabled;
-}
-
-bool physics_debug_is_enabled(void) {
-    return g_debug.enabled;
-}
-
-PhysicsDebugMode physics_debug_get_mode(void) {
-    return g_debug.mode;
+    return t3d_frustum_vs_sphere(g_frustum, &center, radius);
 }
 
 /**
- * Draw debug visualization for a single rigid body
+ * Draw one physics body with all shapes
  */
-static void draw_body(uint16_t* fb, T3DViewport* vp, OimoRigidBody* body) {
-    // Determine color based on body state
+static void draw_body(OimoRigidBody *body)
+{
+    if (!body) return;
+
     uint16_t color;
     if (body->_type == OIMO_RIGID_BODY_STATIC) {
         color = g_debug.colors.wireframe_static;
@@ -415,41 +526,53 @@ static void draw_body(uint16_t* fb, T3DViewport* vp, OimoRigidBody* body) {
         color = g_debug.colors.wireframe_active;
     }
 
-    // Draw each shape
-    OimoShape* shape = body->_shapeList;
-    while (shape) {
-        // AABB
-        if (g_debug.mode & PHYSICS_DEBUG_AABB) {
-            draw_aabb(fb, vp, &shape->_aabb, g_debug.colors.aabb);
+    // Iterate shapes with strict safety limit
+    OimoShape *shape = body->_shapeList;
+    int shape_count = 0;
+    while (shape && shape_count < MAX_SHAPES_PER_BODY) {
+        if (!shape->_geom) {
+            shape = shape->_next;
+            shape_count++;
+            continue;
         }
 
-        // Wireframe
-        if (g_debug.mode & PHYSICS_DEBUG_WIREFRAME) {
-            OimoVec3 pos = shape->_transform.position;
-            OimoMat3 rot = shape->_transform.rotation;
+        // Frustum cull: skip shapes outside view frustum
+        if (!shape_in_frustum(shape)) {
+            shape = shape->_next;
+            shape_count++;
+            continue;
+        }
 
+        OimoVec3 pos = shape->_transform.position;
+        OimoMat3 rot = shape->_transform.rotation;
+
+        // Draw AABB if enabled
+        if (g_debug.mode & PHYSICS_DEBUG_AABB) {
+            draw_aabb(&shape->_aabb, g_debug.colors.aabb);
+        }
+
+        // Draw wireframe if enabled
+        if (g_debug.mode & PHYSICS_DEBUG_WIREFRAME) {
             switch (shape->_geom->type) {
                 case OIMO_GEOMETRY_BOX: {
-                    OimoBoxGeometry* box = (OimoBoxGeometry*)shape->_geom;
-                    draw_box_wireframe(fb, vp, &pos, &rot,
-                                       box->half_extents.x, box->half_extents.y, box->half_extents.z,
-                                       color);
+                    OimoBoxGeometry *box = (OimoBoxGeometry*)shape->_geom;
+                    draw_box(&pos, &rot,
+                             box->half_extents.x, box->half_extents.y, box->half_extents.z, color);
                     break;
                 }
                 case OIMO_GEOMETRY_SPHERE: {
-                    OimoSphereGeometry* sphere = (OimoSphereGeometry*)shape->_geom;
-                    draw_sphere_wireframe(fb, vp, &pos, &rot, sphere->radius, color);
+                    OimoSphereGeometry *sphere = (OimoSphereGeometry*)shape->_geom;
+                    draw_sphere(&pos, &rot, sphere->radius, color);
                     break;
                 }
                 case OIMO_GEOMETRY_CAPSULE: {
-                    OimoCapsuleGeometry* capsule = (OimoCapsuleGeometry*)shape->_geom;
-                    draw_capsule_wireframe(fb, vp, &pos, &rot,
-                                           capsule->radius, capsule->halfHeight, color);
+                    OimoCapsuleGeometry *capsule = (OimoCapsuleGeometry*)shape->_geom;
+                    draw_capsule(&pos, &rot, capsule->radius, capsule->halfHeight, color);
                     break;
                 }
                 case OIMO_GEOMETRY_STATIC_MESH: {
-                    OimoStaticMeshGeometry* mesh = (OimoStaticMeshGeometry*)shape->_geom;
-                    draw_mesh_wireframe(fb, vp, &pos, &rot, mesh, color);
+                    OimoStaticMeshGeometry *mesh = (OimoStaticMeshGeometry*)shape->_geom;
+                    draw_static_mesh(&pos, &rot, mesh, color);
                     break;
                 }
                 default:
@@ -457,64 +580,242 @@ static void draw_body(uint16_t* fb, T3DViewport* vp, OimoRigidBody* body) {
             }
         }
 
-        // Body axes
+        // Draw face normals if enabled
+        if (g_debug.mode & PHYSICS_DEBUG_NORMALS) {
+            uint16_t normal_color = g_debug.colors.face_normal;
+            switch (shape->_geom->type) {
+                case OIMO_GEOMETRY_BOX: {
+                    // Draw 6 face normals for box
+                    OimoBoxGeometry *box = (OimoBoxGeometry*)shape->_geom;
+                    float len = 0.3f;
+                    // +X face
+                    float fx = pos.x + rot.e00 * box->half_extents.x;
+                    float fy = pos.y + rot.e10 * box->half_extents.x;
+                    float fz = pos.z + rot.e20 * box->half_extents.x;
+                    debugDrawLineVec3(fx, fy, fz, fx + rot.e00 * len, fy + rot.e10 * len, fz + rot.e20 * len, normal_color);
+                    // -X face
+                    fx = pos.x - rot.e00 * box->half_extents.x;
+                    fy = pos.y - rot.e10 * box->half_extents.x;
+                    fz = pos.z - rot.e20 * box->half_extents.x;
+                    debugDrawLineVec3(fx, fy, fz, fx - rot.e00 * len, fy - rot.e10 * len, fz - rot.e20 * len, normal_color);
+                    // +Y face
+                    fx = pos.x + rot.e01 * box->half_extents.y;
+                    fy = pos.y + rot.e11 * box->half_extents.y;
+                    fz = pos.z + rot.e21 * box->half_extents.y;
+                    debugDrawLineVec3(fx, fy, fz, fx + rot.e01 * len, fy + rot.e11 * len, fz + rot.e21 * len, normal_color);
+                    // -Y face
+                    fx = pos.x - rot.e01 * box->half_extents.y;
+                    fy = pos.y - rot.e11 * box->half_extents.y;
+                    fz = pos.z - rot.e21 * box->half_extents.y;
+                    debugDrawLineVec3(fx, fy, fz, fx - rot.e01 * len, fy - rot.e11 * len, fz - rot.e21 * len, normal_color);
+                    // +Z face
+                    fx = pos.x + rot.e02 * box->half_extents.z;
+                    fy = pos.y + rot.e12 * box->half_extents.z;
+                    fz = pos.z + rot.e22 * box->half_extents.z;
+                    debugDrawLineVec3(fx, fy, fz, fx + rot.e02 * len, fy + rot.e12 * len, fz + rot.e22 * len, normal_color);
+                    // -Z face
+                    fx = pos.x - rot.e02 * box->half_extents.z;
+                    fy = pos.y - rot.e12 * box->half_extents.z;
+                    fz = pos.z - rot.e22 * box->half_extents.z;
+                    debugDrawLineVec3(fx, fy, fz, fx - rot.e02 * len, fy - rot.e12 * len, fz - rot.e22 * len, normal_color);
+                    break;
+                }
+                case OIMO_GEOMETRY_SPHERE: {
+                    // Draw 6 surface normals for sphere (along principal axes)
+                    OimoSphereGeometry *sphere = (OimoSphereGeometry*)shape->_geom;
+                    float r = sphere->radius;
+                    float len = 0.3f;
+                    // +X, -X, +Y, -Y, +Z, -Z
+                    debugDrawLineVec3(pos.x + r, pos.y, pos.z, pos.x + r + len, pos.y, pos.z, normal_color);
+                    debugDrawLineVec3(pos.x - r, pos.y, pos.z, pos.x - r - len, pos.y, pos.z, normal_color);
+                    debugDrawLineVec3(pos.x, pos.y + r, pos.z, pos.x, pos.y + r + len, pos.z, normal_color);
+                    debugDrawLineVec3(pos.x, pos.y - r, pos.z, pos.x, pos.y - r - len, pos.z, normal_color);
+                    debugDrawLineVec3(pos.x, pos.y, pos.z + r, pos.x, pos.y, pos.z + r + len, normal_color);
+                    debugDrawLineVec3(pos.x, pos.y, pos.z - r, pos.x, pos.y, pos.z - r - len, normal_color);
+                    break;
+                }
+                case OIMO_GEOMETRY_CAPSULE: {
+                    // Draw normals at top/bottom caps and around cylinder
+                    OimoCapsuleGeometry *capsule = (OimoCapsuleGeometry*)shape->_geom;
+                    float r = capsule->radius;
+                    float hh = capsule->halfHeight;
+                    float len = 0.3f;
+                    // Top cap normal (up direction)
+                    float tx = pos.x + rot.e01 * (hh + r);
+                    float ty = pos.y + rot.e11 * (hh + r);
+                    float tz = pos.z + rot.e21 * (hh + r);
+                    debugDrawLineVec3(tx, ty, tz, tx + rot.e01 * len, ty + rot.e11 * len, tz + rot.e21 * len, normal_color);
+                    // Bottom cap normal (-up direction)
+                    float bx = pos.x - rot.e01 * (hh + r);
+                    float by = pos.y - rot.e11 * (hh + r);
+                    float bz = pos.z - rot.e21 * (hh + r);
+                    debugDrawLineVec3(bx, by, bz, bx - rot.e01 * len, by - rot.e11 * len, bz - rot.e21 * len, normal_color);
+                    // Side normals (+X, -X, +Z, -Z in local space)
+                    debugDrawLineVec3(pos.x + rot.e00 * r, pos.y + rot.e10 * r, pos.z + rot.e20 * r,
+                                      pos.x + rot.e00 * (r + len), pos.y + rot.e10 * (r + len), pos.z + rot.e20 * (r + len), normal_color);
+                    debugDrawLineVec3(pos.x - rot.e00 * r, pos.y - rot.e10 * r, pos.z - rot.e20 * r,
+                                      pos.x - rot.e00 * (r + len), pos.y - rot.e10 * (r + len), pos.z - rot.e20 * (r + len), normal_color);
+                    debugDrawLineVec3(pos.x + rot.e02 * r, pos.y + rot.e12 * r, pos.z + rot.e22 * r,
+                                      pos.x + rot.e02 * (r + len), pos.y + rot.e12 * (r + len), pos.z + rot.e22 * (r + len), normal_color);
+                    debugDrawLineVec3(pos.x - rot.e02 * r, pos.y - rot.e12 * r, pos.z - rot.e22 * r,
+                                      pos.x - rot.e02 * (r + len), pos.y - rot.e12 * (r + len), pos.z - rot.e22 * (r + len), normal_color);
+                    break;
+                }
+                case OIMO_GEOMETRY_STATIC_MESH: {
+                    OimoStaticMeshGeometry *mesh = (OimoStaticMeshGeometry*)shape->_geom;
+                    draw_mesh_normals(&pos, &rot, mesh, normal_color);
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+
+        // Draw axes gizmo if enabled (per-shape)
         if (g_debug.mode & PHYSICS_DEBUG_AXES) {
-            OimoVec3 pos = body->_transform.position;
-            OimoMat3 rot = body->_transform.rotation;
-            draw_body_axes(fb, vp, &pos, &rot, 0.5f);
+            draw_axes(&pos, &rot, 0.5f);
         }
 
         shape = shape->_next;
+        shape_count++;
     }
 }
 
-/**
- * Draw contact points and normals
- */
-static void draw_contacts(uint16_t* fb, T3DViewport* vp, OimoWorld* world) {
-    if (!(g_debug.mode & PHYSICS_DEBUG_CONTACTS)) return;
+// =============================================================================
+// Public API
+// =============================================================================
 
-    OimoContact* contact = world->_contactManager._contactList;
-    while (contact) {
-        if (contact->_touching) {
-            OimoManifold* manifold = &contact->_manifold;
+void physics_debug_init(void)
+{
+    // Clear all state
+    g_debug.mode = PHYSICS_DEBUG_NONE;
+    g_debug.enabled = false;
+    g_lines_this_frame = 0;
+    g_screen_w = 0;
+    g_screen_h = 0;
+    g_surface = NULL;
+    g_viewport = NULL;
+    g_frustum = NULL;
 
-            for (int i = 0; i < manifold->_numPoints; i++) {
-                OimoManifoldPoint* mp = &manifold->_points[i];
+    // Default colors (bright, easily visible)
+    g_debug.colors.wireframe_active   = RGBA5551(0, 31, 0);   // Green
+    g_debug.colors.wireframe_sleeping = RGBA5551(16, 16, 16); // Gray
+    g_debug.colors.wireframe_static   = RGBA5551(31, 31, 0);  // Yellow
+    g_debug.colors.aabb               = RGBA5551(31, 16, 0);  // Orange
+    g_debug.colors.contact_point      = RGBA5551(31, 0, 0);   // Red
+    g_debug.colors.contact_normal     = RGBA5551(31, 0, 31);  // Magenta
+    g_debug.colors.face_normal        = RGBA5551(0, 31, 31);  // Cyan
+    g_debug.colors.axis_x             = RGBA5551(31, 0, 0);   // Red
+    g_debug.colors.axis_y             = RGBA5551(0, 31, 0);   // Green
+    g_debug.colors.axis_z             = RGBA5551(0, 0, 31);   // Blue
 
-                // Draw contact point (average of two positions)
-                OimoVec3 pos = {
-                    (mp->_pos1.x + mp->_pos2.x) * 0.5f,
-                    (mp->_pos1.y + mp->_pos2.y) * 0.5f,
-                    (mp->_pos1.z + mp->_pos2.z) * 0.5f
-                };
-                draw_contact_point(fb, vp, &pos, g_debug.colors.contact_point);
-
-                // Draw contact normal
-                draw_line_3d(fb, vp, pos.x, pos.y, pos.z,
-                             pos.x + manifold->_normal.x * 0.3f,
-                             pos.y + manifold->_normal.y * 0.3f,
-                             pos.z + manifold->_normal.z * 0.3f,
-                             g_debug.colors.contact_normal);
-            }
-        }
-        contact = contact->_next;
-    }
+    // Pre-compute circle LUT
+    init_circle_lut();
 }
 
-void physics_debug_draw(surface_t* surface, T3DViewport* viewport, OimoWorld* world) {
-    if (!surface || !surface->buffer) return;
+void physics_debug_set_mode(PhysicsDebugMode mode)
+{
+    g_debug.mode = mode;
+}
+
+void physics_debug_enable(bool enabled)
+{
+    g_debug.enabled = enabled;
+}
+
+bool physics_debug_is_enabled(void)
+{
+    return g_debug.enabled;
+}
+
+PhysicsDebugMode physics_debug_get_mode(void)
+{
+    return g_debug.mode;
+}
+
+void physics_debug_draw(surface_t *surface, T3DViewport *viewport, OimoWorld *world)
+{
+    // Early out checks
     if (!g_debug.enabled || g_debug.mode == PHYSICS_DEBUG_NONE) return;
+    if (!surface || !surface->buffer || !viewport || !world) return;
 
-    uint16_t* fb = (uint16_t*)surface->buffer;
+    // Reset per-frame state
+    g_lines_this_frame = 0;
+    g_surface = surface;
+    g_viewport = viewport;
+    g_frustum = &viewport->viewFrustum;  // Cache frustum for shape culling
+    g_screen_w = display_get_width();
+    g_screen_h = display_get_height();
 
-    // Draw all bodies
-    OimoRigidBody* body = world->_rigidBodyList;
-    while (body) {
-        draw_body(fb, viewport, body);
-        body = body->_next;
+    // Validate screen dimensions (sanity check)
+    if (g_screen_w == 0 || g_screen_h == 0 ||
+        g_screen_w > MAX_SCREEN_WIDTH || g_screen_h > MAX_SCREEN_HEIGHT) {
+        g_surface = NULL;
+        g_viewport = NULL;
+        g_frustum = NULL;
+        return;
     }
 
-    // Draw contacts
-    draw_contacts(fb, viewport, world);
+    // Draw bodies with strict limit
+    OimoRigidBody *body = world->_rigidBodyList;
+    int body_count = 0;
+    while (body && body_count < MAX_BODIES_PER_FRAME) {
+        draw_body(body);
+        body = body->_next;
+        body_count++;
+    }
+
+    // Draw contact points if enabled
+    if (g_debug.mode & PHYSICS_DEBUG_CONTACTS) {
+        OimoContact *contact = world->_contactManager._contactList;
+        int contact_count = 0;
+
+        while (contact && contact_count < MAX_CONTACTS_PER_FRAME) {
+            if (contact->_touching) {
+                OimoManifold *manifold = &contact->_manifold;
+                if (manifold) {
+                    int numPoints = manifold->_numPoints;
+                    if (numPoints < 0) numPoints = 0;
+                    if (numPoints > MAX_CONTACT_POINTS) numPoints = MAX_CONTACT_POINTS;
+
+                    for (int i = 0; i < numPoints; i++) {
+                        OimoManifoldPoint *mp = &manifold->_points[i];
+                        if (!mp) continue;
+
+                        // Average contact position
+                        float px = (mp->_pos1.x + mp->_pos2.x) * 0.5f;
+                        float py = (mp->_pos1.y + mp->_pos2.y) * 0.5f;
+                        float pz = (mp->_pos1.z + mp->_pos2.z) * 0.5f;
+
+                        // Skip invalid positions
+                        if (!is_valid_float(px) || !is_valid_float(py) || !is_valid_float(pz)) {
+                            continue;
+                        }
+
+                        // Draw contact normal
+                        float nx = manifold->_normal.x;
+                        float ny = manifold->_normal.y;
+                        float nz = manifold->_normal.z;
+                        float len = 0.3f;
+                        debugDrawLineVec3(px, py, pz,
+                                          px + nx * len, py + ny * len, pz + nz * len,
+                                          g_debug.colors.contact_normal);
+
+                        // Draw small cross at contact point
+                        float cross = 0.05f;
+                        debugDrawLineVec3(px - cross, py, pz, px + cross, py, pz, g_debug.colors.contact_point);
+                        debugDrawLineVec3(px, py - cross, pz, px, py + cross, pz, g_debug.colors.contact_point);
+                        debugDrawLineVec3(px, py, pz - cross, px, py, pz + cross, g_debug.colors.contact_point);
+                    }
+                }
+            }
+            contact = contact->_next;
+            contact_count++;
+        }
+    }
+
+    // Clear per-frame pointers
+    g_surface = NULL;
+    g_viewport = NULL;
+    g_frustum = NULL;
 }

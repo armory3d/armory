@@ -173,8 +173,7 @@ void renderer_end_frame(T3DViewport *viewport)
 {
 #if ENGINE_ENABLE_PHYSICS && ENGINE_ENABLE_PHYSICS_DEBUG
     // Detach RDP and wait for all commands to complete before CPU drawing
-    rdpq_detach();
-    rspq_wait();
+	rdpq_detach_wait();
     physics_debug_draw(g_current_surface, viewport, physics_get_world());
     display_show(g_current_surface);
 #else

@@ -45,6 +45,7 @@ typedef struct PhysicsDebugColors {
     uint16_t aabb;               // AABB outlines (orange)
     uint16_t contact_point;      // Contact point markers (red)
     uint16_t contact_normal;     // Contact normal lines (magenta)
+    uint16_t face_normal;        // Face normals (cyan)
     uint16_t axis_x;             // X axis (red)
     uint16_t axis_y;             // Y axis (green)
     uint16_t axis_z;             // Z axis (blue)
