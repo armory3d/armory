@@ -1,14 +1,16 @@
 /**
  * Physics Debug Drawing for N64
- * Software rendering version - reliable on real hardware
+ * Hardware rendering version - uses RDP triangles for line drawing
  *
- * Uses libdragon's graphics_draw_line() for CPU-based Bresenham rendering.
- * This avoids RDP state conflicts that cause freezes on real hardware.
+ * Uses rdpq_triangle() with degenerate triangles for line rendering.
+ * This provides hardware acceleration while staying within the RDP pipeline.
  */
 
 #include "physics_debug.h"
 #include <libdragon.h>
-#include <graphics.h>
+#include <rdpq.h>
+#include <rdpq_mode.h>
+#include <rdpq_tri.h>
 #include <t3d/t3d.h>
 #include <math.h>
 #include <stdint.h>
@@ -59,11 +61,13 @@ static bool g_circle_lut_ready = false;
 static int g_lines_this_frame = 0;
 static uint32_t g_screen_w = 0;
 static uint32_t g_screen_h = 0;
-static surface_t *g_surface = NULL;
 static T3DViewport *g_viewport = NULL;
 
 // Cached frustum pointer for per-shape culling
 static const T3DFrustum *g_frustum = NULL;
+
+// RDP mode initialized flag
+static bool g_rdp_mode_set = false;
 
 // =============================================================================
 // Initialization
@@ -90,14 +94,14 @@ static void init_circle_lut(void)
 // =============================================================================
 
 /**
- * Convert RGBA5551 to 32-bit color for libdragon graphics.h
+ * Convert RGBA5551 to color_t for RDP
  */
-static inline uint32_t rgba5551_to_color32(uint16_t c)
+static inline color_t rgba5551_to_color(uint16_t c)
 {
     uint8_t r = ((c >> 11) & 0x1F) << 3;
     uint8_t g = ((c >> 6) & 0x1F) << 3;
     uint8_t b = ((c >> 1) & 0x1F) << 3;
-    return graphics_make_color(r, g, b, 255);
+    return RGBA32(r, g, b, 255);
 }
 
 /**
@@ -116,14 +120,13 @@ static inline bool is_valid_float(float f)
 }
 
 /**
- * Draw 2D line using software rendering (libdragon graphics.h)
- * Safe for real N64 hardware - no RDP state conflicts
+ * Draw 2D line using RDP hardware (degenerate triangle)
+ * Uses rdpq_triangle for hardware-accelerated line rendering
  */
 static void debugDrawLine(int x0, int y0, int x1, int y1, uint16_t color)
 {
     // Enforce per-frame line budget to prevent slowdown/crashes
     if (g_lines_this_frame >= MAX_LINES_PER_FRAME) return;
-    if (!g_surface) return;
 
     g_lines_this_frame++;
 
@@ -138,9 +141,28 @@ static void debugDrawLine(int x0, int y0, int x1, int y1, uint16_t color)
         return;
     }
 
-    // Draw using libdragon's CPU-based Bresenham line drawing
-    uint32_t col = rgba5551_to_color32(color);
-    graphics_draw_line(g_surface, x0, y0, x1, y1, col);
+    // Set color for this line
+    rdpq_set_prim_color(rgba5551_to_color(color));
+
+    // Draw line as a thin triangle (degenerate triangle with 1 pixel offset)
+    // Create a perpendicular offset for line thickness
+    float dx = (float)(x1 - x0);
+    float dy = (float)(y1 - y0);
+    float len = sqrtf(dx * dx + dy * dy);
+    if (len < 0.001f) return;  // Skip zero-length lines
+
+    // Perpendicular unit vector scaled by half line width (0.5 pixel)
+    float px = -dy / len * 0.5f;
+    float py = dx / len * 0.5f;
+
+    // Two triangles forming a thin quad (line)
+    float v0[] = { (float)x0 - px, (float)y0 - py };
+    float v1[] = { (float)x0 + px, (float)y0 + py };
+    float v2[] = { (float)x1 + px, (float)y1 + py };
+    float v3[] = { (float)x1 - px, (float)y1 - py };
+
+    rdpq_triangle(&TRIFMT_FILL, v0, v1, v2);
+    rdpq_triangle(&TRIFMT_FILL, v0, v2, v3);
 }
 
 /**
@@ -716,9 +738,9 @@ void physics_debug_init(void)
     g_lines_this_frame = 0;
     g_screen_w = 0;
     g_screen_h = 0;
-    g_surface = NULL;
     g_viewport = NULL;
     g_frustum = NULL;
+    g_rdp_mode_set = false;
 
     // Default colors (bright, easily visible)
     g_debug.colors.wireframe_active   = RGBA5551(0, 31, 0);   // Green
@@ -756,15 +778,14 @@ PhysicsDebugMode physics_debug_get_mode(void)
     return g_debug.mode;
 }
 
-void physics_debug_draw(surface_t *surface, T3DViewport *viewport, OimoWorld *world)
+void physics_debug_draw(T3DViewport *viewport, OimoWorld *world)
 {
     // Early out checks
     if (!g_debug.enabled || g_debug.mode == PHYSICS_DEBUG_NONE) return;
-    if (!surface || !surface->buffer || !viewport || !world) return;
+    if (!viewport || !world) return;
 
     // Reset per-frame state
     g_lines_this_frame = 0;
-    g_surface = surface;
     g_viewport = viewport;
     g_frustum = &viewport->viewFrustum;  // Cache frustum for shape culling
     g_screen_w = display_get_width();
@@ -773,11 +794,16 @@ void physics_debug_draw(surface_t *surface, T3DViewport *viewport, OimoWorld *wo
     // Validate screen dimensions (sanity check)
     if (g_screen_w == 0 || g_screen_h == 0 ||
         g_screen_w > MAX_SCREEN_WIDTH || g_screen_h > MAX_SCREEN_HEIGHT) {
-        g_surface = NULL;
         g_viewport = NULL;
         g_frustum = NULL;
         return;
     }
+
+    // Set up RDP mode for flat-colored triangle drawing
+    rdpq_sync_pipe();
+    rdpq_set_mode_standard();
+    rdpq_mode_combiner(RDPQ_COMBINER_FLAT);
+    rdpq_mode_blender(0);  // Disable blending for solid lines
 
     // Draw bodies with strict limit
     OimoRigidBody *body = world->_rigidBodyList;
@@ -837,8 +863,10 @@ void physics_debug_draw(surface_t *surface, T3DViewport *viewport, OimoWorld *wo
         }
     }
 
+    // Sync before finishing debug drawing
+    rdpq_sync_pipe();
+
     // Clear per-frame pointers
-    g_surface = NULL;
     g_viewport = NULL;
     g_frustum = NULL;
 }

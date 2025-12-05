@@ -1,7 +1,7 @@
 /**
  * Physics Debug Drawing for N64
- * Visual debugging for OimoPhysics - similar to Blender's physics debug panel
- * Uses T3D's viewport projection for 3D->2D conversion
+ * Hardware-accelerated debug visualization for OimoPhysics
+ * Uses RDP triangles for line rendering via T3D viewport projection
  *
  * Features:
  * - Collider wireframes (box, sphere, capsule)
@@ -14,7 +14,6 @@
 
 #include <libdragon.h>
 #include <stdint.h>
-#include <libdragon.h>
 #include <t3d/t3d.h>
 #include "../oimo.h"
 
@@ -37,7 +36,7 @@ typedef enum PhysicsDebugMode {
     PHYSICS_DEBUG_ALL               = 0x1C80B     // All implemented modes
 } PhysicsDebugMode;
 
-// Debug draw colors (RGBA5551 format for direct framebuffer write)
+// Debug draw colors (RGBA5551 format, converted to color_t for RDP)
 typedef struct PhysicsDebugColors {
     uint16_t wireframe_active;   // Active dynamic bodies (green)
     uint16_t wireframe_sleeping; // Sleeping bodies (gray)
@@ -91,14 +90,13 @@ PhysicsDebugMode physics_debug_get_mode(void);
 /**
  * Main debug draw function - draws all enabled debug visualization
  *
- * Call this AFTER rdpq_detach_wait() to ensure RDP is done with framebuffer.
- * This uses CPU software rendering directly to the framebuffer.
+ * Call this while RDP is attached (before rdpq_detach_show).
+ * Uses RDP hardware triangles for line rendering.
  *
- * @param surface   The surface/framebuffer to draw to (from display_get())
  * @param viewport  T3D viewport (for 3D->2D projection)
  * @param world     Physics world to visualize
  */
-void physics_debug_draw(surface_t* surface, T3DViewport* viewport, OimoWorld* world);
+void physics_debug_draw(T3DViewport* viewport, OimoWorld* world);
 
 #ifdef __cplusplus
 }
