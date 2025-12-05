@@ -99,6 +99,52 @@ class N64TraitMacro {
                 Reflect.setField(eventsObj, eventName, [for (n in eventNodes) serializeIRNode(n)]);
             }
 
+            // Generate struct_type and struct_def for signals with 2+ args
+            for (sig in ir.meta.signals) {
+                var argCount = sig.arg_types.length;
+                if (argCount >= 2) {
+                    sig.struct_type = '${ir.cName}_${sig.name}_payload_t';
+                    // Generate full struct definition
+                    var lines:Array<String> = ['typedef struct {'];
+                    for (i in 0...argCount) {
+                        lines.push('    ${sig.arg_types[i]} arg$i;');
+                    }
+                    lines.push('} ${sig.struct_type};');
+                    sig.struct_def = lines.join('\n');
+                }
+            }
+
+            for (sh in ir.meta.signal_handlers) {
+                // Find the signal this handler connects to
+                for (sig in ir.meta.signals) {
+                    if (sig.name == sh.signal_name) {
+                        var argTypes = sig.arg_types;
+                        var argCount = argTypes.length;
+
+                        // Always cast ctx to data pointer so handler body can use 'data'
+                        var dataType = '${ir.name}Data';
+                        var dataCast = '$dataType* data = ($dataType*)ctx;';
+
+                        if (argCount == 0) {
+                            sh.preamble = '$dataCast (void)payload;';
+                        } else if (argCount == 1) {
+                            sh.preamble = '$dataCast ${argTypes[0]} arg0 = (${argTypes[0]})(uintptr_t)payload; (void)arg0;';
+                        } else {
+                            // Multiple args - cast to struct (use sig.struct_type)
+                            var structType = sig.struct_type;
+                            var lines:Array<String> = [];
+                            lines.push(dataCast);
+                            lines.push('$structType* p = ($structType*)payload;');
+                            for (i in 0...argCount) {
+                                lines.push('${argTypes[i]} arg$i = p->arg$i; (void)arg$i;');
+                            }
+                            sh.preamble = lines.join(" ");
+                        }
+                        break;
+                    }
+                }
+            }
+
             Reflect.setField(traits, name, {
                 module: ir.module,
                 c_name: ir.cName,
@@ -191,12 +237,15 @@ typedef ContactEventMeta = {
 typedef SignalMeta = {
     name: String,            // Signal member name, e.g., "onDeath"
     arg_types: Array<String>, // C types for emit args, e.g., ["int32_t", "ArmObject*"]
-    max_subs: Int            // Max subscribers, default 16, configurable via @:n64MaxSubs(N)
+    max_subs: Int,           // Max subscribers, default 16, configurable via @:n64MaxSubs(N)
+    ?struct_type: String,    // Payload struct type name for 2+ args
+    ?struct_def: String      // Full C struct definition for 2+ args
 }
 
 typedef SignalHandlerMeta = {
     handler_name: String,    // Function name used as callback, e.g., "onEnemyDeath"
-    signal_name: String      // Which signal it connects to, e.g., "onDeath"
+    signal_name: String,     // Which signal it connects to, e.g., "onDeath"
+    ?preamble: String        // C code for payload unpacking, generated after arg_types known
 }
 
 typedef TraitMeta = {
@@ -1653,16 +1702,16 @@ class TraitExtractor {
 
         switch (method) {
             case "connect":
-                // signal.connect(callback) -> signal_connect(&data->signalName, callback, obj, data)
-                // The callback should be a function reference
+                // signal.connect(callback) -> signal_connect(&data->signalName, callback_func, data)
                 if (params.length > 0) {
                     var callbackName = extractFunctionRef(params[0]);
                     if (callbackName != null) {
-                        // Track this handler for declaration generation
                         addSignalHandler(callbackName, signalName);
+                        // c_code with {signal_ptr} and {handler} placeholders
                         return {
                             type: "signal_call",
                             value: "connect",
+                            c_code: 'signal_connect({signal_ptr}, {handler}, data);',
                             props: {
                                 signal_name: signalName,
                                 callback: callbackName
@@ -1673,13 +1722,13 @@ class TraitExtractor {
                 return { type: "skip" };
 
             case "disconnect":
-                // signal.disconnect(callback) -> signal_disconnect(&data->signalName, callback)
                 if (params.length > 0) {
                     var callbackName = extractFunctionRef(params[0]);
                     if (callbackName != null) {
                         return {
                             type: "signal_call",
                             value: "disconnect",
+                            c_code: 'signal_disconnect({signal_ptr}, {handler});',
                             props: {
                                 signal_name: signalName,
                                 callback: callbackName
@@ -1690,14 +1739,29 @@ class TraitExtractor {
                 return { type: "skip" };
 
             case "emit":
-                // signal.emit(arg1, arg2, ...) -> signal_emit(&data->signalName, obj, arg1, arg2, ...)
-                // Track arg types for this signal
                 updateSignalArgTypes(signalName, params);
+                var argCount = params.length;
+
+                // Generate c_code based on arg count
+                var c_code:String;
+                if (argCount == 0) {
+                    c_code = 'signal_emit({signal_ptr}, NULL);';
+                } else if (argCount == 1) {
+                    c_code = 'signal_emit({signal_ptr}, (void*)(uintptr_t)({0}));';
+                } else {
+                    // Multiple args - generate struct init + emit
+                    // {struct_type} _p = {{0}, {1}, ...}; signal_emit({signal_ptr}, &_p);
+                    var argPlaceholders = [for (i in 0...argCount) '{$i}'];
+                    c_code = '{struct_type} _p = {' + argPlaceholders.join(', ') + '}; signal_emit({signal_ptr}, &_p);';
+                }
+
                 return {
                     type: "signal_call",
                     value: "emit",
+                    c_code: c_code,
                     props: {
-                        signal_name: signalName
+                        signal_name: signalName,
+                        arg_count: argCount
                     },
                     args: args
                 };
@@ -1837,8 +1901,9 @@ class TraitExtractor {
 
     function extractSignalHandler(name:String, func:Function, eventNodes:Array<IRNode>):Void {
         // Signal handlers have signature matching ArmSignalHandler:
-        // void (*)(void* sender, void* a0, void* a1, void* a2, void* a3)
-        // The first param in Haxe is typically (sender: ArmObject) or similar
+        // void (*)(void* ctx, void* payload)
+        // ctx = the trait data pointer passed to signal_connect
+        // payload = the data pointer passed to signal_emit
 
         if (func.expr == null) return;
 

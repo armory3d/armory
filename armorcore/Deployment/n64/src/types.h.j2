@@ -104,13 +104,22 @@ typedef struct {{
 
 /**
  * Signal handler function type.
- * Called when a signal is emitted with: (sender_obj, handler_data, signal_args...)
- * Since C doesn't support variadic function pointers cleanly, handlers receive void* args.
+ * Called when a signal is emitted with: (context, payload)
+ * Pack all data into a struct and pass its pointer as payload.
  */
-typedef void (*ArmSignalHandler)(void *obj, void *data, void *arg0, void *arg1, void *arg2, void *arg3);
+typedef void (*ArmSignalHandler)(void *ctx, void *payload);
+
+/**
+ * Signal subscriber entry - keeps handler + context together for cache efficiency
+ */
+typedef struct {{
+    ArmSignalHandler handler;
+    void *ctx;  // Handler's context (passed as first arg)
+}} ArmSignalEntry;
 
 /**
  * ArmSignal - Per-instance signal with up to ARM_SIGNAL_MAX_SUBS subscribers.
+ * Uses array-of-structs (AoS) for better cache locality on N64.
  *
  * Usage in traits:
  *   - Declare: var onDeath:Signal; (Haxe) → ArmSignal onDeath; (C struct member)
@@ -119,24 +128,15 @@ typedef void (*ArmSignalHandler)(void *obj, void *data, void *arg0, void *arg1, 
  *   - Disconnect: onDeath.disconnect(callback) → signal_disconnect(&data->onDeath, handler)
  */
 typedef struct {{
-    ArmSignalHandler handlers[ARM_SIGNAL_MAX_SUBS];
-    void *handler_objs[ARM_SIGNAL_MAX_SUBS];    // Object pointer for each handler
-    void *handler_data[ARM_SIGNAL_MAX_SUBS];    // Data pointer for each handler
     uint8_t count;
+    ArmSignalEntry entries[ARM_SIGNAL_MAX_SUBS];
 }} ArmSignal;
 
 // Signal functions (implemented in signal.c)
-void signal_connect(ArmSignal *signal, ArmSignalHandler handler, void *obj, void *data);
+void signal_connect(ArmSignal *signal, ArmSignalHandler handler, void *ctx);
 void signal_disconnect(ArmSignal *signal, ArmSignalHandler handler);
-void signal_emit(ArmSignal *signal, void *sender, void *arg0, void *arg1, void *arg2, void *arg3);
+void signal_emit(ArmSignal *signal, void *payload);
 void signal_clear(ArmSignal *signal);
-
-// Convenience macros for emit with fewer args
-#define signal_emit0(sig, sender) signal_emit(sig, sender, NULL, NULL, NULL, NULL)
-#define signal_emit1(sig, sender, a0) signal_emit(sig, sender, (void*)(uintptr_t)(a0), NULL, NULL, NULL)
-#define signal_emit2(sig, sender, a0, a1) signal_emit(sig, sender, (void*)(uintptr_t)(a0), (void*)(uintptr_t)(a1), NULL, NULL)
-#define signal_emit3(sig, sender, a0, a1, a2) signal_emit(sig, sender, (void*)(uintptr_t)(a0), (void*)(uintptr_t)(a1), (void*)(uintptr_t)(a2), NULL)
-#define signal_emit4(sig, sender, a0, a1, a2, a3) signal_emit(sig, sender, (void*)(uintptr_t)(a0), (void*)(uintptr_t)(a1), (void*)(uintptr_t)(a2), (void*)(uintptr_t)(a3))
 
 typedef struct {{
     T3DVec3 loc;

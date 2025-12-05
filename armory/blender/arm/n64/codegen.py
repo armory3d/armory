@@ -412,54 +412,32 @@ class IREmitter:
     def emit_signal_call(self, node: Dict) -> str:
         """Signal calls - connect/disconnect/emit on per-instance signals.
 
-        Generates calls to signal_* functions that operate on ArmSignal structs
-        stored in trait data.
+        Uses c_code template from macro with placeholder substitution.
         """
-        action = node.get("value", "")  # "connect", "disconnect", or "emit"
+        c_code = node.get("c_code", "")
+        if not c_code:
+            return ""
+
         props = node.get("props", {})
         signal_name = props.get("signal_name", "")
+        callback = props.get("callback", "")
 
-        if not signal_name:
-            return ""
-
-        # Signal is stored in trait data: data->signalName
+        # Build signal pointer
         signal_ptr = f"&(({self.data_type}*)data)->{signal_name}"
+        handler_name = f"{self.c_name}_{callback}" if callback else ""
+        struct_type = f"{self.c_name}_{signal_name}_payload_t"
 
-        if action == "connect":
-            callback = props.get("callback", "")
-            if callback:
-                # signal_connect(signal, handler, obj, data)
-                # The callback function must be defined - use c_name prefix
-                handler_name = f"{self.c_name}_{callback}"
-                return f"signal_connect({signal_ptr}, {handler_name}, obj, data);"
-            return ""
+        # Substitute placeholders
+        c_code = c_code.replace("{signal_ptr}", signal_ptr)
+        c_code = c_code.replace("{handler}", handler_name)
+        c_code = c_code.replace("{struct_type}", struct_type)
 
-        elif action == "disconnect":
-            callback = props.get("callback", "")
-            if callback:
-                handler_name = f"{self.c_name}_{callback}"
-                return f"signal_disconnect({signal_ptr}, {handler_name});"
-            return ""
+        # Substitute arg placeholders {0}, {1}, etc.
+        args = node.get("args", [])
+        for i, arg in enumerate(args):
+            c_code = c_code.replace("{" + str(i) + "}", self.emit(arg))
 
-        elif action == "emit":
-            args = node.get("args", [])
-            arg_strs = [self.emit(a) for a in args]
-            arg_count = len(arg_strs)
-
-            # Use convenience macros for correct argument count (max 4 args)
-            if arg_count == 0:
-                return f"signal_emit0({signal_ptr}, obj);"
-            elif arg_count == 1:
-                return f"signal_emit1({signal_ptr}, obj, {arg_strs[0]});"
-            elif arg_count == 2:
-                return f"signal_emit2({signal_ptr}, obj, {arg_strs[0]}, {arg_strs[1]});"
-            elif arg_count == 3:
-                return f"signal_emit3({signal_ptr}, obj, {arg_strs[0]}, {arg_strs[1]}, {arg_strs[2]});"
-            else:
-                # 4 or more args - use first 4
-                return f"signal_emit4({signal_ptr}, obj, {arg_strs[0]}, {arg_strs[1]}, {arg_strs[2]}, {arg_strs[3]});"
-
-        return ""
+        return c_code
 
     def emit_global_signal_call(self, node: Dict) -> str:
         """Global signal calls - GameEvents.signalName.connect/emit/disconnect.
@@ -479,7 +457,7 @@ class IREmitter:
             callback = props.get("callback", "")
             if callback:
                 handler_name = f"{self.c_name}_{callback}"
-                return f"signal_connect({signal_ptr}, {handler_name}, obj, data);"
+                return f"signal_connect({signal_ptr}, {handler_name}, data);"
             return ""
 
         elif action == "disconnect":
@@ -495,15 +473,9 @@ class IREmitter:
             arg_count = len(arg_strs)
 
             if arg_count == 0:
-                return f"signal_emit0({signal_ptr}, obj);"
-            elif arg_count == 1:
-                return f"signal_emit1({signal_ptr}, obj, {arg_strs[0]});"
-            elif arg_count == 2:
-                return f"signal_emit2({signal_ptr}, obj, {arg_strs[0]}, {arg_strs[1]});"
-            elif arg_count == 3:
-                return f"signal_emit3({signal_ptr}, obj, {arg_strs[0]}, {arg_strs[1]}, {arg_strs[2]});"
+                return f"signal_emit({signal_ptr}, NULL);"
             else:
-                return f"signal_emit4({signal_ptr}, obj, {arg_strs[0]}, {arg_strs[1]}, {arg_strs[2]}, {arg_strs[3]});"
+                return f"signal_emit({signal_ptr}, (void*){arg_strs[0]});"
 
         return ""
 
@@ -636,6 +608,22 @@ class TraitCodeGenerator:
 
         return "\n".join(lines)
 
+    def generate_signal_payload_structs(self) -> str:
+        """Generate payload struct types for signals with 2+ args.
+
+        Uses struct_def from macro-generated metadata.
+        """
+        signals = self.meta.get("signals", [])
+        lines = []
+
+        for sig in signals:
+            struct_def = sig.get("struct_def")
+            if struct_def:
+                lines.append(struct_def)
+                lines.append("")
+
+        return "\n".join(lines)
+
     def generate_lifecycle_declarations(self) -> List[str]:
         """Generate declarations for lifecycle event handlers."""
         decls = []
@@ -676,8 +664,8 @@ class TraitCodeGenerator:
         for event_name in self.events.keys():
             if event_name.startswith("signal_"):
                 handler_name = event_name[7:]  # Strip "signal_" prefix
-                # ArmSignalHandler signature: void (*)(void* obj, void* data, void* arg0, void* arg1, void* arg2, void* arg3)
-                decls.append(f"void {self.c_name}_{handler_name}(void* obj, void* data, void* arg0, void* arg1, void* arg2, void* arg3);")
+                # ArmSignalHandler signature: void (*)(void* ctx, void* payload)
+                decls.append(f"void {self.c_name}_{handler_name}(void* ctx, void* payload);")
         return decls
 
     def generate_all_event_implementations(self) -> str:
@@ -745,14 +733,26 @@ class TraitCodeGenerator:
                 impl_lines.append("}")
                 impl_lines.append("")
 
-        # Signal handler events - ArmSignalHandler signature: (obj, data, arg0, arg1, arg2, arg3)
+        # Signal handler events - use preamble from macro
+        signal_handlers = self.meta.get("signal_handlers", [])
+
         for event_name in self.events.keys():
             if event_name.startswith("signal_"):
                 event_nodes = self.events.get(event_name, [])
                 body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
                 handler_name = event_name[7:]  # Strip "signal_" prefix
-                impl_lines.append(f"void {self.c_name}_{handler_name}(void* obj, void* data, void* arg0, void* arg1, void* arg2, void* arg3) {{")
-                impl_lines.append(f"    (void)arg0; (void)arg1; (void)arg2; (void)arg3;  // Signal args")
+
+                # Find preamble from signal_handlers meta
+                # Default includes data cast so handler body can use 'data'
+                default_preamble = f"{self.name}Data* data = ({self.name}Data*)ctx; (void)payload;"
+                preamble = default_preamble
+                for sh in signal_handlers:
+                    if sh.get("handler_name") == handler_name:
+                        preamble = sh.get("preamble", default_preamble)
+                        break
+
+                impl_lines.append(f"void {self.c_name}_{handler_name}(void* ctx, void* payload) {{")
+                impl_lines.append(f"    {preamble}")
                 impl_lines.append(body)
                 impl_lines.append("}")
                 impl_lines.append("")
@@ -952,7 +952,11 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
     for trait_name, trait_ir in traits.items():
         gen = TraitCodeGenerator(trait_name, trait_ir, type_overrides)
 
-        # Header data: struct + declarations
+        # Header data: signal payload structs + data struct + declarations
+        payload_structs = gen.generate_signal_payload_structs()
+        if payload_structs:
+            trait_data_structs.append(payload_structs)
+
         struct = gen.generate_data_struct()
         if struct:
             trait_data_structs.append(struct)
