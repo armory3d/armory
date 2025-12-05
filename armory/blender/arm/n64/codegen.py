@@ -440,44 +440,29 @@ class IREmitter:
         return c_code
 
     def emit_global_signal_call(self, node: Dict) -> str:
-        """Global signal calls - GameEvents.signalName.connect/emit/disconnect.
+        """Global signal calls - uses c_code template from macro."""
+        c_code = node.get("c_code", "")
+        if not c_code:
+            return ""
 
-        Global signals are stored as extern ArmSignal structs.
-        """
-        action = node.get("value", "")
         props = node.get("props", {})
         global_signal = props.get("global_signal", "")
+        callback = props.get("callback", "")
 
-        if not global_signal:
-            return ""
-
+        # Build signal pointer and handler name
         signal_ptr = f"&{global_signal}"
+        handler_name = f"{self.c_name}_{callback}" if callback else ""
 
-        if action == "connect":
-            callback = props.get("callback", "")
-            if callback:
-                handler_name = f"{self.c_name}_{callback}"
-                return f"signal_connect({signal_ptr}, {handler_name}, data);"
-            return ""
+        # Substitute placeholders
+        c_code = c_code.replace("{signal_ptr}", signal_ptr)
+        c_code = c_code.replace("{handler}", handler_name)
 
-        elif action == "disconnect":
-            callback = props.get("callback", "")
-            if callback:
-                handler_name = f"{self.c_name}_{callback}"
-                return f"signal_disconnect({signal_ptr}, {handler_name});"
-            return ""
+        # Substitute arg placeholders {0}, {1}, etc.
+        args = node.get("args", [])
+        for i, arg in enumerate(args):
+            c_code = c_code.replace("{" + str(i) + "}", self.emit(arg))
 
-        elif action == "emit":
-            args = node.get("args", [])
-            arg_strs = [self.emit(a) for a in args]
-            arg_count = len(arg_strs)
-
-            if arg_count == 0:
-                return f"signal_emit({signal_ptr}, NULL);"
-            else:
-                return f"signal_emit({signal_ptr}, (void*){arg_strs[0]});"
-
-        return ""
+        return c_code
 
     def emit_cast_call(self, node: Dict) -> str:
         """Std.int() -> (int32_t)value"""

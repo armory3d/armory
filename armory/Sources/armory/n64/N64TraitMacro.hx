@@ -1790,7 +1790,7 @@ class TraitExtractor {
                         addSignalHandler(callbackName, signalName);
                         return {
                             type: "global_signal_call",
-                            value: "connect",
+                            c_code: 'signal_connect({signal_ptr}, {handler}, data);',
                             props: {
                                 global_signal: globalSignalName,
                                 callback: callbackName
@@ -1806,7 +1806,7 @@ class TraitExtractor {
                     if (callbackName != null) {
                         return {
                             type: "global_signal_call",
-                            value: "disconnect",
+                            c_code: 'signal_disconnect({signal_ptr}, {handler});',
                             props: {
                                 global_signal: globalSignalName,
                                 callback: callbackName
@@ -1817,9 +1817,19 @@ class TraitExtractor {
                 return { type: "skip" };
 
             case "emit":
+                var argCount = params.length;
+                var c_code:String;
+                if (argCount == 0) {
+                    c_code = 'signal_emit({signal_ptr}, NULL);';
+                } else if (argCount == 1) {
+                    c_code = 'signal_emit({signal_ptr}, (void*)(uintptr_t)({0}));';
+                } else {
+                    // Multiple args - for global signals, user should pass a struct pointer
+                    c_code = 'signal_emit({signal_ptr}, (void*){0});';
+                }
                 return {
                     type: "global_signal_call",
-                    value: "emit",
+                    c_code: c_code,
                     props: {
                         global_signal: globalSignalName
                     },
