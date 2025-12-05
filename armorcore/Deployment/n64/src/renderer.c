@@ -43,8 +43,8 @@ void renderer_update_objects(ArmScene *scene)
     for (uint16_t i = 0; i < scene->object_count; i++) {
         ArmObject *obj = &scene->objects[i];
 
-        // Skip removed objects
-        if (obj->is_removed) {
+        // Skip removed or static objects (static matrices computed once at init)
+        if (obj->is_removed || obj->is_static) {
             continue;
         }
 

@@ -206,7 +206,7 @@ def init_properties():
                ('Oimo', 'Oimo', 'Oimo')],
         name="Physics Engine", default='Bullet', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_physics_fixed_step = FloatProperty(
-        name="Fixed Step", default=1/60, min=0, max=1,
+        name="Fixed Step", default=1/30, min=0, max=1,
         description="Physics steps for fixed update"
     )
     bpy.types.World.arm_physics_dbg_draw_wireframe = BoolProperty(
