@@ -621,17 +621,40 @@ static void draw_body(OimoRigidBody *body)
                     break;
                 }
                 case OIMO_GEOMETRY_SPHERE: {
-                    // Draw 6 surface normals for sphere (along principal axes)
+                    // Draw 6 surface normals for sphere (along rotated local axes)
                     OimoSphereGeometry *sphere = (OimoSphereGeometry*)shape->_geom;
                     float r = sphere->radius;
                     float len = 0.3f;
-                    // +X, -X, +Y, -Y, +Z, -Z
-                    debugDrawLineVec3(pos.x + r, pos.y, pos.z, pos.x + r + len, pos.y, pos.z, normal_color);
-                    debugDrawLineVec3(pos.x - r, pos.y, pos.z, pos.x - r - len, pos.y, pos.z, normal_color);
-                    debugDrawLineVec3(pos.x, pos.y + r, pos.z, pos.x, pos.y + r + len, pos.z, normal_color);
-                    debugDrawLineVec3(pos.x, pos.y - r, pos.z, pos.x, pos.y - r - len, pos.z, normal_color);
-                    debugDrawLineVec3(pos.x, pos.y, pos.z + r, pos.x, pos.y, pos.z + r + len, normal_color);
-                    debugDrawLineVec3(pos.x, pos.y, pos.z - r, pos.x, pos.y, pos.z - r - len, normal_color);
+                    // +X axis (rotated)
+                    float sx = pos.x + rot.e00 * r;
+                    float sy = pos.y + rot.e10 * r;
+                    float sz = pos.z + rot.e20 * r;
+                    debugDrawLineVec3(sx, sy, sz, sx + rot.e00 * len, sy + rot.e10 * len, sz + rot.e20 * len, normal_color);
+                    // -X axis (rotated)
+                    sx = pos.x - rot.e00 * r;
+                    sy = pos.y - rot.e10 * r;
+                    sz = pos.z - rot.e20 * r;
+                    debugDrawLineVec3(sx, sy, sz, sx - rot.e00 * len, sy - rot.e10 * len, sz - rot.e20 * len, normal_color);
+                    // +Y axis (rotated)
+                    sx = pos.x + rot.e01 * r;
+                    sy = pos.y + rot.e11 * r;
+                    sz = pos.z + rot.e21 * r;
+                    debugDrawLineVec3(sx, sy, sz, sx + rot.e01 * len, sy + rot.e11 * len, sz + rot.e21 * len, normal_color);
+                    // -Y axis (rotated)
+                    sx = pos.x - rot.e01 * r;
+                    sy = pos.y - rot.e11 * r;
+                    sz = pos.z - rot.e21 * r;
+                    debugDrawLineVec3(sx, sy, sz, sx - rot.e01 * len, sy - rot.e11 * len, sz - rot.e21 * len, normal_color);
+                    // +Z axis (rotated)
+                    sx = pos.x + rot.e02 * r;
+                    sy = pos.y + rot.e12 * r;
+                    sz = pos.z + rot.e22 * r;
+                    debugDrawLineVec3(sx, sy, sz, sx + rot.e02 * len, sy + rot.e12 * len, sz + rot.e22 * len, normal_color);
+                    // -Z axis (rotated)
+                    sx = pos.x - rot.e02 * r;
+                    sy = pos.y - rot.e12 * r;
+                    sz = pos.z - rot.e22 * r;
+                    debugDrawLineVec3(sx, sy, sz, sx - rot.e02 * len, sy - rot.e12 * len, sz - rot.e22 * len, normal_color);
                     break;
                 }
                 case OIMO_GEOMETRY_CAPSULE: {
