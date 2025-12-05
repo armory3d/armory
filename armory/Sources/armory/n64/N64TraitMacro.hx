@@ -709,6 +709,16 @@ class TraitExtractor {
                             c_code: "it_set_scale(&((ArmObject*)obj)->transform, ({0}).x * 0.015625f, ({0}).z * 0.015625f, ({0}).y * 0.015625f);",
                             args: [valueIR]
                         };
+                    }
+                    // Special case: label.text = value -> koui_label_set_text(label, value)
+                    else if (isLabelTextAssign(e1)) {
+                        var labelObjIR = getLabelFromTextAccess(e1);
+                        var valueIR = exprToIR(e2);
+                        {
+                            type: "call",
+                            value: "koui_label_set_text",
+                            children: [labelObjIR, valueIR]
+                        };
                     } else {
                         { type: "assign", children: [exprToIR(e1), exprToIR(e2)] };
                     }
@@ -840,6 +850,27 @@ class TraitExtractor {
         return false;
     }
 
+    // Check if expression is assignment to label.text (needs koui_label_set_text)
+    function isLabelTextAssign(expr:Expr):Bool {
+        switch (expr.expr) {
+            case EField(obj, "text"):
+                var objType = getExprType(obj);
+                return objType == "Label";
+            default:
+        }
+        return false;
+    }
+
+    // Extract the label object from a label.text field access
+    function getLabelFromTextAccess(expr:Expr):IRNode {
+        switch (expr.expr) {
+            case EField(obj, "text"):
+                return exprToIR(obj);
+            default:
+        }
+        return null;
+    }
+
     function convertFieldAccess(obj:Expr, field:String):IRNode {
         // Handle transform access
         switch (obj.expr) {
@@ -858,7 +889,8 @@ class TraitExtractor {
                 // gamepad.leftStick, gamepad.rightStick
                 meta.uses_input = true;
                 if (field == "leftStick" || field == "rightStick") {
-                    return { type: "gamepad_stick", value: field };
+                    // Emit inline C struct with input functions
+                    return { type: "c_literal", c_code: "(ArmVec2){input_stick_x(), input_stick_y()}" };
                 }
             default:
         }
@@ -1163,6 +1195,30 @@ class TraitExtractor {
                 c_func: "koui_create_label",
                 args: args
             };
+        }
+
+        // Vec constructors: emit C struct literal with placeholders
+        if (typeName == "Vec4") {
+            // {0}, {1}, {2}, {3} will be substituted by Python
+            var argCount = args.length;
+            if (argCount >= 4) {
+                return { type: "new_vec", c_code: "(ArmVec4){{0}, {1}, {2}, {3}}", args: args };
+            } else if (argCount >= 3) {
+                return { type: "new_vec", c_code: "(ArmVec4){{0}, {1}, {2}, 1.0f}", args: args };
+            }
+            return { type: "c_literal", c_code: "(ArmVec4){0, 0, 0, 1.0f}" };
+        }
+        if (typeName == "Vec3") {
+            if (args.length >= 3) {
+                return { type: "new_vec", c_code: "(ArmVec3){{0}, {1}, {2}}", args: args };
+            }
+            return { type: "c_literal", c_code: "(ArmVec3){0, 0, 0}" };
+        }
+        if (typeName == "Vec2") {
+            if (args.length >= 2) {
+                return { type: "new_vec", c_code: "(ArmVec2){{0}, {1}}", args: args };
+            }
+            return { type: "c_literal", c_code: "(ArmVec2){0, 0}" };
         }
 
         // Default: generic new expression

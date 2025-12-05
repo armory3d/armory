@@ -29,13 +29,14 @@ The IR schema (version 1):
   }
 
 IRNode types (1:1 with emit_* handlers):
-  Literals: int, float, string, bool, null, skip
-  Variables: member, ident, field, gamepad_stick
+  Literals: int, float, string, bool, null, skip, c_literal
+  Variables: member, ident, field, label_field
   Operators: assign, binop, unop
   Control: if, block, var, return
   Calls: call, scene_call, transform_call, math_call, input_call, physics_call, vec_call
-  Utility: cast_call, debug_call, object_call
-  Constructors: new
+  Calls: koui_call, signal_call, global_signal_call
+  Utility: cast_call, debug_call, object_call, sprintf
+  Constructors: new, new_vec
 
 TraitMeta fields:
   uses_input, uses_transform, mutates_transform, uses_time, uses_physics,
@@ -188,11 +189,9 @@ class IREmitter:
             return f"{obj}->{field}"
         return ""
 
-    def emit_gamepad_stick(self, node: Dict) -> str:
-        """Gamepad stick access: returns ArmVec2 with x,y from input functions."""
-        stick = node.get("value", "leftStick")
-        # Generate inline struct - input functions return floats
-        return "(ArmVec2){input_stick_x(), input_stick_y()}"
+    def emit_c_literal(self, node: Dict) -> str:
+        """Literal C code from macro - pure 1:1."""
+        return node.get("c_code", "")
 
     # =========================================================================
     # Operators
@@ -305,7 +304,15 @@ class IREmitter:
     # =========================================================================
 
     def emit_call(self, node: Dict) -> str:
-        """Unhandled call - add pattern to macro."""
+        """Function call - handles both generic calls and specific patterns."""
+        # Handle generic calls with value + children (from macro)
+        func_name = node.get("value", "")
+        if func_name:
+            children = node.get("children", [])
+            arg_strs = [self.emit(a) for a in children if self.emit(a)]
+            return f"{func_name}({', '.join(arg_strs)});"
+
+        # Legacy: method + args pattern
         method = node.get("method", "")
         args = node.get("args", [])
         arg_strs = [self.emit(a) for a in args if self.emit(a)]
@@ -556,31 +563,21 @@ class IREmitter:
     # =========================================================================
 
     def emit_new(self, node: Dict) -> str:
-        """Constructor calls: new Vec3(x, y, z) or new Vec4(x, y, z, w)"""
-        type_name = node.get("value", "")
+        """Generic constructor - fallback for non-Vec types."""
+        # Vec constructors are now handled by emit_new_vec
+        return ""
+
+    def emit_new_vec(self, node: Dict) -> str:
+        """Vec constructor with c_code template from macro."""
+        c_code = node.get("c_code", "")
+        if not c_code:
+            return ""
         args = node.get("args", [])
         arg_strs = [self.emit(a) for a in args]
-
-        if type_name == "Vec4":
-            # Vec4 with 4 args: full quaternion/4D vector
-            if len(arg_strs) >= 4:
-                return f"(ArmVec4){{{arg_strs[0]}, {arg_strs[1]}, {arg_strs[2]}, {arg_strs[3]}}}"
-            # Vec4 with 3 args: treat as Vec3 position (w=1.0 for homogeneous coords)
-            if len(arg_strs) >= 3:
-                return f"(ArmVec4){{{arg_strs[0]}, {arg_strs[1]}, {arg_strs[2]}, 1.0f}}"
-            return "(ArmVec4){0, 0, 0, 1.0f}"
-
-        if type_name == "Vec3":
-            if len(arg_strs) >= 3:
-                return f"(ArmVec3){{{arg_strs[0]}, {arg_strs[1]}, {arg_strs[2]}}}"
-            return "(ArmVec3){0, 0, 0}"
-
-        if type_name == "Vec2":
-            if len(arg_strs) >= 2:
-                return f"(ArmVec2){{{arg_strs[0]}, {arg_strs[1]}}}"
-            return "(ArmVec2){0, 0}"
-
-        return ""
+        # Substitute {0}, {1}, {2}, {3} with args
+        for i, arg in enumerate(arg_strs):
+            c_code = c_code.replace("{" + str(i) + "}", arg)
+        return c_code
 
 
 # =============================================================================

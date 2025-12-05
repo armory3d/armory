@@ -139,6 +139,11 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
             continue;
         }
 
+        // Skip if display list not loaded (model failed to load)
+        if (!obj->dpl) {
+            continue;
+        }
+
         visible_count++;
         int mat_idx = obj->is_static ? 0 : frameIdx;
         t3d_matrix_set(&obj->model_mat[mat_idx], true);
@@ -147,6 +152,7 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
     t3d_matrix_pop(1);
 
 #ifdef ARM_DEBUG_HUD
+    rdpq_sync_pipe();
     rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 200, 220, "FPS: %.2f", display_get_fps());
     rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 200, 230, "Obj: %d/%d (S:%d)", visible_count, scene->object_count, scene->static_count);
 
@@ -165,12 +171,13 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
 
 void renderer_end_frame(T3DViewport *viewport)
 {
-    rdpq_detach_wait();
-
 #if ENGINE_ENABLE_PHYSICS && ENGINE_ENABLE_PHYSICS_DEBUG
     physics_debug_draw(g_current_surface, viewport, physics_get_world());
-#endif
+    rdpq_detach_wait();
     display_show(g_current_surface);
+#else
+    rdpq_detach_show();
+#endif
 }
 
 void renderer_build_static_dpl(ArmScene *scene)
@@ -196,7 +203,7 @@ void renderer_build_static_dpl(ArmScene *scene)
     t3d_matrix_push_pos(1);
     for (uint16_t i = 0; i < scene->object_count; i++) {
         ArmObject *obj = &scene->objects[i];
-        if (!obj->is_static || !obj->visible) {
+        if (!obj->is_static || !obj->visible || !obj->dpl) {
             continue;
         }
         // Use frame 0 matrix (all frames should be identical for static objects)

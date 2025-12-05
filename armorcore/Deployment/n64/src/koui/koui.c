@@ -43,7 +43,13 @@ KouiLabel* koui_create_label(const char *text)
     if (g_label_pool_used >= KOUI_MAX_LABELS) return NULL;
     KouiLabel *label = &g_label_pool[g_label_pool_used++];
 
-    label->text = text;
+    // Copy text into label's own buffer
+    if (text) {
+        strncpy(label->text, text, KOUI_LABEL_TEXT_SIZE - 1);
+        label->text[KOUI_LABEL_TEXT_SIZE - 1] = '\0';
+    } else {
+        label->text[0] = '\0';
+    }
     label->pos_x = 0;
     label->pos_y = 0;
     label->font_id = g_default_font_rdpq_id;
@@ -100,10 +106,21 @@ void koui_label_set_position(KouiLabel *label, int16_t x, int16_t y)
     }
 }
 
+void koui_label_set_text(KouiLabel *label, const char *text)
+{
+    if (label && text) {
+        strncpy(label->text, text, KOUI_LABEL_TEXT_SIZE - 1);
+        label->text[KOUI_LABEL_TEXT_SIZE - 1] = '\0';
+    }
+}
+
 void koui_render(void)
 {
     // Early exit if nothing to render
     if (g_render_count == 0 || g_default_font_rdpq_id == 0) return;
+
+    // Sync pipeline before switching from 3D to 2D mode
+    rdpq_sync_pipe();
 
     // Begin 2D text rendering mode
     rdpq_set_mode_standard();
@@ -113,7 +130,7 @@ void koui_render(void)
     // Render all visible labels in render list
     for (uint8_t i = 0; i < g_render_count; i++) {
         KouiLabel *label = g_render_list[i];
-        if (!label || !label->visible || !label->text) continue;
+        if (!label || !label->visible) continue;
 
         rdpq_text_print(NULL, label->font_id, label->pos_x, label->pos_y + 15, label->text);
     }
