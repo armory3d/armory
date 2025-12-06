@@ -55,6 +55,13 @@ class N64TraitMacro {
             return null;
         }
 
+        // TODO: LogicTree subclasses need special handling
+        // For now, skip them - will be implemented with graph parsing
+        if (extendsLogicTree(cls)) {
+            trace('[N64] Skipping LogicTree: ' + className + ' (not yet supported)');
+            return null;
+        }
+
         var fields = Context.getBuildFields();
 
         // Extract trait IR
@@ -175,6 +182,22 @@ class N64TraitMacro {
         } catch (e:Dynamic) {
             Context.error('Failed to write n64_traits.json: $e', Context.currentPos());
         }
+    }
+
+    /**
+     * Check if a class extends armory.logicnode.LogicTree.
+     * These are handled by Python-side make_logic.py, not this macro.
+     */
+    static function extendsLogicTree(cls:haxe.macro.Type.ClassType):Bool {
+        var superClass = cls.superClass;
+        while (superClass != null) {
+            var sc = superClass.t.get();
+            if (sc.module == "armory.logicnode.LogicTree" && sc.name == "LogicTree") {
+                return true;
+            }
+            superClass = sc.superClass;
+        }
+        return false;
     }
 
     static function serializeIRNode(node:IRNode):Dynamic {

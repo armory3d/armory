@@ -80,7 +80,9 @@ int main(void)
         if (pending < SCENE_COUNT) {{
             scene_clear_pending();
             scene_clear(current_scene);
+#if ENGINE_ENABLE_UI
             koui_clear();
+#endif
             trait_events_clear();
 #if ENGINE_ENABLE_PHYSICS
             physics_reset();

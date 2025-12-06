@@ -851,16 +851,25 @@ def write_traits_files(type_overrides: dict = None):
     import arm.utils
 
     build_dir = arm.utils.build_dir()
+
+    # Load traits from Haxe macro JSON
     data = load_traits_json(build_dir)
     traits = data.get("traits", {})
-
-    if not traits:
-        print("[N64] No traits to generate")
-        return {'has_ui': False, 'has_physics': False}
 
     data_dir = os.path.join(build_dir, "n64", "src", "data")
     os.makedirs(data_dir, exist_ok=True)
     tmpl_dir = os.path.join(arm.utils.get_n64_deployment_path(), "src", "data")
+
+    if not traits:
+        print("[N64] No traits to generate, creating empty stubs")
+        # Generate empty stub files so Makefile doesn't fail
+        h_path = os.path.join(data_dir, "traits.h")
+        c_path = os.path.join(data_dir, "traits.c")
+        with open(h_path, 'w') as f:
+            f.write("// Auto-generated empty traits header\n#ifndef _TRAITS_H_\n#define _TRAITS_H_\n#endif\n")
+        with open(c_path, 'w') as f:
+            f.write("// Auto-generated empty traits implementation\n#include \"traits.h\"\n")
+        return {'has_ui': False, 'has_physics': False}
 
     # Generate template substitution data and detect features
     template_data, features = _prepare_traits_template_data(traits, type_overrides)
