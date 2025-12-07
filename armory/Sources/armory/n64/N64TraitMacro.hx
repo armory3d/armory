@@ -7,6 +7,7 @@ import haxe.macro.Type;
 import haxe.Json;
 import sys.io.File;
 import sys.FileSystem;
+import armory.n64.N64LogicNodeMacro;
 
 using haxe.macro.ExprTools;
 using haxe.macro.TypeTools;
@@ -55,16 +56,19 @@ class N64TraitMacro {
             return null;
         }
 
-        // TODO: LogicTree subclasses need special handling
-        // For now, skip them - will be implemented with graph parsing
+        var fields = Context.getBuildFields();
+
+        // Check if this is a LogicTree subclass - interpret at compile time
         if (extendsLogicTree(cls)) {
-            trace('[N64] Skipping LogicTree: ' + className + ' (not yet supported)');
+            var interpreter = new LogicNodeInterpreter(className, modulePath, fields);
+            var traitIR = interpreter.interpret();
+            if (traitIR != null) {
+                traitData.set(className, traitIR);
+            }
             return null;
         }
 
-        var fields = Context.getBuildFields();
-
-        // Extract trait IR
+        // Extract regular trait IR
         var extractor = new TraitExtractor(className, modulePath, fields);
         var traitIR = extractor.extract();
 
@@ -186,7 +190,7 @@ class N64TraitMacro {
 
     /**
      * Check if a class extends armory.logicnode.LogicTree.
-     * These are handled by Python-side make_logic.py, not this macro.
+     * Logic trees are interpreted at compile time into standard trait IR (events, members, meta).
      */
     static function extendsLogicTree(cls:haxe.macro.Type.ClassType):Bool {
         var superClass = cls.superClass;
@@ -2138,4 +2142,5 @@ class TraitExtractor {
         };
     }
 }
+
 #end

@@ -157,14 +157,31 @@ class N64Exporter:
         traits = []
         if hasattr(obj, 'arm_traitlist'):
             for trait in obj.arm_traitlist:
-                if trait.enabled_prop and trait.class_name_prop:
-                    prop_data = n64_utils.extract_blender_trait_props(trait)
-                    traits.append({
-                        "class_name": trait.class_name_prop,
-                        "type": trait.type_prop,
-                        "props": prop_data['values'],
-                        "type_overrides": prop_data['types']
-                    })
+                if not trait.enabled_prop:
+                    continue
+
+                # Get class name based on trait type
+                if trait.type_prop == 'Logic Nodes':
+                    if trait.node_tree_prop is not None:
+                        # Logic nodes: class name is the node tree name
+                        class_name = trait.node_tree_prop.name
+                    else:
+                        continue  # No node tree assigned
+                elif trait.type_prop == 'Haxe Script' or trait.type_prop == 'Bundled Script':
+                    if trait.class_name_prop:
+                        class_name = trait.class_name_prop
+                    else:
+                        continue  # No class assigned
+                else:
+                    continue  # Unsupported trait type for N64
+
+                prop_data = n64_utils.extract_blender_trait_props(trait)
+                traits.append({
+                    "class_name": class_name,
+                    "type": trait.type_prop,
+                    "props": prop_data['values'],
+                    "type_overrides": prop_data['types']
+                })
         return traits
 
 
