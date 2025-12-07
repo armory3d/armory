@@ -88,36 +88,16 @@ class LogicNodeInterpreter {
     }
 
     public function interpret():TraitIR {
-        trace('[N64 LogicNode] Interpreting: ${className}');
-
         // Parse the logic node graph from add() function
         parseNodeGraph();
-
-        trace('[N64 LogicNode] Parsed ${Lambda.count(nodes)} nodes');
-        for (nodeName in nodes.keys()) {
-            var node = nodes.get(nodeName);
-            trace('[N64 LogicNode]   - ${nodeName}: ${node.type}');
-        }
 
         // Find entry point nodes (lifecycle nodes) and simulate execution
         for (nodeName in nodes.keys()) {
             var node = nodes.get(nodeName);
             if (isLifecycleNode(node)) {
-                trace('[N64 LogicNode] Executing lifecycle: ${node.type}');
                 executeLifecycleNode(node);
             }
         }
-
-        // Debug: print generated events
-        trace('[N64 LogicNode] Generated events:');
-        for (eventName in events.keys()) {
-            var stmts = events.get(eventName);
-            trace('[N64 LogicNode]   ${eventName}: ${stmts.length} statements');
-            for (i in 0...stmts.length) {
-                trace('[N64 LogicNode]     [$i] type=${stmts[i].type}');
-            }
-        }
-        trace('[N64 LogicNode] Meta: uses_input=${meta.uses_input}, uses_physics=${meta.uses_physics}');
 
         return {
             name: className,
@@ -310,21 +290,14 @@ class LogicNodeInterpreter {
     // ========================================================================
 
     public function getInputValue(node:LogicNode, socketIndex:Int):IRNode {
-        trace('[N64 LogicNode] getInputValue: ${node.name} socket $socketIndex');
-        trace('[N64 LogicNode]   node has ${node.inputs.length} inputs');
         for (input in node.inputs) {
-            trace('[N64 LogicNode]   input: socket=${input.socket} from ${input.sourceNode}:${input.sourceSocket}');
             if (input.socket == socketIndex) {
                 var sourceNode = nodes.get(input.sourceNode);
                 if (sourceNode != null) {
-                    trace('[N64 LogicNode]   found sourceNode: ${sourceNode.name} type=${sourceNode.type}');
                     return converter.evaluateValue(sourceNode, input.sourceSocket);
-                } else {
-                    trace('[N64 LogicNode]   sourceNode NOT FOUND: ${input.sourceNode}');
                 }
             }
         }
-        trace('[N64 LogicNode]   no connection found, returning default 0.0');
         // No connection - return a proper default (0.0f for floats, 0 for ints)
         return { type: "float", value: 0.0 };
     }
@@ -477,11 +450,6 @@ class LogicNodeConverter {
             case "VectorNode":
                 // VectorNode can have both properties AND input connections
                 // Input connections override properties
-                trace('[N64 LogicNode] VectorNode: ${node.name} has ${node.inputs.length} inputs');
-                for (inp in node.inputs) {
-                    trace('[N64 LogicNode]   VectorNode input: socket=${inp.socket} from ${inp.sourceNode}:${inp.sourceSocket}');
-                }
-
                 // Check for input connections first (they override properties)
                 var xInput = interpreter.getInputValueOrNull(node, 0);
                 var yInput = interpreter.getInputValueOrNull(node, 1);
@@ -574,8 +542,6 @@ class LogicNodeConverter {
                 var vec2 = interpreter.getInputValueOrNull(node, 1);
                 var operation = Std.string(node.props.get("property0"));
                 var separatorOut = node.props.get("property1") == true;
-
-                trace('[N64 LogicNode] VectorMathNode: ${node.name} op=${operation} socketIndex=${socketIndex} separatorOut=${separatorOut}');
 
                 // VectorMathNode has multiple outputs:
                 // socket 0: vector result
@@ -786,18 +752,8 @@ class LogicNodeConverter {
     // ========================================================================
 
     function convertApplyForce(node:LogicNode):IRNode {
-        trace('[N64 LogicNode] convertApplyForce: ${node.name}');
-        trace('[N64 LogicNode]   inputs: ${node.inputs.length}');
-        for (i in 0...node.inputs.length) {
-            var inp = node.inputs[i];
-            trace('[N64 LogicNode]   input[$i]: socket=${inp.socket} from ${inp.sourceNode}:${inp.sourceSocket}');
-        }
-
         var objInput = interpreter.getInputValue(node, 1);
         var forceInput = interpreter.getInputValue(node, 2);
-
-        trace('[N64 LogicNode]   objInput type: ${objInput.type}');
-        trace('[N64 LogicNode]   forceInput type: ${forceInput.type}');
 
         interpreter.getMeta().uses_physics = true;
 
