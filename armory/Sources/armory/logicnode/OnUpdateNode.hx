@@ -13,6 +13,7 @@ class OnUpdateNode extends LogicNode {
 
 	function init() {
 		switch (property0) {
+		case "Fixed Update": tree.notifyOnFixedUpdate(update);
 		case "Late Update": tree.notifyOnLateUpdate(update);
 		#if arm_physics
 		case "Physics Pre-Update": PhysicsWorld.active.notifyOnPreUpdate(update);
