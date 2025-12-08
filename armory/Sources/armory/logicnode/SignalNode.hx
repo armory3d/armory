@@ -1,25 +1,26 @@
 package armory.logicnode;
 
 import armory.system.Signal;
+import iron.object.Object;
 
 class SignalNode extends LogicNode {
-	var standaloneSignal: Signal = null;
+	var signal: Signal = null;
 
 	public function new(tree: LogicTree) {
 		super(tree);
 	}
 
-	override function get(from: Int): Dynamic {
-		var object: Dynamic = inputs[0].get();
+	override function get(from: Int): Null<Signal> {
+		var object: Object = inputs[0].get();
 		var property: String = inputs[1].get();
 
 		if (object != null && property != null && property != "") {
 			return Reflect.getProperty(object, property);
 		}
 
-		if (standaloneSignal == null) {
-			standaloneSignal = new Signal();
+		if (signal == null) {
+			signal = new Signal();
 		}
-		return standaloneSignal;
+		return signal;
 	}
 }

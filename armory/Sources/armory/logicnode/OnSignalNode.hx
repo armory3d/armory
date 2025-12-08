@@ -31,8 +31,8 @@ class OnSignalNode extends LogicNode {
 		runOutput(0);
 	}
 
-	override function get(from: Int): Dynamic {
-		var argIndex = from - 1;
+	override function get(from: Int): Any {
+		var argIndex: Int = from - 1;
 		if (argIndex >= 0 && argIndex < emittedArgs.length) {
 			return emittedArgs[argIndex];
 		}

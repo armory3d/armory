@@ -12,7 +12,7 @@ class EmitSignalNode extends LogicNode {
 		if (signal == null)
 			return;
 
-		var args: Array<Dynamic> = [];
+		var args: Array<Any> = [];
 		for (i in 2...inputs.length) {
 			args.push(inputs[i].get());
 		}
