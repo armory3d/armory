@@ -88,7 +88,7 @@ class Animation {
 
 	public function update(delta: FastFloat) {
 		if (paused || speed == 0.0) return;
-		time += delta * speed;
+		time += delta * speed * iron.system.Time.scale;
 
 		if (blendTime > 0 && blendFactor == 0) {
 			blendCurrent += delta;

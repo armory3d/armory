@@ -5,17 +5,24 @@
 
 #include "compiled.inc"
 #include "std/math.glsl"
+#include "std/brdf.glsl"
 #include "std/gbuffer.glsl"
+
+#ifdef _Brdf
+uniform sampler2D senvmapBrdf;
+#endif
 
 uniform sampler2D tex;
 uniform sampler2D tex1;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
+uniform sampler2D gbuffer1;
 uniform sampler2D gbufferD1;
 uniform sampler2D gbuffer_refraction; // ior\opacity
 uniform mat4 P;
 uniform mat3 V3;
 uniform vec2 cameraProj;
+uniform vec3 eye;
 
 in vec3 viewRay;
 in vec2 texCoord;
@@ -51,31 +58,32 @@ vec4 binarySearch(vec3 dir) {
 		ddepth = getDeltaDepth(hitCoord);
 		if (ddepth < 0.0) hitCoord += dir;
 	}
-	if (abs(ddepth) > ss_refractionSearchDist) return vec4(0.0);
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
 vec4 rayCast(vec3 dir) {
 	float ddepth;
-	dir *= ss_refractionRayStep;
 	for (int i = 0; i < maxSteps; i++) {
-		hitCoord += dir;
+		hitCoord += dir * ss_refractionRayStep;
 		ddepth = getDeltaDepth(hitCoord);
 		if (ddepth > 0.0) return binarySearch(dir);
 	}
-	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
+	return vec4(getProjectedCoord(hitCoord), 0.0, 0.0);
 }
 
 void main() {
     vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
-    float roughness = g0.z;
+	float roughness = g0.b;
+	float metallic;
+	uint matid;
+	unpackFloatInt16(g0.a, metallic, matid);
     vec4 gr = textureLod(gbuffer_refraction, texCoord, 0.0);
     float ior = gr.x;
     float opac = gr.y;
     float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
-    if (d == 0.0) {
-        fragColor.rgb = textureLod(tex1, texCoord, 0.0).rgb;
+    if (d == 0.0 || d == 1.0 || opac == 1.0) {
+        fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb;
         return;
     }
 
@@ -86,34 +94,37 @@ void main() {
     n = normalize(n);
 
     vec3 viewNormal = V3 * n;
-    vec3 viewPos = getPosView(viewRay, d, cameraProj);
-    vec3 refracted = refract(normalize(viewPos), viewNormal, 1.0 / ior);
+    vec3 viewPos = getPosView(normalize(viewRay), d, cameraProj);
+    vec3 refracted = refract(viewPos, viewNormal, 1.0 / ior);
     hitCoord = viewPos;
 
 	vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter * roughness) * 2.0;
 
     vec4 coords = rayCast(dir);
+
+    vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb;
+
+	vec4 g1 = textureLod(gbuffer1, texCoord, 0.0); // Basecolor.rgb, spec/occ
+	vec3 f0 = surfaceF0(refractionCol.rgb, metallic);
+	float dotNV = max(dot(viewNormal, viewPos), 0.0);
+
+	#ifdef _Brdf
+	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
+	vec3 F = f0 * envBRDF.x + envBRDF.y;
+	#else
+	vec3 F = f0;
+	#endif
+
 	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
-	float viewDot = clamp(dot(normalize(viewPos), viewNormal), 0.0, 1.0);
-	float fresnel = pow(1.0 - viewDot, 3.0) * 0.9 + 0.1; // bias to keep some refraction at grazing angles
+	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
 
-	// Distance attenuation (so rays that travel far contribute less)
-	float dist = length(viewPos - hitCoord);
-	float distFalloff = exp(-dist); // tweak 4.0 as needed, higher = shorter falloff
+	float refractivity = 1.0 - opac;
+	vec3 intensity = refractivity * screenEdgeFactor * clamp(abs(refracted.z), 0.0, 1.0) * (1.0 - F);
 
-	// Edge fade (smoothstep for stability)
-	float screenEdgeFactor = smoothstep(0.1, 0.6, 1.0 - (deltaCoords.x + deltaCoords.y));
+	intensity = clamp(intensity, 0.0, 1.0);
 
-	// Combine terms safely
-	float refractivity = 1.0 - roughness;
-	float intensity = refractivity * fresnel * screenEdgeFactor * coords.w;
-
-	// Clamp and slightly bias to avoid hard cutoff
-	intensity = clamp(intensity, 0.0, 0.95);
-
-    vec3 refractionCol = textureLod(tex1, coords.xy, 0.0).rgb;
 	refractionCol *= intensity;
-	vec3 color = textureLod(tex, texCoord.xy, 0.0).rgb;
+	vec3 color = textureLod(tex1, texCoord.xy, 0.0).rgb;
 
     fragColor.rgb = mix(refractionCol, color, opac);
 

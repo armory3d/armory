@@ -145,7 +145,7 @@ class ParticleSystemCPU {
 				case 0: // Emission
 					loopAnim = {
 						tick: function () {
-							spawnTime += Time.delta;
+							spawnTime += Time.delta * Time.scale;
 							var expected: Int = Math.floor(spawnTime / spawnRate);
 							while (spawnedParticles < expected && spawnedParticles < count) {
 								spawnParticle();
@@ -368,7 +368,7 @@ class ParticleSystemCPU {
 
 	function updateParticles() {
 		for (particle => physics in particlePhysics) {
-			physics.age += Time.delta;
+			physics.age += Time.delta * Time.scale;
 
 			if (physics.age >= physics.lifetime) {
 				particlePhysics.remove(particle);
@@ -376,14 +376,14 @@ class ParticleSystemCPU {
 				continue;
 			}
 
-			physics.velocity.x += physics.gravity.x * Time.delta;
-			physics.velocity.y += physics.gravity.y * Time.delta;
-			physics.velocity.z += physics.gravity.z * Time.delta;
+			physics.velocity.x += physics.gravity.x * Time.delta * Time.scale;
+			physics.velocity.y += physics.gravity.y * Time.delta * Time.scale;
+			physics.velocity.z += physics.gravity.z * Time.delta * Time.scale;
 
 			particle.transform.translate(
-				physics.velocity.x * Time.delta,
-				physics.velocity.y * Time.delta,
-				physics.velocity.z * Time.delta
+				physics.velocity.x * Time.delta * Time.scale,
+				physics.velocity.y * Time.delta * Time.scale,
+				physics.velocity.z * Time.delta * Time.scale
 			);
 
 			if (rotation && dynamicRotation && orientationAxis == 3) setVelocityHair(particle, physics.velocity, randQuat, phaseQuat);
