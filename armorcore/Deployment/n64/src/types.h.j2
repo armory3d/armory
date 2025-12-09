@@ -1,0 +1,246 @@
+/**
+ * N64 Engine Type System
+ * =======================
+ *
+ * COORDINATE SYSTEM
+ * -----------------
+ * Blender uses Z-up, N64/T3D uses Y-up. Conversion is automatic:
+ *   Blender (x, y, z) → N64 (x, z, -y)
+ *
+ * Scale factor: Blender units * 0.015625 = N64 units (1/64 scale)
+ *   - 1 Blender unit = 64 N64 units
+ *   - Typical N64 world scale: -500 to +500 units
+ *
+ * TYPE MAPPING (Haxe/Armory → C)
+ * ------------------------------
+ *   Vec2, Vec3, Vec4    → ArmVec2, ArmVec3, ArmVec4 (value types)
+ *   Object              → ArmObject* (pointer)
+ *   Transform           → ArmTransform (embedded in ArmObject)
+ *   Camera, Light       → ArmCamera*, ArmLight* (pointers)
+ *   Scene               → ArmScene (global)
+ *   Float, Int, Bool    → float, int32_t, bool
+ *   String              → const char*
+ *
+ * MEMORY LIMITS (N64 Hardware)
+ * ----------------------------
+ *   Total RAM:           4 MB (with Expansion Pak), 8 MB addressable
+ *   Heap available:      ~380 KB typical after engine + assets
+ *   Stack size:          8 KB default
+ *   Uncached memory:     Limited - used for DMA, display lists
+ *
+ *   Recommended limits:
+ *     - Objects per scene:     64-128 max
+ *     - Traits per object:     2-4 max
+ *     - Vertices per model:    500-2000 (depending on complexity)
+ *     - Textures:              64x64 or 32x32 preferred
+ *
+ * PHYSICS LIMITS (OimoPhysics)
+ * ----------------------------
+ *   MAX_PHYSICS_BODIES:       32 default (configurable in config.py)
+ *   MAX_CONTACT_BODIES:       16 default
+ *   MAX_CONTACT_SUBSCRIBERS:  4 per body default
+ *
+ *   Collision shapes: box, sphere, capsule, mesh (static only)
+ *   Body types: static, dynamic, kinematic, trigger
+ *
+ * PERFORMANCE NOTES
+ * -----------------
+ *   - Traits are compiled to C functions, not runtime objects
+ *   - Static objects are batched into combined display lists
+ *   - Transform matrices only recomputed when dirty flag set
+ *   - Frustum culling uses cached world-space bounds
+ */
+
+#pragma once
+
+#include <stdbool.h>
+#include <stdint.h>
+#include <rspq.h>
+#include <t3d/t3dmath.h>
+#include <t3d/t3dmodel.h>
+
+#ifdef __cplusplus
+extern "C" {{
+#endif
+
+#define FB_COUNT 3 {debug_hud_define}
+
+// Number of frames to keep transform dirty for double/triple buffering
+#define TRANSFORM_DIRTY_FRAMES 3
+
+// Minimum static objects to batch into a combined display list
+#ifndef STATIC_BATCH_THRESHOLD
+#define STATIC_BATCH_THRESHOLD 3
+#endif
+
+struct OimoRigidBody;
+
+typedef struct {{ float x, y; }} ArmVec2;
+typedef struct {{ float x, y, z; }} ArmVec3;
+typedef struct {{ float x, y, z, w; }} ArmVec4;
+
+typedef void (*ArmTraitReadyFn)(void *entity, void *data);
+typedef void (*ArmTraitFixedUpdateFn)(void *entity, float dt, void *data);
+typedef void (*ArmTraitUpdateFn)(void *entity, float dt, void *data);
+typedef void (*ArmTraitLateUpdateFn)(void *entity, float dt, void *data);
+typedef void (*ArmTraitRemoveFn)(void *entity, void *data);
+
+typedef struct {{
+    ArmTraitReadyFn on_ready;
+    ArmTraitFixedUpdateFn on_fixed_update;
+    ArmTraitUpdateFn on_update;
+    ArmTraitLateUpdateFn on_late_update;
+    ArmTraitRemoveFn on_remove;
+    void *data;
+}} ArmTrait;
+
+// =============================================================================
+// Signal System - Per-instance event dispatch
+// =============================================================================
+
+#ifndef ARM_SIGNAL_MAX_SUBS
+#define ARM_SIGNAL_MAX_SUBS 16
+#endif
+
+/**
+ * Signal handler function type.
+ * Called when a signal is emitted with: (context, payload)
+ * Pack all data into a struct and pass its pointer as payload.
+ */
+typedef void (*ArmSignalHandler)(void *ctx, void *payload);
+
+/**
+ * Signal subscriber entry - keeps handler + context together for cache efficiency
+ */
+typedef struct {{
+    ArmSignalHandler handler;
+    void *ctx;  // Handler's context (passed as first arg)
+}} ArmSignalEntry;
+
+/**
+ * ArmSignal - Per-instance signal with up to ARM_SIGNAL_MAX_SUBS subscribers.
+ * Uses array-of-structs (AoS) for better cache locality on N64.
+ *
+ * Usage in traits:
+ *   - Declare: var onDeath:Signal; (Haxe) → ArmSignal onDeath; (C struct member)
+ *   - Connect: onDeath.connect(callback) → signal_connect(&data->onDeath, handler, obj, data)
+ *   - Emit: onDeath.emit(damage) → signal_emit(&data->onDeath, obj, damage)
+ *   - Disconnect: onDeath.disconnect(callback) → signal_disconnect(&data->onDeath, handler)
+ */
+typedef struct {{
+    uint8_t count;
+    ArmSignalEntry entries[ARM_SIGNAL_MAX_SUBS];
+}} ArmSignal;
+
+// Signal functions (implemented in signal.c)
+void signal_connect(ArmSignal *signal, ArmSignalHandler handler, void *ctx);
+void signal_disconnect(ArmSignal *signal, ArmSignalHandler handler);
+void signal_emit(ArmSignal *signal, void *payload);
+void signal_clear(ArmSignal *signal);
+
+typedef struct {{
+    T3DVec3 loc;
+    T3DQuat rot;
+    T3DVec3 scale;
+    uint8_t dirty;
+}} ArmTransform;
+
+/**
+ * ArmObject - Core entity type
+ *
+ * Field layout optimized for cache:
+ *   - Hot data first (accessed every frame): transform, visibility, matrices
+ *   - Cold data after (accessed occasionally): bounds, physics, traits
+ *
+ * Cached world bounds are updated when transform.dirty > 0, avoiding
+ * redundant calculations during frustum culling.
+ */
+typedef struct ArmObject {{
+    // === HOT DATA (accessed every frame) ===
+    ArmTransform transform;       // 44 bytes: position, rotation, scale
+    T3DMat4FP *model_mat;         // 4 bytes: matrix for rendering
+    rspq_block_t *dpl;            // 4 bytes: display list pointer
+    bool visible;                 // 1 byte
+    bool is_static;               // 1 byte
+    bool is_removed;              // 1 byte: object marked for removal
+    uint8_t trait_count;          // 1 byte
+
+    // === CACHED BOUNDS (updated when dirty) ===
+    T3DVec3 cached_world_center;  // 12 bytes: world-space center for culling
+    float cached_world_radius;    // 4 bytes: world-space radius for culling
+
+    // === COLD DATA (accessed occasionally) ===
+    T3DVec3 bounds_center;        // 12 bytes: local-space center
+    float bounds_radius;          // 4 bytes: local-space radius
+    struct OimoRigidBody *rigid_body;  // 4 bytes
+    ArmTrait *traits;             // 4 bytes
+
+    // === LIFECYCLE FLAGS (bitmask for fast dispatch) ===
+    // Bit 0: has on_fixed_update, Bit 1: has on_update, Bit 2: has on_late_update
+    uint8_t lifecycle_flags;      // 1 byte
+}} ArmObject;
+
+// Lifecycle flag bits
+#define ARM_LIFECYCLE_FIXED_UPDATE (1 << 0)
+#define ARM_LIFECYCLE_UPDATE       (1 << 1)
+#define ARM_LIFECYCLE_LATE_UPDATE  (1 << 2)
+
+typedef struct ArmLight {{
+    ArmTransform transform;
+    uint8_t color[4];
+    T3DVec3 dir;
+    uint8_t trait_count;
+    uint8_t lifecycle_flags;
+    ArmTrait *traits;
+}} ArmLight;
+
+typedef struct ArmCamera {{
+    ArmTransform transform;
+    T3DVec3 target;
+    float fov;
+    float near;
+    float far;
+    uint8_t trait_count;
+    uint8_t lifecycle_flags;
+    ArmTrait *traits;
+}} ArmCamera;
+
+typedef struct {{
+    uint8_t clear_color[4];
+    uint8_t ambient_color[4];
+}} ArmWorld;
+
+typedef struct ArmScene {{
+    ArmWorld world;
+
+    uint8_t camera_count;
+    ArmCamera *cameras;
+    uint8_t active_camera_id;
+
+    uint8_t light_count;
+    ArmLight *lights;
+
+    uint16_t object_count;        // Total slots in object array
+    uint16_t active_count;        // Number of active (non-removed) objects
+    ArmObject *objects;
+    uint16_t static_count;        // Number of static objects
+    rspq_block_t *static_dpl;     // Combined display list for static objects
+
+    // Object pool recycling - free list for removed object slots
+    uint16_t *free_list;          // Array of free slot indices
+    uint16_t free_count;          // Number of free slots available
+    uint16_t free_capacity;       // Maximum slots (same as object_count)
+
+    // Active object tracking - indices of objects that need lifecycle updates
+    // Avoids iterating entire object array when most objects have no traits
+    uint16_t *active_objects;     // Array of object indices with active traits
+    uint16_t active_trait_count;  // Count of objects with traits
+
+    uint8_t trait_count;
+    uint8_t lifecycle_flags;      // Scene-level trait lifecycle flags
+    ArmTrait *traits;
+}} ArmScene;
+
+#ifdef __cplusplus
+}}
+#endif

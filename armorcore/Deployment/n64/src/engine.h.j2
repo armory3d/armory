@@ -1,0 +1,20 @@
+#pragma once
+
+#include <libdragon.h>
+#include <t3d/t3d.h>
+#include <t3d/t3dmodel.h>
+
+#ifdef __cplusplus
+extern "C" {{
+#endif
+
+#define ENGINE_ENABLE_PHYSICS {enable_physics}
+#define ENGINE_ENABLE_PHYSICS_DEBUG {enable_physics_debug}
+#define ENGINE_ENABLE_UI {enable_ui}
+
+void engine_init(void);
+void engine_shutdown(void);
+
+#ifdef __cplusplus
+}}
+#endif

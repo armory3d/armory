@@ -14,12 +14,12 @@ class Time {
 		return 1 / frequency;
 	}
 
-	static var _fixedStep: Null<Float> = 1 / 60;
+	static var _fixedStep: Null<Float> = 1 / 30;
 	public static var fixedStep(get, never): Float;
 	static function get_fixedStep(): Float {
 		return _fixedStep;
 	}
-	public static function initFixedStep(value: Float = 1 / 60) {
+	public static function initFixedStep(value: Float = 1 / 30) {
 		_fixedStep = value;
 	}
 
