@@ -11,10 +11,10 @@ class OnContactNode extends LogicNode {
 	public function new(tree: LogicTree) {
 		super(tree);
 
-		tree.notifyOnUpdate(update);
+		tree.notifyOnFixedUpdate(fixedUpdate);
 	}
 
-	function update() {
+	function fixedUpdate() {
 		var object1: Object = inputs[0].get();
 		var object2: Object = inputs[1].get();
 

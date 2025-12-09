@@ -33,6 +33,7 @@ class LogicTree extends iron.Trait {
 		if (paused) return;
 		paused = true;
 
+		if (_fixedUpdate != null) for (f in _fixedUpdate) iron.App.removeFixedUpdate(f);
 		if (_update != null) for (f in _update) iron.App.removeUpdate(f);
 		if (_lateUpdate != null) for (f in _lateUpdate) iron.App.removeLateUpdate(f);
 	}
@@ -41,6 +42,7 @@ class LogicTree extends iron.Trait {
 		if (!paused) return;
 		paused = false;
 
+		if (_fixedUpdate != null) for (f in _fixedUpdate) iron.App.notifyOnFixedUpdate(f);
 		if (_update != null) for (f in _update) iron.App.notifyOnUpdate(f);
 		if (_lateUpdate != null) for (f in _lateUpdate) iron.App.notifyOnLateUpdate(f);
 	}

@@ -11,10 +11,10 @@ class OnContactArrayNode extends LogicNode {
 	public function new(tree: LogicTree) {
 		super(tree);
 
-		tree.notifyOnUpdate(update);
+		tree.notifyOnFixedUpdate(fixedUpdate);
 	}
 
-	function update() {
+	function fixedUpdate() {
 		var object1: Object = inputs[0].get();
 		var objects: Array<Object> = inputs[1].get();
 

@@ -13,6 +13,7 @@ class OnUpdateNode(ArmLogicTreeNode):
     property0: HaxeEnumProperty(
         'property0',
         items = [('Update', 'Update', 'Update'),
+                 ('Fixed Update', 'Fixed Update', 'Fixed Update'),
                  ('Late Update', 'Late Update', 'Late Update'),
                  ('Physics Pre-Update', 'Physics Pre-Update', 'Physics Pre-Update')],
         name='On', default='Update')

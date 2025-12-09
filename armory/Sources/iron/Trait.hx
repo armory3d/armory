@@ -17,9 +17,9 @@ class Trait {
 	var _add: Array<Void->Void> = null;
 	var _init: Array<Void->Void> = null;
 	var _remove: Array<Void->Void> = null;
+	var _fixedUpdate: Array<Void->Void> = null;
 	var _update: Array<Void->Void> = null;
 	var _lateUpdate: Array<Void->Void> = null;
-	var _fixedUpdate: Array<Void->Void> = null;
 	var _render: Array<kha.graphics4.Graphics->Void> = null;
 	var _render2D: Array<kha.graphics2.Graphics->Void> = null;
 
