@@ -1157,7 +1157,7 @@ class Zui {
 			}
 		}
 		else handle.changed = false;
-		
+
 		#if (!kha_android && !kha_ios)
 		if (handle == scrollHandle && inputDX != 0) { // Scroll
 		#else
@@ -1338,7 +1338,7 @@ class Zui {
 					var search = textSelected.toLowerCase();
 					while (comboSelectedTexts[comboToSubmit - step].toLowerCase().indexOf(search) < 0 && comboToSubmit - step > 0)
 						++step;
-					
+
 					// Corner case: Current position is the top one according to the search pattern.
 					if (comboSelectedTexts[comboToSubmit - step].toLowerCase().indexOf(search) < 0) step = 0;
 				}
@@ -1355,7 +1355,7 @@ class Zui {
 					// Corner case: Current position is the lowest one according to the search pattern.
 					if (comboSelectedTexts[comboToSubmit + step].toLowerCase().indexOf(search) < 0) step = 0;
 				}
-				
+
 				comboToSubmit += step;
 				submitComboHandle = comboSelectedHandle;
 			}
@@ -2018,6 +2018,8 @@ typedef HandleOptions = {
 }
 
 class Handle {
+	static var ptrCounter: Int = 0;
+	public var ptr(default, null): Int; // Unique handle identifier
 	public var selected = false;
 	public var position = 0;
 	public var color = kha.Color.White;
@@ -2037,6 +2039,7 @@ class Handle {
 	var children: Map<Int, Handle>;
 
 	public function new(ops: HandleOptions = null) {
+		ptr = ptrCounter++;
 		if (ops != null) {
 			if (ops.selected != null) selected = ops.selected;
 			if (ops.position != null) position = ops.position;
