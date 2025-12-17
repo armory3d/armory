@@ -27,7 +27,7 @@ else:
 
 
 def get_library_hooks():
-    """Discover and load armory_hooks.py from Libraries and Subprojects.
+    """Discover and load `armory_hooks.py` from Libraries and Subprojects.
 
     Each hook module can define a write_main() function that returns a dict with:
     - 'imports': Haxe import statements to add at the top
@@ -51,9 +51,9 @@ def get_library_hooks():
     Returns a dict with combined strings for each injection point.
     """
     hooks = {
-        'imports': '',
-        'main_pre': '',
-        'main_post': '',
+        'imports': '',     # Haxe import statements
+        'main_pre': '',    # Code to add at the start of main() before Starter.main()
+        'main_post': '',   # Code to add at the end of main() after Starter.main()
         'wrap_inits': [],  # List of (priority, before, after) tuples
         'defines': [],     # List of Haxe defines for khafile.js
         'parameters': [],  # List of Haxe parameters for khafile.js
@@ -180,7 +180,7 @@ def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, expo
 let project = new Project('""" + arm.utils.safesrc(wrd.arm_project_name + '-' + wrd.arm_project_version) + """');
 
 """)
-        # Add library hook assets FIRST (before sources, so they're available during macro compilation)
+        # Add library hook assets
         for asset in hooks['assets']:
             if isinstance(asset, tuple):
                 path, options = asset
@@ -197,19 +197,18 @@ let project = new Project('""" + arm.utils.safesrc(wrd.arm_project_name + '-' + 
             else:
                 khafile.write(f'project.addAssets("{asset}");\n')
 
-        khafile.write("project.addSources('Sources');\n")
-
         # Add library hook defines
         for d in hooks['defines']:
             khafile.write("project.addDefine('" + d + "');\n")
-
-        for p in assets.khafile_params:
-            khafile.write("project.addParameter('" + p + "');\n")
 
         # Add library hook parameters
         for p in hooks['parameters']:
             khafile.write("project.addParameter('" + p + "');\n")
 
+        for p in assets.khafile_params:
+            khafile.write("project.addParameter('" + p + "');\n")
+
+        khafile.write("project.addSources('Sources');\n")
 
         # Auto-add assets located in Bundled directory
         if os.path.exists('Bundled'):
