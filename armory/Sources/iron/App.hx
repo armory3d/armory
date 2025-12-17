@@ -29,7 +29,7 @@ class App {
 	static var lastw = -1;
 	static var lasth = -1;
 	public static var onResize: Void->Void = null; // TODO: deprecate this. Use armory.system.Signal 'resized' instead.
-	public static var resized: armory.system.Signal = new armory.system.Signal();
+	public static var resized: armory.system.Signal = new armory.system.Signal(); // args: (w: Int, h: Int)
 
 	public static function init(done: Void->Void) {
 		new App(done);
@@ -61,10 +61,8 @@ class App {
 			lasth = App.h();
 		}
 		if (lastw != App.w() || lasth != App.h()) {
-			if (onResize != null) {
-				onResize();
-				resized.emit();
-			}
+			resized.emit(App.w(), App.h());
+			if (onResize != null) onResize();
 			else {
 				if (Scene.active != null && Scene.active.camera != null) {
 					Scene.active.camera.buildProjection();
