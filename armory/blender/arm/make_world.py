@@ -38,6 +38,10 @@ def build():
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
 
+    if rpdat is None:
+        log.error("No render path found. Please ensure a valid render path is selected.")
+        return
+
     mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
     envpath = os.path.join(arm.utils.get_fp_build(), 'compiled', 'Assets', 'envmaps')
 
