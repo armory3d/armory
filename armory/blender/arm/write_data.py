@@ -1,4 +1,5 @@
 import glob
+import importlib.util
 import json
 import os
 import shutil
@@ -9,6 +10,7 @@ from typing import List
 import bpy
 
 import arm.assets as assets
+import arm.log as log
 import arm.make_renderpath as make_renderpath
 import arm.make_state as state
 import arm.utils
@@ -16,11 +18,103 @@ import arm.utils
 if arm.is_reload(__name__):
     import arm
     assets = arm.reload_module(assets)
+    log = arm.reload_module(log)
     make_renderpath = arm.reload_module(make_renderpath)
     state = arm.reload_module(state)
     arm.utils = arm.reload_module(arm.utils)
 else:
     arm.enable_reload(__name__)
+
+
+def get_library_hooks():
+    """Discover and load `armory_hooks.py` from Libraries and Subprojects.
+
+    Each hook module can define a write_main() function that returns a dict with:
+    - 'imports': Haxe import statements to add at the top
+    - 'main_pre': Code to add at the start of main() before Starter.main()
+    - 'main_post': Code to add at the end of main() after Starter.main()
+    - 'wrap_init': Tuple of (before, after) strings to wrap around the main() body
+    - 'priority': Integer for wrap_init nesting order (lower = outer, default = 0)
+    - 'defines': List of Haxe defines to add to khafile.js
+    - 'parameters': List of Haxe parameters to add to khafile.js
+    - 'assets': List of asset entries for khafile.js. Each entry can be:
+        - A string path: "Assets/icons.png"
+        - A tuple (path, options_dict): ("Assets/icons.png", {"noCompress": True})
+
+    Multiple wrap_init hooks are nested based on priority:
+    - Priority 0 (outer): LibA.init(function() {
+    - Priority 10 (inner):     LibB.init(function() {
+    -                              Starter.main();
+    - Priority 10 (inner):     });
+    - Priority 0 (outer): });
+
+    Returns a dict with combined strings for each injection point.
+    """
+    hooks = {
+        'imports': '',     # Haxe import statements
+        'main_pre': '',    # Code to add at the start of main() before Starter.main()
+        'main_post': '',   # Code to add at the end of main() after Starter.main()
+        'wrap_inits': [],  # List of (priority, before, after) tuples
+        'defines': [],     # List of Haxe defines for khafile.js
+        'parameters': [],  # List of Haxe parameters for khafile.js
+        'assets': []       # List of assets for khafile.js
+    }
+
+    project_path = arm.utils.get_fp()
+    hook_dirs = []
+
+    # Check Libraries folder
+    libraries_path = os.path.join(project_path, 'Libraries')
+    if os.path.exists(libraries_path):
+        for lib in os.listdir(libraries_path):
+            lib_path = os.path.join(libraries_path, lib)
+            if os.path.isdir(lib_path):
+                hook_dirs.append((lib, lib_path))
+
+    # Check Subprojects folder
+    subprojects_path = os.path.join(project_path, 'Subprojects')
+    if os.path.exists(subprojects_path):
+        for lib in os.listdir(subprojects_path):
+            lib_path = os.path.join(subprojects_path, lib)
+            if os.path.isdir(lib_path):
+                hook_dirs.append((lib, lib_path))
+
+    # Load each hook module
+    for lib_name, lib_path in hook_dirs:
+        hook_file = os.path.join(lib_path, 'armory_hooks.py')
+        if os.path.isfile(hook_file):
+            try:
+                spec = importlib.util.spec_from_file_location(f"armory_hooks_{lib_name}", hook_file)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+
+                if hasattr(module, 'write_main'):
+                    result = module.write_main()
+                    if result:
+                        if 'imports' in result and result['imports']:
+                            hooks['imports'] += result['imports'] + '\n'
+                        if 'main_pre' in result and result['main_pre']:
+                            hooks['main_pre'] += result['main_pre'] + '\n'
+                        if 'main_post' in result and result['main_post']:
+                            hooks['main_post'] += result['main_post'] + '\n'
+                        if 'wrap_init' in result and result['wrap_init']:
+                            priority = result.get('priority', 0)
+                            hooks['wrap_inits'].append((priority, result['wrap_init'][0], result['wrap_init'][1]))
+                        if 'defines' in result and result['defines']:
+                            hooks['defines'].extend(result['defines'])
+                        if 'parameters' in result and result['parameters']:
+                            hooks['parameters'].extend(result['parameters'])
+                        if 'assets' in result and result['assets']:
+                            hooks['assets'].extend(result['assets'])
+
+                        log.info(f"Loaded library hook: {lib_name}")
+            except Exception as e:
+                log.warn(f"Failed to load hook from {lib_name}: {e}")
+
+    # Sort wrap_inits by priority (lower = outer wrapper)
+    hooks['wrap_inits'].sort(key=lambda x: x[0])
+
+    return hooks
 
 
 def on_same_drive(path1: str, path2: str) -> bool:
@@ -74,6 +168,9 @@ def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, expo
     project_path = arm.utils.get_fp()
     build_dir = arm.utils.build_dir()
 
+    # Get library hooks for defines and parameters
+    hooks = get_library_hooks()
+
     # Whether to use relative paths for paths inside the SDK
     do_relpath_sdk = rel_path and on_same_drive(sdk_path, project_path)
 
@@ -82,8 +179,36 @@ def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, expo
 """// Auto-generated
 let project = new Project('""" + arm.utils.safesrc(wrd.arm_project_name + '-' + wrd.arm_project_version) + """');
 
-project.addSources('Sources');
 """)
+        # Add library hook assets
+        for asset in hooks['assets']:
+            if isinstance(asset, tuple):
+                path, options = asset
+                opts = []
+                for key, value in options.items():
+                    if isinstance(value, bool):
+                        opts.append(f"{key}: {'true' if value else 'false'}")
+                    elif isinstance(value, str):
+                        opts.append(f"{key}: '{value}'")
+                    else:
+                        opts.append(f"{key}: {value}")
+                opts_str = ', '.join(opts)
+                khafile.write(f'project.addAssets("{path}", {{ {opts_str} }});\n')
+            else:
+                khafile.write(f'project.addAssets("{asset}");\n')
+
+        # Add library hook defines
+        for d in hooks['defines']:
+            khafile.write("project.addDefine('" + d + "');\n")
+
+        # Add library hook parameters
+        for p in hooks['parameters']:
+            khafile.write("project.addParameter('" + p + "');\n")
+
+        for p in assets.khafile_params:
+            khafile.write("project.addParameter('" + p + "');\n")
+
+        khafile.write("project.addSources('Sources');\n")
 
         # Auto-add assets located in Bundled directory
         if os.path.exists('Bundled'):
@@ -360,9 +485,6 @@ project.addSources('Sources');
         for d in assets.khafile_defs:
             khafile.write("project.addDefine('" + d + "');\n")
 
-        for p in assets.khafile_params:
-            khafile.write("project.addParameter('" + p + "');\n")
-
         if state.target.startswith('android'):
             bundle = 'org.armory3d.' + wrd.arm_project_package if wrd.arm_project_bundle == '' else wrd.arm_project_bundle
             khafile.write("project.targetOptions.android_native.package = '{0}';\n".format(arm.utils.safestr(bundle)))
@@ -469,10 +591,18 @@ def write_mainhx(scene_name, resx, resy, is_play, is_publish):
     elif rpdat.rp_driver != 'Armory':
         pathpack = rpdat.rp_driver.lower()
 
+    # Get library hooks
+    hooks = get_library_hooks()
+
     with open('Sources/Main.hx', 'w', encoding="utf-8") as f:
         f.write(
 """// Auto-generated
-package;\n""")
+package;
+""")
+
+        # Write hook imports
+        if hooks['imports']:
+            f.write(hooks['imports'])
 
         f.write("""
 class Main {
@@ -498,49 +628,71 @@ class Main {
         f.write("""\n
     public static function main() {""")
 
+        # Calculate base indentation (2 tabs = 8 spaces)
+        base_indent = "        "
+        wrap_count = len(hooks['wrap_inits'])
+
+        # Write wrap_init opening statements (outer to inner, sorted by priority)
+        for i, (priority, before, after) in enumerate(hooks['wrap_inits']):
+            indent = base_indent + ("    " * i)
+            f.write("\n" + indent + before)
+
+        # Calculate content indentation based on wrap depth
+        content_indent = base_indent + ("    " * wrap_count)
+
+        # Write main_pre hooks
+        if hooks['main_pre']:
+            f.write("\n" + content_indent + hooks['main_pre'].replace('\n', '\n' + content_indent))
+
         if rpdat.arm_skin != 'Off':
-            f.write("""
-        iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;""")
+            f.write("\n" + content_indent + "iron.object.BoneAnimation.skinMaxBones = " + str(rpdat.arm_skin_max_bones) + ";")
 
         if rpdat.rp_shadows:
             if rpdat.rp_shadowmap_cascades != '1':
-                f.write("""
-            iron.object.LightObject.cascadeCount = """ + str(rpdat.rp_shadowmap_cascades) + """;
-            iron.object.LightObject.cascadeSplitFactor = """ + str(rpdat.arm_shadowmap_split) + """;""")
+                f.write("\n" + content_indent + "iron.object.LightObject.cascadeCount = " + str(rpdat.rp_shadowmap_cascades) + ";")
+                f.write("\n" + content_indent + "iron.object.LightObject.cascadeSplitFactor = " + str(rpdat.arm_shadowmap_split) + ";")
             if rpdat.arm_shadowmap_bounds != 1.0:
-                f.write("""
-            iron.object.LightObject.cascadeBounds = """ + str(rpdat.arm_shadowmap_bounds) + """;""")
+                f.write("\n" + content_indent + "iron.object.LightObject.cascadeBounds = " + str(rpdat.arm_shadowmap_bounds) + ";")
 
         if is_publish and wrd.arm_loadscreen:
             asset_references = list(set(assets.assets))
             loadscreen_class = 'armory.trait.internal.LoadingScreen'
             if os.path.isfile(arm.utils.get_fp() + '/Sources/' + wrd.arm_project_package + '/LoadingScreen.hx'):
                 loadscreen_class = wrd.arm_project_package + '.LoadingScreen'
-            f.write("""
-        armory.system.Starter.numAssets = """ + str(len(asset_references)) + """;
-        armory.system.Starter.drawLoading = """ + loadscreen_class + """.render;""")
+            f.write("\n" + content_indent + "armory.system.Starter.numAssets = " + str(len(asset_references)) + ";")
+            f.write("\n" + content_indent + "armory.system.Starter.drawLoading = " + loadscreen_class + ".render;")
 
         if wrd.arm_ui == 'Enabled':
             if wrd.arm_canvas_img_scaling_quality == 'low':
-                f.write("""
-        armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.Low;""")
+                f.write("\n" + content_indent + "armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.Low;")
             elif wrd.arm_canvas_img_scaling_quality == 'high':
-                f.write("""
-        armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.High;""")
+                f.write("\n" + content_indent + "armory.ui.Canvas.imageScaleQuality = kha.graphics2.ImageScaleQuality.High;")
+
+        # Write Starter.main call
+        starter_indent = content_indent + "    "
+        f.write("\n" + content_indent + "armory.system.Starter.main(")
+        f.write("\n" + starter_indent + "'" + arm.utils.safestr(scene_name) + scene_ext + "',")
+        f.write("\n" + starter_indent + str(winmode) + ",")
+        f.write("\n" + starter_indent + ('true' if wrd.arm_winresize else 'false') + ",")
+        f.write("\n" + starter_indent + ('true' if wrd.arm_winminimize else 'false') + ",")
+        f.write("\n" + starter_indent + ('true' if (wrd.arm_winresize and wrd.arm_winmaximize) else 'false') + ",")
+        f.write("\n" + starter_indent + str(resx) + ",")
+        f.write("\n" + starter_indent + str(resy) + ",")
+        f.write("\n" + starter_indent + str(int(rpdat.arm_samples_per_pixel)) + ",")
+        f.write("\n" + starter_indent + ('true' if wrd.arm_vsync else 'false') + ",")
+        f.write("\n" + starter_indent + pathpack + ".renderpath.RenderPathCreator.get")
+        f.write("\n" + content_indent + ");")
+
+        # Write main_post hooks
+        if hooks['main_post']:
+            f.write("\n" + content_indent + hooks['main_post'].replace('\n', '\n' + content_indent))
+
+        # Write wrap_init closing statements (inner to outer, reverse order)
+        for i, (priority, before, after) in enumerate(reversed(hooks['wrap_inits'])):
+            indent = base_indent + ("    " * (wrap_count - 1 - i))
+            f.write("\n" + indent + after)
 
         f.write("""
-        armory.system.Starter.main(
-            '""" + arm.utils.safestr(scene_name) + scene_ext + """',
-            """ + str(winmode) + """,
-            """ + ('true' if wrd.arm_winresize else 'false') + """,
-            """ + ('true' if wrd.arm_winminimize else 'false') + """,
-            """ + ('true' if (wrd.arm_winresize and wrd.arm_winmaximize) else 'false') + """,
-            """ + str(resx) + """,
-            """ + str(resy) + """,
-            """ + str(int(rpdat.arm_samples_per_pixel)) + """,
-            """ + ('true' if wrd.arm_vsync else 'false') + """,
-            """ + pathpack + """.renderpath.RenderPathCreator.get
-        );
     }
 }""")
 
