@@ -1058,6 +1058,11 @@ class Uniforms {
 					vx = ts.tileX;
 					vy = ts.tileY;
 				}
+				case "_tilesheetFlip": {
+					var ts = cast(object, MeshObject).tilesheet;
+					vx = ts.flipX ? 1.0 : 0.0;
+					vy = ts.flipY ? 1.0 : 0.0;
+				}
 				case "_tilesheetTiles": {
 					var ts = cast(object, MeshObject).tilesheet;
 					vx = ts.tilesx;
