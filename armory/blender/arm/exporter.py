@@ -645,18 +645,37 @@ class ArmoryExporter:
             # Skinning
             if arm.utils.export_bone_data(bobject):
                 variant_suffix = '_armskin'
-            # Tilesheets
-            elif bobject.arm_tilesheet != '':
-                if not bobject.arm_use_custom_tilesheet_node:
-                    variant_suffix = '_armtile'
-            elif arm.utils.export_morph_targets(bobject):
+            # Tilesheets - check if any material slot has tilesheet enabled
+            elif bobject.type == 'MESH' and len(bobject.material_slots) > 0:
+                for slot in bobject.material_slots:
+                    if slot.material and slot.material.arm_tilesheet_enabled:
+                        variant_suffix = '_armtile'
+                        break
+            # For collection instances, check objects inside the instanced collection
+            elif bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
+                for cobj in bobject.instance_collection.all_objects:
+                    if cobj.type == 'MESH':
+                        for slot in cobj.material_slots:
+                            if slot.material and slot.material.arm_tilesheet_enabled:
+                                variant_suffix = '_armtile'
+                                break
+                    if variant_suffix != '':
+                        break
+            if variant_suffix == '' and arm.utils.export_morph_targets(bobject):
                 variant_suffix = '_armskey'
 
             if variant_suffix == '':
                 continue
 
+            # For regular mesh objects, process their material slots
             for slot in bobject.material_slots:
-                if slot.material is None or slot.material.library is not None:
+                if slot.material is None:
+                    continue
+                # For linked materials, set the flag directly (can't create variants)
+                if slot.material.library is not None:
+                    if variant_suffix == '_armtile':
+                        slot.material.arm_tilesheet_flag = True
+                        slot.material.arm_cached = False
                     continue
                 if slot.material.name.endswith(variant_suffix):
                     continue
@@ -672,6 +691,19 @@ class ArmoryExporter:
                         mat.arm_tilesheet_flag = True
                     matvars.append(mat)
                 slot.material = mat
+
+            # For collection instances, set tilesheet flag on materials of objects inside the collection
+            if bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
+                for cobj in bobject.instance_collection.all_objects:
+                    if cobj.type != 'MESH':
+                        continue
+                    for slot in cobj.material_slots:
+                        if slot.material is None:
+                            continue
+                        # Set the flag and invalidate cache to force shader regeneration
+                        if variant_suffix == '_armtile':
+                            slot.material.arm_tilesheet_flag = True
+                            slot.material.arm_cached = False
 
         # Particle and non-particle objects can not share material
         particle_sys: bpy.types.ParticleSettings
@@ -842,9 +874,14 @@ class ArmoryExporter:
                 out_object['group_ref'] = bobject.instance_collection.name
                 self.referenced_collections.append(bobject.instance_collection)
 
-            if bobject.arm_tilesheet != '':
-                out_object['tilesheet_ref'] = bobject.arm_tilesheet
-                out_object['tilesheet_action_ref'] = bobject.arm_tilesheet_action
+            # Export tilesheet reference - find material with tilesheet enabled
+            if bobject.data and hasattr(bobject.data, 'materials'):
+                for mat in bobject.data.materials:
+                    if mat and mat.arm_tilesheet_enabled:
+                        out_object['tilesheet_material_ref'] = arm.utils.asset_name(mat)
+                        if bobject.arm_tilesheet_action != '':
+                            out_object['tilesheet_action_ref'] = bobject.arm_tilesheet_action
+                        break
 
 
             if len(bobject.vertex_groups) > 0:
@@ -2342,6 +2379,22 @@ Make sure the mesh only has tris/quads.""")
                     for ob in mat_users:
                         ob.data.arm_cached = False
 
+            # Export tilesheet data if enabled on this material
+            if material.arm_tilesheet_enabled:
+                o['tilesheet'] = {
+                    'tilesx': material.arm_tilesheet_tilesx,
+                    'tilesy': material.arm_tilesheet_tilesy,
+                    'framerate': material.arm_tilesheet_framerate,
+                    'actions': []
+                }
+                for action in material.arm_tilesheet_actionlist:
+                    o['tilesheet']['actions'].append({
+                        'name': action.name,
+                        'start': action.start_prop,
+                        'end': action.end_prop,
+                        'loop': action.loop_prop
+                    })
+
             self.output['material_datas'].append(o)
             material.arm_cached = True
 
@@ -2529,26 +2582,6 @@ Make sure the mesh only has tris/quads.""")
 
         return result
 
-    def export_tilesheets(self):
-        wrd = bpy.data.worlds['Arm']
-        if len(wrd.arm_tilesheetlist) > 0:
-            self.output['tilesheet_datas'] = []
-        for ts in wrd.arm_tilesheetlist:
-            o = {}
-            o['name'] = ts.name
-            o['tilesx'] = ts.tilesx_prop
-            o['tilesy'] = ts.tilesy_prop
-            o['framerate'] = ts.framerate_prop
-            o['actions'] = []
-            for tsa in ts.arm_tilesheetactionlist:
-                ao = {}
-                ao['name'] = tsa.name
-                ao['start'] = tsa.start_prop
-                ao['end'] = tsa.end_prop
-                ao['loop'] = tsa.loop_prop
-                o['actions'].append(ao)
-            self.output['tilesheet_datas'].append(o)
-
     def export_world(self):
         """Exports the world of the current scene."""
         world = self.scene.world
@@ -2729,7 +2762,6 @@ Make sure the mesh only has tris/quads.""")
             self.export_particle_systems()
             self.output['world_datas'] = []
             self.export_world()
-            self.export_tilesheets()
 
             if self.scene.world is not None:
                 self.output['world_ref'] = arm.utils.safestr(arm.utils.asset_name(self.scene.world) if self.scene.world.library else self.scene.world.name)

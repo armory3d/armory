@@ -2,8 +2,8 @@ from arm.logicnode.arm_nodes import *
 
 class GetTilesheetStateNode(ArmLogicTreeNode):
     """Returns the information about the current tilesheet of the given object.
-    
-    @output Active Tilesheet: Current active tilesheet.
+
+    @output Material: Material name with tilesheet data.
 
     @output Active Action: Current action in the tilesheet.
 
@@ -15,13 +15,13 @@ class GetTilesheetStateNode(ArmLogicTreeNode):
     """
     bl_idname = 'LNGetTilesheetStateNode'
     bl_label = 'Get Tilesheet State'
-    arm_version = 2
+    arm_version = 3
     arm_section = 'tilesheet'
 
     def arm_init(self, context):
         self.add_input('ArmNodeSocketObject', 'Object')
 
-        self.add_output('ArmStringSocket', 'Active Tilesheet')
+        self.add_output('ArmStringSocket', 'Material')
         self.add_output('ArmStringSocket', 'Active Action')
         self.add_output('ArmIntSocket', 'Frame')
         self.add_output('ArmIntSocket', 'Absolute Frame')
