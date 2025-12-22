@@ -79,7 +79,6 @@ class RigidBody extends iron.Trait {
 
 	// Interpolation
 	var interpolate: Bool = false;
-	var time: Float = 0.0;
 	var currentPos: bullet.Bt.Vector3 = new bullet.Bt.Vector3(0, 0, 0);
 	var prevPos: bullet.Bt.Vector3 = new bullet.Bt.Vector3(0, 0, 0);
 	var currentRot: bullet.Bt.Quaternion = new bullet.Bt.Quaternion(0, 0, 0, 1);
@@ -335,13 +334,7 @@ class RigidBody extends iron.Trait {
 
 	function update() {
 		if (interpolate) {
-			time += Time.delta;
-
-			while (time >= Time.fixedStep) {
-				time -= Time.fixedStep;
-			}
-
-			var t: Float = time / Time.fixedStep;
+			var t: Float = Time.fixedStepInterpolation;
 			t = Helper.clamp(t, 0, 1);
 
 			var tx: Float = prevPos.x() * (1.0 - t) + currentPos.x() * t;
