@@ -23,6 +23,12 @@ class Time {
 		_fixedStep = value;
 	}
 
+	static var _fixedStepInterpolation: Float = 0.0;
+	public static var fixedStepInterpolation(get, never): Float;
+	static function get_fixedStepInterpolation(): Float {
+		return _fixedStepInterpolation;
+	}
+
 	static var lastTime = 0.0;
 	static var _delta = 0.0;
 	public static var delta(get, never): Float;
