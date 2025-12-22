@@ -13,11 +13,11 @@ class GetTilesheetStateNode extends LogicNode {
 
 		if (object == null) return null;
 
-		var tilesheet = object.activeTilesheet;
+		var tilesheet = object.tilesheet;
 
 		return switch (from) {
-			case 0: tilesheet.raw.name;
-			case 1: tilesheet.action.name;
+			case 0: tilesheet.materialName;
+			case 1: tilesheet.action != null ? tilesheet.action.name : null;
 			case 2: tilesheet.getFrameOffset();
 			case 3: tilesheet.frame;
 			case 4: tilesheet.paused;

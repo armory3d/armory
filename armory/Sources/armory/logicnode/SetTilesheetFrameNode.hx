@@ -14,7 +14,7 @@ class SetTilesheetFrameNode extends LogicNode {
 
 		if (object == null) return;
 
-		object.activeTilesheet.setFrameOffset(frame);
+		object.tilesheet.setFrameOffset(frame);
 
 		runOutput(0);
 	}

@@ -14,7 +14,7 @@ class SetTilesheetPausedNode extends LogicNode {
 
 		if (object == null) return;
 
-		paused ? object.activeTilesheet.pause() : object.activeTilesheet.resume();
+		paused ? object.tilesheet.pause() : object.tilesheet.resume();
 
 		runOutput(0);
 	}

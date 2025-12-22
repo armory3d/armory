@@ -11,8 +11,12 @@ class Tilesheet {
 	public var tileX = 0.0; // Tile offset on tilesheet texture 0-1
 	public var tileY = 0.0;
 
-	public var raw: TTilesheetData;
+	public var tilesx: Int;
+	public var tilesy: Int;
+	public var framerate: Int;
+	public var actions: Array<TTilesheetAction>;
 	public var action: TTilesheetAction = null;
+	public var materialName: String;
 	var ready: Bool;
 
 	public var paused = false;
@@ -20,14 +24,30 @@ class Tilesheet {
 	var time = 0.0;
 	var onActionComplete: Void->Void = null;
 
-	public function new(sceneName: String, tilesheet_ref: String, tilesheet_action_ref: String) {
+	/**
+	 * Create a tilesheet from material data.
+	 * @param sceneName The scene containing the material
+	 * @param materialRef The material name with tilesheet data
+	 * @param actionRef The initial action to play (optional)
+	 */
+	public function new(sceneName: String, materialRef: String, actionRef: String) {
 		ready = false;
+		materialName = materialRef;
 		Data.getSceneRaw(sceneName, function(format: TSceneFormat) {
-			for (ts in format.tilesheet_datas) {
-				if (ts.name == tilesheet_ref) {
-					raw = ts;
+			// Find material with tilesheet data
+			for (mat in format.material_datas) {
+				if (mat.name == materialRef && mat.tilesheet != null) {
+					var ts = mat.tilesheet;
+					tilesx = ts.tilesx;
+					tilesy = ts.tilesy;
+					framerate = Std.int(ts.framerate);
+					actions = ts.actions;
 					Scene.active.tilesheets.push(this);
-					play(tilesheet_action_ref);
+					if (actionRef != null && actionRef != "") {
+						play(actionRef);
+					} else if (actions.length > 0) {
+						play(actions[0].name);
+					}
 					ready = true;
 					break;
 				}
@@ -37,15 +57,17 @@ class Tilesheet {
 
 	public function play(action_ref: String, onActionComplete: Void->Void = null) {
 		this.onActionComplete = onActionComplete;
-		for (a in raw.actions) {
+		for (a in actions) {
 			if (a.name == action_ref) {
 				action = a;
 				break;
 			}
 		}
-		setFrame(action.start);
-		paused = false;
-		time = 0.0;
+		if (action != null) {
+			setFrame(action.start);
+			paused = false;
+			time = 0.0;
+		}
 	}
 
 	public function pause() {
@@ -78,11 +100,11 @@ class Tilesheet {
 	}
 
 	function update() {
-		if (!ready || paused || action.start >= action.end) return;
+		if (!ready || paused || action == null || action.start >= action.end) return;
 
 		time += Time.renderDelta;
 
-		var frameTime = 1 / raw.framerate;
+		var frameTime = 1 / framerate;
 		var framesToAdvance = 0;
 
 		// Check how many animation frames passed during the last render frame
@@ -109,9 +131,9 @@ class Tilesheet {
 			return;
 		}
 
-		var tx = frame % raw.tilesx;
-		var ty = Std.int(frame / raw.tilesx);
-		tileX = tx * (1 / raw.tilesx);
-		tileY = ty * (1 / raw.tilesy);
+		var tx = frame % tilesx;
+		var ty = Std.int(frame / tilesx);
+		tileX = tx * (1 / tilesx);
+		tileY = ty * (1 / tilesy);
 	}
 }

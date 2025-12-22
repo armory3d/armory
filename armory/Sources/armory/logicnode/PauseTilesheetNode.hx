@@ -13,7 +13,7 @@ class PauseTilesheetNode extends LogicNode {
 
 		if (object == null) return;
 
-		object.activeTilesheet.pause();
+		object.tilesheet.pause();
 
 		runOutput(0);
 	}
