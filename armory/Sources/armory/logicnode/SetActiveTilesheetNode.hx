@@ -11,12 +11,12 @@ class SetActiveTilesheetNode extends LogicNode {
 
 	override function run(from: Int) {
 		var object: MeshObject = inputs[1].get();
-		var tilesheet: String = inputs[2].get();
+		var materialRef: String = inputs[2].get();
 		var action: String = inputs[3].get();
 
 		if (object == null) return;
 
-		object.setActiveTilesheet(Scene.active.raw.name, tilesheet, action);
+		object.setActiveTilesheet(Scene.active.raw.name, materialRef, action);
 
 		runOutput(0);
 	}
