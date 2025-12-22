@@ -174,6 +174,9 @@ def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, expo
     # Whether to use relative paths for paths inside the SDK
     do_relpath_sdk = rel_path and on_same_drive(sdk_path, project_path)
 
+    # Determine if assets should go to data folder (used for hook assets and later)
+    use_data_dir = is_publish and (state.target == 'krom-windows' or state.target == 'krom-linux' or state.target == 'windows-hl' or state.target == 'linux-hl' or state.target == 'html5')
+
     with open('khafile.js', 'w', encoding="utf-8") as khafile:
         khafile.write(
 """// Auto-generated
@@ -182,6 +185,7 @@ let project = new Project('""" + arm.utils.safesrc(wrd.arm_project_name + '-' + 
 """)
         # Add library hook assets
         for asset in hooks['assets']:
+            dest_opt = ', destination: "data/{name}"' if use_data_dir else ''
             if isinstance(asset, tuple):
                 path, options = asset
                 opts = []
@@ -192,10 +196,12 @@ let project = new Project('""" + arm.utils.safesrc(wrd.arm_project_name + '-' + 
                         opts.append(f"{key}: '{value}'")
                     else:
                         opts.append(f"{key}: {value}")
+                if use_data_dir and 'destination' not in options:
+                    opts.append('destination: "data/{name}"')
                 opts_str = ', '.join(opts)
                 khafile.write(f'project.addAssets("{path}", {{ {opts_str} }});\n')
             else:
-                khafile.write(f'project.addAssets("{asset}");\n')
+                khafile.write(f'project.addAssets("{asset}", {{ notinlist: true{dest_opt} }});\n')
 
         # Add library hook defines
         for d in hooks['defines']:
@@ -356,8 +362,7 @@ let project = new Project('""" + arm.utils.safesrc(wrd.arm_project_name + '-' + 
                 shaders_path = os.path.relpath(shaders_path, project_path).replace('\\', '/')
             khafile.write('project.addShaders("' + shaders_path + '", { noprocessing: true, noembed: ' + str(noembed).lower() + ' });\n')
 
-        # Move assets for published game to /data folder
-        use_data_dir = is_publish and (state.target == 'krom-windows' or state.target == 'krom-linux' or state.target == 'windows-hl' or state.target == 'linux-hl' or state.target == 'html5')
+        # Add define for data directory usage
         if use_data_dir:
             assets.add_khafile_def('arm_data_dir')
 
