@@ -10,6 +10,8 @@ class Tilesheet {
 
 	public var tileX = 0.0; // Tile offset on tilesheet texture 0-1
 	public var tileY = 0.0;
+	public var flipX = false;
+	public var flipY = false;
 
 	public var tilesx: Int;
 	public var tilesy: Int;
