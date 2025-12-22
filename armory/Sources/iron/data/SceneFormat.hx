@@ -31,6 +31,7 @@ typedef TSceneFormat = {
 	@:optional public var speaker_datas: Array<TSpeakerData>;
 	@:optional public var world_datas: Array<TWorldData>;
 	@:optional public var world_ref: String;
+	@:optional public var tilesheet_datas: Array<TTilesheetData>;
 	@:optional public var objects: Array<TObj>;
 	@:optional public var groups: Array<TGroup>;
 	@:optional public var gravity: Float32Array;
@@ -160,18 +161,6 @@ typedef TMaterialData = {
 	public var contexts: Array<TMaterialContext>;
 	@:optional public var skip_context: String;
 	@:optional public var override_context: TShaderOverride;
-	@:optional public var tilesheet: TMaterialTilesheet;
-}
-
-#if js
-typedef TMaterialTilesheet = {
-#else
-@:structInit class TMaterialTilesheet {
-#end
-	public var tilesx: Int;
-	public var tilesy: Int;
-	public var framerate: Int;
-	public var actions: Array<TTilesheetAction>;
 }
 
 #if js
@@ -376,6 +365,18 @@ typedef TProbeData = {
 }
 
 #if js
+typedef TTilesheetData = {
+#else
+@:structInit class TTilesheetData {
+#end
+	public var name: String;
+	public var tilesx: Int;
+	public var tilesy: Int;
+	public var framerate: Int;
+	public var actions: Array<TTilesheetAction>;
+}
+
+#if js
 typedef TTilesheetAction = {
 #else
 @:structInit class TTilesheetAction {
@@ -480,8 +481,8 @@ typedef TObj = {
 	@:optional public var mobile: Null<Bool>;
 	@:optional public var spawn: Null<Bool>; // Auto add object when creating scene
 	@:optional public var local_only: Null<Bool>; // Apply parent matrix
-	@:optional public var tilesheet_material_ref: String; // Material with tilesheet data
-	@:optional public var tilesheet_action_ref: String; // Starting action
+	@:optional public var tilesheet_ref: String;
+	@:optional public var tilesheet_action_ref: String;
 	@:optional public var sampled: Null<Bool>; // Object action
 	@:optional public var is_ik_fk_only: Null<Bool>; // Bone IK or FK only
 	@:optional public var relative_bone_constraints: Null<Bool>; // Use parent relative bone constraints

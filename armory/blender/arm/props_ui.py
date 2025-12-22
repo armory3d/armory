@@ -73,10 +73,16 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
 
         if obj.type == 'MESH':
             layout.prop(obj, 'arm_instanced')
-            # Tilesheet action selection - use active material if it has tilesheet enabled
-            if obj.active_material and obj.active_material.arm_tilesheet_enabled:
-                layout.label(text=f"Tilesheet Material: {obj.active_material.name}")
-                layout.prop_search(obj, "arm_tilesheet_action", obj.active_material, "arm_tilesheet_actionlist", text="Start Action")
+            wrd = bpy.data.worlds['Arm']
+            layout.prop_search(obj, "arm_tilesheet", wrd, "arm_tilesheetlist", text="Tilesheet")
+            if obj.arm_tilesheet != '':
+                selected_ts = None
+                for ts in wrd.arm_tilesheetlist:
+                    if ts.name == obj.arm_tilesheet:
+                        selected_ts = ts
+                        break
+                layout.prop_search(obj, "arm_tilesheet_action", selected_ts, "arm_tilesheetactionlist", text="Action")
+                layout.prop(obj, "arm_use_custom_tilesheet_node")
 
         # Properties list
         arm.props_properties.draw_properties(layout, obj)
@@ -2312,54 +2318,56 @@ class ARM_PT_TilesheetPanel(bpy.types.Panel):
     bl_context = "material"
     bl_options = {'DEFAULT_CLOSED'}
 
-    @classmethod
-    def poll(cls, context):
-        return context.material is not None
-
-    def draw_header(self, context):
-        mat = context.material
-        self.layout.prop(mat, "arm_tilesheet_enabled", text="")
-
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
-        mat = context.material
+        wrd = bpy.data.worlds['Arm']
 
-        layout.enabled = mat.arm_tilesheet_enabled
-
-        # Tilesheet grid settings
-        col = layout.column(align=True)
-        col.prop(mat, "arm_tilesheet_tilesx")
-        col.prop(mat, "arm_tilesheet_tilesy")
-        layout.prop(mat, "arm_tilesheet_framerate")
-
-        # Actions list
-        layout.separator()
-        layout.label(text="Actions")
         rows = 2
-        if len(mat.arm_tilesheet_actionlist) > 1:
+        if len(wrd.arm_tilesheetlist) > 1:
             rows = 4
         row = layout.row()
-        row.template_list("ARM_UL_TilesheetActionList", "The_List", mat, "arm_tilesheet_actionlist", mat, "arm_tilesheet_actionlist_index", rows=rows)
+        row.template_list("ARM_UL_TilesheetList", "The_List", wrd, "arm_tilesheetlist", wrd, "arm_tilesheetlist_index", rows=rows)
         col = row.column(align=True)
-        col.operator("arm_tilesheetactionlist.new_item", icon='ADD', text="")
-        col.operator("arm_tilesheetactionlist.delete_item", icon='REMOVE', text="")
+        col.operator("arm_tilesheetlist.new_item", icon='ADD', text="")
+        col.operator("arm_tilesheetlist.delete_item", icon='REMOVE', text="")
 
-        if len(mat.arm_tilesheet_actionlist) > 1:
+        if len(wrd.arm_tilesheetlist) > 1:
             col.separator()
-            op = col.operator("arm_tilesheetactionlist.move_item", icon='TRIA_UP', text="")
+            op = col.operator("arm_tilesheetlist.move_item", icon='TRIA_UP', text="")
             op.direction = 'UP'
-            op = col.operator("arm_tilesheetactionlist.move_item", icon='TRIA_DOWN', text="")
+            op = col.operator("arm_tilesheetlist.move_item", icon='TRIA_DOWN', text="")
             op.direction = 'DOWN'
 
-        # Selected action details
-        if mat.arm_tilesheet_actionlist_index >= 0 and len(mat.arm_tilesheet_actionlist) > 0:
-            adat = mat.arm_tilesheet_actionlist[mat.arm_tilesheet_actionlist_index]
-            box = layout.box()
-            box.prop(adat, "start_prop")
-            box.prop(adat, "end_prop")
-            box.prop(adat, "loop_prop")
+        if wrd.arm_tilesheetlist_index >= 0 and len(wrd.arm_tilesheetlist) > 0:
+            dat = wrd.arm_tilesheetlist[wrd.arm_tilesheetlist_index]
+            layout.prop(dat, "tilesx_prop")
+            layout.prop(dat, "tilesy_prop")
+            layout.prop(dat, "framerate_prop")
+
+            layout.label(text='Actions')
+            rows = 2
+            if len(dat.arm_tilesheetactionlist) > 1:
+                rows = 4
+            row = layout.row()
+            row.template_list("ARM_UL_TilesheetList", "The_List", dat, "arm_tilesheetactionlist", dat, "arm_tilesheetactionlist_index", rows=rows)
+            col = row.column(align=True)
+            col.operator("arm_tilesheetactionlist.new_item", icon='ADD', text="")
+            col.operator("arm_tilesheetactionlist.delete_item", icon='REMOVE', text="")
+
+            if len(dat.arm_tilesheetactionlist) > 1:
+                col.separator()
+                op = col.operator("arm_tilesheetactionlist.move_item", icon='TRIA_UP', text="")
+                op.direction = 'UP'
+                op = col.operator("arm_tilesheetactionlist.move_item", icon='TRIA_DOWN', text="")
+                op.direction = 'DOWN'
+
+            if dat.arm_tilesheetactionlist_index >= 0 and len(dat.arm_tilesheetactionlist) > 0:
+                adat = dat.arm_tilesheetactionlist[dat.arm_tilesheetactionlist_index]
+                layout.prop(adat, "start_prop")
+                layout.prop(adat, "end_prop")
+                layout.prop(adat, "loop_prop")
 
 class ArmPrintTraitsButton(bpy.types.Operator):
     bl_idname = 'arm.print_traits'

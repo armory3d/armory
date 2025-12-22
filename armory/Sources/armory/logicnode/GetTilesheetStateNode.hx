@@ -16,8 +16,8 @@ class GetTilesheetStateNode extends LogicNode {
 		var tilesheet = object.activeTilesheet;
 
 		return switch (from) {
-			case 0: tilesheet.materialName;
-			case 1: tilesheet.action != null ? tilesheet.action.name : null;
+			case 0: tilesheet.raw.name;
+			case 1: tilesheet.action.name;
 			case 2: tilesheet.getFrameOffset();
 			case 3: tilesheet.frame;
 			case 4: tilesheet.paused;

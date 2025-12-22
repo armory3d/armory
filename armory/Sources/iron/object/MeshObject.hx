@@ -123,20 +123,20 @@ class MeshObject extends Object {
 	}
 	#end
 
-	public function setupTilesheet(sceneName: String, materialRef: String, actionRef: String) {
-		activeTilesheet = new Tilesheet(sceneName, materialRef, actionRef);
+	public function setupTilesheet(sceneName: String, tilesheet_ref: String, tilesheet_action_ref: String) {
+		activeTilesheet = new Tilesheet(sceneName, tilesheet_ref, tilesheet_action_ref);
 		if(tilesheets == null) tilesheets = new Array<Tilesheet>();
 		tilesheets.push(activeTilesheet);
 	}
 
-	public function setActiveTilesheet(sceneName: String, materialRef: String, actionRef: String) {
+	public function setActiveTilesheet(sceneName: String, tilesheet_ref: String, tilesheet_action_ref: String) {
 		var set = false;
 		// Check if tilesheet already created
 		if (tilesheets != null) {
 			for (ts in tilesheets) {
-				if (ts.materialName == materialRef) {
+				if (ts.raw.name == tilesheet_ref) {
 					activeTilesheet = ts;
-					activeTilesheet.play(actionRef);
+					activeTilesheet.play(tilesheet_action_ref);
 					set = true;
 					break;
 				}
@@ -144,7 +144,7 @@ class MeshObject extends Object {
 		}
 		// If not already created
 		if (!set) {
-			setupTilesheet(sceneName, materialRef, actionRef);
+			setupTilesheet(sceneName, tilesheet_ref, tilesheet_action_ref);
 		}
 
 	}
