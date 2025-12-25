@@ -21,7 +21,8 @@ class Tilesheet {
 	var time = 0.0;
 	var onActionComplete: Void->Void = null;
 	var owner: MeshObject = null;
-	var currentMesh: String = null; // Track current mesh name to avoid redundant swaps
+	var currentMesh: MeshObject = null; // Currently active mesh (from children)
+	var meshCache: Map<String, MeshObject> = new Map(); // Cache of child meshes by name
 
 	/**
 	 * Create a tilesheet from embedded object tilesheet data.
@@ -32,6 +33,11 @@ class Tilesheet {
 		owner = ownerObject;
 		actions = tilesheetData.actions;
 
+		// Cache child mesh objects for quick lookup during mesh swaps
+		if (owner != null) {
+			cacheChildMeshes();
+		}
+
 		// Play the start action or default to first action
 		var startAction = tilesheetData.start_action;
 		if (startAction != null && startAction != "") {
@@ -40,6 +46,26 @@ class Tilesheet {
 			play(actions[0].name);
 		}
 		ready = true;
+	}
+
+	/**
+	 * Cache all MeshObject children for quick lookup by mesh name.
+	 * Children used for tilesheet mesh swapping should be hidden (not rendered directly).
+	 */
+	function cacheChildMeshes() {
+		if (owner.children == null) return;
+
+		for (child in owner.children) {
+			if (Std.isOfType(child, MeshObject)) {
+				var meshChild = cast(child, MeshObject);
+				// Cache by the mesh data name (what's referenced in action.mesh)
+				if (meshChild.data != null) {
+					meshCache.set(meshChild.data.name, meshChild);
+					// Hide children - they're just data sources, not rendered directly
+					meshChild.visible = false;
+				}
+			}
+		}
 	}
 
 	public function play(action_ref: String, onActionComplete: Void->Void = null) {
@@ -58,9 +84,18 @@ class Tilesheet {
 			}
 		}
 		if (action != null) {
-			// Handle optional mesh swap
-			if (action.mesh != null && action.mesh != "" && owner != null && action.mesh != currentMesh) {
-				swapMesh(action.mesh);
+			// Lazy cache children - they may not be available at construction time
+			var cacheSize = 0;
+			for (_ in meshCache) cacheSize++;
+			if (cacheSize == 0 && owner != null) {
+				cacheChildMeshes();
+			}
+			// Handle optional mesh swap - find child MeshObject and copy its data/materials
+			if (action.mesh != null && action.mesh != "") {
+				var targetMesh = meshCache.get(action.mesh);
+				if (targetMesh != null && targetMesh != currentMesh) {
+					swapMesh(targetMesh);
+				}
 			}
 			setFrame(action.start);
 			paused = false;
@@ -68,15 +103,24 @@ class Tilesheet {
 		}
 	}
 
-	function swapMesh(meshName: String) {
-		currentMesh = meshName;
-		// Mesh files are exported as "mesh_[meshname].arm" with the mesh data named "[meshname]" inside
-		var meshFile = "mesh_" + meshName;
-		Data.getMesh(meshFile, meshName, function(meshData) {
-			if (owner != null && meshData != null) {
-				owner.setData(meshData);
-			}
-		});
+	/**
+	 * Swap to a different mesh by copying its geometry and materials to the owner.
+	 * @param meshObj The child MeshObject to swap to
+	 */
+	function swapMesh(meshObj: MeshObject) {
+		if (owner == null || meshObj == null) return;
+
+		currentMesh = meshObj;
+
+		// Copy geometry data
+		if (meshObj.data != null) {
+			owner.setData(meshObj.data);
+		}
+
+		// Copy materials
+		if (meshObj.materials != null) {
+			owner.materials = meshObj.materials;
+		}
 	}
 
 	public function pause() {
@@ -92,6 +136,8 @@ class Tilesheet {
 		action = null;
 		actions = null;
 		owner = null;
+		currentMesh = null;
+		meshCache.clear();
 	}
 
 	/**
