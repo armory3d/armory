@@ -99,7 +99,7 @@ class Tilesheet {
 	 * @param frame Frame offset with 0 as the first frame of the active action.
 	 **/
 	public function setFrameOffset(frame: Int) {
-		if (action == null) return 0;
+		if (action == null) return;
 		setFrame(action.start + frame);
 		paused = false;
 	}
