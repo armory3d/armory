@@ -14,7 +14,7 @@ class Tilesheet {
 
 	public var actions: Array<TTilesheetAction>;
 	public var action: TTilesheetAction = null;
-	var ready: Bool;
+	var ready: Bool = false;
 
 	public var paused = false;
 	public var frame = 0;
@@ -23,6 +23,10 @@ class Tilesheet {
 	var owner: MeshObject = null;
 	var currentMesh: MeshObject = null; // Currently active mesh (from children)
 	var meshCache: Map<String, MeshObject> = new Map(); // Cache of child meshes by name
+
+	var pendingAction: String = null; // Action to play once ready
+	var pendingOnComplete: Void->Void = null;
+	var expectedMeshCount: Int = 0; // Number of meshes we expect to cache
 
 	/**
 	 * Create a tilesheet from embedded object tilesheet data.
@@ -33,94 +37,168 @@ class Tilesheet {
 		owner = ownerObject;
 		actions = tilesheetData.actions;
 
-		// Cache child mesh objects for quick lookup during mesh swaps
-		if (owner != null) {
-			cacheChildMeshes();
+		// Count how many unique meshes we need from actions
+		var meshNames = new Map<String, Bool>();
+		for (a in actions) {
+			if (a.mesh != null && a.mesh != "") {
+				meshNames.set(a.mesh, true);
+			}
+		}
+		for (_ in meshNames) expectedMeshCount++;
+
+		// Store start action
+		pendingAction = tilesheetData.start_action;
+		if ((pendingAction == null || pendingAction == "") && actions.length > 0) {
+			pendingAction = actions[0].name;
 		}
 
-		// Play the start action or default to first action
-		var startAction = tilesheetData.start_action;
-		if (startAction != null && startAction != "") {
-			play(startAction);
-		} else if (actions.length > 0) {
-			play(actions[0].name);
-		}
-		ready = true;
-	}
-
-	/**
-	 * Cache all MeshObject children for quick lookup by mesh name.
-	 * Children used for tilesheet mesh swapping should be hidden (not rendered directly).
-	 */
-	function cacheChildMeshes() {
-		if (owner.children == null) return;
-
-		for (child in owner.children) {
-			if (Std.isOfType(child, MeshObject)) {
-				var meshChild = cast(child, MeshObject);
-				// Cache by the mesh data name (what's referenced in action.mesh)
-				if (meshChild.data != null) {
-					meshCache.set(meshChild.data.name, meshChild);
-					// Hide children - they're just data sources, not rendered directly
-					meshChild.visible = false;
-				}
+		// If no meshes needed, we're ready immediately
+		if (expectedMeshCount == 0) {
+			ready = true;
+			if (pendingAction != null) {
+				playAction(pendingAction);
+				pendingAction = null;
 			}
 		}
 	}
 
+	/**
+	 * Called every frame. Handles initialization and animation.
+	 */
+	public function update() {
+		// Initialization: wait for all required meshes to be available
+		if (!ready) {
+			if (tryInitialize()) {
+				ready = true;
+				if (pendingAction != null) {
+					playAction(pendingAction, pendingOnComplete);
+					pendingAction = null;
+					pendingOnComplete = null;
+				}
+			}
+			return;
+		}
+
+		// Animation update
+		if (paused || action == null || action.start >= action.end) return;
+
+		time += Time.renderDelta;
+
+		var frameTime = 1 / action.framerate;
+		var framesToAdvance = 0;
+
+		while (time >= frameTime) {
+			time -= frameTime;
+			framesToAdvance++;
+		}
+
+		if (framesToAdvance != 0) {
+			setFrame(frame + framesToAdvance);
+		}
+	}
+
+	/**
+	 * Try to cache all required child meshes.
+	 * Returns true when all expected meshes are cached.
+	 */
+	function tryInitialize(): Bool {
+		if (owner == null || owner.children == null) return false;
+
+		// Scan children for MeshObjects with loaded data
+		for (child in owner.children) {
+			if (Std.isOfType(child, MeshObject)) {
+				var meshChild = cast(child, MeshObject);
+				if (meshChild.data != null && !meshCache.exists(meshChild.data.name)) {
+					meshCache.set(meshChild.data.name, meshChild);
+					meshChild.visible = false;
+				}
+			}
+		}
+
+		// Check if we have all required meshes
+		var cachedCount = 0;
+		for (_ in meshCache) cachedCount++;
+		return cachedCount >= expectedMeshCount;
+	}
+
+	/**
+	 * Play a tilesheet action by name.
+	 */
 	public function play(action_ref: String, onActionComplete: Void->Void = null) {
 		if (actions == null) return;
 
+		if (!ready) {
+			// Queue action until ready
+			pendingAction = action_ref;
+			pendingOnComplete = onActionComplete;
+			return;
+		}
+
+		playAction(action_ref, onActionComplete);
+	}
+
+	function playAction(action_ref: String, onComplete: Void->Void = null) {
 		if (action != null && action.name == action_ref) {
 			paused = false;
 			return;
 		}
 
-		this.onActionComplete = onActionComplete;
+		this.onActionComplete = onComplete;
+
+		// Find the action
 		for (a in actions) {
 			if (a.name == action_ref) {
 				action = a;
 				break;
 			}
 		}
-		if (action != null) {
-			// Lazy cache children - they may not be available at construction time
-			var cacheSize = 0;
-			for (_ in meshCache) cacheSize++;
-			if (cacheSize == 0 && owner != null) {
-				cacheChildMeshes();
+
+		if (action == null) return;
+
+		// Handle mesh swap
+		if (action.mesh != null && action.mesh != "" && owner != null) {
+			var targetMesh = meshCache.get(action.mesh);
+			if (targetMesh != null && targetMesh != currentMesh) {
+				swapMesh(targetMesh);
 			}
-			// Handle optional mesh swap - find child MeshObject and copy its data/materials
-			if (action.mesh != null && action.mesh != "") {
-				var targetMesh = meshCache.get(action.mesh);
-				if (targetMesh != null && targetMesh != currentMesh) {
-					swapMesh(targetMesh);
-				}
-			}
-			setFrame(action.start);
-			paused = false;
-			time = 0.0;
 		}
+
+		setFrame(action.start);
+		paused = false;
+		time = 0.0;
 	}
 
 	/**
 	 * Swap to a different mesh by copying its geometry and materials to the owner.
-	 * @param meshObj The child MeshObject to swap to
 	 */
 	function swapMesh(meshObj: MeshObject) {
 		if (owner == null || meshObj == null) return;
 
 		currentMesh = meshObj;
 
-		// Copy geometry data
 		if (meshObj.data != null) {
 			owner.setData(meshObj.data);
 		}
 
-		// Copy materials
 		if (meshObj.materials != null) {
 			owner.materials = meshObj.materials;
 		}
+	}
+
+	function setFrame(f: Int) {
+		frame = f;
+
+		if (frame > action.end && action.start < action.end) {
+			if (onActionComplete != null) onActionComplete();
+			if (action.loop) setFrame(action.start);
+			else paused = true;
+			return;
+		}
+
+		var tx = frame % action.tilesx;
+		var ty = Std.int(frame / action.tilesx);
+		tileX = tx * (1 / action.tilesx);
+		tileY = ty * (1 / action.tilesy);
 	}
 
 	public function pause() {
@@ -137,67 +215,22 @@ class Tilesheet {
 		actions = null;
 		owner = null;
 		currentMesh = null;
+		pendingAction = null;
+		pendingOnComplete = null;
 		meshCache.clear();
 	}
 
-	/**
-	 * Set the frame of the current active tilesheet action. Automatically un-pauses action.
-	 * @param frame Frame offset with 0 as the first frame of the active action.
-	 **/
 	public function setFrameOffset(frame: Int) {
 		if (action == null) return;
 		setFrame(action.start + frame);
 		paused = false;
 	}
 
-	/**
-	 * Returns the current frame.
-	 * @return Frame offset with 0 as the first frame of the active action.
-	 */
 	public function getFrameOffset(): Int {
 		if (action == null) return 0;
 		return frame - action.start;
 	}
 
-	public function update() {
-		if (!ready || paused || action == null || action.start >= action.end) return;
-
-		time += Time.renderDelta;
-
-		var frameTime = 1 / action.framerate;
-		var framesToAdvance = 0;
-
-		// Check how many animation frames passed during the last render frame
-		// and catch up if required. The remaining `time` that couldn't fit in
-		// another animation frame will be used in the next `update()`.
-		while (time >= frameTime) {
-			time -= frameTime;
-			framesToAdvance++;
-		}
-
-		if (framesToAdvance != 0) {
-			setFrame(frame + framesToAdvance);
-		}
-	}
-
-	function setFrame(f: Int) {
-		frame = f;
-
-		// Action end
-		if (frame > action.end && action.start < action.end) {
-			if (onActionComplete != null) onActionComplete();
-			if (action.loop) setFrame(action.start);
-			else paused = true;
-			return;
-		}
-
-		var tx = frame % action.tilesx;
-		var ty = Std.int(frame / action.tilesx);
-		tileX = tx * (1 / action.tilesx);
-		tileY = ty * (1 / action.tilesy);
-	}
-
-	// Getters for current action's tile dimensions (for uniforms)
 	public function getTilesx(): Int {
 		return action != null ? action.tilesx : 1;
 	}
