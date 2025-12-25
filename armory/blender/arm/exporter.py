@@ -557,87 +557,6 @@ class ArmoryExporter:
             self.material_array.append(material)
         o['material_refs'].append(arm.utils.asset_name(material))
 
-    def collect_tilesheet_meshes(self, scene: bpy.types.Scene):
-        """Collects meshes and materials referenced by tilesheet actions.
-
-        When a tilesheet action references a mesh for swapping, that mesh and its
-        materials need to be exported even though they're not directly in the scene.
-        """
-        print(f"[Tilesheet] Collecting meshes from scene: {scene.name}")
-
-        # Collect all objects including those inside collection instances
-        objects_to_check = list(scene.collection.all_objects.values())
-
-        # Also check inside collection instances (for linked collections)
-        for bobject in scene.collection.all_objects.values():
-            if bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
-                for cobj in bobject.instance_collection.all_objects:
-                    if cobj not in objects_to_check:
-                        objects_to_check.append(cobj)
-
-        for bobject in objects_to_check:
-            if bobject.type != 'MESH':
-                continue
-            if not bobject.arm_tilesheet_enabled:
-                continue
-
-            print(f"[Tilesheet] Found tilesheet object: {bobject.name}")
-            print(f"[Tilesheet]   Actions count: {len(bobject.arm_tilesheet_actionlist)}")
-
-            # Get the library path if this object's mesh is linked
-            library_path = None
-            if bobject.data and bobject.data.library:
-                library_path = bobject.data.library.filepath
-                print(f"[Tilesheet]   Library path: {library_path}")
-
-            for action in bobject.arm_tilesheet_actionlist:
-                print(f"[Tilesheet]   Action: {action.name}, mesh_prop: '{action.mesh_prop}'")
-                if action.mesh_prop == '':
-                    continue
-
-                # Look up the mesh in bpy.data.meshes
-                mesh_data = bpy.data.meshes.get(action.mesh_prop)
-
-                # If mesh not found and we have a library path, try to link it
-                if mesh_data is None and library_path is not None:
-                    print(f"[Tilesheet]   Mesh '{action.mesh_prop}' not in scene, linking from library...")
-                    mesh_data = self.link_mesh_from_library(library_path, action.mesh_prop)
-
-                print(f"[Tilesheet]   Mesh lookup result: {mesh_data}")
-                if mesh_data is None:
-                    print(f"[Tilesheet]   WARNING: Mesh '{action.mesh_prop}' not found!")
-                    continue
-
-                # Add mesh to mesh_array if not already present
-                if mesh_data not in self.mesh_array:
-                    struct_name = arm.utils.asset_name(mesh_data)
-                    self.mesh_array[mesh_data] = {"structName": struct_name, "objectTable": [bobject]}
-                    print(f"[Tilesheet]   Added mesh to export: {struct_name}")
-
-                # Collect materials from the mesh
-                for mat in mesh_data.materials:
-                    if mat is None:
-                        continue
-                    # Create tilesheet variant if needed
-                    if mat.library is not None:
-                        # For linked materials, set the flag directly
-                        mat.arm_tilesheet_flag = True
-                        mat.arm_cached = False
-                        if mat not in self.material_array:
-                            self.material_array.append(mat)
-                            print(f"[Tilesheet]   Added linked material: {mat.name}")
-                    else:
-                        # For local materials, create a variant with _armtile suffix
-                        variant_name = mat.name + '_armtile'
-                        variant_mat = bpy.data.materials.get(variant_name)
-                        if variant_mat is None:
-                            variant_mat = mat.copy()
-                            variant_mat.name = variant_name
-                            variant_mat.arm_tilesheet_flag = True
-                        if variant_mat not in self.material_array:
-                            self.material_array.append(variant_mat)
-                            print(f"[Tilesheet]   Added material variant: {variant_mat.name}")
-
     def link_mesh_from_library(self, library_path: str, mesh_name: str):
         """Links a mesh from an external library file.
 
@@ -648,15 +567,12 @@ class ArmoryExporter:
             with bpy.data.libraries.load(library_path, link=True) as (data_from, data_to):
                 if mesh_name in data_from.meshes:
                     data_to.meshes = [mesh_name]
-                    print(f"[Tilesheet]   Linking mesh '{mesh_name}' from {library_path}")
                 else:
-                    print(f"[Tilesheet]   Mesh '{mesh_name}' not found in library. Available: {data_from.meshes[:10]}")
                     return None
 
             # Return the newly linked mesh
             return bpy.data.meshes.get(mesh_name)
         except Exception as e:
-            print(f"[Tilesheet]   Error linking mesh: {e}")
             return None
 
     def export_particle_system_ref(self, psys: bpy.types.ParticleSystem, out_object):
@@ -970,7 +886,6 @@ class ArmoryExporter:
                 out_object['group_ref'] = bobject.instance_collection.name
                 self.referenced_collections.append(bobject.instance_collection)
 
-            # FIXME: mesh export is broken, investigate why
             # Export tilesheet data if enabled on this object
             if bobject.arm_tilesheet_enabled:
                 out_object['tilesheet'] = {
@@ -2873,9 +2788,6 @@ Make sure the mesh only has tris/quads.""")
                     self.output['gravity'][2] *= weights.all * weights.gravity
             else:
                 self.output['gravity'] = [0.0, 0.0, 0.0]
-
-        # Collect meshes and materials referenced by tilesheet actions
-        self.collect_tilesheet_meshes(self.scene)
 
         self.export_objects(self.scene)
 
