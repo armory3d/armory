@@ -1,11 +1,10 @@
 package iron.object;
 
-import iron.Scene;
 import iron.data.Data;
 import iron.data.SceneFormat;
 import iron.system.Time;
+import iron.Scene;
 
-@:allow(iron.Scene)
 class Tilesheet {
 
 	public var tileX = 0.0; // Tile offset on tilesheet texture 0-1
@@ -13,48 +12,34 @@ class Tilesheet {
 	public var flipX = false;
 	public var flipY = false;
 
-	public var tilesx: Int;
-	public var tilesy: Int;
-	public var framerate: Int;
 	public var actions: Array<TTilesheetAction>;
 	public var action: TTilesheetAction = null;
-	public var materialName: String;
 	var ready: Bool;
 
 	public var paused = false;
 	public var frame = 0;
 	var time = 0.0;
 	var onActionComplete: Void->Void = null;
+	var owner: MeshObject = null;
+	var currentMesh: String = null; // Track current mesh name to avoid redundant swaps
 
 	/**
-	 * Create a tilesheet from material data.
-	 * @param sceneName The scene containing the material
-	 * @param materialRef The material name with tilesheet data
-	 * @param actionRef The initial action to play (optional)
+	 * Create a tilesheet from embedded object tilesheet data.
+	 * @param tilesheetData The tilesheet data embedded in the object
+	 * @param ownerObject The MeshObject that owns this tilesheet
 	 */
-	public function new(sceneName: String, materialRef: String, actionRef: String) {
-		ready = false;
-		materialName = materialRef;
-		Data.getSceneRaw(sceneName, function(format: TSceneFormat) {
-			// Find material with tilesheet data
-			for (mat in format.material_datas) {
-				if (mat.name == materialRef && mat.tilesheet != null) {
-					var ts = mat.tilesheet;
-					tilesx = ts.tilesx;
-					tilesy = ts.tilesy;
-					framerate = Std.int(ts.framerate);
-					actions = ts.actions;
-					Scene.active.tilesheets.push(this);
-					if (actionRef != null && actionRef != "") {
-						play(actionRef);
-					} else if (actions.length > 0) {
-						play(actions[0].name);
-					}
-					ready = true;
-					break;
-				}
-			}
-		});
+	public function new(tilesheetData: TTilesheetData, ownerObject: MeshObject = null) {
+		owner = ownerObject;
+		actions = tilesheetData.actions;
+
+		// Play the start action or default to first action
+		var startAction = tilesheetData.start_action;
+		if (startAction != null && startAction != "") {
+			play(startAction);
+		} else if (actions.length > 0) {
+			play(actions[0].name);
+		}
+		ready = true;
 	}
 
 	public function play(action_ref: String, onActionComplete: Void->Void = null) {
@@ -71,10 +56,25 @@ class Tilesheet {
 			}
 		}
 		if (action != null) {
+			// Handle optional mesh swap
+			if (action.mesh != null && action.mesh != "" && owner != null && action.mesh != currentMesh) {
+				swapMesh(action.mesh);
+			}
 			setFrame(action.start);
 			paused = false;
 			time = 0.0;
 		}
+	}
+
+	function swapMesh(meshName: String) {
+		currentMesh = meshName;
+		// Mesh files are exported as "mesh_[meshname].arm" with the mesh data named "[meshname]" inside
+		var meshFile = "mesh_" + meshName;
+		Data.getMesh(meshFile, meshName, function(meshData) {
+			if (owner != null && meshData != null) {
+				owner.setData(meshData);
+			}
+		});
 	}
 
 	public function pause() {
@@ -86,7 +86,10 @@ class Tilesheet {
 	}
 
 	public function remove() {
-		Scene.active.tilesheets.remove(this);
+		ready = false;
+		action = null;
+		actions = null;
+		owner = null;
 	}
 
 	/**
@@ -106,12 +109,12 @@ class Tilesheet {
 		return frame - action.start;
 	}
 
-	function update() {
+	public function update() {
 		if (!ready || paused || action == null || action.start >= action.end) return;
 
 		time += Time.renderDelta;
 
-		var frameTime = 1 / framerate;
+		var frameTime = 1 / action.framerate;
 		var framesToAdvance = 0;
 
 		// Check how many animation frames passed during the last render frame
@@ -138,9 +141,18 @@ class Tilesheet {
 			return;
 		}
 
-		var tx = frame % tilesx;
-		var ty = Std.int(frame / tilesx);
-		tileX = tx * (1 / tilesx);
-		tileY = ty * (1 / tilesy);
+		var tx = frame % action.tilesx;
+		var ty = Std.int(frame / action.tilesx);
+		tileX = tx * (1 / action.tilesx);
+		tileY = ty * (1 / action.tilesy);
+	}
+
+	// Getters for current action's tile dimensions (for uniforms)
+	public function getTilesx(): Int {
+		return action != null ? action.tilesx : 1;
+	}
+
+	public function getTilesy(): Int {
+		return action != null ? action.tilesy : 1;
 	}
 }

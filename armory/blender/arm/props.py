@@ -379,8 +379,6 @@ def init_properties():
             subtype='LAYER')
     bpy.types.Object.arm_relative_physics_constraint = BoolProperty(name="Relative Physics Constraint", description="Add physics constraint relative to the parent object or collection when spawned", default=False)
     bpy.types.Object.arm_animation_enabled = BoolProperty(name="Animation", description="Enable skinning & timeline animation", default=True)
-    # Tilesheet starting action - tilesheet config is now on Material
-    bpy.types.Object.arm_tilesheet_action = StringProperty(name="Tilesheet Action", description="Set startup tilesheet action", default='')
     # For speakers
     bpy.types.Speaker.arm_play_on_start = BoolProperty(name="Play on Start", description="Play this sound automatically", default=False)
     bpy.types.Speaker.arm_loop = BoolProperty(name="Loop", description="Loop this sound", default=False)

@@ -11,7 +11,7 @@ class PauseTilesheetNode extends LogicNode {
 	override function run(from: Int) {
 		var object: MeshObject = inputs[1].get();
 
-		if (object == null) return;
+		if (object == null || object.tilesheet == null) return;
 
 		object.tilesheet.pause();
 
