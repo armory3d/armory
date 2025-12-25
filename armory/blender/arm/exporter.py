@@ -656,16 +656,26 @@ class ArmoryExporter:
             # Skinning
             if arm.utils.export_bone_data(bobject):
                 variant_suffix = '_armskin'
-            # Tilesheets - check if any material slot is a tilesheet
+            # Tilesheets - check object-level tilesheet OR any material slot is a tilesheet
             elif bobject.type == 'MESH' and len(bobject.material_slots) > 0:
-                for slot in bobject.material_slots:
-                    if slot.material and slot.material.arm_tilesheet_flag:
-                        variant_suffix = '_armtile'
-                        break
+                # Check object-level tilesheet (new system)
+                if bobject.arm_tilesheet_enabled:
+                    variant_suffix = '_armtile'
+                else:
+                    # Check material-level tilesheet (legacy support)
+                    for slot in bobject.material_slots:
+                        if slot.material and slot.material.arm_tilesheet_flag:
+                            variant_suffix = '_armtile'
+                            break
             # For collection instances, check objects inside the instanced collection
             elif bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
                 for cobj in bobject.instance_collection.all_objects:
                     if cobj.type == 'MESH':
+                        # Check object-level tilesheet (new system)
+                        if cobj.arm_tilesheet_enabled:
+                            variant_suffix = '_armtile'
+                            break
+                        # Check material-level tilesheet (legacy support)
                         for slot in cobj.material_slots:
                             if slot.material and slot.material.arm_tilesheet_flag:
                                 variant_suffix = '_armtile'
@@ -889,7 +899,7 @@ class ArmoryExporter:
             # Export tilesheet data if enabled on this object
             if bobject.arm_tilesheet_enabled:
                 out_object['tilesheet'] = {
-                    'default_action': bobject.arm_tilesheet_default_action,
+                    'start_action': bobject.arm_tilesheet_default_action,
                     'actions': []
                 }
                 for action in bobject.arm_tilesheet_actionlist:
@@ -904,12 +914,17 @@ class ArmoryExporter:
                     }
                     # Mesh swap reference (for later implementation)
                     if action.mesh_prop != '':
-                        action_data['mesh'] = action.mesh_prop
+                        # Look up the actual mesh to get proper name with library suffix if linked
+                        mesh_data = bpy.data.meshes.get(action.mesh_prop)
+                        if mesh_data is not None:
+                            action_data['mesh'] = arm.utils.safestr(arm.utils.asset_name(mesh_data))
+                        else:
+                            action_data['mesh'] = arm.utils.safestr(action.mesh_prop)
                     out_object['tilesheet']['actions'].append(action_data)
 
-                # Export base mesh ref
-                if bobject.data:
-                    out_object['tilesheet']['mesh_ref'] = arm.utils.asset_name(bobject.data)
+                # # Export base mesh ref
+                # if bobject.data:
+                #     out_object['tilesheet']['mesh_ref'] = arm.utils.safestr(arm.utils.asset_name(bobject.data))
 
 
             if len(bobject.vertex_groups) > 0:
