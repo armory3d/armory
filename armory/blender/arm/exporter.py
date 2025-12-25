@@ -645,31 +645,15 @@ class ArmoryExporter:
             # Skinning
             if arm.utils.export_bone_data(bobject):
                 variant_suffix = '_armskin'
-            # Tilesheets - check object-level tilesheet OR any material slot is a tilesheet
+            # Tilesheets - check if object has tilesheet enabled
             elif bobject.type == 'MESH' and len(bobject.material_slots) > 0:
-                # Check object-level tilesheet (new system)
                 if bobject.arm_tilesheet_enabled:
                     variant_suffix = '_armtile'
-                else:
-                    # Check material-level tilesheet (legacy support)
-                    for slot in bobject.material_slots:
-                        if slot.material and slot.material.arm_tilesheet_flag:
-                            variant_suffix = '_armtile'
-                            break
             # For collection instances, check objects inside the instanced collection
             elif bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
                 for cobj in bobject.instance_collection.all_objects:
-                    if cobj.type == 'MESH':
-                        # Check object-level tilesheet (new system)
-                        if cobj.arm_tilesheet_enabled:
-                            variant_suffix = '_armtile'
-                            break
-                        # Check material-level tilesheet (legacy support)
-                        for slot in cobj.material_slots:
-                            if slot.material and slot.material.arm_tilesheet_flag:
-                                variant_suffix = '_armtile'
-                                break
-                    if variant_suffix != '':
+                    if cobj.type == 'MESH' and cobj.arm_tilesheet_enabled:
+                        variant_suffix = '_armtile'
                         break
             if variant_suffix == '' and arm.utils.export_morph_targets(bobject):
                 variant_suffix = '_armskey'
@@ -910,11 +894,6 @@ class ArmoryExporter:
                         else:
                             action_data['mesh'] = arm.utils.safestr(action.mesh_prop)
                     out_object['tilesheet']['actions'].append(action_data)
-
-                # # Export base mesh ref
-                # if bobject.data:
-                #     out_object['tilesheet']['mesh_ref'] = arm.utils.safestr(arm.utils.asset_name(bobject.data))
-
 
             if len(bobject.vertex_groups) > 0:
                 out_object['vertex_groups'] = []
@@ -2410,22 +2389,6 @@ Make sure the mesh only has tris/quads.""")
                     mat_users = self.material_to_object_dict[material]
                     for ob in mat_users:
                         ob.data.arm_cached = False
-
-            # Export tilesheet data if enabled on this material
-            # if material.arm_tilesheet_enabled:
-            #     o['tilesheet'] = {
-            #         'tilesx': material.arm_tilesheet_tilesx,
-            #         'tilesy': material.arm_tilesheet_tilesy,
-            #         'framerate': material.arm_tilesheet_framerate,
-            #         'actions': []
-            #     }
-            #     for action in material.arm_tilesheet_actionlist:
-            #         o['tilesheet']['actions'].append({
-            #             'name': action.name,
-            #             'start': action.start_prop,
-            #             'end': action.end_prop,
-            #             'loop': action.loop_prop
-            #         })
 
             self.output['material_datas'].append(o)
             material.arm_cached = True
