@@ -121,18 +121,13 @@ class MeshObject extends Object {
 	}
 	#end
 
-	public function setupTilesheet(sceneName: String, materialRef: String, actionRef: String) {
-		tilesheet = new Tilesheet(sceneName, materialRef, actionRef);
+	public function setupTilesheet(tilesheetData: iron.data.SceneFormat.TTilesheetData) {
+		tilesheet = new Tilesheet(tilesheetData, this);
 	}
 
-	public function setTilesheet(sceneName: String, materialRef: String, actionRef: String) {
-		// If same material, just play the action
-		if (tilesheet != null && tilesheet.materialName == materialRef) {
+	public function setTilesheetAction(actionRef: String) {
+		if (tilesheet != null) {
 			tilesheet.play(actionRef);
-		} else {
-			// Setup new tilesheet
-			if (tilesheet != null) tilesheet.remove();
-			setupTilesheet(sceneName, materialRef, actionRef);
 		}
 	}
 
@@ -227,6 +222,11 @@ class MeshObject extends Object {
 		if (!visible) return; // Skip render if object is hidden
 		if (cullMesh(context, Scene.active.camera, RenderPath.active.light)) return;
 		var meshContext = raw != null ? context == "mesh" : false;
+
+		// Update tilesheet
+		if (tilesheet != null && meshContext) {
+			tilesheet.update();
+		}
 
 		if (cameraList != null && cameraList.indexOf(Scene.active.camera.name) < 0) return;
 

@@ -645,10 +645,10 @@ class ArmoryExporter:
             # Skinning
             if arm.utils.export_bone_data(bobject):
                 variant_suffix = '_armskin'
-            # Tilesheets - check if any material slot has tilesheet enabled
+            # Tilesheets - check if any material slot is a tilesheet
             elif bobject.type == 'MESH' and len(bobject.material_slots) > 0:
                 for slot in bobject.material_slots:
-                    if slot.material and slot.material.arm_tilesheet_enabled:
+                    if slot.material and slot.material.arm_tilesheet_flag:
                         variant_suffix = '_armtile'
                         break
             # For collection instances, check objects inside the instanced collection
@@ -656,7 +656,7 @@ class ArmoryExporter:
                 for cobj in bobject.instance_collection.all_objects:
                     if cobj.type == 'MESH':
                         for slot in cobj.material_slots:
-                            if slot.material and slot.material.arm_tilesheet_enabled:
+                            if slot.material and slot.material.arm_tilesheet_flag:
                                 variant_suffix = '_armtile'
                                 break
                     if variant_suffix != '':
@@ -874,14 +874,31 @@ class ArmoryExporter:
                 out_object['group_ref'] = bobject.instance_collection.name
                 self.referenced_collections.append(bobject.instance_collection)
 
-            # Export tilesheet reference - find material with tilesheet enabled
-            if bobject.data and hasattr(bobject.data, 'materials'):
-                for mat in bobject.data.materials:
-                    if mat and mat.arm_tilesheet_enabled:
-                        out_object['tilesheet_material_ref'] = arm.utils.asset_name(mat)
-                        if bobject.arm_tilesheet_action != '':
-                            out_object['tilesheet_action_ref'] = bobject.arm_tilesheet_action
-                        break
+            # FIXME: mesh export is broken, investigate why
+            # Export tilesheet data if enabled on this object
+            if bobject.arm_tilesheet_enabled:
+                out_object['tilesheet'] = {
+                    'default_action': bobject.arm_tilesheet_default_action,
+                    'actions': []
+                }
+                for action in bobject.arm_tilesheet_actionlist:
+                    action_data = {
+                        'name': action.name,
+                        'start': action.start_prop,
+                        'end': action.end_prop,
+                        'loop': action.loop_prop,
+                        'tilesx': action.tilesx_prop,
+                        'tilesy': action.tilesy_prop,
+                        'framerate': action.framerate_prop
+                    }
+                    # Mesh swap reference (for later implementation)
+                    if action.mesh_prop != '':
+                        action_data['mesh'] = action.mesh_prop
+                    out_object['tilesheet']['actions'].append(action_data)
+
+                # Export base mesh ref
+                if bobject.data:
+                    out_object['tilesheet']['mesh_ref'] = arm.utils.asset_name(bobject.data)
 
 
             if len(bobject.vertex_groups) > 0:
@@ -2380,20 +2397,20 @@ Make sure the mesh only has tris/quads.""")
                         ob.data.arm_cached = False
 
             # Export tilesheet data if enabled on this material
-            if material.arm_tilesheet_enabled:
-                o['tilesheet'] = {
-                    'tilesx': material.arm_tilesheet_tilesx,
-                    'tilesy': material.arm_tilesheet_tilesy,
-                    'framerate': material.arm_tilesheet_framerate,
-                    'actions': []
-                }
-                for action in material.arm_tilesheet_actionlist:
-                    o['tilesheet']['actions'].append({
-                        'name': action.name,
-                        'start': action.start_prop,
-                        'end': action.end_prop,
-                        'loop': action.loop_prop
-                    })
+            # if material.arm_tilesheet_enabled:
+            #     o['tilesheet'] = {
+            #         'tilesx': material.arm_tilesheet_tilesx,
+            #         'tilesy': material.arm_tilesheet_tilesy,
+            #         'framerate': material.arm_tilesheet_framerate,
+            #         'actions': []
+            #     }
+            #     for action in material.arm_tilesheet_actionlist:
+            #         o['tilesheet']['actions'].append({
+            #             'name': action.name,
+            #             'start': action.start_prop,
+            #             'end': action.end_prop,
+            #             'loop': action.loop_prop
+            #         })
 
             self.output['material_datas'].append(o)
             material.arm_cached = True

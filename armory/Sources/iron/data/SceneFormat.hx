@@ -384,6 +384,19 @@ typedef TTilesheetAction = {
 	public var start: Int;
 	public var end: Int;
 	public var loop: Bool;
+	public var tilesx: Int;
+	public var tilesy: Int;
+	public var framerate: Int;
+	@:optional public var mesh: String; // Optional mesh to swap to when playing this action
+}
+
+#if js
+typedef TTilesheetData = {
+#else
+@:structInit class TTilesheetData {
+#end
+	public var actions: Array<TTilesheetAction>;
+	@:optional public var start_action: String;
 }
 
 #if js
@@ -480,8 +493,7 @@ typedef TObj = {
 	@:optional public var mobile: Null<Bool>;
 	@:optional public var spawn: Null<Bool>; // Auto add object when creating scene
 	@:optional public var local_only: Null<Bool>; // Apply parent matrix
-	@:optional public var tilesheet_material_ref: String; // Material with tilesheet data
-	@:optional public var tilesheet_action_ref: String; // Starting action
+	@:optional public var tilesheet: TTilesheetData; // Embedded tilesheet data
 	@:optional public var sampled: Null<Bool>; // Object action
 	@:optional public var is_ik_fk_only: Null<Bool>; // Bone IK or FK only
 	@:optional public var relative_bone_constraints: Null<Bool>; // Use parent relative bone constraints

@@ -74,10 +74,6 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
 
         if obj.type == 'MESH':
             layout.prop(obj, 'arm_instanced')
-            # Tilesheet action selection - use active material if it has tilesheet enabled
-            if obj.active_material and obj.active_material.arm_tilesheet_enabled:
-                layout.label(text=f"Tilesheet Material: {obj.active_material.name}")
-                layout.prop_search(obj, "arm_tilesheet_action", obj.active_material, "arm_tilesheet_actionlist", text="Start Action")
 
         # Properties list
         arm.props_properties.draw_properties(layout, obj)
@@ -2324,57 +2320,64 @@ class ARM_PT_TilesheetPanel(bpy.types.Panel):
     bl_label = "Armory Tilesheet"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
-    bl_context = "material"
+    bl_context = "object"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
     def poll(cls, context):
-        return context.material is not None
+        return context.object is not None and context.object.type == 'MESH'
 
     def draw_header(self, context):
-        mat = context.material
-        self.layout.prop(mat, "arm_tilesheet_enabled", text="")
+        obj = context.object
+        self.layout.prop(obj, "arm_tilesheet_enabled", text="")
 
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
-        mat = context.material
+        obj = context.object
 
-        layout.enabled = mat.arm_tilesheet_enabled
+        layout.enabled = obj.arm_tilesheet_enabled
 
-        # Tilesheet grid settings
-        col = layout.column(align=True)
-        col.prop(mat, "arm_tilesheet_tilesx")
-        col.prop(mat, "arm_tilesheet_tilesy")
-        layout.prop(mat, "arm_tilesheet_framerate")
+        # Default action dropdown
+        layout.prop_search(obj, "arm_tilesheet_default_action", obj, "arm_tilesheet_actionlist", text="Default Action")
 
         # Actions list
         layout.separator()
         layout.label(text="Actions")
         rows = 2
-        if len(mat.arm_tilesheet_actionlist) > 1:
+        if len(obj.arm_tilesheet_actionlist) > 1:
             rows = 4
         row = layout.row()
-        row.template_list("ARM_UL_TilesheetActionList", "The_List", mat, "arm_tilesheet_actionlist", mat, "arm_tilesheet_actionlist_index", rows=rows)
+        row.template_list("ARM_UL_TilesheetActionList", "The_List", obj, "arm_tilesheet_actionlist", obj, "arm_tilesheet_actionlist_index", rows=rows)
         col = row.column(align=True)
         col.operator("arm_tilesheetactionlist.new_item", icon='ADD', text="")
         col.operator("arm_tilesheetactionlist.delete_item", icon='REMOVE', text="")
 
-        if len(mat.arm_tilesheet_actionlist) > 1:
+        if len(obj.arm_tilesheet_actionlist) > 1:
             col.separator()
             op = col.operator("arm_tilesheetactionlist.move_item", icon='TRIA_UP', text="")
             op.direction = 'UP'
             op = col.operator("arm_tilesheetactionlist.move_item", icon='TRIA_DOWN', text="")
             op.direction = 'DOWN'
 
-        # Selected action details
-        if mat.arm_tilesheet_actionlist_index >= 0 and len(mat.arm_tilesheet_actionlist) > 0:
-            adat = mat.arm_tilesheet_actionlist[mat.arm_tilesheet_actionlist_index]
+        # Selected action details (per-action properties)
+        if obj.arm_tilesheet_actionlist_index >= 0 and len(obj.arm_tilesheet_actionlist) > 0:
+            adat = obj.arm_tilesheet_actionlist[obj.arm_tilesheet_actionlist_index]
             box = layout.box()
-            box.prop(adat, "start_prop")
-            box.prop(adat, "end_prop")
+            # Grid dimensions
+            row = box.row(align=True)
+            row.prop(adat, "tilesx_prop")
+            row.prop(adat, "tilesy_prop")
+            # Frame range
+            row = box.row(align=True)
+            row.prop(adat, "start_prop")
+            row.prop(adat, "end_prop")
+            # Framerate and loop
+            box.prop(adat, "framerate_prop")
             box.prop(adat, "loop_prop")
+            # Optional mesh (dropdown from bpy.data.meshes)
+            box.prop_search(adat, "mesh_prop", bpy.data, "meshes", text="Mesh")
 
 class ArmPrintTraitsButton(bpy.types.Operator):
     bl_idname = 'arm.print_traits'
