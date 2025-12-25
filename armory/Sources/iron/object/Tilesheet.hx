@@ -43,6 +43,8 @@ class Tilesheet {
 	}
 
 	public function play(action_ref: String, onActionComplete: Void->Void = null) {
+		if (actions == null) return;
+
 		if (action != null && action.name == action_ref) {
 			paused = false;
 			return;
@@ -97,6 +99,7 @@ class Tilesheet {
 	 * @param frame Frame offset with 0 as the first frame of the active action.
 	 **/
 	public function setFrameOffset(frame: Int) {
+		if (action == null) return 0;
 		setFrame(action.start + frame);
 		paused = false;
 	}
@@ -106,6 +109,7 @@ class Tilesheet {
 	 * @return Frame offset with 0 as the first frame of the active action.
 	 */
 	public function getFrameOffset(): Int {
+		if (action == null) return 0;
 		return frame - action.start;
 	}
 
