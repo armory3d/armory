@@ -5,6 +5,8 @@ import iron.data.SceneFormat;
 import iron.system.Time;
 import iron.Scene;
 
+using StringTools;
+
 class Tilesheet {
 
 	public var tileX = 0.0; // Tile offset on tilesheet texture 0-1
@@ -26,7 +28,7 @@ class Tilesheet {
 
 	var pendingAction: String = null; // Action to play once ready
 	var pendingOnComplete: Void->Void = null;
-	var expectedMeshCount: Int = 0; // Number of meshes we expect to cache
+	var hasMeshActions: Bool = false; // Whether any action requires mesh swapping
 
 	/**
 	 * Create a tilesheet from embedded object tilesheet data.
@@ -37,14 +39,13 @@ class Tilesheet {
 		owner = ownerObject;
 		actions = tilesheetData.actions;
 
-		// Count how many unique meshes we need from actions
-		var meshNames = new Map<String, Bool>();
+		// Check if any actions require mesh swapping
 		for (a in actions) {
 			if (a.mesh != null && a.mesh != "") {
-				meshNames.set(a.mesh, true);
+				hasMeshActions = true;
+				break;
 			}
 		}
-		for (_ in meshNames) expectedMeshCount++;
 
 		// Store start action
 		pendingAction = tilesheetData.start_action;
@@ -53,7 +54,7 @@ class Tilesheet {
 		}
 
 		// If no meshes needed, we're ready immediately
-		if (expectedMeshCount == 0) {
+		if (!hasMeshActions) {
 			ready = true;
 			if (pendingAction != null) {
 				playAction(pendingAction);
@@ -108,17 +109,72 @@ class Tilesheet {
 		for (child in owner.children) {
 			if (Std.isOfType(child, MeshObject)) {
 				var meshChild = cast(child, MeshObject);
-				if (meshChild.data != null && !meshCache.exists(meshChild.data.name)) {
-					meshCache.set(meshChild.data.name, meshChild);
-					meshChild.visible = false;
+				if (meshChild.data != null) {
+					// Cache by mesh data name
+					if (!meshCache.exists(meshChild.data.name)) {
+						meshCache.set(meshChild.data.name, meshChild);
+						trace('Tilesheet: Cached mesh by data name: "${meshChild.data.name}"');
+						meshChild.visible = false;
+					}
+					// Also cache by object name if different from mesh data name
+					if (meshChild.name != meshChild.data.name && !meshCache.exists(meshChild.name)) {
+						meshCache.set(meshChild.name, meshChild);
+						trace('Tilesheet: Also cached by object name: "${meshChild.name}"');
+					}
 				}
 			}
 		}
 
-		// Check if we have all required meshes
-		var cachedCount = 0;
-		for (_ in meshCache) cachedCount++;
-		return cachedCount >= expectedMeshCount;
+		// Check if all required meshes (from actions) are available
+		for (a in actions) {
+			if (a.mesh != null && a.mesh != "") {
+				if (!meshCache.exists(a.mesh)) {
+					// Try to find a mesh with matching prefix (handles linked objects with different suffixes)
+					var foundMatch = findMatchingMesh(a.mesh);
+					if (foundMatch == null) {
+						trace('Tilesheet: Missing mesh for action "${a.name}": looking for "${a.mesh}"');
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Find a mesh that matches the action name pattern when exact match fails.
+	 * This handles linked objects where mesh names have different suffixes.
+	 * E.g., action wants "MeshIdle_paulie.blend" but we have "Idle_ruler.blend"
+	 */
+	function findMatchingMesh(actionMeshName: String): MeshObject {
+		// Extract the base action name (e.g., "Idle" from "MeshIdle_paulie.blend" or "Idle_paulie.blend")
+		var baseName = actionMeshName;
+
+		// Remove common prefixes
+		if (StringTools.startsWith(baseName, "Mesh")) {
+			baseName = baseName.substr(4);
+		}
+
+		// Remove suffix after underscore (e.g., "_paulie.blend")
+		var underscoreIdx = baseName.indexOf("_");
+		if (underscoreIdx > 0) {
+			baseName = baseName.substr(0, underscoreIdx);
+		}
+
+		trace('Tilesheet: Looking for mesh matching base name: "$baseName"');
+
+		// Find a cached mesh that contains the base name
+		for (meshName in meshCache.keys()) {
+			if (StringTools.contains(meshName, baseName)) {
+				var mesh = meshCache.get(meshName);
+				// Also add this as an alias for future lookups
+				meshCache.set(actionMeshName, mesh);
+				trace('Tilesheet: Found match "$meshName" for "$actionMeshName"');
+				return mesh;
+			}
+		}
+
+		return null;
 	}
 
 	/**
