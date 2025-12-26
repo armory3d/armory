@@ -1,45 +1,38 @@
 package iron.object;
 
-import iron.data.Data;
 import iron.data.SceneFormat;
 import iron.system.Time;
-import iron.Scene;
-
-using StringTools;
 
 class Tilesheet {
-
-	public var tileX = 0.0; // Tile offset on tilesheet texture 0-1
-	public var tileY = 0.0;
-	public var flipX = false;
-	public var flipY = false;
-
+	public var tileX: Float = 0.0;
+	public var tileY: Float = 0.0;
+	public var flipX: Bool = false;
+	public var flipY: Bool = false;
+	public var paused: Bool = false;
+	public var frame: Int = 0;
 	public var actions: Array<TTilesheetAction>;
 	public var action: TTilesheetAction = null;
-	var ready: Bool = false;
 
-	public var paused = false;
-	public var frame = 0;
-	var time = 0.0;
+	var ready: Bool = false;
+	var time: Float = 0.0;
 	var onActionComplete: Void->Void = null;
 	var owner: MeshObject = null;
-	var currentMesh: MeshObject = null; // Currently active mesh (from children)
-	var meshCache: Map<String, MeshObject> = new Map(); // Cache of child meshes by name
-
-	var pendingAction: String = null; // Action to play once ready
+	var currentMesh: MeshObject = null;
+	var meshCache: Map<String, MeshObject> = new Map();
+	var pendingAction: String = null;
 	var pendingOnComplete: Void->Void = null;
-	var hasMeshActions: Bool = false; // Whether any action requires mesh swapping
 
-	/**
-	 * Create a tilesheet from embedded object tilesheet data.
-	 * @param tilesheetData The tilesheet data embedded in the object
-	 * @param ownerObject The MeshObject that owns this tilesheet
-	 */
 	public function new(tilesheetData: TTilesheetData, ownerObject: MeshObject = null) {
 		owner = ownerObject;
 		actions = tilesheetData.actions;
 
-		// Check if any actions require mesh swapping
+		pendingAction = tilesheetData.start_action;
+		if ((pendingAction == null || pendingAction == "") && actions.length > 0) {
+			pendingAction = actions[0].name;
+		}
+
+		// If no actions need mesh swapping, ready immediately
+		var hasMeshActions = false;
 		for (a in actions) {
 			if (a.mesh != null && a.mesh != "") {
 				hasMeshActions = true;
@@ -47,13 +40,6 @@ class Tilesheet {
 			}
 		}
 
-		// Store start action
-		pendingAction = tilesheetData.start_action;
-		if ((pendingAction == null || pendingAction == "") && actions.length > 0) {
-			pendingAction = actions[0].name;
-		}
-
-		// If no meshes needed, we're ready immediately
 		if (!hasMeshActions) {
 			ready = true;
 			if (pendingAction != null) {
@@ -63,11 +49,7 @@ class Tilesheet {
 		}
 	}
 
-	/**
-	 * Called every frame. Handles initialization and animation.
-	 */
 	public function update() {
-		// Initialization: wait for all required meshes to be available
 		if (!ready) {
 			if (tryInitialize()) {
 				ready = true;
@@ -80,11 +62,9 @@ class Tilesheet {
 			return;
 		}
 
-		// Animation update
 		if (paused || action == null || action.start >= action.end) return;
 
 		time += Time.renderDelta;
-
 		var frameTime = 1 / action.framerate;
 		var framesToAdvance = 0;
 
@@ -93,98 +73,63 @@ class Tilesheet {
 			framesToAdvance++;
 		}
 
-		if (framesToAdvance != 0) {
+		if (framesToAdvance > 0) {
 			setFrame(frame + framesToAdvance);
 		}
 	}
 
-	/**
-	 * Try to cache all required child meshes.
-	 * Returns true when all expected meshes are cached.
-	 */
 	function tryInitialize(): Bool {
 		if (owner == null || owner.children == null) return false;
 
-		// Scan children for MeshObjects with loaded data
 		for (child in owner.children) {
 			if (Std.isOfType(child, MeshObject)) {
 				var meshChild = cast(child, MeshObject);
-				if (meshChild.data != null) {
-					// Cache by mesh data name
-					if (!meshCache.exists(meshChild.data.name)) {
-						meshCache.set(meshChild.data.name, meshChild);
-						trace('Tilesheet: Cached mesh by data name: "${meshChild.data.name}"');
-						meshChild.visible = false;
-					}
-					// Also cache by object name if different from mesh data name
-					if (meshChild.name != meshChild.data.name && !meshCache.exists(meshChild.name)) {
+				if (meshChild.data != null && !meshCache.exists(meshChild.data.name)) {
+					meshCache.set(meshChild.data.name, meshChild);
+					meshChild.visible = false;
+					// Also cache by object name for flexible lookup
+					if (meshChild.name != meshChild.data.name) {
 						meshCache.set(meshChild.name, meshChild);
-						trace('Tilesheet: Also cached by object name: "${meshChild.name}"');
 					}
 				}
 			}
 		}
 
-		// Check if all required meshes (from actions) are available
 		for (a in actions) {
-			if (a.mesh != null && a.mesh != "") {
-				if (!meshCache.exists(a.mesh)) {
-					// Try to find a mesh with matching prefix (handles linked objects with different suffixes)
-					var foundMatch = findMatchingMesh(a.mesh);
-					if (foundMatch == null) {
-						trace('Tilesheet: Missing mesh for action "${a.name}": looking for "${a.mesh}"');
-						return false;
-					}
-				}
+			if (a.mesh != null && a.mesh != "" && !meshCache.exists(a.mesh)) {
+				if (findMatchingMesh(a.mesh) == null) return false;
 			}
 		}
 		return true;
 	}
 
-	/**
-	 * Find a mesh that matches the action name pattern when exact match fails.
-	 * This handles linked objects where mesh names have different suffixes.
-	 * E.g., action wants "MeshIdle_paulie.blend" but we have "Idle_ruler.blend"
-	 */
+	/** Find mesh by base name pattern (handles linked objects with different suffixes). */
 	function findMatchingMesh(actionMeshName: String): MeshObject {
-		// Extract the base action name (e.g., "Idle" from "MeshIdle_paulie.blend" or "Idle_paulie.blend")
 		var baseName = actionMeshName;
 
-		// Remove common prefixes
+		// Strip "Mesh" prefix if present
 		if (StringTools.startsWith(baseName, "Mesh")) {
 			baseName = baseName.substr(4);
 		}
 
-		// Remove suffix after underscore (e.g., "_paulie.blend")
-		var underscoreIdx = baseName.indexOf("_");
-		if (underscoreIdx > 0) {
-			baseName = baseName.substr(0, underscoreIdx);
-		}
+		// Strip suffix after underscore (e.g., "_character.blend")
+		var idx = baseName.indexOf("_");
+		if (idx > 0) baseName = baseName.substr(0, idx);
 
-		trace('Tilesheet: Looking for mesh matching base name: "$baseName"');
-
-		// Find a cached mesh that contains the base name
 		for (meshName in meshCache.keys()) {
-			if (StringTools.contains(meshName, baseName)) {
+			if (meshName.indexOf(baseName) != -1) {
 				var mesh = meshCache.get(meshName);
-				// Also add this as an alias for future lookups
-				meshCache.set(actionMeshName, mesh);
-				trace('Tilesheet: Found match "$meshName" for "$actionMeshName"');
+				meshCache.set(actionMeshName, mesh); // Cache alias
 				return mesh;
 			}
 		}
-
 		return null;
 	}
 
-	/**
-	 * Play a tilesheet action by name.
-	 */
 	public function play(action_ref: String, onActionComplete: Void->Void = null) {
 		if (actions == null) return;
 
 		if (!ready) {
-			// Queue action until ready
 			pendingAction = action_ref;
 			pendingOnComplete = onActionComplete;
 			return;
@@ -199,9 +144,8 @@ class Tilesheet {
 			return;
 		}
 
-		this.onActionComplete = onComplete;
+		onActionComplete = onComplete;
 
-		// Find the action
 		for (a in actions) {
 			if (a.name == action_ref) {
 				action = a;
@@ -211,8 +155,7 @@ class Tilesheet {
 
 		if (action == null) return;
 
-		// Handle mesh swap
-		if (action.mesh != null && action.mesh != "" && owner != null) {
+		if (action.mesh != null && action.mesh != "") {
 			var targetMesh = meshCache.get(action.mesh);
 			if (targetMesh != null && targetMesh != currentMesh) {
 				swapMesh(targetMesh);
@@ -224,21 +167,11 @@ class Tilesheet {
 		time = 0.0;
 	}
 
-	/**
-	 * Swap to a different mesh by copying its geometry and materials to the owner.
-	 */
 	function swapMesh(meshObj: MeshObject) {
 		if (owner == null || meshObj == null) return;
-
 		currentMesh = meshObj;
-
-		if (meshObj.data != null) {
-			owner.setData(meshObj.data);
-		}
-
-		if (meshObj.materials != null) {
-			owner.materials = meshObj.materials;
-		}
+		if (meshObj.data != null) owner.setData(meshObj.data);
+		if (meshObj.materials != null) owner.materials = meshObj.materials;
 	}
 
 	function setFrame(f: Int) {
@@ -246,15 +179,17 @@ class Tilesheet {
 
 		if (frame > action.end && action.start < action.end) {
 			if (onActionComplete != null) onActionComplete();
-			if (action.loop) setFrame(action.start);
-			else paused = true;
+			if (action.loop)
+				setFrame(action.start);
+			else
+				paused = true;
 			return;
 		}
 
 		var tx = frame % action.tilesx;
 		var ty = Std.int(frame / action.tilesx);
-		tileX = tx * (1 / action.tilesx);
-		tileY = ty * (1 / action.tilesy);
+		tileX = tx / action.tilesx;
+		tileY = ty / action.tilesy;
 	}
 
 	public function pause() {
@@ -283,8 +218,7 @@ class Tilesheet {
 	}
 
 	public function getFrameOffset(): Int {
-		if (action == null) return 0;
-		return frame - action.start;
+		return action != null ? frame - action.start : 0;
 	}
 
 	public function getTilesx(): Int {
