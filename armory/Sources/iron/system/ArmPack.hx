@@ -136,7 +136,7 @@ class ArmPack {
 			case "speaker_datas": TSpeakerData;
 			case "world_datas": TWorldData;
 			case "terrain_datas": TTerrainData;
-			case "tilesheet_datas": TTilesheetData;
+			case "tilesheet": TMaterialTilesheet;
 			case "objects": TObj;
 			case "children": TObj;
 			case "groups": TGroup;

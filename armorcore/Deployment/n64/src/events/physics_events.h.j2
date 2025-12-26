@@ -1,0 +1,74 @@
+// physics_events.h - Per-object physics contact event subscriptions
+#pragma once
+
+#include "../types.h"
+#include "../oimo/oimo.h"
+
+#ifdef __cplusplus
+extern "C" {{
+#endif
+
+/**
+ * Physics Contact Event System
+ *
+ * Similar to trait_events for input, but for physics contacts.
+ * Traits can subscribe to contact notifications for specific rigid bodies.
+ *
+ * Usage:
+ *   physics_contact_subscribe(rb, handler, obj, data);  // In on_ready
+ *   physics_contact_unsubscribe(rb, handler, obj);      // In on_remove
+ *   physics_contact_dispatch();                         // Called by physics_step
+ */
+
+// Maximum contact subscriptions per rigid body
+#define MAX_CONTACT_SUBSCRIBERS {max_contact_subscribers}
+
+// Maximum rigid bodies with contact subscriptions
+#define MAX_CONTACT_BODIES {max_contact_bodies}
+
+// Contact handler signature: (obj, data, other_obj)
+// - obj: the object this trait is attached to
+// - data: trait data pointer
+// - other_obj: the object we collided with
+typedef void (*PhysicsContactHandler)(void* obj, void* data, ArmObject* other);
+
+// Subscription entry
+typedef struct {{
+    PhysicsContactHandler handler;
+    void* obj;
+    void* data;
+}} PhysicsContactSub;
+
+// Per-body subscriptions
+typedef struct {{
+    OimoRigidBody* rb;
+    PhysicsContactSub subs[MAX_CONTACT_SUBSCRIBERS];
+    uint8_t count;
+}} BodyContactSubs;
+
+// Initialize contact event system
+void physics_contact_init(void);
+
+// Clear all subscriptions (call on scene change)
+void physics_contact_clear(void);
+
+// Subscribe to contact events for a rigid body
+// handler: function to call on contact
+// obj: object pointer (usually the ArmObject with this rigid body)
+// data: trait data pointer
+void physics_contact_subscribe(OimoRigidBody* rb, PhysicsContactHandler handler, void* obj, void* data);
+
+// Unsubscribe from contact events
+// Matches by rb + handler + obj (same as subscribe)
+void physics_contact_unsubscribe(OimoRigidBody* rb, PhysicsContactHandler handler, void* obj);
+
+// Unsubscribe all handlers for an object (call when trait is removed)
+void physics_contact_unsubscribe_all(void* obj);
+
+// Dispatch contact events for all touching bodies
+// Called internally by physics_step after world simulation
+void physics_contact_dispatch(void);
+
+#ifdef __cplusplus
+}}
+#endif

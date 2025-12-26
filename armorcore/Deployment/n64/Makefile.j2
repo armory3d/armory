@@ -1,0 +1,75 @@
+BUILD_DIR=build
+
+T3D_INST={tiny3d_path}
+
+include $(N64_INST)/include/n64.mk
+include $(T3D_INST)/t3d.mk
+
+GAME_TITLE := {game_title}
+ROM_NAME := {game_title}
+
+N64_CFLAGS += -std=gnu2x
+
+src = \
+    src/main.c \
+    src/engine.c \
+    src/renderer.c \
+    src/system/signal.c \
+	src/data/models.c \
+    src/data/scenes.c \
+	src/data/traits.c \
+	src/events/trait_events.c \
+	src/iron/object/transform.c \
+	src/iron/object/object.c \
+	src/iron/system/input.c \
+{scene_files}
+
+# Physics sources (conditionally included)
+{physics_sources}
+
+# UI sources (conditionally included)
+{koui_sources}
+
+assets_png = $(wildcard assets/*.png)
+assets_gltf = $(wildcard assets/*.gltf)
+assets_ttf = $(wildcard assets/*.ttf)
+assets_conv = $(addprefix filesystem/,$(notdir $(assets_png:%.png=%.sprite))) \
+			  $(addprefix filesystem/,$(notdir $(assets_ttf:%.ttf=%.font64))) \
+			  $(addprefix filesystem/,$(notdir $(assets_gltf:%.gltf=%.t3dm)))
+
+all: $(ROM_NAME).z64
+
+filesystem/%.sprite: assets/%.png
+	@mkdir -p $(dir $@)
+	@echo "    [SPRITE] $@"
+	$(N64_MKSPRITE) $(MKSPRITE_FLAGS) -o filesystem "$<"
+
+filesystem/%.font64: assets/%.ttf
+	@mkdir -p $(dir $@)
+	@echo "    [FONT] $@"
+	$(N64_MKFONT) $(MKFONT_FLAGS) -o filesystem "$<"
+
+filesystem/%.t3dm: assets/%.gltf
+	@mkdir -p $(dir $@)
+	@echo "    [T3D-MODEL] $@"
+	$(T3D_GLTF_TO_3D) "$<" $@
+	$(N64_BINDIR)/mkasset -c 2 -o filesystem $@
+
+$(BUILD_DIR)/$(ROM_NAME).dfs: $(assets_conv)
+$(BUILD_DIR)/$(ROM_NAME).elf: $(src:%.c=$(BUILD_DIR)/%.o)
+
+$(ROM_NAME).z64: N64_ROM_TITLE=$(GAME_TITLE)
+$(ROM_NAME).z64: $(BUILD_DIR)/$(ROM_NAME).dfs
+
+clean:
+	rm -rf $(BUILD_DIR) *.z64
+	rm -rf filesystem
+
+build_lib:
+	rm -rf $(BUILD_DIR) *.z64
+	make -C $(T3D_INST)
+	make all
+
+-include $(wildcard $(BUILD_DIR)/*.d)
+
+.PHONY: all clean

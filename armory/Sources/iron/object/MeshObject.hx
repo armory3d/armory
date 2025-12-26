@@ -27,8 +27,7 @@ class MeshObject extends Object {
 	public var cameraList: Array<String> = null;
 	public var screenSize = 0.0;
 	public var frustumCulling = true;
-	public var activeTilesheet: Tilesheet = null;
-	public var tilesheets: Array<Tilesheet> = null;
+	public var tilesheet: Tilesheet = null;
 	public var skip_context: String = null; // Do not draw this context
 	public var force_context: String = null; // Draw only this context
 	static var lastPipeline: PipelineState = null;
@@ -87,8 +86,7 @@ class MeshObject extends Object {
 			particleSystems = null;
 		}
 		#end
-		if (activeTilesheet != null) activeTilesheet.remove();
-		if (tilesheets != null) for (ts in tilesheets) { ts.remove(); }
+		if (tilesheet != null) tilesheet.remove();
 		if (Scene.active != null) Scene.active.meshes.remove(this);
 		data.refcount--;
 		super.remove();
@@ -123,30 +121,14 @@ class MeshObject extends Object {
 	}
 	#end
 
-	public function setupTilesheet(sceneName: String, tilesheet_ref: String, tilesheet_action_ref: String) {
-		activeTilesheet = new Tilesheet(sceneName, tilesheet_ref, tilesheet_action_ref);
-		if(tilesheets == null) tilesheets = new Array<Tilesheet>();
-		tilesheets.push(activeTilesheet);
+	public function setupTilesheet(tilesheetData: iron.data.SceneFormat.TTilesheetData) {
+		tilesheet = new Tilesheet(tilesheetData, this);
 	}
 
-	public function setActiveTilesheet(sceneName: String, tilesheet_ref: String, tilesheet_action_ref: String) {
-		var set = false;
-		// Check if tilesheet already created
-		if (tilesheets != null) {
-			for (ts in tilesheets) {
-				if (ts.raw.name == tilesheet_ref) {
-					activeTilesheet = ts;
-					activeTilesheet.play(tilesheet_action_ref);
-					set = true;
-					break;
-				}
-			}
+	public function setTilesheetAction(actionRef: String) {
+		if (tilesheet != null) {
+			tilesheet.play(actionRef);
 		}
-		// If not already created
-		if (!set) {
-			setupTilesheet(sceneName, tilesheet_ref, tilesheet_action_ref);
-		}
-
 	}
 
 	inline function isLodMaterial(): Bool {
@@ -240,6 +222,11 @@ class MeshObject extends Object {
 		if (!visible) return; // Skip render if object is hidden
 		if (cullMesh(context, Scene.active.camera, RenderPath.active.light)) return;
 		var meshContext = raw != null ? context == "mesh" : false;
+
+		// Update tilesheet
+		if (tilesheet != null && meshContext) {
+			tilesheet.update();
+		}
 
 		if (cameraList != null && cameraList.indexOf(Scene.active.camera.name) < 0) return;
 

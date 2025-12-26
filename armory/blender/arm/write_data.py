@@ -264,6 +264,11 @@ let project = new Project('""" + arm.utils.safesrc(wrd.arm_project_name + '-' + 
         if state.target.startswith('krom'):
             assets.add_khafile_def('js-es=6')
 
+        if state.is_n64:
+            assets.add_khafile_def('arm_target_n64')
+            # Tell the N64 trait macro where to write the traits JSON file
+            assets.add_khafile_def('arm_build_dir=../' + arm.utils.build_dir())
+
         if export_physics:
             assets.add_khafile_def('arm_physics')
             if wrd.arm_physics_engine == 'Bullet':

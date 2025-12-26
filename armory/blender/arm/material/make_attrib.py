@@ -81,7 +81,13 @@ def write_tex_coords(con_mesh: ShaderContext, vert: Shader, frag: Shader, tese: 
                 make_particle.write_tilesheet(vert)
             else:
                 vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
-                vert.write_attrib('texCoord = tex * texUnpack + tilesheetOffset;')
+                vert.add_uniform('vec2 tilesheetFlip', '_tilesheetFlip')
+                vert.add_uniform('vec2 tilesheetTiles', '_tilesheetTiles')
+                vert.write_attrib('vec2 tileSize = vec2(1.0 / tilesheetTiles.x, 1.0 / tilesheetTiles.y);')
+                vert.write_attrib('vec2 tileUV = tex * texUnpack;')
+                vert.write_attrib('tileUV.x = mix(tileUV.x, tileSize.x - tileUV.x, tilesheetFlip.x);')
+                vert.write_attrib('tileUV.y = mix(tileUV.y, tileSize.y - tileUV.y, tilesheetFlip.y);')
+                vert.write_attrib('texCoord = tileUV + tilesheetOffset;')
         else:
             vert.write_attrib('texCoord = tex * texUnpack;')
 

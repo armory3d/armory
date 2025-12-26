@@ -499,7 +499,13 @@ def make_forward_solid(con_mesh):
         vert.add_uniform('float texUnpack', link='_texUnpack')
         if mat_state.material.arm_tilesheet_flag:
             vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
-            vert.write('texCoord = tex * texUnpack + tilesheetOffset;')
+            vert.add_uniform('vec2 tilesheetFlip', '_tilesheetFlip')
+            vert.add_uniform('vec2 tilesheetTiles', '_tilesheetTiles')
+            vert.write('vec2 tileSize = vec2(1.0 / tilesheetTiles.x, 1.0 / tilesheetTiles.y);')
+            vert.write('vec2 tileUV = tex * texUnpack;')
+            vert.write('tileUV.x = mix(tileUV.x, tileSize.x - tileUV.x, tilesheetFlip.x);')
+            vert.write('tileUV.y = mix(tileUV.y, tileSize.y - tileUV.y, tilesheetFlip.y);')
+            vert.write('texCoord = tileUV + tilesheetOffset;')
         else:
             vert.write('texCoord = tex * texUnpack;')
 

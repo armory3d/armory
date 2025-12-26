@@ -117,7 +117,7 @@ class RigidBody extends iron.Trait {
 			angularFactorsZ: 1.0,
 			collisionMargin: 0.0,
 			linearDeactivationThreshold: 0.0,
-			angularDeactivationThrshold: 0.0,
+			angularDeactivationThreshold: 0.0,
 			deactivationTime: 0.0
 		};
 
@@ -136,7 +136,7 @@ class RigidBody extends iron.Trait {
 		this.linearFactors = [params.linearFactorsX, params.linearFactorsY, params.linearFactorsZ];
 		this.angularFactors = [params.angularFactorsX, params.angularFactorsY, params.angularFactorsZ];
 		this.collisionMargin = params.collisionMargin;
-		this.deactivationParams = [params.linearDeactivationThreshold, params.angularDeactivationThrshold, params.deactivationTime];
+		this.deactivationParams = [params.linearDeactivationThreshold, params.angularDeactivationThreshold, params.deactivationTime];
 		this.animated = flags.animated;
 		this.trigger = flags.trigger;
 		this.ccd = flags.ccd;
@@ -746,7 +746,7 @@ typedef RigidBodyParams = {
 	var angularFactorsZ: Float;
 	var collisionMargin: Float;
 	var linearDeactivationThreshold: Float;
-	var angularDeactivationThrshold: Float;
+	var angularDeactivationThreshold: Float;
 	var deactivationTime: Float;
 }
 
