@@ -55,6 +55,16 @@ def reset():
     shader_cons['voxel_frag'] = []
     shader_cons['voxel_geom'] = []
 
+def reset_shader_cons():
+    # Reset shader comparison arrays to prevent cross-scene shader merging
+    global shader_cons
+    shader_cons['mesh_vert'] = []
+    shader_cons['depth_vert'] = []
+    shader_cons['depth_frag'] = []
+    shader_cons['voxel_vert'] = []
+    shader_cons['voxel_frag'] = []
+    shader_cons['voxel_geom'] = []
+
 def add(asset_file):
     global assets
 
