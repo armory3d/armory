@@ -124,9 +124,8 @@ class Scene {
 
 			// Startup scene
 			active.addScene(format.name, null, function(sceneObject: Object) {
-				for (object in sceneObject.getChildren(true)) {
-					createTraits(object.raw.traits, object);
-				}
+				// Create traits bottom-up (children first, then parents)
+				createTraitsBottomUp(sceneObject);
 
 				#if arm_terrain
 				if (format.terrain_ref != null) {
@@ -141,15 +140,27 @@ class Scene {
 				active.camera = active.getCamera(format.camera_ref);
 				active.sceneParent = sceneObject;
 
-				active.ready = true;
-
 				for (f in active.traitInits) f();
 				active.traitInits = [];
 
+				active.ready = true;
 				active.initializing = false;
 				done(sceneObject);
 			});
 		});
+	}
+
+	// Create traits in post-order (bottom-up): children's traits are created before parents.
+	// This ensures that when a parent's notifyOnInit runs, children are already initialized.
+	static function createTraitsBottomUp(object: Object) {
+		// First, recursively process all children
+		for (child in object.children) {
+			createTraitsBottomUp(child);
+		}
+		// Then create traits for this object
+		if (object.raw != null) {
+			createTraits(object.raw.traits, object);
+		}
 	}
 
 	#if arm_patch
@@ -453,14 +464,15 @@ class Scene {
 				if (spawnChildren && obj.children != null) {
 					for (child in obj.children) spawnObjectTree(child, object, obj, done);
 				}
-				if (++objectsTraversed == objectsCount && done != null) {
+				if (++objectsTraversed == objectsCount) {
 					// Retrieve the originally spawned object from the current
 					// child object to ensure done() is called with the right
 					// object
 					while (object.uid != rootId) {
 						object = object.parent;
 					}
-					done(object);
+					// Then call user callback
+					if (done != null) done(object);
 				}
 			});
 		}

@@ -209,6 +209,16 @@ class Object {
 		return null;
 	}
 
+	public function getTraitFromChildren<T: Trait>(c: Class<T>): T {
+		var t: T = getTrait(c);
+		if (t != null) return t;
+		for (child in getChildren()) {
+			t = child.getTraitFromChildren(c);
+			if (t != null) return t;
+		}
+		return null;
+	}
+
 	#if arm_skin
 	public function getParentArmature(name: String): BoneAnimation {
 		for (a in Scene.active.animations) if (a.armature != null && a.armature.name == name) return cast a;
