@@ -13,7 +13,7 @@ class Tilesheet {
 	public var actions: Array<TTilesheetAction>;
 	public var action: TTilesheetAction = null;
 
-	var ready: Bool = false;
+	public var ready: Bool = false;
 	var time: Float = 0.0;
 	var onActionComplete: Void->Void = null;
 	var owner: MeshObject = null;
