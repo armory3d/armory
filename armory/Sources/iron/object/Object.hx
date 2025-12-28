@@ -209,11 +209,11 @@ class Object {
 		return null;
 	}
 
-	public function getTraitInChildren<T: Trait>(c: Class<T>): T {
+	public function getTraitFromChildren<T: Trait>(c: Class<T>): T {
 		var t: T = getTrait(c);
 		if (t != null) return t;
 		for (child in getChildren()) {
-			t = child.getTraitInChildren(c);
+			t = child.getTraitFromChildren(c);
 			if (t != null) return t;
 		}
 		return null;
