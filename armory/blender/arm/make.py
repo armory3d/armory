@@ -261,6 +261,8 @@ def export_data(fp, sdk_path):
 
     for scene in bpy.data.scenes:
         if scene.arm_export:
+            # Reset shader comparison arrays to prevent cross-scene shader merging
+            assets.reset_shader_cons()
             ext = '.lz4' if ArmoryExporter.compress_enabled else '.arm'
             asset_path = build_dir + '/compiled/Assets/' + arm.utils.safestr(scene.name + "_" + os.path.basename(scene.library.filepath).replace(".blend", "") if scene.library else scene.name) + ext
             ArmoryExporter.export_scene(bpy.context, asset_path, scene=scene, depsgraph=depsgraph)
