@@ -16,6 +16,9 @@ class Tilesheet {
 	public var ready: Bool = false;
 	var time: Float = 0.0;
 	var onActionComplete: Void->Void = null;
+	var onReady: Void->Void = null;
+	var onEvent: String->Void = null; // Callback for tilesheet events
+	var prevFrame: Int = -1; // Track previous frame to detect changes
 	var owner: MeshObject = null;
 	var currentMesh: MeshObject = null;
 	var meshCache: Map<String, MeshObject> = new Map();
@@ -46,6 +49,7 @@ class Tilesheet {
 				playAction(pendingAction);
 				pendingAction = null;
 			}
+			if (onReady != null) onReady();
 		}
 	}
 
@@ -58,6 +62,7 @@ class Tilesheet {
 					pendingAction = null;
 					pendingOnComplete = null;
 				}
+				if (onReady != null) onReady();
 			}
 			return;
 		}
@@ -138,6 +143,15 @@ class Tilesheet {
 		playAction(action_ref, onActionComplete);
 	}
 
+	public function notifyOnReady(callback: Void->Void) {
+		onReady = callback;
+		if (ready) onReady();
+	}
+
+	public function notifyOnEvent(callback: String->Void) {
+		onEvent = callback;
+	}
+
 	function playAction(action_ref: String, onComplete: Void->Void = null) {
 		if (action != null && action.name == action_ref) {
 			paused = false;
@@ -162,6 +176,7 @@ class Tilesheet {
 			}
 		}
 
+		prevFrame = -1; // Reset previous frame for new action
 		setFrame(action.start);
 		paused = false;
 		time = 0.0;
@@ -178,18 +193,42 @@ class Tilesheet {
 		frame = f;
 
 		if (frame > action.end && action.start < action.end) {
+			// Check for events on last frame before completing
+			checkEvents(prevFrame, action.end);
 			if (onActionComplete != null) onActionComplete();
-			if (action.loop)
+			if (action.loop) {
+				prevFrame = -1; // Reset for loop
 				setFrame(action.start);
-			else
+			} else {
 				paused = true;
+			}
 			return;
 		}
+
+		// Check for events between previous frame and current frame
+		checkEvents(prevFrame, frame);
+		prevFrame = frame;
 
 		var tx = frame % action.tilesx;
 		var ty = Std.int(frame / action.tilesx);
 		tileX = tx / action.tilesx;
 		tileY = ty / action.tilesy;
+	}
+
+	/** Check and fire events for frames between fromFrame (exclusive) and toFrame (inclusive). */
+	function checkEvents(fromFrame: Int, toFrame: Int) {
+		if (onEvent == null || action == null || action.events == null) return;
+
+		// Convert to action-relative frame numbers
+		var relativeFrom = fromFrame - action.start;
+		var relativeTo = toFrame - action.start;
+
+		for (evt in action.events) {
+			// Fire event if it falls in the range (fromFrame, toFrame]
+			if (evt.frame > relativeFrom && evt.frame <= relativeTo) {
+				onEvent(evt.name);
+			}
+		}
 	}
 
 	public function pause() {
@@ -208,6 +247,8 @@ class Tilesheet {
 		currentMesh = null;
 		pendingAction = null;
 		pendingOnComplete = null;
+		onEvent = null;
+		prevFrame = -1;
 		meshCache.clear();
 	}
 

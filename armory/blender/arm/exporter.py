@@ -910,6 +910,14 @@ class ArmoryExporter:
                             action_data['mesh'] = arm.utils.safestr(arm.utils.asset_name(mesh_data))
                         else:
                             action_data['mesh'] = arm.utils.safestr(action.mesh_prop)
+                    # Export events if any
+                    if len(action.events) > 0:
+                        action_data['events'] = []
+                        for evt in action.events:
+                            action_data['events'].append({
+                                'name': evt.name,
+                                'frame': evt.frame_prop
+                            })
                     out_object['tilesheet']['actions'].append(action_data)
 
             if len(bobject.vertex_groups) > 0:
