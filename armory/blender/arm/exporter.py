@@ -2933,89 +2933,136 @@ Make sure the mesh only has tris/quads.""")
 
         # Rigid body trait
         if bobject.rigid_body is not None and phys_enabled:
-            ArmoryExporter.export_physics = True
-            rb = bobject.rigid_body
-            shape = 0  # BOX
-
-            if rb.collision_shape == 'SPHERE':
-                shape = 1
-            elif rb.collision_shape == 'CONVEX_HULL':
-                shape = 2
-            elif rb.collision_shape == 'MESH':
-                shape = 3
-            elif rb.collision_shape == 'CONE':
-                shape = 4
-            elif rb.collision_shape == 'CYLINDER':
-                shape = 5
-            elif rb.collision_shape == 'CAPSULE':
-                shape = 6
-
-            body_mass = rb.mass
-            is_static = self.rigid_body_static(rb)
-            if is_static:
-                body_mass = 0
-            x = {}
-            x['type'] = 'Script'
-            x['class_name'] = 'armory.trait.physics.' + phys_pkg + '.RigidBody'
-            col_group = ''
-            for b in rb.collision_collections:
-                col_group = ('1' if b else '0') + col_group
-            col_mask = ''
-            for b in bobject.arm_rb_collision_filter_mask:
-                col_mask = ('1' if b else '0') + col_mask
-
-            x['parameters'] = [str(shape), str(body_mass), str(rb.friction), str(rb.restitution), str(int(col_group, 2)), str(int(col_mask, 2)) ]
-            lx = bobject.arm_rb_linear_factor[0]
-            ly = bobject.arm_rb_linear_factor[1]
-            lz = bobject.arm_rb_linear_factor[2]
-            ax = bobject.arm_rb_angular_factor[0]
-            ay = bobject.arm_rb_angular_factor[1]
-            az = bobject.arm_rb_angular_factor[2]
-            if bobject.lock_location[0]:
-                lx = 0
-            if bobject.lock_location[1]:
-                ly = 0
-            if bobject.lock_location[2]:
-                lz = 0
-            if bobject.lock_rotation[0]:
-                ax = 0
-            if bobject.lock_rotation[1]:
-                ay = 0
-            if bobject.lock_rotation[2]:
-                az = 0
-            col_margin = rb.collision_margin if rb.use_margin else 0.0
-            if rb.use_deactivation:
-                deact_lv = rb.deactivate_linear_velocity
-                deact_av = rb.deactivate_angular_velocity
-                deact_time = bobject.arm_rb_deactivation_time
+            # Skip children of compound parents - their shapes are baked into the parent
+            is_compound_child = (bobject.parent is not None and
+                                 bobject.parent.rigid_body is not None and
+                                 bobject.parent.rigid_body.collision_shape == 'COMPOUND')
+            if is_compound_child:
+                pass  # Don't export RigidBody trait for compound children
             else:
-                deact_lv = 0.0
-                deact_av = 0.0
-                deact_time = 0.0
-            body_params = {}
-            body_params['linearDamping'] = rb.linear_damping
-            body_params['angularDamping'] = rb.angular_damping
-            body_params['linearFactorsX'] = lx
-            body_params['linearFactorsY'] = ly
-            body_params['linearFactorsZ'] = lz
-            body_params['angularFactorsX'] = ax
-            body_params['angularFactorsY'] = ay
-            body_params['angularFactorsZ'] = az
-            body_params['angularFriction'] = bobject.arm_rb_angular_friction
-            body_params['collisionMargin'] = col_margin
-            body_params['linearDeactivationThreshold'] = deact_lv
-            body_params['angularDeactivationThrshold'] = deact_av
-            body_params['deactivationTime'] = deact_time
-            body_flags = {}
-            body_flags['animated'] = rb.kinematic
-            body_flags['trigger'] = bobject.arm_rb_trigger
-            body_flags['ccd'] = bobject.arm_rb_ccd
-            body_flags['interpolate'] = bobject.arm_rb_interpolate
-            body_flags['staticObj'] = is_static
-            body_flags['useDeactivation'] = rb.use_deactivation
-            x['parameters'].append(arm.utils.get_haxe_json_string(body_params))
-            x['parameters'].append(arm.utils.get_haxe_json_string(body_flags))
-            o['traits'].append(x)
+                ArmoryExporter.export_physics = True
+                rb = bobject.rigid_body
+                shape = 0  # BOX
+
+                if rb.collision_shape == 'SPHERE':
+                    shape = 1
+                elif rb.collision_shape == 'CONVEX_HULL':
+                    shape = 2
+                elif rb.collision_shape == 'MESH':
+                    shape = 3
+                elif rb.collision_shape == 'CONE':
+                    shape = 4
+                elif rb.collision_shape == 'CYLINDER':
+                    shape = 5
+                elif rb.collision_shape == 'CAPSULE':
+                    shape = 6
+                elif rb.collision_shape == 'COMPOUND':
+                    shape = 8
+
+                body_mass = rb.mass
+                is_static = self.rigid_body_static(rb)
+                if is_static:
+                    body_mass = 0
+                x = {}
+                x['type'] = 'Script'
+                x['class_name'] = 'armory.trait.physics.' + phys_pkg + '.RigidBody'
+                col_group = ''
+                for b in rb.collision_collections:
+                    col_group = ('1' if b else '0') + col_group
+                col_mask = ''
+                for b in bobject.arm_rb_collision_filter_mask:
+                    col_mask = ('1' if b else '0') + col_mask
+
+                x['parameters'] = [str(shape), str(body_mass), str(rb.friction), str(rb.restitution), str(int(col_group, 2)), str(int(col_mask, 2)) ]
+                lx = bobject.arm_rb_linear_factor[0]
+                ly = bobject.arm_rb_linear_factor[1]
+                lz = bobject.arm_rb_linear_factor[2]
+                ax = bobject.arm_rb_angular_factor[0]
+                ay = bobject.arm_rb_angular_factor[1]
+                az = bobject.arm_rb_angular_factor[2]
+                if bobject.lock_location[0]:
+                    lx = 0
+                if bobject.lock_location[1]:
+                    ly = 0
+                if bobject.lock_location[2]:
+                    lz = 0
+                if bobject.lock_rotation[0]:
+                    ax = 0
+                if bobject.lock_rotation[1]:
+                    ay = 0
+                if bobject.lock_rotation[2]:
+                    az = 0
+                col_margin = rb.collision_margin if rb.use_margin else 0.0
+                if rb.use_deactivation:
+                    deact_lv = rb.deactivate_linear_velocity
+                    deact_av = rb.deactivate_angular_velocity
+                    deact_time = bobject.arm_rb_deactivation_time
+                else:
+                    deact_lv = 0.0
+                    deact_av = 0.0
+                    deact_time = 0.0
+                body_params = {}
+                body_params['linearDamping'] = rb.linear_damping
+                body_params['angularDamping'] = rb.angular_damping
+                body_params['linearFactorsX'] = lx
+                body_params['linearFactorsY'] = ly
+                body_params['linearFactorsZ'] = lz
+                body_params['angularFactorsX'] = ax
+                body_params['angularFactorsY'] = ay
+                body_params['angularFactorsZ'] = az
+                body_params['angularFriction'] = bobject.arm_rb_angular_friction
+                body_params['collisionMargin'] = col_margin
+                body_params['linearDeactivationThreshold'] = deact_lv
+                body_params['angularDeactivationThrshold'] = deact_av
+                body_params['deactivationTime'] = deact_time
+
+                # Collect compound children shapes if this is a compound parent
+                if rb.collision_shape == 'COMPOUND':
+                    compound_children = []
+                    for child in bobject.children:
+                        if child.rigid_body is not None:
+                            child_rb = child.rigid_body
+                            # Map child collision shape to int
+                            child_shape = 0  # BOX default
+                            if child_rb.collision_shape == 'SPHERE':
+                                child_shape = 1
+                            elif child_rb.collision_shape == 'CONVEX_HULL':
+                                child_shape = 2
+                            elif child_rb.collision_shape == 'MESH':
+                                child_shape = 3
+                            elif child_rb.collision_shape == 'CONE':
+                                child_shape = 4
+                            elif child_rb.collision_shape == 'CYLINDER':
+                                child_shape = 5
+                            elif child_rb.collision_shape == 'CAPSULE':
+                                child_shape = 6
+
+                            # Get child's local transform relative to parent
+                            local_matrix = bobject.matrix_world.inverted() @ child.matrix_world
+                            loc = local_matrix.to_translation()
+                            rot = local_matrix.to_quaternion()
+
+                            # Get child dimensions
+                            child_dim = child.dimensions
+
+                            compound_children.append({
+                                'shape': child_shape,
+                                'posX': loc.x, 'posY': loc.y, 'posZ': loc.z,
+                                'rotX': rot.x, 'rotY': rot.y, 'rotZ': rot.z, 'rotW': rot.w,
+                                'dimX': child_dim.x, 'dimY': child_dim.y, 'dimZ': child_dim.z
+                            })
+                    body_params['compoundChildren'] = compound_children
+
+                body_flags = {}
+                body_flags['animated'] = rb.kinematic
+                body_flags['trigger'] = bobject.arm_rb_trigger
+                body_flags['ccd'] = bobject.arm_rb_ccd
+                body_flags['interpolate'] = bobject.arm_rb_interpolate
+                body_flags['staticObj'] = is_static
+                body_flags['useDeactivation'] = rb.use_deactivation
+                x['parameters'].append(arm.utils.get_haxe_json_string(body_params))
+                x['parameters'].append(arm.utils.get_haxe_json_string(body_flags))
+                o['traits'].append(x)
 
         # Phys traits
         if phys_enabled:
