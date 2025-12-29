@@ -2,6 +2,20 @@ import bpy
 from bpy.props import *
 
 
+class ArmTilesheetEventListItem(bpy.types.PropertyGroup):
+    """An event triggered on a specific frame within a tilesheet action."""
+    name: StringProperty(
+        name="Event Name",
+        description="Name of the event to trigger",
+        default="event")
+
+    frame_prop: IntProperty(
+        name="Frame",
+        description="Frame number when this event triggers",
+        default=0,
+        min=0)
+
+
 class ArmTilesheetActionListItem(bpy.types.PropertyGroup):
     """An action (animation sequence) within a tilesheet with per-action properties."""
     name: StringProperty(
@@ -46,6 +60,10 @@ class ArmTilesheetActionListItem(bpy.types.PropertyGroup):
         name="Mesh",
         description="Optional mesh data to swap to when playing this action (brings its own material/texture/UVs)",
         default="")
+
+    # Events list for this action
+    events: CollectionProperty(type=ArmTilesheetEventListItem)
+    events_index: IntProperty(name="Event Index", default=0)
 
 
 class ARM_UL_TilesheetActionList(bpy.types.UIList):
@@ -130,6 +148,55 @@ class ArmTilesheetActionListMoveItem(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class ArmTilesheetEventListNewItem(bpy.types.Operator):
+    """Add a new event to the current action"""
+    bl_idname = "arm_tilesheetactionlist.new_event"
+    bl_label = "Add Event"
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        return obj is not None and len(obj.arm_tilesheet_actionlist) > 0
+
+    def execute(self, context):
+        obj = context.object
+        if obj.arm_tilesheet_actionlist_index < 0:
+            return {'CANCELLED'}
+        action = obj.arm_tilesheet_actionlist[obj.arm_tilesheet_actionlist_index]
+        action.events.add()
+        action.events_index = len(action.events) - 1
+        return {'FINISHED'}
+
+
+class ArmTilesheetEventListDeleteItem(bpy.types.Operator):
+    """Delete the selected event from the current action"""
+    bl_idname = "arm_tilesheetactionlist.delete_event"
+    bl_label = "Delete Event"
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if obj is None or len(obj.arm_tilesheet_actionlist) == 0:
+            return False
+        if obj.arm_tilesheet_actionlist_index < 0:
+            return False
+        action = obj.arm_tilesheet_actionlist[obj.arm_tilesheet_actionlist_index]
+        return len(action.events) > 0
+
+    def execute(self, context):
+        obj = context.object
+        action = obj.arm_tilesheet_actionlist[obj.arm_tilesheet_actionlist_index]
+        events = action.events
+        index = action.events_index
+
+        events.remove(index)
+
+        if index > 0:
+            action.events_index = index - 1
+
+        return {'FINISHED'}
+
+
 class ARM_PT_TilesheetPanel(bpy.types.Panel):
     bl_label = "Armory Tilesheet"
     bl_space_type = "PROPERTIES"
@@ -193,13 +260,29 @@ class ARM_PT_TilesheetPanel(bpy.types.Panel):
             # Optional mesh (dropdown from bpy.data.meshes)
             box.prop_search(adat, "mesh_prop", bpy.data, "meshes", text="Mesh")
 
+            # Events section
+            box.separator()
+            box.label(text="Events")
+            row = box.row()
+            col = row.column()
+            for i, evt in enumerate(adat.events):
+                evt_row = col.row(align=True)
+                evt_row.prop(evt, "name", text="")
+                evt_row.prop(evt, "frame_prop", text="Frame")
+            row = box.row(align=True)
+            row.operator("arm_tilesheetactionlist.new_event", icon='ADD', text="Add Event")
+            row.operator("arm_tilesheetactionlist.delete_event", icon='REMOVE', text="Remove Event")
+
 
 __REG_CLASSES = (
+    ArmTilesheetEventListItem,
     ArmTilesheetActionListItem,
     ARM_UL_TilesheetActionList,
     ArmTilesheetActionListNewItem,
     ArmTilesheetActionListDeleteItem,
     ArmTilesheetActionListMoveItem,
+    ArmTilesheetEventListNewItem,
+    ArmTilesheetEventListDeleteItem,
     ARM_PT_TilesheetPanel,
 )
 __reg_classes, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)

@@ -388,6 +388,16 @@ typedef TTilesheetAction = {
 	public var tilesy: Int;
 	public var framerate: Int;
 	@:optional public var mesh: String; // Optional mesh to swap to when playing this action
+	@:optional public var events: Array<TTilesheetEvent>; // Optional events triggered on specific frames
+}
+
+#if js
+typedef TTilesheetEvent = {
+#else
+@:structInit class TTilesheetEvent {
+#end
+	public var name: String; // Event name
+	public var frame: Int; // Frame number when event triggers
 }
 
 #if js
