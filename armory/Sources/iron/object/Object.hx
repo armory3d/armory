@@ -59,7 +59,6 @@ class Object {
 			parent.children.remove(this);
 			if (keepTransform) this.transform.applyParent();
 			this.parent = null; // rebuild matrix without a parent
-			this.transform.buildMatrix();
 		}
 
 		if (parentObject == null) {
@@ -68,6 +67,8 @@ class Object {
 		parent = parentObject;
 		parent.children.push(this);
 		if (parentInverse) this.transform.applyParentInverse();
+
+		this.transform.buildMatrix();
 	}
 
 	/**
@@ -212,7 +213,7 @@ class Object {
 	public function getTraitFromChildren<T: Trait>(c: Class<T>): T {
 		var t: T = getTrait(c);
 		if (t != null) return t;
-		for (child in getChildren()) {
+		for (child in getChildren(true)) {
 			t = child.getTraitFromChildren(c);
 			if (t != null) return t;
 		}
