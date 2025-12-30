@@ -716,9 +716,13 @@ class ArmoryExporter:
                 slot.material = mat
 
             # For collection instances, set tilesheet flag on materials of objects inside the collection
+            # ONLY for objects that have arm_tilesheet_enabled set
             if bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
                 for cobj in bobject.instance_collection.all_objects:
                     if cobj.type != 'MESH':
+                        continue
+                    # Only apply tilesheet flag to objects that have it enabled
+                    if not cobj.arm_tilesheet_enabled:
                         continue
                     for slot in cobj.material_slots:
                         if slot.material is None:
