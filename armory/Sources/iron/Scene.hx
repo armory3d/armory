@@ -448,6 +448,10 @@ class Scene {
 		@param	srcRaw If not `null`, spawn the object from the given scene data instead of using the scene this function is called on. Useful to spawn objects from other scenes.
 	**/
 	public function spawnObject(name: String, parent: Null<Object>, done: Null<Object->Void>, spawnChildren = true, srcRaw: Null<TSceneFormat> = null) {
+		spawnObjectInternal(name, parent, done, spawnChildren, srcRaw, true);
+	}
+
+	function spawnObjectInternal(name: String, parent: Null<Object>, done: Null<Object->Void>, spawnChildren: Bool, srcRaw: Null<TSceneFormat>, createTraits: Bool) {
 		if (srcRaw == null) srcRaw = raw;
 		var objectsTraversed = 0;
 		var obj = getRawObjectByName(srcRaw, name);
@@ -471,7 +475,7 @@ class Scene {
 					}
 					// Create traits bottom-up after all objects are ready
 					spawnDepth--;
-					if (spawnDepth == 0) {
+					if (createTraits) {
 						createTraitsBottomUp(object);
 					}
 					// Then call user callback
@@ -607,7 +611,7 @@ class Scene {
 		else {
 			for (object_ref in object_refs) {
 				// Spawn top-level collection objects and their children
-				spawnObject(object_ref, groupOwner, function(spawnedObject: Object) {
+				spawnObjectInternal(object_ref, groupOwner, function(spawnedObject: Object) {
 					// Apply collection/group instance offset to all
 					// top-level parents of that group
 					if (!isObjectInGroup(groupRef, spawnedObject.parent, format)) {
@@ -627,7 +631,7 @@ class Scene {
 						groupOwner.transform.reset();
 						done();
 					}
-				}, true, format);
+				}, true, format, false);
 			}
 		}
 	}
