@@ -84,17 +84,29 @@ class Tilesheet {
 	}
 
 	function tryInitialize(): Bool {
-		if (owner == null || owner.children == null) return false;
+		if (owner == null) return false;
 
-		for (child in owner.children) {
-			if (Std.isOfType(child, MeshObject)) {
-				var meshChild = cast(child, MeshObject);
-				if (meshChild.data != null && !meshCache.exists(meshChild.data.name)) {
-					meshCache.set(meshChild.data.name, meshChild);
-					meshChild.visible = false;
-					// Also cache by object name for flexible lookup
-					if (meshChild.name != meshChild.data.name) {
-						meshCache.set(meshChild.name, meshChild);
+		// If no children, use the owner mesh itself
+		if (owner.children == null || owner.children.length == 0) {
+			if (owner.data != null && !meshCache.exists(owner.data.name)) {
+				meshCache.set(owner.data.name, owner);
+				// Also cache by object name for flexible lookup
+				if (owner.name != owner.data.name) {
+					meshCache.set(owner.name, owner);
+				}
+			}
+		} else {
+			// Use child meshes for mesh swapping
+			for (child in owner.children) {
+				if (Std.isOfType(child, MeshObject)) {
+					var meshChild = cast(child, MeshObject);
+					if (meshChild.data != null && !meshCache.exists(meshChild.data.name)) {
+						meshCache.set(meshChild.data.name, meshChild);
+						meshChild.visible = false;
+						// Also cache by object name for flexible lookup
+						if (meshChild.name != meshChild.data.name) {
+							meshCache.set(meshChild.name, meshChild);
+						}
 					}
 				}
 			}
