@@ -1,5 +1,6 @@
 package iron.object;
 
+import iron.App;
 import iron.data.SceneFormat;
 import iron.system.Time;
 
@@ -54,6 +55,8 @@ class Tilesheet {
 	}
 
 	public function update() {
+		if (App.pauseUpdates) return;
+
 		if (!ready) {
 			if (tryInitialize()) {
 				ready = true;
