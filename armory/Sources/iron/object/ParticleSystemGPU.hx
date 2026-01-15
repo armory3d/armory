@@ -142,9 +142,9 @@ class ParticleSystemGPU {
 		dimy = object.transform.dim.y;
 
 		if (object.tilesheet != null) {
-			tilesx = object.tilesheet.tilesx;
-			tilesy = object.tilesheet.tilesy;
-			tilesFramerate = object.tilesheet.framerate;
+			tilesx = object.tilesheet.getTilesx();
+			tilesy = object.tilesheet.getTilesy();
+			tilesFramerate = object.tilesheet.action != null ? object.tilesheet.action.framerate : 1;
 		}
 
 		// Animate
