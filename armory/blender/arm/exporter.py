@@ -63,7 +63,13 @@ class NodeType(Enum):
             if bobject.data.polygons or bobject.data.edges or bobject.data.vertices:
                 return cls.MESH
         elif bobject.type in ('FONT', 'META', 'CURVE'):
-            return cls.MESH
+            mesh = bobject.to_mesh()
+            if mesh is not None:
+                has_geometry = mesh.polygons or mesh.edges or mesh.vertices
+                bobject.to_mesh_clear()
+                if has_geometry:
+                    return cls.MESH
+            return cls.EMPTY
         elif bobject.type == "LIGHT":
             return cls.LIGHT
         elif bobject.type == "CAMERA":
@@ -1912,10 +1918,6 @@ Make sure the mesh only has tris/quads.""")
         if export_mesh is None:
             log.warn(oid + ' was not exported')
             return
-
-        # Warn if a curve was converted but has no faces (no bevel/extrude)
-        if bobject.type == 'CURVE' and len(export_mesh.polygons) == 0:
-            log.warn(oid + ' is a curve with no faces - add bevel or extrude to generate geometry')
 
         if len(export_mesh.uv_layers) > 2:
             log.warn(oid + ' exceeds maximum of 2 UV Maps supported')
