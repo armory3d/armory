@@ -212,7 +212,7 @@ class Object {
 	public function getTraitFromChildren<T: Trait>(c: Class<T>): T {
 		var t: T = getTrait(c);
 		if (t != null) return t;
-		for (child in getChildren()) {
+		for (child in getChildren(true)) {
 			t = child.getTraitFromChildren(c);
 			if (t != null) return t;
 		}

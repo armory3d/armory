@@ -78,6 +78,9 @@ class Scene {
 	public var traitRemoves: Array<Void->Void> = [];
 
 	var initializing: Bool; // Is the scene in its initialization phase?
+	var spawnDepth: Int = 0; // Nested spawn counter (defer trait creation while > 0)
+	var spawning(get, never): Bool;
+	inline function get_spawning(): Bool return spawnDepth > 0;
 
 	public function new() {
 		uid = uidCounter++;
@@ -437,7 +440,7 @@ class Scene {
 		var result = objects.length;
 		for (o in objects) {
 			if (discardNoSpawn && o.spawn != null && o.spawn == false) continue; // Do not count children of non-spawned objects
-			if (o.children != null) result += getObjectsCount(o.children);
+			if (o.children != null) result += getObjectsCount(o.children, discardNoSpawn);
 		}
 		return result;
 	}
@@ -451,11 +454,16 @@ class Scene {
 		@param	srcRaw If not `null`, spawn the object from the given scene data instead of using the scene this function is called on. Useful to spawn objects from other scenes.
 	**/
 	public function spawnObject(name: String, parent: Null<Object>, done: Null<Object->Void>, spawnChildren = true, srcRaw: Null<TSceneFormat> = null) {
+		spawnObjectInternal(name, parent, done, spawnChildren, srcRaw, true);
+	}
+
+	function spawnObjectInternal(name: String, parent: Null<Object>, done: Null<Object->Void>, spawnChildren: Bool, srcRaw: Null<TSceneFormat>, createTraits: Bool) {
 		if (srcRaw == null) srcRaw = raw;
 		var objectsTraversed = 0;
 		var obj = getRawObjectByName(srcRaw, name);
 		var objectsCount = spawnChildren ? getObjectsCount([obj], false) : 1;
 		var rootId = -1;
+		spawnDepth++; // Defer trait creation until all objects are ready
 		function spawnObjectTree(obj: TObj, parent: Object, parentObject: TObj, done: Object->Void) {
 			createObject(obj, srcRaw, parent, parentObject, function(object: Object) {
 				if (rootId == -1) {
@@ -470,6 +478,11 @@ class Scene {
 					// object
 					while (object.uid != rootId) {
 						object = object.parent;
+					}
+					// Create traits bottom-up after all objects are ready
+					spawnDepth--;
+					if (createTraits) {
+						createTraitsBottomUp(object);
 					}
 					// Then call user callback
 					if (done != null) done(object);
@@ -604,7 +617,7 @@ class Scene {
 		else {
 			for (object_ref in object_refs) {
 				// Spawn top-level collection objects and their children
-				spawnObject(object_ref, groupOwner, function(spawnedObject: Object) {
+				spawnObjectInternal(object_ref, groupOwner, function(spawnedObject: Object) {
 					// Apply collection/group instance offset to all
 					// top-level parents of that group
 					if (!isObjectInGroup(groupRef, spawnedObject.parent, format)) {
@@ -624,7 +637,7 @@ class Scene {
 						groupOwner.transform.reset();
 						done();
 					}
-				}, true, format);
+				}, true, format, false);
 			}
 		}
 	}
@@ -874,9 +887,9 @@ class Scene {
 				}
 			}
 
-			// If the scene is still initializing, traits will be created later
+			// If the scene is still initializing or spawning, traits will be created later
 			// to ensure that object references for trait properties are valid
-			if (!active.initializing) createTraits(o.traits, object);
+			if (!active.initializing && !active.spawning) createTraits(o.traits, object);
 		}
 		done(object);
 	}

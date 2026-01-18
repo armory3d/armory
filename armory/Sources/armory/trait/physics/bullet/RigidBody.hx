@@ -55,6 +55,10 @@ class RigidBody extends iron.Trait {
 	public var onReady: Void->Void = null;
 	public var onContact: Array<RigidBody->Void> = null;
 	public var heightData: haxe.io.Bytes = null;
+
+	// Compound shape children (baked from exporter)
+	var compoundChildren: Array<CompoundChild> = null;
+
 	#if js
 	static var ammoArray: Int = -1;
 	#end
@@ -143,6 +147,9 @@ class RigidBody extends iron.Trait {
 		this.interpolate = flags.interpolate;
 		this.staticObj = flags.staticObj;
 		this.useDeactivation = flags.useDeactivation;
+
+		// Store compound children data if provided
+		this.compoundChildren = params.compoundChildren;
 
 		notifyOnAdd(init);
 	}
@@ -245,6 +252,25 @@ class RigidBody extends iron.Trait {
 			btshape.setLocalScaling(vec1);
 			#end
 		}
+		else if (shape == Shape.Compound) {
+			// Create compound shape and add all child shapes
+			var compound = new bullet.Bt.CompoundShape(true);
+			if (compoundChildren != null) {
+				for (child in compoundChildren) {
+					var childShape = createChildShape(child);
+					if (childShape != null) {
+						// Set child local transform
+						trans2.setIdentity();
+						vec1.setValue(child.posX, child.posY, child.posZ);
+						trans2.setOrigin(vec1);
+						quat1.setValue(child.rotX, child.rotY, child.rotZ, child.rotW);
+						trans2.setRotation(quat1);
+						compound.addChildShape(trans2, childShape);
+					}
+				}
+			}
+			btshape = compound;
+		}
 
 		trans1.setIdentity();
 		vec1.setX(transform.worldx());
@@ -330,6 +356,46 @@ class RigidBody extends iron.Trait {
 		#else
 		bodyCI.delete();
 		#end
+	}
+
+	/**
+	 * Creates a child collision shape for compound rigidbodies from baked export data.
+	 * @param child The compound child data containing shape type and dimensions
+	 * @return The created Bullet collision shape, or null if shape type is unsupported
+	 */
+	function createChildShape(child: CompoundChild): bullet.Bt.CollisionShape {
+		var childShapeType: Int = child.shape;
+
+		if (childShapeType == Shape.Box) {
+			vec1.setValue(withMargin(child.dimX / 2), withMargin(child.dimY / 2), withMargin(child.dimZ / 2));
+			return new bullet.Bt.BoxShape(vec1);
+		}
+		else if (childShapeType == Shape.Sphere) {
+			return new bullet.Bt.SphereShape(withMargin(child.dimX / 2));
+		}
+		else if (childShapeType == Shape.Cone) {
+			var coneZ = new bullet.Bt.ConeShapeZ(
+				withMargin(child.dimX / 2), // Radius
+				withMargin(child.dimZ));    // Height
+			return coneZ;
+		}
+		else if (childShapeType == Shape.Cylinder) {
+			vec1.setValue(withMargin(child.dimX / 2), withMargin(child.dimY / 2), withMargin(child.dimZ / 2));
+			var cylZ = new bullet.Bt.CylinderShapeZ(vec1);
+			return cylZ;
+		}
+		else if (childShapeType == Shape.Capsule) {
+			var r = child.dimX / 2;
+			var capsZ = new bullet.Bt.CapsuleShapeZ(
+				withMargin(r), // Radius
+				withMargin(child.dimZ - r * 2)); // Height between 2 sphere centers
+			return capsZ;
+		}
+		else {
+			// Unsupported shape type for compound children (ConvexHull, Mesh, Terrain)
+			trace("Warning: Unsupported compound child shape type: " + childShapeType);
+			return null;
+		}
 	}
 
 	function update() {
@@ -732,6 +798,7 @@ class RigidBody extends iron.Trait {
 	var Cylinder = 5;
 	var Capsule = 6;
 	var Terrain = 7;
+	var Compound = 8;
 }
 
 typedef RigidBodyParams = {
@@ -748,6 +815,21 @@ typedef RigidBodyParams = {
 	var linearDeactivationThreshold: Float;
 	var angularDeactivationThreshold: Float;
 	var deactivationTime: Float;
+	@:optional var compoundChildren: Array<CompoundChild>;
+}
+
+typedef CompoundChild = {
+	var shape: Int;      // 0=Box, 1=Sphere, 2=ConvexHull, 3=Mesh, 4=Cone, 5=Cylinder, 6=Capsule
+	var posX: Float;     // Local position relative to parent
+	var posY: Float;
+	var posZ: Float;
+	var rotX: Float;     // Local rotation quaternion
+	var rotY: Float;
+	var rotZ: Float;
+	var rotW: Float;
+	var dimX: Float;     // Dimensions for shape creation
+	var dimY: Float;
+	var dimZ: Float;
 }
 
 typedef RigidBodyFlags = {
