@@ -197,6 +197,101 @@ class ArmTilesheetEventListDeleteItem(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class ArmTilesheetSlice(bpy.types.Operator):
+    """Slice the UV map based on tile dimensions - scales UVs to fit one tile"""
+    bl_idname = "arm_tilesheet.slice"
+    bl_label = "Slice"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if obj is None or obj.type != 'MESH':
+            return False
+        if len(obj.arm_tilesheet_actionlist) == 0:
+            return False
+        if obj.arm_tilesheet_actionlist_index < 0:
+            return False
+        action = obj.arm_tilesheet_actionlist[obj.arm_tilesheet_actionlist_index]
+        # Check if action has a mesh specified, and that mesh has UVs
+        if action.mesh_prop != '':
+            mesh_data = bpy.data.meshes.get(action.mesh_prop)
+            if mesh_data is None or not mesh_data.uv_layers:
+                return False
+        else:
+            # Fall back to object's own mesh
+            if not obj.data.uv_layers:
+                return False
+        return True
+
+    def execute(self, context):
+        obj = context.object
+
+        if obj.arm_tilesheet_actionlist_index < 0:
+            self.report({'ERROR'}, "No action selected")
+            return {'CANCELLED'}
+
+        action = obj.arm_tilesheet_actionlist[obj.arm_tilesheet_actionlist_index]
+        tiles_x = action.tilesx_prop
+        tiles_y = action.tilesy_prop
+
+        if tiles_x < 1 or tiles_y < 1:
+            self.report({'ERROR'}, "Tiles X and Y must be at least 1")
+            return {'CANCELLED'}
+
+        # Get mesh from action's mesh_prop, or fall back to object's mesh
+        if action.mesh_prop != '':
+            mesh = bpy.data.meshes.get(action.mesh_prop)
+            if mesh is None:
+                self.report({'ERROR'}, f"Mesh '{action.mesh_prop}' not found")
+                return {'CANCELLED'}
+            mesh_name = action.mesh_prop
+        else:
+            mesh = obj.data
+            mesh_name = obj.data.name
+
+        if not mesh.uv_layers:
+            self.report({'ERROR'}, f"Mesh '{mesh_name}' has no UV layers")
+            return {'CANCELLED'}
+
+        uv_layer = mesh.uv_layers.active.data
+
+        # Calculate target tile size
+        tile_width = 1.0 / tiles_x
+        tile_height = 1.0 / tiles_y
+
+        # Find current UV bounding box
+        min_u = min_v = float('inf')
+        max_u = max_v = float('-inf')
+
+        for loop_uv in uv_layer:
+            min_u = min(min_u, loop_uv.uv[0])
+            max_u = max(max_u, loop_uv.uv[0])
+            min_v = min(min_v, loop_uv.uv[1])
+            max_v = max(max_v, loop_uv.uv[1])
+
+        current_width = max_u - min_u
+        current_height = max_v - min_v
+
+        if current_width == 0 or current_height == 0:
+            self.report({'ERROR'}, f"UV map on '{mesh_name}' has zero dimensions")
+            return {'CANCELLED'}
+
+        # Scale and position UVs to fit in first tile (0,0) to (tile_width, tile_height)
+        for loop_uv in uv_layer:
+            # Normalize to 0-1 range
+            norm_u = (loop_uv.uv[0] - min_u) / current_width
+            norm_v = (loop_uv.uv[1] - min_v) / current_height
+            # Scale to tile size
+            loop_uv.uv[0] = norm_u * tile_width
+            loop_uv.uv[1] = norm_v * tile_height
+
+        mesh.update()
+
+        self.report({'INFO'}, f"UVs sliced to {tiles_x}x{tiles_y} grid (tile size: {tile_width:.3f} x {tile_height:.3f})")
+        return {'FINISHED'}
+
+
 class ARM_PT_TilesheetPanel(bpy.types.Panel):
     bl_label = "Armory Tilesheet"
     bl_space_type = "PROPERTIES"
@@ -255,6 +350,8 @@ class ARM_PT_TilesheetPanel(bpy.types.Panel):
             row.use_property_split = False
             row.prop(adat, "tilesx_prop")
             row.prop(adat, "tilesy_prop")
+            row = box.row()
+            row.operator("arm_tilesheet.slice", text="Slice")
             # Frame range
             row = box.row()
             row.use_property_split = False
@@ -289,6 +386,7 @@ __REG_CLASSES = (
     ArmTilesheetActionListMoveItem,
     ArmTilesheetEventListNewItem,
     ArmTilesheetEventListDeleteItem,
+    ArmTilesheetSlice,
     ARM_PT_TilesheetPanel,
 )
 __reg_classes, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)
