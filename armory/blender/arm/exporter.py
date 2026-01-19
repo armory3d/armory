@@ -887,6 +887,8 @@ class ArmoryExporter:
             if bobject.arm_tilesheet_enabled:
                 out_object['tilesheet'] = {
                     'start_action': bobject.arm_tilesheet_default_action,
+                    'flipx': bobject.arm_tilesheet_flipx,
+                    'flipy': bobject.arm_tilesheet_flipy,
                     'actions': []
                 }
                 for action in bobject.arm_tilesheet_actionlist:

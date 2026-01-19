@@ -223,6 +223,10 @@ class ARM_PT_TilesheetPanel(bpy.types.Panel):
         # Default action dropdown
         layout.prop_search(obj, "arm_tilesheet_default_action", obj, "arm_tilesheet_actionlist", text="Default Action")
 
+        row = layout.row()
+        row.prop(obj, "arm_tilesheet_flipx")
+        row.prop(obj, "arm_tilesheet_flipy")
+
         # Actions list
         layout.separator()
         layout.label(text="Actions")
@@ -247,11 +251,13 @@ class ARM_PT_TilesheetPanel(bpy.types.Panel):
             adat = obj.arm_tilesheet_actionlist[obj.arm_tilesheet_actionlist_index]
             box = layout.box()
             # Grid dimensions
-            row = box.row(align=True)
+            row = box.row()
+            row.use_property_split = False
             row.prop(adat, "tilesx_prop")
             row.prop(adat, "tilesy_prop")
             # Frame range
-            row = box.row(align=True)
+            row = box.row()
+            row.use_property_split = False
             row.prop(adat, "start_prop")
             row.prop(adat, "end_prop")
             # Framerate and loop
@@ -301,6 +307,16 @@ def register():
         name="Default Action",
         description="Default action to play on start",
         default="")
+
+    bpy.types.Object.arm_tilesheet_flipx = BoolProperty(
+        name="Flip X",
+        description="Flip the tilesheet horizontally",
+        default=False)
+
+    bpy.types.Object.arm_tilesheet_flipy = BoolProperty(
+        name="Flip Y",
+        description="Flip the tilesheet vertically",
+        default=False)
 
     bpy.types.Object.arm_tilesheet_actionlist = CollectionProperty(type=ArmTilesheetActionListItem)
     bpy.types.Object.arm_tilesheet_actionlist_index = IntProperty(

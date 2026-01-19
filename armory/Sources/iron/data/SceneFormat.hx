@@ -407,6 +407,8 @@ typedef TTilesheetData = {
 #end
 	public var actions: Array<TTilesheetAction>;
 	@:optional public var start_action: String;
+	@:optional public var flipx: Bool;
+	@:optional public var flipy: Bool;
 }
 
 #if js

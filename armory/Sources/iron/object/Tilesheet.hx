@@ -35,8 +35,11 @@ class Tilesheet {
 			pendingAction = actions[0].name;
 		}
 
+		if (tilesheetData.flipx != null) flipX = tilesheetData.flipx;
+		if (tilesheetData.flipy != null) flipY = tilesheetData.flipy;
+
 		// If no actions need mesh swapping, ready immediately
-		var hasMeshActions = false;
+		var hasMeshActions: Bool = false;
 		for (a in actions) {
 			if (a.mesh != null && a.mesh != "") {
 				hasMeshActions = true;
