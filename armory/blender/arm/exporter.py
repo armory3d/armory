@@ -62,10 +62,6 @@ class NodeType(Enum):
         if bobject.type == "MESH":
             if bobject.data.polygons or bobject.data.edges or bobject.data.vertices:
                 return cls.MESH
-        elif bobject.type in ('FONT', 'META', 'CURVE'):
-            mesh = bobject.to_mesh()
-            if mesh is not None:
-                has_geometry = mesh.polygons or mesh.edges or mesh.vertices
         elif bobject.type in ('FONT', 'META', 'CURVE'): # FIXME: curves with meshes shouldn't be used in modifiers for now.
             if bobject.type == 'CURVE':
                 mesh = bobject.to_mesh()
