@@ -18,3 +18,4 @@ if not arm.is_reload(__name__):
     is_export = False
     is_play = False
     is_publish = False
+    is_n64 = False

@@ -64,7 +64,6 @@ class Scene {
 	#end
 	public var empties: Array<Object>;
 	public var animations: Array<Animation>;
-	public var tilesheets: Array<Tilesheet>;
 	#if arm_skin
 	public var armatures: Array<Armature>;
 	#end
@@ -104,7 +103,6 @@ class Scene {
 		#end
 		empties = [];
 		animations = [];
-		tilesheets = [];
 		#if arm_skin
 		armatures = [];
 		#end
@@ -255,10 +253,6 @@ class Scene {
 	public function renderFrame(g: kha.graphics4.Graphics) {
 		if (!ready || RenderPath.active == null) return;
 		framePassed = true;
-
-		for (tilesheet in tilesheets) {
-			tilesheet.update();
-		}
 
 		// Render probes
 		#if rp_probes
@@ -817,9 +811,9 @@ class Scene {
 				for (ref in o.particle_refs) cast(object, MeshObject).setupParticleSystem(sceneName, ref);
 			}
 			#end
-			// Attach tilesheet
-			if (o.tilesheet_ref != null) {
-				cast(object, MeshObject).setupTilesheet(sceneName, o.tilesheet_ref, o.tilesheet_action_ref);
+			// Attach tilesheet from embedded object data
+			if (o.tilesheet != null) {
+				cast(object, MeshObject).setupTilesheet(o.tilesheet);
 			}
 
 

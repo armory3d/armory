@@ -1,0 +1,396 @@
+#include <libdragon.h>
+#include <t3d/t3d.h>
+#include <t3d/t3dmodel.h>
+#include <string.h>
+
+#include "../types.h"
+#include "../engine.h"
+#include "../renderer.h"
+#include "scenes.h"
+
+#if ENGINE_ENABLE_PHYSICS
+#include "../oimo/physics.h"
+#endif
+
+static ArmScene g_scenes[SCENE_COUNT];
+static SceneId g_current_scene = SCENE_COUNT;
+static SceneId g_pending_scene = SCENE_COUNT;
+
+void scene_init(SceneId id)
+{{
+    if (id >= SCENE_COUNT) return;
+    g_current_scene = id;
+
+    switch (id) {{
+{scene_init_switch_cases}
+		default: break;
+    }}
+	scene_on_ready(id);
+}}
+
+void scene_on_ready(SceneId id)
+{{
+	ArmScene *s = &g_scenes[id];
+
+	for (uint8_t i = 0; i < s->trait_count; i++) {{
+		if (s->traits[i].on_ready) s->traits[i].on_ready(s, s->traits[i].data);
+	}}
+	if (s->cameras) {{
+		for (uint8_t i = 0; i < s->camera_count; i++) {{
+			for (uint8_t t = 0; t < s->cameras[i].trait_count; t++) {{
+				if (s->cameras[i].traits[t].on_ready) s->cameras[i].traits[t].on_ready(&s->cameras[i], s->cameras[i].traits[t].data);
+			}}
+		}}
+	}}
+	if (s->lights) {{
+		for (uint8_t i = 0; i < s->light_count; i++) {{
+			for (uint8_t t = 0; t < s->lights[i].trait_count; t++) {{
+				if (s->lights[i].traits[t].on_ready) s->lights[i].traits[t].on_ready(&s->lights[i], s->lights[i].traits[t].data);
+			}}
+		}}
+	}}
+	if (s->objects) {{
+		for (uint16_t i = 0; i < s->object_count; i++) {{
+			if (s->objects[i].is_removed) continue;
+			for (uint8_t t = 0; t < s->objects[i].trait_count; t++) {{
+				if (s->objects[i].traits[t].on_ready) s->objects[i].traits[t].on_ready(&s->objects[i], s->objects[i].traits[t].data);
+			}}
+		}}
+	}}
+}}
+
+void scene_on_fixed_update(SceneId id, float dt)
+{{
+	ArmScene *s = &g_scenes[id];
+
+	// Scene-level traits
+	for (uint8_t i = 0; i < s->trait_count; i++) {{
+		if (s->traits[i].on_fixed_update) s->traits[i].on_fixed_update(s, dt, s->traits[i].data);
+	}}
+
+	// Cameras (usually 1, direct iteration is fine)
+	if (s->cameras) {{
+		for (uint8_t i = 0; i < s->camera_count; i++) {{
+			if (!(s->cameras[i].lifecycle_flags & ARM_LIFECYCLE_FIXED_UPDATE)) continue;
+			for (uint8_t t = 0; t < s->cameras[i].trait_count; t++) {{
+				if (s->cameras[i].traits[t].on_fixed_update) s->cameras[i].traits[t].on_fixed_update(&s->cameras[i], dt, s->cameras[i].traits[t].data);
+			}}
+		}}
+	}}
+
+	// Lights (usually few, direct iteration is fine)
+	if (s->lights) {{
+		for (uint8_t i = 0; i < s->light_count; i++) {{
+			if (!(s->lights[i].lifecycle_flags & ARM_LIFECYCLE_FIXED_UPDATE)) continue;
+			for (uint8_t t = 0; t < s->lights[i].trait_count; t++) {{
+				if (s->lights[i].traits[t].on_fixed_update) s->lights[i].traits[t].on_fixed_update(&s->lights[i], dt, s->lights[i].traits[t].data);
+			}}
+		}}
+	}}
+
+	// Objects - use active list for O(active) instead of O(total)
+	if (s->active_objects && s->active_trait_count > 0) {{
+		for (uint16_t i = 0; i < s->active_trait_count; i++) {{
+			ArmObject *obj = &s->objects[s->active_objects[i]];
+			if (obj->is_removed || !(obj->lifecycle_flags & ARM_LIFECYCLE_FIXED_UPDATE)) continue;
+			for (uint8_t t = 0; t < obj->trait_count; t++) {{
+				if (obj->traits[t].on_fixed_update) obj->traits[t].on_fixed_update(obj, dt, obj->traits[t].data);
+			}}
+		}}
+	}}
+}}
+
+void scene_sync_physics(SceneId id)
+{{
+#if ENGINE_ENABLE_PHYSICS
+	ArmScene *s = &g_scenes[id];
+	if (s->objects) {{
+		for (uint16_t i = 0; i < s->object_count; i++) {{
+			if (s->objects[i].is_removed) continue;
+			physics_sync_object(&s->objects[i]);
+		}}
+	}}
+#else
+	(void)id;
+#endif
+}}
+
+void scene_on_update(SceneId id, float dt)
+{{
+	ArmScene *s = &g_scenes[id];
+
+	// Scene-level traits
+	for (uint8_t i = 0; i < s->trait_count; i++) {{
+		if (s->traits[i].on_update) s->traits[i].on_update(s, dt, s->traits[i].data);
+	}}
+
+	// Cameras
+	if (s->cameras) {{
+		for (uint8_t i = 0; i < s->camera_count; i++) {{
+			if (!(s->cameras[i].lifecycle_flags & ARM_LIFECYCLE_UPDATE)) continue;
+			for (uint8_t t = 0; t < s->cameras[i].trait_count; t++) {{
+				if (s->cameras[i].traits[t].on_update) s->cameras[i].traits[t].on_update(&s->cameras[i], dt, s->cameras[i].traits[t].data);
+			}}
+		}}
+	}}
+
+	// Lights
+	if (s->lights) {{
+		for (uint8_t i = 0; i < s->light_count; i++) {{
+			if (!(s->lights[i].lifecycle_flags & ARM_LIFECYCLE_UPDATE)) continue;
+			for (uint8_t t = 0; t < s->lights[i].trait_count; t++) {{
+				if (s->lights[i].traits[t].on_update) s->lights[i].traits[t].on_update(&s->lights[i], dt, s->lights[i].traits[t].data);
+			}}
+		}}
+	}}
+
+	// Objects - use active list
+	if (s->active_objects && s->active_trait_count > 0) {{
+		for (uint16_t i = 0; i < s->active_trait_count; i++) {{
+			ArmObject *obj = &s->objects[s->active_objects[i]];
+			if (obj->is_removed || !(obj->lifecycle_flags & ARM_LIFECYCLE_UPDATE)) continue;
+			for (uint8_t t = 0; t < obj->trait_count; t++) {{
+				if (obj->traits[t].on_update) obj->traits[t].on_update(obj, dt, obj->traits[t].data);
+			}}
+		}}
+	}}
+}}
+
+void scene_on_late_update(SceneId id, float dt)
+{{
+	ArmScene *s = &g_scenes[id];
+
+	// Scene-level traits
+	for (uint8_t i = 0; i < s->trait_count; i++) {{
+		if (s->traits[i].on_late_update) s->traits[i].on_late_update(s, dt, s->traits[i].data);
+	}}
+
+	// Cameras
+	if (s->cameras) {{
+		for (uint8_t i = 0; i < s->camera_count; i++) {{
+			if (!(s->cameras[i].lifecycle_flags & ARM_LIFECYCLE_LATE_UPDATE)) continue;
+			for (uint8_t t = 0; t < s->cameras[i].trait_count; t++) {{
+				if (s->cameras[i].traits[t].on_late_update) s->cameras[i].traits[t].on_late_update(&s->cameras[i], dt, s->cameras[i].traits[t].data);
+			}}
+		}}
+	}}
+
+	// Lights
+	if (s->lights) {{
+		for (uint8_t i = 0; i < s->light_count; i++) {{
+			if (!(s->lights[i].lifecycle_flags & ARM_LIFECYCLE_LATE_UPDATE)) continue;
+			for (uint8_t t = 0; t < s->lights[i].trait_count; t++) {{
+				if (s->lights[i].traits[t].on_late_update) s->lights[i].traits[t].on_late_update(&s->lights[i], dt, s->lights[i].traits[t].data);
+			}}
+		}}
+	}}
+
+	// Objects - use active list
+	if (s->active_objects && s->active_trait_count > 0) {{
+		for (uint16_t i = 0; i < s->active_trait_count; i++) {{
+			ArmObject *obj = &s->objects[s->active_objects[i]];
+			if (obj->is_removed || !(obj->lifecycle_flags & ARM_LIFECYCLE_LATE_UPDATE)) continue;
+			for (uint8_t t = 0; t < obj->trait_count; t++) {{
+				if (obj->traits[t].on_late_update) obj->traits[t].on_late_update(obj, dt, obj->traits[t].data);
+			}}
+		}}
+	}}
+}}
+
+void scene_on_remove(SceneId id)
+{{
+	ArmScene *s = &g_scenes[id];
+
+	for (uint8_t i = 0; i < s->trait_count; i++) {{
+		if (s->traits[i].on_remove) s->traits[i].on_remove(s, s->traits[i].data);
+	}}
+	if (s->cameras) {{
+		for (uint8_t i = 0; i < s->camera_count; i++) {{
+			for (uint8_t t = 0; t < s->cameras[i].trait_count; t++) {{
+				if (s->cameras[i].traits[t].on_remove) s->cameras[i].traits[t].on_remove(&s->cameras[i], s->cameras[i].traits[t].data);
+			}}
+		}}
+	}}
+	if (s->lights) {{
+		for (uint8_t i = 0; i < s->light_count; i++) {{
+			for (uint8_t t = 0; t < s->lights[i].trait_count; t++) {{
+				if (s->lights[i].traits[t].on_remove) s->lights[i].traits[t].on_remove(&s->lights[i], s->lights[i].traits[t].data);
+			}}
+		}}
+	}}
+	if (s->objects) {{
+		for (uint16_t i = 0; i < s->object_count; i++) {{
+			for (uint8_t t = 0; t < s->objects[i].trait_count; t++) {{
+				if (s->objects[i].traits[t].on_remove) s->objects[i].traits[t].on_remove(&s->objects[i], s->objects[i].traits[t].data);
+			}}
+		}}
+	}}
+}}
+
+void scene_clear(SceneId id)
+{{
+    if (id >= SCENE_COUNT) return;
+
+    ArmScene *s = &g_scenes[id];
+    scene_on_remove(id);
+
+    // Free static display list
+    renderer_free_static_dpl(s);
+
+    // Free object resources
+    if (s->objects != NULL) {{
+        for (uint16_t i = 0; i < s->object_count; i++) {{
+#if ENGINE_ENABLE_PHYSICS
+            if (s->objects[i].rigid_body) physics_remove_body(&s->objects[i]);
+#endif
+            if (s->objects[i].model_mat) {{ free_uncached(s->objects[i].model_mat); s->objects[i].model_mat = NULL; }}
+            // Free trait data (malloc'd) before freeing traits array
+            if (s->objects[i].traits) {{
+                for (uint8_t t = 0; t < s->objects[i].trait_count; t++) {{
+                    if (s->objects[i].traits[t].data) {{ free(s->objects[i].traits[t].data); s->objects[i].traits[t].data = NULL; }}
+                }}
+                free(s->objects[i].traits);
+                s->objects[i].traits = NULL;
+            }}
+            s->objects[i].dpl = NULL;
+            s->objects[i].trait_count = 0;
+        }}
+    }}
+
+    // Free camera trait data
+    if (s->cameras != NULL) {{
+        for (uint8_t i = 0; i < s->camera_count; i++) {{
+            if (s->cameras[i].traits) {{
+                for (uint8_t t = 0; t < s->cameras[i].trait_count; t++) {{
+                    if (s->cameras[i].traits[t].data) {{ free(s->cameras[i].traits[t].data); s->cameras[i].traits[t].data = NULL; }}
+                }}
+                free(s->cameras[i].traits);
+                s->cameras[i].traits = NULL;
+            }}
+            s->cameras[i].trait_count = 0;
+        }}
+    }}
+
+    // Free light trait data
+    if (s->lights != NULL) {{
+        for (uint8_t i = 0; i < s->light_count; i++) {{
+            if (s->lights[i].traits) {{
+                for (uint8_t t = 0; t < s->lights[i].trait_count; t++) {{
+                    if (s->lights[i].traits[t].data) {{ free(s->lights[i].traits[t].data); s->lights[i].traits[t].data = NULL; }}
+                }}
+                free(s->lights[i].traits);
+                s->lights[i].traits = NULL;
+            }}
+            s->lights[i].trait_count = 0;
+        }}
+    }}
+
+    // Free scene-level trait data (note: scene_traits array itself is static, don't free it)
+    if (s->traits != NULL) {{
+        for (uint8_t i = 0; i < s->trait_count; i++) {{
+            if (s->traits[i].data) {{ free(s->traits[i].data); s->traits[i].data = NULL; }}
+        }}
+        // Don't free s->traits - it's a static array
+        s->traits = NULL;
+    }}
+
+	s->world.clear_color[0] = s->world.clear_color[1] = s->world.clear_color[2] = 0;
+	s->world.clear_color[3] = 0xFF;
+	s->world.ambient_color[0] = s->world.ambient_color[1] = s->world.ambient_color[2] = 0;
+	s->world.ambient_color[3] = 0xFF;
+	s->cameras = NULL;
+	s->camera_count = 0;
+	s->active_camera_id = 0;
+	s->lights = NULL;
+	s->light_count = 0;
+	s->objects = NULL;
+	s->object_count = 0;
+	s->active_count = 0;
+	s->free_list = NULL;
+	s->free_count = 0;
+	s->free_capacity = 0;
+	s->active_objects = NULL;
+	s->active_trait_count = 0;
+    s->trait_count = 0;
+    s->lifecycle_flags = 0;
+}}
+
+ArmScene *scene_get(SceneId id)
+{{
+    if (id >= SCENE_COUNT) return NULL;
+    return &g_scenes[id];
+}}
+
+// Scene name to ID lookup table
+static const struct {{ const char *name; SceneId id; }} g_scene_names[] = {{
+{scene_name_entries}
+}};
+
+SceneId scene_get_id_by_name(const char *name)
+{{
+    if (name == NULL) return SCENE_COUNT;
+    for (int i = 0; i < {scene_count}; i++) {{
+        if (strcmp(g_scene_names[i].name, name) == 0) {{
+            return g_scene_names[i].id;
+        }}
+    }}
+    return SCENE_COUNT; // Not found
+}}
+
+SceneId scene_get_current_id(void) {{ return g_current_scene; }}
+SceneId scene_get_pending(void) {{ return g_pending_scene; }}
+void scene_switch_to(SceneId id) {{ g_pending_scene = id; }}
+void scene_clear_pending(void) {{ g_pending_scene = SCENE_COUNT; }}
+
+// =============================================================================
+// Object Pool Management
+// =============================================================================
+
+void scene_recycle_object(SceneId id, ArmObject *obj)
+{{
+    if (id >= SCENE_COUNT) return;
+    ArmScene *s = &g_scenes[id];
+
+    if (!obj || !s->free_list) return;
+
+    // Find object index in the array
+    ptrdiff_t idx = obj - s->objects;
+    if (idx < 0 || idx >= s->object_count) return;
+
+    // Add to free list if there's room
+    if (s->free_count < s->free_capacity) {{
+        s->free_list[s->free_count++] = (uint16_t)idx;
+        s->active_count--;
+    }}
+}}
+
+ArmObject *scene_alloc_object(SceneId id)
+{{
+    if (id >= SCENE_COUNT) return NULL;
+    ArmScene *s = &g_scenes[id];
+
+    if (!s->free_list || s->free_count == 0) {{
+        debugf("Scene: object pool exhausted\\n");
+        return NULL;
+    }}
+
+    // Pop from free list (LIFO for cache locality)
+    uint16_t idx = s->free_list[--s->free_count];
+    ArmObject *obj = &s->objects[idx];
+
+    // Reset object to clean state
+    memset(obj, 0, sizeof(ArmObject));
+    obj->visible = true;
+    obj->transform.scale = (T3DVec3){{{{1.0f, 1.0f, 1.0f}}}};
+    obj->transform.rot = (T3DQuat){{{{0.0f, 0.0f, 0.0f, 1.0f}}}};
+    obj->transform.dirty = TRANSFORM_DIRTY_FRAMES;
+
+    s->active_count++;
+    return obj;
+}}
+
+uint16_t scene_get_active_count(SceneId id)
+{{
+    if (id >= SCENE_COUNT) return 0;
+    return g_scenes[id].active_count;
+}}

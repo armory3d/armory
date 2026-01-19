@@ -62,6 +62,12 @@ def update_gapi_html5(self, context):
     bpy.data.worlds['Arm'].arm_recompile = True
     assets.invalidate_compiled_data(self, context)
 
+def update_gapi_n64(self, context):
+    if os.path.isdir(arm.utils.get_fp_build() + '/n64-build'):
+        shutil.rmtree(arm.utils.get_fp_build() + '/n64-build', onerror=remove_readonly)
+    bpy.data.worlds['Arm'].arm_recompile = True
+    assets.invalidate_compiled_data(self, context)
+
 class ArmExporterListItem(bpy.types.PropertyGroup):
     name: StringProperty(
            name="Name",
@@ -89,6 +95,7 @@ class ArmExporterListItem(bpy.types.PropertyGroup):
                  ('ios-hl', 'iOS (C)', 'ios-hl'),
                  ('android-hl', 'Android (C)', 'android-hl'),
                  ('node', 'Node (JS)', 'node'),
+                 ('n64', 'Nintendo 64', 'n64'),
                  ('custom', 'Custom', 'custom'),],
         name="Target", default='html5', description='Build platform')
 
@@ -132,6 +139,9 @@ class ArmExporterListItem(bpy.types.PropertyGroup):
         items = [('webgl', 'Auto', 'webgl'),
                  ('webgl', 'WebGL2', 'webgl')],
         name="Graphics API", default='webgl', description='Based on currently selected target', update=update_gapi_html5)
+    arm_gapi_n64: EnumProperty(
+        items = [('tiny3d', 'Tiny3D', 'tiny3d')],
+        name="Graphics API", default='tiny3d', description='Based on currently selected target', update=update_gapi_n64)
 
 class ArmExporterAndroidPermissionListItem(bpy.types.PropertyGroup):
     arm_android_permissions: EnumProperty(

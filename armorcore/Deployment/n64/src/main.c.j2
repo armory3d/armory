@@ -1,0 +1,120 @@
+#include <libdragon.h>
+#include <t3d/t3d.h>
+#include <t3d/t3dmath.h>
+
+#include "types.h"
+#include "engine.h"
+#include "renderer.h"
+#include "data/scenes.h"
+#include "data/models.h"
+#include "events/trait_events.h"
+#include "iron/system/input.h"
+#if ENGINE_ENABLE_PHYSICS
+#include "oimo/physics.h"
+#if ENGINE_ENABLE_PHYSICS_DEBUG
+#include "oimo/debug/physics_debug.h"
+#endif
+#endif
+#if ENGINE_ENABLE_UI
+#include "data/fonts.h"
+#include "koui/koui.h"
+#endif
+
+#define FIXED_TIMESTEP ({fixed_timestep}f)
+
+// Build static display list after this many frames (for triple-buffering)
+#define STATIC_DPL_BUILD_FRAME (FB_COUNT + 1)
+
+static float get_time_s(void)
+{{
+    return (float)((double)get_ticks_ms() / 1000.0);
+}}
+
+int main(void)
+{{
+    engine_init();
+    trait_events_init();
+#if ENGINE_ENABLE_PHYSICS && ENGINE_ENABLE_PHYSICS_DEBUG
+    physics_debug_init();
+    physics_debug_set_mode({physics_debug_mode});
+    physics_debug_enable(true);
+#endif
+#if ENGINE_ENABLE_UI
+    fonts_init();
+    koui_init();
+#endif
+
+    T3DViewport viewport = t3d_viewport_create_buffered(FB_COUNT);
+
+    SceneId current_scene = {initial_scene_id};
+    scene_init(current_scene);
+
+    float last_time = get_time_s();
+    float fixed_time = 0.0f;
+    uint8_t frame_count = 0;  // Track frames for static DPL building
+
+    for (;;) {{
+        float now = get_time_s();
+        float dt = now - last_time;
+        last_time = now;
+
+        input_poll();
+        trait_events_dispatch(dt);
+
+        ArmScene *scene = scene_get(current_scene);
+
+        fixed_time += dt;
+        while (fixed_time >= FIXED_TIMESTEP) {{
+#if ENGINE_ENABLE_PHYSICS
+            physics_step(FIXED_TIMESTEP);
+            scene_sync_physics(current_scene);
+#endif
+            scene_on_fixed_update(current_scene, FIXED_TIMESTEP);
+            fixed_time -= FIXED_TIMESTEP;
+        }}
+
+        scene_on_update(current_scene, dt);
+        scene_on_late_update(current_scene, dt);
+
+        SceneId pending = scene_get_pending();
+        if (pending < SCENE_COUNT) {{
+            scene_clear_pending();
+            scene_clear(current_scene);
+#if ENGINE_ENABLE_UI
+            koui_clear();
+#endif
+            trait_events_clear();
+#if ENGINE_ENABLE_PHYSICS
+            physics_reset();
+#endif
+            // Free all models to reclaim memory before loading new scene
+            models_unload_all();
+            fixed_time = 0.0f;
+            frame_count = 0;  // Reset frame counter for new scene
+            current_scene = pending;
+            scene_init(current_scene);
+            scene = scene_get(current_scene);
+        }}
+
+        renderer_begin_frame(&viewport, scene);
+        renderer_draw_scene(&viewport, scene);
+#if ENGINE_ENABLE_UI
+        koui_render();
+#endif
+        renderer_end_frame(&viewport);
+
+        // Build static display list after initial frames (matrices computed for all buffers)
+        if (frame_count == STATIC_DPL_BUILD_FRAME) {{
+            renderer_build_static_dpl(scene);
+        }}
+        if (frame_count <= STATIC_DPL_BUILD_FRAME) {{
+            frame_count++;
+        }}
+    }}
+
+#if ENGINE_ENABLE_UI
+    fonts_shutdown();
+#endif
+    engine_shutdown();
+    return 0;
+}}

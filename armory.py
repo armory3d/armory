@@ -147,6 +147,30 @@ class ArmoryAddonPreferences(AddonPreferences):
         self.skip_update = True
         self.html5_copy_path = bpy.path.reduce_dirs([bpy.path.abspath(self.html5_copy_path)])[0]
 
+    def n64_toolchain_path_update(self, context):
+        if self.skip_update:
+            return
+        self.skip_update = True
+        self.n64_toolchain_path = bpy.path.reduce_dirs([bpy.path.abspath(self.n64_toolchain_path)])[0]
+
+    def msys2_bash_executable_update(self, context):
+        if self.skip_update:
+            return
+        self.skip_update = True
+        self.msys2_bash_executable = bpy.path.reduce_dirs([bpy.path.abspath(self.msys2_bash_executable)])[0]
+
+    def mingw64_path_update(self, context):
+        if self.skip_update:
+            return
+        self.skip_update = True
+        self.mingw64_path = bpy.path.reduce_dirs([bpy.path.abspath(self.mingw64_path)])[0]
+
+    def ares_emulator_executable_update(self, context):
+        if self.skip_update:
+            return
+        self.skip_update = True
+        self.ares_emulator_executable = bpy.path.reduce_dirs([bpy.path.abspath(self.ares_emulator_executable)])[0]
+
     sdk_path: StringProperty(name="SDK Path", subtype="FILE_PATH", update=sdk_path_update, default="")
     update_submodules: BoolProperty(
         name="Update Submodules", default=True, description=(
@@ -286,6 +310,12 @@ class ArmoryAddonPreferences(AddonPreferences):
     link_web_server: StringProperty(name="Url To Web Server", description="Url to the web server that runs the local server", default="http://localhost/", set=set_link_web_server, get=get_link_web_server)
     html5_server_port: IntProperty(name="Web Server Port", description="The port number of the local web server", default=8040, min=1024, max=65535)
     html5_server_log: BoolProperty(name="Enable Http Log", description="Enable logging of http requests to local web server", default=True)
+    # Nintendo 64 Settings
+    n64_toolchain_path: StringProperty(name="N64 Toolchain Path", description="Path to the N64 Toolchain installation directory", default="", subtype="FILE_PATH", update=n64_toolchain_path_update)
+    msys2_bash_executable: StringProperty(name="MSYS2 Bash Executable", description="Path to the MSYS2 Bash executable", default="", subtype="FILE_PATH", update=msys2_bash_executable_update)
+    mingw64_path: StringProperty(name="MinGW64 Path", description="Path to the MinGW64 directory", default="", subtype="FILE_PATH", update=mingw64_path_update)
+    open_n64_rom_directory: BoolProperty(name="Open Nintendo 64 ROM Directory", description="Open the Nintendo 64 ROM directory after successfully build", default=False)
+    ares_emulator_executable: StringProperty(name="Ares Emulator Executable", description="Path to the Ares Emulator executable", default="", subtype="FILE_PATH", update=ares_emulator_executable_update)
 
     # Developer options
     profile_exporter: BoolProperty(
@@ -421,6 +451,19 @@ class ArmoryAddonPreferences(AddonPreferences):
                 box.prop(self, "link_web_server")
                 box.prop(self, "html5_server_port")
                 box.prop(self, "html5_server_log")
+
+                box = box_main.column()
+                box.label(text="Nintendo 64 Settings")
+                box.prop(self, "n64_toolchain_path")
+                box.prop(self, "msys2_bash_executable")
+                box.prop(self, "mingw64_path")
+                box.prop(self, "ares_emulator_executable")
+                box.prop(self, "open_n64_rom_directory")
+                box.label(text="Libraries:")
+                row = box.row(align=True)
+                row.operator("arm_addon.install_libdragon_dependencies", icon="IMPORT")
+                row.operator("arm_addon.build_libdragon", icon="MOD_BUILD")
+                row.operator("arm_addon.build_tiny3d", icon="MOD_BUILD")
 
             elif self.tabs == "debugconsole":
                 box.label(text="Debug Console")
@@ -803,6 +846,157 @@ class ArmAddonHelpButton(bpy.types.Operator):
         return {"FINISHED"}
 
 
+#TODO: refactor common code between the two build buttons
+class ArmAddonInstallLibdragonDependenciesButton(bpy.types.Operator):
+    """Install libdragon dependencies via pacman"""
+    bl_idname = "arm_addon.install_libdragon_dependencies"
+    bl_label = "Install Dependencies"
+    bl_description = "Install libdragon dependencies (base-devel, mingw-w64-x86_64-gcc, mingw-w64-x86_64-make, git)"
+
+    def execute(self, context):
+        sdk_path = get_sdk_path(context)
+        if sdk_path == "":
+            self.report({"ERROR"}, "Configure Armory SDK path first")
+            return {"CANCELLED"}
+
+        prefs = ArmoryAddonPreferences.get_prefs()
+        msys2_exe = prefs.msys2_bash_executable
+        libdragon_path = os.path.abspath(os.path.join(sdk_path, "lib", "libdragon")).replace("\\", "/")
+
+        if not msys2_exe or not os.path.exists(msys2_exe):
+            self.report({'ERROR'}, 'MSYS2 Bash executable not configured in preferences')
+            return {'FINISHED'}
+
+        env = os.environ.copy()
+        env['MSYSTEM'] = 'MINGW64'
+
+        result = subprocess.run(
+            [
+                rf'{msys2_exe}',
+                '--login',
+                '-c',
+                f'pacman -S --needed --noconfirm base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-make git'
+            ],
+            stdout=None,
+            stderr=None,
+            text=True,
+            env=env
+        )
+
+        if result.returncode == 0:
+            self.report({'INFO'}, 'libdragon dependencies installed successfully.')
+        else:
+            self.report({'WARNING'}, 'libdragon dependencies installation completed with errors. Check console for details.')
+
+        return {'FINISHED'}
+
+
+class ArmAddonBuildLibdragonButton(bpy.types.Operator):
+    """Build libdragon for Nintendo 64"""
+    bl_idname = "arm_addon.build_libdragon"
+    bl_label = "Build libdragon"
+    bl_description = "Build libdragon for Nintendo 64 development"
+
+    def execute(self, context):
+        sdk_path = get_sdk_path(context)
+        if sdk_path == "":
+            self.report({"ERROR"}, "Configure Armory SDK path first")
+            return {"CANCELLED"}
+
+        preferences = context.preferences
+        addon_prefs = preferences.addons["armory"].preferences
+
+        if addon_prefs.msys2_bash_executable == "":
+            self.report({"ERROR"}, "Configure MSYS2 Bash executable path first")
+            return {"CANCELLED"}
+
+        libdragon_path = os.path.abspath(os.path.join(sdk_path, "lib", "libdragon")).replace("\\", "/")
+        msys2_executable = addon_prefs.msys2_bash_executable
+        n64_toolchain_path = os.path.abspath(addon_prefs.n64_toolchain_path).replace("\\", "/")
+        mingw64_path = os.path.abspath(addon_prefs.mingw64_path).replace("\\", "/")
+
+        print('Building libdragon for Nintendo 64, check console for details.')
+
+        # Build environment variables
+        env = os.environ.copy()
+        env['MSYSTEM'] = 'MINGW64'
+        env['N64_INST'] = n64_toolchain_path
+        env['PATH'] = f"{n64_toolchain_path}:{mingw64_path}:{env.get('PATH', '')}"
+
+        result = subprocess.run(
+            [
+                rf'{msys2_executable}',
+                '--login',
+                '-c',
+                f'cd "{libdragon_path}" && ./build.sh'
+            ],
+            stdout=None,
+            stderr=None,
+            text=True,
+            env=env
+        )
+
+        if result.returncode != 0:
+            self.report({"ERROR"}, "Failed building libdragon, check console for details.")
+        else:
+            self.report({'INFO'}, 'libdragon build completed.')
+
+        return {"FINISHED"}
+
+
+class ArmAddonBuildTiny3dButton(bpy.types.Operator):
+    """Build Tiny3D for Nintendo 64"""
+    bl_idname = "arm_addon.build_tiny3d"
+    bl_label = "Build Tiny3D"
+    bl_description = "Build Tiny3D rendering library for Nintendo 64 development"
+
+    def execute(self, context):
+        sdk_path = get_sdk_path(context)
+        if sdk_path == "":
+            self.report({"ERROR"}, "Configure Armory SDK path first")
+            return {"CANCELLED"}
+
+        preferences = context.preferences
+        addon_prefs = preferences.addons["armory"].preferences
+
+        if addon_prefs.msys2_bash_executable == "":
+            self.report({"ERROR"}, "Configure MSYS2 Bash executable path first")
+            return {"CANCELLED"}
+
+        tiny3d_path = os.path.abspath(os.path.join(sdk_path, "lib", "tiny3d")).replace("\\", "/")
+        msys2_executable = addon_prefs.msys2_bash_executable
+        n64_toolchain_path = os.path.abspath(addon_prefs.n64_toolchain_path).replace("\\", "/")
+        mingw64_path = os.path.abspath(addon_prefs.mingw64_path).replace("\\", "/")
+
+        print('Building Tiny3D for Nintendo 64, check console for details.')
+
+        # Build environment variables
+        env = os.environ.copy()
+        env['MSYSTEM'] = 'MINGW64'
+        env['N64_INST'] = n64_toolchain_path
+        env['PATH'] = f"{n64_toolchain_path}:{mingw64_path}:{env.get('PATH', '')}"
+
+        result = subprocess.run(
+            [
+                rf'{msys2_executable}',
+                '--login',
+                '-c',
+                f'cd "{tiny3d_path}" && ./build.sh'
+            ],
+            stdout=None,
+            stderr=None,
+            text=True,
+            env=env
+        )
+
+        if result.returncode != 0:
+            self.report({"ERROR"}, "Failed building Tiny3D, check console for details.")
+        else:
+            self.report({'INFO'}, 'Tiny3D build completed.')
+
+        return {"FINISHED"}
+
+
 def update_armory_py(sdk_path: str, force_relink=False):
     """Ensure that armory.py is up to date by copying it from the
     current SDK path (if 'use_armory_py_symlink' is true, a symlink is
@@ -917,6 +1111,9 @@ def register():
     bpy.utils.register_class(ArmAddonUpdateButton)
     bpy.utils.register_class(ArmAddonRestoreButton)
     bpy.utils.register_class(ArmAddonHelpButton)
+    bpy.utils.register_class(ArmAddonInstallLibdragonDependenciesButton)
+    bpy.utils.register_class(ArmAddonBuildLibdragonButton)
+    bpy.utils.register_class(ArmAddonBuildTiny3dButton)
     bpy.app.handlers.load_post.append(on_load_post)
 
     # Hack to avoid _RestrictContext
@@ -931,6 +1128,9 @@ def unregister():
     bpy.utils.unregister_class(ArmAddonUpdateButton)
     bpy.utils.unregister_class(ArmAddonRestoreButton)
     bpy.utils.unregister_class(ArmAddonHelpButton)
+    bpy.utils.unregister_class(ArmAddonInstallLibdragonDependenciesButton)
+    bpy.utils.unregister_class(ArmAddonBuildLibdragonButton)
+    bpy.utils.unregister_class(ArmAddonBuildTiny3dButton)
     bpy.app.handlers.load_post.remove(on_load_post)
 
 

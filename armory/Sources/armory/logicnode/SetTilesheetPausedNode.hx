@@ -12,9 +12,9 @@ class SetTilesheetPausedNode extends LogicNode {
 		var object: MeshObject = inputs[1].get();
 		var paused: Bool = inputs[2].get();
 
-		if (object == null) return;
+		if (object == null || object.tilesheet == null) return;
 
-		paused ? object.activeTilesheet.pause() : object.activeTilesheet.resume();
+		paused ? object.tilesheet.pause() : object.tilesheet.resume();
 
 		runOutput(0);
 	}

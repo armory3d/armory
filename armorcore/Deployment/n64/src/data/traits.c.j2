@@ -1,0 +1,24 @@
+#include "traits.h"
+#include "scenes.h"
+#include "../types.h"
+#include "../engine.h"
+#include "../utils.h"
+#include "../events/trait_events.h"
+#include "../iron/object/transform.h"
+#include "../iron/object/object.h"
+#include "../iron/system/input.h"
+#include <math.h>
+
+#if ENGINE_ENABLE_PHYSICS
+#include "../events/physics_events.h"
+#include "../oimo/physics.h"
+#endif
+
+#if ENGINE_ENABLE_UI
+#include "../koui/koui.h"
+#endif
+
+// Global signals (shared across traits)
+{global_signals}
+
+{trait_implementations}

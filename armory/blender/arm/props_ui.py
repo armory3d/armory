@@ -12,6 +12,7 @@ from arm.lightmapper.panels import scene
 import arm.api
 import arm.assets as assets
 from arm.exporter import ArmoryExporter
+from arm.n64.exporter import N64Exporter
 import arm.log as log
 import arm.logicnode.replacement
 import arm.make as make
@@ -73,16 +74,6 @@ class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
 
         if obj.type == 'MESH':
             layout.prop(obj, 'arm_instanced')
-            wrd = bpy.data.worlds['Arm']
-            layout.prop_search(obj, "arm_tilesheet", wrd, "arm_tilesheetlist", text="Tilesheet")
-            if obj.arm_tilesheet != '':
-                selected_ts = None
-                for ts in wrd.arm_tilesheetlist:
-                    if ts.name == obj.arm_tilesheet:
-                        selected_ts = ts
-                        break
-                layout.prop_search(obj, "arm_tilesheet_action", selected_ts, "arm_tilesheetactionlist", text="Action")
-                layout.prop(obj, "arm_use_custom_tilesheet_node")
 
         # Properties list
         arm.props_properties.draw_properties(layout, obj)
@@ -1259,6 +1250,11 @@ class ArmoryPlayButton(bpy.types.Operator):
 
         arm.utils.check_default_props()
 
+        wrd = bpy.data.worlds['Arm']
+        if wrd.arm_runtime == 'Ares':
+            state.is_n64 = True
+            if not wrd.arm_cache_build:
+                bpy.ops.arm.clean_project()
         assets.invalidate_enabled = False
         if wrd.arm_clear_on_compile:
             os.system("cls")
@@ -1319,11 +1315,16 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
             if wrd.arm_rplist[i].name == item.arm_project_rp:
                 wrd.arm_rplist_index = i
                 break
+
         assets.invalidate_shader_cache(None, None)
         assets.invalidate_enabled = False
         if wrd.arm_clear_on_compile:
             os.system("cls")
-        make.build(item.arm_project_target, is_export=True)
+        if item.arm_project_target == 'n64':
+            state.is_n64 = True
+            if not wrd.arm_cache_build:
+                bpy.ops.arm.clean_project()
+        make.build('custom' if item.arm_project_target == 'n64' else item.arm_project_target, is_export=True)
         make.compile()
         wrd.arm_rplist_index = rplist_index
         assets.invalidate_enabled = True
@@ -1370,8 +1371,12 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
         make.clean()
         assets.invalidate_enabled = False
         if wrd.arm_clear_on_compile:
-            os.system("cls")
-        make.build(item.arm_project_target, is_publish=True, is_export=True)
+                os.system("cls")
+        if item.arm_project_target == 'n64':
+            state.is_n64 = True
+            if not wrd.arm_cache_build:
+                bpy.ops.arm.clean_project()
+        make.build('custom' if item.arm_project_target == 'n64' else item.arm_project_target, is_publish=True, is_export=True)
         make.compile()
         wrd.arm_rplist_index = rplist_index
         assets.invalidate_enabled = True
@@ -2311,64 +2316,6 @@ class ARM_PT_TerrainPanel(bpy.types.Panel):
         layout.operator('arm.generate_terrain')
         layout.prop(scn, 'arm_terrain_object')
 
-class ARM_PT_TilesheetPanel(bpy.types.Panel):
-    bl_label = "Armory Tilesheet"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "material"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        layout = self.layout
-        layout.use_property_split = True
-        layout.use_property_decorate = False
-        wrd = bpy.data.worlds['Arm']
-
-        rows = 2
-        if len(wrd.arm_tilesheetlist) > 1:
-            rows = 4
-        row = layout.row()
-        row.template_list("ARM_UL_TilesheetList", "The_List", wrd, "arm_tilesheetlist", wrd, "arm_tilesheetlist_index", rows=rows)
-        col = row.column(align=True)
-        col.operator("arm_tilesheetlist.new_item", icon='ADD', text="")
-        col.operator("arm_tilesheetlist.delete_item", icon='REMOVE', text="")
-
-        if len(wrd.arm_tilesheetlist) > 1:
-            col.separator()
-            op = col.operator("arm_tilesheetlist.move_item", icon='TRIA_UP', text="")
-            op.direction = 'UP'
-            op = col.operator("arm_tilesheetlist.move_item", icon='TRIA_DOWN', text="")
-            op.direction = 'DOWN'
-
-        if wrd.arm_tilesheetlist_index >= 0 and len(wrd.arm_tilesheetlist) > 0:
-            dat = wrd.arm_tilesheetlist[wrd.arm_tilesheetlist_index]
-            layout.prop(dat, "tilesx_prop")
-            layout.prop(dat, "tilesy_prop")
-            layout.prop(dat, "framerate_prop")
-
-            layout.label(text='Actions')
-            rows = 2
-            if len(dat.arm_tilesheetactionlist) > 1:
-                rows = 4
-            row = layout.row()
-            row.template_list("ARM_UL_TilesheetList", "The_List", dat, "arm_tilesheetactionlist", dat, "arm_tilesheetactionlist_index", rows=rows)
-            col = row.column(align=True)
-            col.operator("arm_tilesheetactionlist.new_item", icon='ADD', text="")
-            col.operator("arm_tilesheetactionlist.delete_item", icon='REMOVE', text="")
-
-            if len(dat.arm_tilesheetactionlist) > 1:
-                col.separator()
-                op = col.operator("arm_tilesheetactionlist.move_item", icon='TRIA_UP', text="")
-                op.direction = 'UP'
-                op = col.operator("arm_tilesheetactionlist.move_item", icon='TRIA_DOWN', text="")
-                op.direction = 'DOWN'
-
-            if dat.arm_tilesheetactionlist_index >= 0 and len(dat.arm_tilesheetactionlist) > 0:
-                adat = dat.arm_tilesheetactionlist[dat.arm_tilesheetactionlist_index]
-                layout.prop(adat, "start_prop")
-                layout.prop(adat, "end_prop")
-                layout.prop(adat, "loop_prop")
-
 class ArmPrintTraitsButton(bpy.types.Operator):
     bl_idname = 'arm.print_traits'
     bl_label = 'Print All Traits'
@@ -2934,7 +2881,6 @@ __REG_CLASSES = (
     ARM_PT_LodPanel,
     ArmGenTerrainButton,
     ARM_PT_TerrainPanel,
-    ARM_PT_TilesheetPanel,
     ArmPrintTraitsButton,
     ARM_PT_MaterialNodePanel,
     ARM_OT_UpdateFileSDK,

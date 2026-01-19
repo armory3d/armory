@@ -1,0 +1,129 @@
+#include <libdragon.h>
+#include <t3d/t3d.h>
+#include <t3d/t3dmodel.h>
+
+#include "models.h"
+
+static const char *MODEL_PATHS[MODEL_COUNT] = {{
+{mesh_paths}
+}};
+
+typedef struct {{
+    T3DModel *model;
+    rspq_block_t *dpl;
+    uint16_t ref_count;  // Reference count for shared models
+    uint8_t loaded;
+}} ModelEntry;
+
+static ModelEntry g_models[MODEL_COUNT];
+
+void models_init(void)
+{{
+    for (uint8_t i = 0; i < MODEL_COUNT; i++) {{
+        g_models[i].model = NULL;
+		g_models[i].dpl = NULL;
+        g_models[i].ref_count = 0;
+        g_models[i].loaded = 0;
+    }}
+}}
+
+void models_shutdown(void)
+{{
+    for (uint8_t i = 0; i < MODEL_COUNT; i++) {{
+        if (g_models[i].loaded) {{
+            if (g_models[i].model) {{
+                t3d_model_free(g_models[i].model);
+                g_models[i].model = NULL;
+            }}
+            if (g_models[i].dpl) {{
+                rspq_block_free(g_models[i].dpl);
+                g_models[i].dpl = NULL;
+            }}
+            g_models[i].ref_count = 0;
+            g_models[i].loaded = 0;
+        }}
+    }}
+}}
+
+T3DModel *models_get(ModelId id)
+{{
+    if (id < 0 || id >= MODEL_COUNT) {{
+        return NULL;
+    }}
+
+    ModelEntry *e = &g_models[id];
+    if (!e->loaded) {{
+        const char *path = MODEL_PATHS[id];
+        e->model = t3d_model_load(path);
+        if (!e->model) {{
+            debugf("Failed to load model: %s\n", path);
+            return NULL;
+        }}
+		rspq_block_begin();
+		t3d_model_draw(e->model);
+		e->dpl = rspq_block_end();
+		e->loaded = 1;
+    }}
+    e->ref_count++;  // Increment reference count
+    return e->model;
+}}
+
+rspq_block_t *models_get_dpl(ModelId id)
+{{
+    return g_models[id].dpl;
+}}
+
+// Release a reference to a model
+void models_release(ModelId id)
+{{
+    if (id < 0 || id >= MODEL_COUNT) {{
+        return;
+    }}
+    ModelEntry *e = &g_models[id];
+    if (e->ref_count > 0) {{
+        e->ref_count--;
+    }}
+}}
+
+// Unload a model and free its resources.
+// Note: Models are cached by default for performance. Call this explicitly
+// when transitioning between scenes that use different model sets, or when
+// memory pressure requires freeing unused models.
+void models_unload(ModelId id)
+{{
+    if (id < 0 || id >= MODEL_COUNT) {{
+        return;
+    }}
+
+    ModelEntry *e = &g_models[id];
+    if (e->loaded) {{
+        if (e->model) {{
+            t3d_model_free(e->model);
+            e->model = NULL;
+        }}
+        if (e->dpl) {{
+            rspq_block_free(e->dpl);
+            e->dpl = NULL;
+        }}
+        e->ref_count = 0;
+        e->loaded = 0;
+    }}
+}}
+
+// Unload only models with zero references (safe after scene transition)
+void models_unload_unused(void)
+{{
+    for (uint8_t i = 0; i < MODEL_COUNT; i++) {{
+        if (g_models[i].loaded && g_models[i].ref_count == 0) {{
+            models_unload(i);
+        }}
+    }}
+}}
+
+// Unload all models to free memory (useful before scene transitions)
+void models_unload_all(void)
+{{
+    for (uint8_t i = 0; i < MODEL_COUNT; i++) {{
+        models_unload(i);
+    }}
+}}

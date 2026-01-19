@@ -188,9 +188,15 @@ def get_gapi():
     wrd = bpy.data.worlds['Arm']
     if state.is_export:
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+        # N64 uses Krom build with standard graphics API, not tiny3d
+        if item.arm_project_target == 'n64':
+            return 'direct3d11' if get_os() == 'win' else 'opengl'
         return getattr(item, target_to_gapi(item.arm_project_target))
     if wrd.arm_runtime == 'Browser':
         return 'webgl'
+    # N64/Ares uses Krom build with standard graphics API
+    if wrd.arm_runtime == 'Ares':
+        return 'direct3d11' if get_os() == 'win' else 'opengl'
     return 'direct3d11' if get_os() == 'win' else 'opengl'
 
 
@@ -1026,6 +1032,8 @@ def target_to_gapi(arm_project_target: str) -> str:
         return 'arm_gapi_ios'
     elif arm_project_target == 'node':
         return 'arm_gapi_html5'
+    elif arm_project_target == 'n64':
+        return 'arm_gapi_n64'
     else: # html5, custom
         return 'arm_gapi_' + arm_project_target
 
@@ -1135,6 +1143,32 @@ def get_html5_copy_path():
 def get_link_web_server():
     addon_prefs = get_arm_preferences()
     return '' if not hasattr(addon_prefs, 'link_web_server') else addon_prefs.link_web_server
+
+def get_n64_toolchain_path():
+    if os.getenv('N64_INST') == None:
+        addon_prefs = get_arm_preferences()
+        return '' if not hasattr(addon_prefs, 'n64_toolchain_path') else addon_prefs.n64_toolchain_path.replace('C:', '/c').replace('\\', '/')
+    else:
+        return os.getenv('N64_INST')
+
+def get_msys2_bash_executable():
+    addon_prefs = get_arm_preferences()
+    return '' if not hasattr(addon_prefs, 'msys2_bash_executable') else addon_prefs.msys2_bash_executable
+
+def get_mingw64_path():
+    addon_prefs = get_arm_preferences()
+    return '' if not hasattr(addon_prefs, 'mingw64_path') else addon_prefs.mingw64_path.replace('C:', '/c').replace('\\', '/')
+
+def get_ares_emulator_executable():
+    addon_prefs = get_arm_preferences()
+    return '' if not hasattr(addon_prefs, 'ares_emulator_executable') else addon_prefs.ares_emulator_executable
+
+def get_open_n64_rom_directory():
+    addon_prefs = get_arm_preferences()
+    return False if not hasattr(addon_prefs, 'open_n64_rom_directory') else addon_prefs.open_n64_rom_directory
+
+def get_n64_deployment_path():
+    return os.path.join(arm.utils.get_sdk_path(), 'armorcore', 'Deployment', 'n64')
 
 
 def get_file_arm_version_tuple() -> tuple[int]:

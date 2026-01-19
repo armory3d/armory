@@ -1,0 +1,28 @@
+#pragma once
+
+#include "scenes.h"
+#include "../types.h"
+#include "../engine.h"
+#include "../events/trait_events.h"
+#include "../iron/system/input.h"
+
+#if ENGINE_ENABLE_UI
+#include "../koui/koui.h"
+#endif
+
+#ifdef __cplusplus
+extern "C" {{
+#endif
+
+// Trait data structures (for per-instance data)
+{trait_data_structs}
+
+// Trait function declarations
+{trait_declarations}
+
+// Event handler declarations
+{event_handler_declarations}
+
+#ifdef __cplusplus
+}}
+#endif

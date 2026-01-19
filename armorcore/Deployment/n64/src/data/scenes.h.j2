@@ -1,0 +1,46 @@
+#pragma once
+
+#include "../types.h"
+
+#ifdef __cplusplus
+extern "C" {{
+#endif
+
+typedef enum SceneId {{
+{scene_enum_entries}
+    SCENE_COUNT = {scene_count}
+}} SceneId;
+
+{scene_declarations}
+
+void scene_init(SceneId id);
+void scene_on_ready(SceneId id);
+void scene_on_fixed_update(SceneId id, float dt);
+void scene_on_update(SceneId id, float dt);
+void scene_on_late_update(SceneId id, float dt);
+void scene_on_remove(SceneId id);
+void scene_clear(SceneId id);
+
+void scene_sync_physics(SceneId id);
+
+void scene_switch_to(SceneId id);
+SceneId scene_get_id_by_name(const char *name);
+SceneId scene_get_current_id(void);
+SceneId scene_get_pending(void);
+void scene_clear_pending(void);
+
+ArmScene *scene_get(SceneId id);
+
+// Object pool management
+// Recycle a removed object's slot back to the pool for reuse
+void scene_recycle_object(SceneId id, ArmObject *obj);
+
+// Allocate an object slot from the pool (returns NULL if pool exhausted)
+ArmObject *scene_alloc_object(SceneId id);
+
+// Get count of active (non-removed) objects
+uint16_t scene_get_active_count(SceneId id);
+
+#ifdef __cplusplus
+}}
+#endif
