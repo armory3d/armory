@@ -568,24 +568,6 @@ class ArmoryExporter:
             self.material_array.append(material)
         o['material_refs'].append(arm.utils.asset_name(material))
 
-    def link_mesh_from_library(self, library_path: str, mesh_name: str):
-        """Links a mesh from an external library file.
-
-        Returns the linked mesh data or None if not found.
-        """
-        try:
-            # Use link instead of append to maintain the library reference
-            with bpy.data.libraries.load(library_path, link=True) as (data_from, data_to):
-                if mesh_name in data_from.meshes:
-                    data_to.meshes = [mesh_name]
-                else:
-                    return None
-
-            # Return the newly linked mesh
-            return bpy.data.meshes.get(mesh_name)
-        except Exception as e:
-            return None
-
     def export_particle_system_ref(self, psys: bpy.types.ParticleSystem, out_object):
         if psys.settings.instance_object is None or psys.settings.render_type != 'OBJECT' or not psys.settings.instance_object.arm_export:
            return
