@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import iron.object.MeshObject;
 
-class PlayTilesheetNode extends LogicNode {
+class SetTilesheetActionNode extends LogicNode {
 
 	public function new(tree: LogicTree) {
 		super(tree);
@@ -14,9 +14,7 @@ class PlayTilesheetNode extends LogicNode {
 
 		if (object == null || object.tilesheet == null) return;
 
-		object.tilesheet.play(action, function() {
-			runOutput(1);
-		});
+		object.setTilesheetAction(action);
 
 		runOutput(0);
 	}
