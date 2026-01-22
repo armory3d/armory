@@ -280,11 +280,11 @@ class Tilesheet {
 		return action != null ? frame - action.start : 0;
 	}
 
-	public function getTilesx(): Int {
+	public function getTilesX(): Int {
 		return action != null ? action.tilesx : 1;
 	}
 
-	public function getTilesy(): Int {
+	public function getTilesY(): Int {
 		return action != null ? action.tilesy : 1;
 	}
 }
