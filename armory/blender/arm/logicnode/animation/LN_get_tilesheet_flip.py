@@ -2,7 +2,7 @@ from arm.logicnode.arm_nodes import *
 
 class GetTilesheetFlipNode(ArmLogicTreeNode):
     """Returns the flip state of the tilesheet.
-
+    
     @output Flip X: Whether the sprite is flipped horizontally.
     @output Flip Y: Whether the sprite is flipped vertically.
     """

@@ -3,7 +3,7 @@ from arm.logicnode.arm_nodes import *
 class SetTilesheetFlipNode(ArmLogicTreeNode):
     """Set the flip state of the tilesheet for UV-based sprite flipping.
     This is useful for billboarded sprites where mesh scaling cannot be used.
-
+    
     @input Flip X: Flip the sprite horizontally.
     @input Flip Y: Flip the sprite vertically.
     """

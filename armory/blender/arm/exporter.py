@@ -564,24 +564,6 @@ class ArmoryExporter:
             self.material_array.append(material)
         o['material_refs'].append(arm.utils.asset_name(material))
 
-    def link_mesh_from_library(self, library_path: str, mesh_name: str):
-        """Links a mesh from an external library file.
-
-        Returns the linked mesh data or None if not found.
-        """
-        try:
-            # Use link instead of append to maintain the library reference
-            with bpy.data.libraries.load(library_path, link=True) as (data_from, data_to):
-                if mesh_name in data_from.meshes:
-                    data_to.meshes = [mesh_name]
-                else:
-                    return None
-
-            # Return the newly linked mesh
-            return bpy.data.meshes.get(mesh_name)
-        except Exception as e:
-            return None
-
     def export_particle_system_ref(self, psys: bpy.types.ParticleSystem, out_object):
         if psys.settings.instance_object is None or psys.settings.render_type != 'OBJECT' or not psys.settings.instance_object.arm_export:
            return
@@ -901,6 +883,8 @@ class ArmoryExporter:
             if bobject.arm_tilesheet_enabled:
                 out_object['tilesheet'] = {
                     'start_action': bobject.arm_tilesheet_default_action,
+                    'flipx': bobject.arm_tilesheet_flipx,
+                    'flipy': bobject.arm_tilesheet_flipy,
                     'actions': []
                 }
                 for action in bobject.arm_tilesheet_actionlist:
@@ -1996,10 +1980,6 @@ Make sure the mesh only has tris/quads.""")
         if export_mesh is None:
             log.warn(oid + ' was not exported')
             return
-
-        # Warn if a curve was converted but has no faces (no bevel/extrude)
-        if bobject.type == 'CURVE' and len(export_mesh.polygons) == 0:
-            log.warn(oid + ' is a curve with no faces - add bevel or extrude to generate geometry')
 
         if len(export_mesh.uv_layers) > 2:
             log.warn(oid + ' exceeds maximum of 2 UV Maps supported')

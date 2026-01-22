@@ -160,18 +160,6 @@ typedef TMaterialData = {
 	public var contexts: Array<TMaterialContext>;
 	@:optional public var skip_context: String;
 	@:optional public var override_context: TShaderOverride;
-	@:optional public var tilesheet: TMaterialTilesheet;
-}
-
-#if js
-typedef TMaterialTilesheet = {
-#else
-@:structInit class TMaterialTilesheet {
-#end
-	public var tilesx: Int;
-	public var tilesy: Int;
-	public var framerate: Int;
-	public var actions: Array<TTilesheetAction>;
 }
 
 #if js
@@ -407,6 +395,8 @@ typedef TTilesheetData = {
 #end
 	public var actions: Array<TTilesheetAction>;
 	@:optional public var start_action: String;
+	@:optional public var flipx: Bool;
+	@:optional public var flipy: Bool;
 }
 
 #if js
