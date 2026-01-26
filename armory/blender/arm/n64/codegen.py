@@ -50,8 +50,9 @@ from typing import Dict, List, Optional
 
 from arm.n64.utils import (
     convert_vec3_list, convert_quat_list, convert_scale_list,
-    SCALE_FACTOR
+    SCALE_FACTOR, get_trait
 )
+from arm.n64 import utils as n64_utils
 
 
 # =============================================================================
@@ -1034,8 +1035,6 @@ def generate_trait_block(prefix: str, traits: List[Dict],
 
     Pure 1:1 emitter - all data comes from macro-generated trait_info.
     """
-    from arm.n64 import utils as n64_utils
-
     lines = []
     lines.append(f'    {prefix}.trait_count = {len(traits)};')
     lines.append(f'    {prefix}.lifecycle_flags = 0;')
@@ -1047,9 +1046,14 @@ def generate_trait_block(prefix: str, traits: List[Dict],
             trait_class = trait["class_name"]
 
             # Get trait IR - must exist, macro provides all data
-            trait_ir = trait_info.get("traits", {}).get(trait_class, {})
+            trait_ir = n64_utils.get_trait(trait_info, trait_class)
             c_name = trait_ir.get("c_name", "")
             meta = trait_ir.get("meta", {})
+
+            # Debug: log trait lookup
+            if not c_name:
+                print(f"[N64 codegen] WARNING: No c_name found for trait '{trait_class}'")
+                print(f"[N64 codegen]   Available traits: {list(trait_info.get('traits', {}).keys())}")
 
             # Lifecycle hooks - use the full c_name
             lines.append(f'    {prefix}.traits[{t_idx}].on_ready = {c_name}_on_ready;')
@@ -1108,8 +1112,6 @@ def generate_camera_block(cameras: List[Dict], trait_info: dict, scene_name: str
 
 def generate_light_block(lights: List[Dict], trait_info: dict, scene_name: str) -> str:
     """Generate C code for all lights in a scene."""
-    from arm.n64 import utils as n64_utils
-
     lines = []
     for i, light in enumerate(lights):
         prefix = f'lights[{i}]'
@@ -1297,7 +1299,7 @@ def generate_contact_subscriptions_block(objects: List[Dict], trait_info: dict) 
 
         for t_idx, trait in enumerate(traits):
             trait_class = trait["class_name"]
-            trait_ir = trait_info.get("traits", {}).get(trait_class, {})
+            trait_ir = n64_utils.get_trait(trait_info, trait_class)
             meta = trait_ir.get("meta", {})
 
             for contact_evt in meta.get("contact_events", []):
@@ -1334,7 +1336,7 @@ def generate_scene_traits_block(traits: List[Dict], trait_info: dict, scene_name
         trait_class = trait["class_name"]
 
         # Get trait IR - must exist, macro provides all data
-        trait_ir = trait_info.get("traits", {}).get(trait_class, {})
+        trait_ir = n64_utils.get_trait(trait_info, trait_class)
         c_name = trait_ir.get("c_name", "")
         meta = trait_ir.get("meta", {})
 
@@ -1344,7 +1346,6 @@ def generate_scene_traits_block(traits: List[Dict], trait_info: dict, scene_name
         lines.append(f'    scene_traits[{i}].on_late_update = {c_name}_on_late_update;')
         lines.append(f'    scene_traits[{i}].on_remove = {c_name}_on_remove;')
 
-        from arm.n64 import utils as n64_utils
         if n64_utils.trait_needs_data(trait_info, trait_class):
             struct_name = f'{trait_class}Data'
             instance_props = trait.get("props", {})

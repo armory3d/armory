@@ -134,7 +134,14 @@ def extract_blender_trait_props(trait) -> dict:
 # =============================================================================
 
 def get_trait(trait_info: dict, trait_class: str) -> dict:
-    return trait_info.get("traits", {}).get(trait_class, {})
+    """Get trait info by class name. Handles both full module path and simple name."""
+    traits = trait_info.get("traits", {})
+    # Try full path first
+    if trait_class in traits:
+        return traits[trait_class]
+    # Try simple class name (last part after '.')
+    simple_name = trait_class.rsplit('.', 1)[-1]
+    return traits.get(simple_name, {})
 
 def trait_needs_data(trait_info: dict, trait_class: str) -> bool:
     """Check if a trait needs a data struct (has members or signals)."""
