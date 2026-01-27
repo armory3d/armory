@@ -1007,12 +1007,13 @@ class N64Exporter:
             if scene.library:
                 continue
             scene_name = arm.utils.safesrc(scene.name).lower()
+            original_name = scene.name  # Preserve original case for runtime lookup
             init_lines.append(f'    scene_{scene_name}_init(&g_scenes[SCENE_{scene_name.upper()}]);')
             init_switch_cases_lines.append(f'        case SCENE_{scene_name.upper()}:\n'
                                            f'            scene_{scene_name}_init(&g_scenes[SCENE_{scene_name.upper()}]);\n'
                                            f'            break;')
-            # For runtime string -> SceneId lookup
-            name_entry_lines.append(f'    {{"{scene_name}", SCENE_{scene_name.upper()}}},')
+            # For runtime string -> SceneId lookup (use original name for case-sensitive match)
+            name_entry_lines.append(f'    {{"{original_name}", SCENE_{scene_name.upper()}}},')
             scene_count += 1
 
         scene_inits = '\n'.join(init_lines)
