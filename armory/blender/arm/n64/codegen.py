@@ -30,12 +30,12 @@ The IR schema (version 1):
 
 IRNode types (1:1 with emit_* handlers):
   Literals: int, float, string, bool, null, skip, c_literal
-  Variables: member, ident, field, label_field
+  Variables: member, ident, field
   Operators: assign, binop, unop
   Control: if, block, var, return
   Calls: call, scene_call, transform_call, math_call, input_call, physics_call, vec_call
-  Calls: koui_call, signal_call, global_signal_call
-  Utility: cast_call, debug_call, object_call, sprintf
+  Calls: signal_call, global_signal_call, global_signal_emit
+  Utility: cast_call, debug_call, object_call, sprintf, remove_object
   Constructors: new, new_vec
 
 TraitMeta fields:
@@ -180,15 +180,6 @@ class IREmitter:
             return f"{obj}->{field}"
 
         return f"({obj}).{field}"
-
-    def emit_label_field(self, node: Dict) -> str:
-        """Label field access: label->pos_x, label->text, etc.
-        The macro has already mapped Koui names (posX) to C names (pos_x)."""
-        obj = self.emit(node.get("object"))
-        field = node.get("value", "")
-        if obj and field:
-            return f"{obj}->{field}"
-        return ""
 
     def emit_c_literal(self, node: Dict) -> str:
         """Literal C code from macro - pure 1:1."""
@@ -386,30 +377,6 @@ class IREmitter:
 
         return c_code
 
-    def emit_koui_call(self, node: Dict) -> str:
-        """Koui UI calls - pure 1:1 translation from macro-provided c_func."""
-        c_func = node.get("c_func", "")
-        args = node.get("args", [])
-        obj_node = node.get("object")
-
-        if not c_func:
-            print("[N64 codegen] WARNING: koui_call missing c_func")
-            return ""
-
-        # Build argument list: object first (if present), then args
-        arg_strs = []
-        if obj_node:
-            obj = self.emit(obj_node)
-            if obj:
-                arg_strs.append(obj)
-
-        for a in args:
-            emitted = self.emit(a)
-            if emitted:
-                arg_strs.append(emitted)
-
-        return f"{c_func}({', '.join(arg_strs)})"
-
     def emit_signal_call(self, node: Dict) -> str:
         """Signal calls - connect/disconnect/emit on per-instance signals.
 
@@ -462,6 +429,18 @@ class IREmitter:
         args = node.get("args", [])
         for i, arg in enumerate(args):
             c_code = c_code.replace("{" + str(i) + "}", self.emit(arg))
+
+        return c_code
+
+    def emit_remove_object(self, node: Dict) -> str:
+        """Remove object call - substitute {obj} placeholder."""
+        c_code = node.get("c_code", "")
+        if not c_code:
+            return ""
+
+        obj_node = node.get("object")
+        obj = self.emit(obj_node) if obj_node else "object"
+        c_code = c_code.replace("{obj}", obj)
 
         return c_code
 
@@ -847,7 +826,7 @@ def write_traits_files(type_overrides: dict = None):
         type_overrides: Optional dict of {trait_name: {member_name: ctype}} overrides
 
     Returns:
-        dict with feature flags: {'has_ui': bool, 'has_physics': bool}
+        dict with feature flags: {'has_physics': bool}
     """
     import arm.utils
 
@@ -870,7 +849,7 @@ def write_traits_files(type_overrides: dict = None):
             f.write("// Auto-generated empty traits header\n#ifndef _TRAITS_H_\n#define _TRAITS_H_\n#endif\n")
         with open(c_path, 'w') as f:
             f.write("// Auto-generated empty traits implementation\n#include \"traits.h\"\n")
-        return {'has_ui': False, 'has_physics': False}
+        return {'has_physics': False}
 
     # Generate template substitution data and detect features
     template_data, features = _prepare_traits_template_data(traits, type_overrides)
@@ -898,16 +877,14 @@ def write_traits_files(type_overrides: dict = None):
 
 
 def _detect_features_in_nodes(nodes) -> dict:
-    """Recursively scan IR nodes for feature usage (UI, physics, etc.)."""
-    features = {'has_ui': False, 'has_physics': False}
+    """Recursively scan IR nodes for feature usage (physics, etc.)."""
+    features = {'has_physics': False}
 
     def scan(node):
         if not node or not isinstance(node, dict):
             return
         node_type = node.get("type", "")
-        if node_type == "koui_call" or node_type == "label_field":
-            features['has_ui'] = True
-        elif node_type == "physics_call":
+        if node_type == "physics_call":
             features['has_physics'] = True
 
         # Recursively scan children and args
@@ -942,7 +919,7 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
     global_signals = set()  # Collect unique global signals
 
     # Track features across all traits
-    all_features = {'has_ui': False, 'has_physics': False}
+    all_features = {'has_physics': False}
 
     for trait_name, trait_ir in traits.items():
         gen = TraitCodeGenerator(trait_name, trait_ir, type_overrides)
@@ -973,17 +950,8 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
         events = trait_ir.get("events", {})
         for event_name, event_nodes in events.items():
             node_features = _detect_features_in_nodes(event_nodes)
-            if node_features['has_ui']:
-                all_features['has_ui'] = True
             if node_features['has_physics']:
                 all_features['has_physics'] = True
-
-        # Check members for UI types (e.g., KouiLabel*)
-        members = trait_ir.get("members", [])
-        for m in members:
-            ctype = m.get("ctype", "")
-            if "Koui" in ctype or "Label" in ctype:
-                all_features['has_ui'] = True
 
     # Generate global signal declarations with explicit zero initialization
     global_signal_decls = []

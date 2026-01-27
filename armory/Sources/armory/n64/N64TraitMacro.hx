@@ -7,7 +7,6 @@ import haxe.macro.Type;
 import haxe.Json;
 import sys.io.File;
 import sys.FileSystem;
-import armory.n64.N64LogicNodeMacro;
 
 using haxe.macro.ExprTools;
 using haxe.macro.TypeTools;
@@ -58,17 +57,7 @@ class N64TraitMacro {
 
         var fields = Context.getBuildFields();
 
-        // Check if this is a LogicTree subclass - interpret at compile time
-        if (extendsLogicTree(cls)) {
-            var interpreter = new LogicNodeInterpreter(className, modulePath, fields);
-            var traitIR = interpreter.interpret();
-            if (traitIR != null) {
-                traitData.set(className, traitIR);
-            }
-            return null;
-        }
-
-        // Extract regular trait IR
+        // Extract trait IR
         var extractor = new TraitExtractor(className, modulePath, fields);
         var traitIR = extractor.extract();
 
@@ -87,9 +76,12 @@ class N64TraitMacro {
         for (name in traitData.keys()) {
             var ir = traitData.get(name);
 
-            // Skip empty traits
+            // Skip empty traits (no events and doesn't need data struct)
+            // But include if trait has contact_events or button_events in meta
             var hasEvents = Lambda.count(ir.events) > 0;
-            if (!hasEvents && !ir.needsData) continue;
+            var hasContactEvents = ir.meta.contact_events.length > 0;
+            var hasButtonEvents = ir.meta.button_events.length > 0;
+            if (!hasEvents && !hasContactEvents && !hasButtonEvents && !ir.needsData) continue;
 
             // Convert members
             var membersArr:Array<Dynamic> = [];
@@ -188,22 +180,6 @@ class N64TraitMacro {
         }
     }
 
-    /**
-     * Check if a class extends armory.logicnode.LogicTree.
-     * Logic trees are interpreted at compile time into standard trait IR (events, members, meta).
-     */
-    static function extendsLogicTree(cls:haxe.macro.Type.ClassType):Bool {
-        var superClass = cls.superClass;
-        while (superClass != null) {
-            var sc = superClass.t.get();
-            if (sc.module == "armory.logicnode.LogicTree" && sc.name == "LogicTree") {
-                return true;
-            }
-            superClass = sc.superClass;
-        }
-        return false;
-    }
-
     static function serializeIRNode(node:IRNode):Dynamic {
         if (node == null) return null;
 
@@ -281,7 +257,6 @@ typedef TraitMeta = {
     mutates_transform: Bool,   // True if trait modifies transform (translate, rotate, etc.)
     uses_time: Bool,
     uses_physics: Bool,
-    uses_ui: Bool,             // True if trait uses Koui UI elements
     buttons_used: Array<String>,
     button_events: Array<ButtonEventMeta>,  // structured button event info
     contact_events: Array<ContactEventMeta>, // physics contact subscriptions
@@ -319,8 +294,6 @@ class TypeMap {
         "Vec2" => "ArmVec2",
         "Vec3" => "ArmVec3",
         "Vec4" => "ArmVec4",
-        // Koui UI elements
-        "Label" => "KouiLabel*",
     ];
 
     public static function getCType(haxeType:String):String {
@@ -436,7 +409,6 @@ class TraitExtractor {
             mutates_transform: false,
             uses_time: false,
             uses_physics: false,
-            uses_ui: false,
             buttons_used: [],
             button_events: [],
             contact_events: [],
@@ -785,16 +757,6 @@ class TraitExtractor {
                             c_code: "it_set_scale(&((ArmObject*)obj)->transform, ({0}).x * 0.015625f, ({0}).z * 0.015625f, ({0}).y * 0.015625f);",
                             args: [valueIR]
                         };
-                    }
-                    // Special case: label.text = value -> koui_label_set_text(label, value)
-                    else if (isLabelTextAssign(e1)) {
-                        var labelObjIR = getLabelFromTextAccess(e1);
-                        var valueIR = exprToIR(e2);
-                        {
-                            type: "call",
-                            value: "koui_label_set_text",
-                            children: [labelObjIR, valueIR]
-                        };
                     } else {
                         { type: "assign", children: [exprToIR(e1), exprToIR(e2)] };
                     }
@@ -926,27 +888,6 @@ class TraitExtractor {
         return false;
     }
 
-    // Check if expression is assignment to label.text (needs koui_label_set_text)
-    function isLabelTextAssign(expr:Expr):Bool {
-        switch (expr.expr) {
-            case EField(obj, "text"):
-                var objType = getExprType(obj);
-                return objType == "Label";
-            default:
-        }
-        return false;
-    }
-
-    // Extract the label object from a label.text field access
-    function getLabelFromTextAccess(expr:Expr):IRNode {
-        switch (expr.expr) {
-            case EField(obj, "text"):
-                return exprToIR(obj);
-            default:
-        }
-        return null;
-    }
-
     function convertFieldAccess(obj:Expr, field:String):IRNode {
         // Handle transform access
         switch (obj.expr) {
@@ -969,21 +910,6 @@ class TraitExtractor {
                     return { type: "c_literal", c_code: "(ArmVec2){input_stick_x(), input_stick_y()}" };
                 }
             default:
-        }
-
-        // Check if this is a Label field access (label.text, label.posX, etc.)
-        var objType = getExprType(obj);
-        if (objType == "Label") {
-            meta.uses_ui = true;
-            // Map Koui property names to C struct field names
-            var cField = switch (field) {
-                case "posX": "pos_x";
-                case "posY": "pos_y";
-                case "text": "text";
-                case "visible": "visible";
-                default: field;
-            };
-            return { type: "label_field", object: exprToIR(obj), value: cField };
         }
 
         // Vec3 component access
@@ -1130,10 +1056,6 @@ class TraitExtractor {
                     case EConst(CIdent("Scene")):
                         return convertSceneCall(method, args, params);
 
-                    // Koui.init(callback), Koui.add(label), Koui.remove(label), Koui.render(g2)
-                    case EConst(CIdent("Koui")):
-                        return convertKouiStaticCall(method, args, params);
-
                     // transform.translate(...) -> it_translate(...)
                     case EField(_, "transform"), EConst(CIdent("transform")):
                         meta.uses_transform = true;
@@ -1178,7 +1100,7 @@ class TraitExtractor {
                         return convertObjectCall(method, args);
 
                     // Unsupported APIs - explicitly skip with no codegen fallback
-                    case EConst(CIdent("Audio")), EConst(CIdent("Tween")), EConst(CIdent("Network")):
+                    case EConst(CIdent("Audio")), EConst(CIdent("Tween")), EConst(CIdent("Network")), EConst(CIdent("canvas")), EConst(CIdent("Koui")):
                         return { type: "skip" };
 
                     default:
@@ -1210,10 +1132,6 @@ class TraitExtractor {
                                     }
                                 default:
                             }
-                        }
-                        // Check if this is a Label method call
-                        if (objType == "Label") {
-                            return convertLabelCall(method, exprToIR(obj), args);
                         }
                         // Fallback: generic call with object
                         return {
@@ -1261,17 +1179,6 @@ class TraitExtractor {
     function convertNew(tp:TypePath, params:Array<Expr>):IRNode {
         var typeName = tp.name;
         var args = [for (p in params) exprToIR(p)];
-
-        // Check for Koui UI elements
-        if (typeName == "Label") {
-            meta.uses_ui = true;
-            // Label constructor: new Label(text) -> koui_create_label(text)
-            return {
-                type: "koui_call",
-                c_func: "koui_create_label",
-                args: args
-            };
-        }
 
         // Vec constructors: emit C struct literal with placeholders
         if (typeName == "Vec4") {
@@ -1641,73 +1548,6 @@ class TraitExtractor {
             return Std.string(node.value);
         }
         return null;
-    }
-
-    // =========================================================================
-    // Koui static call conversion - Koui.init(), Koui.add(), Koui.remove(), Koui.render()
-    // =========================================================================
-
-    function convertKouiStaticCall(method:String, args:Array<IRNode>, rawParams:Array<Expr>):IRNode {
-        meta.uses_ui = true;
-
-        switch (method) {
-            case "init":
-                // Koui.init(callback) - extract callback body, emit statements inline
-                // The callback runs immediately on N64 since we don't have async loading
-                if (rawParams.length > 0) {
-                    var callback = resolveCallback(rawParams[0]);
-                    if (callback != null) {
-                        // Return block of statements from callback
-                        return exprToIR(callback);
-                    }
-                }
-                return { type: "skip" };
-
-            case "add":
-                // Koui.add(label) -> koui_add_label(label)
-                return {
-                    type: "koui_call",
-                    c_func: "koui_add_label",
-                    args: args
-                };
-
-            case "render":
-                // Koui.render(g2) - skip, handled in main loop
-                return { type: "skip" };
-
-            case "remove":
-                // Koui.remove(label) -> koui_remove_label(label)
-                return {
-                    type: "koui_call",
-                    c_func: "koui_remove_label",
-                    args: args
-                };
-
-            default:
-                return { type: "skip" };
-        }
-    }
-
-    // =========================================================================
-    // Label method call conversion - label.setPosition(), label.setText(), etc.
-    // =========================================================================
-
-    function convertLabelCall(method:String, objIR:IRNode, args:Array<IRNode>):IRNode {
-        meta.uses_ui = true;
-
-        switch (method) {
-            case "setPosition":
-                // label.setPosition(x, y) -> koui_label_set_position(label, x, y)
-                return {
-                    type: "koui_call",
-                    c_func: "koui_label_set_position",
-                    object: objIR,
-                    args: args
-                };
-
-            default:
-                return { type: "skip" };
-        }
     }
 
     // =========================================================================

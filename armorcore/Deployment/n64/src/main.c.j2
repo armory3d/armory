@@ -17,6 +17,7 @@
 #endif
 #if ENGINE_ENABLE_UI
 #include "data/fonts.h"
+#include "data/ui_canvas.h"
 #include "koui/koui.h"
 #endif
 
@@ -47,6 +48,9 @@ int main(void)
     T3DViewport viewport = t3d_viewport_create_buffered(FB_COUNT);
 
     SceneId current_scene = {initial_scene_id};
+#if ENGINE_ENABLE_UI
+    ui_canvas_scene_init(current_scene);
+#endif
     scene_init(current_scene);
 
     float last_time = get_time_s();
@@ -92,6 +96,9 @@ int main(void)
             fixed_time = 0.0f;
             frame_count = 0;  // Reset frame counter for new scene
             current_scene = pending;
+#if ENGINE_ENABLE_UI
+            ui_canvas_scene_init(current_scene);  // Load canvas for new scene
+#endif
             scene_init(current_scene);
             scene = scene_get(current_scene);
         }}

@@ -1,0 +1,40 @@
+#pragma once
+
+#include "../koui/koui.h"
+#include "scenes.h"
+
+#ifdef __cplusplus
+extern "C" {{
+#endif
+
+// Anchor enum (matches Koui Editor)
+typedef enum {{
+    ANCHOR_TOP_LEFT = 0,
+    ANCHOR_TOP_CENTER = 1,
+    ANCHOR_TOP_RIGHT = 2,
+    ANCHOR_MIDDLE_LEFT = 3,
+    ANCHOR_MIDDLE_CENTER = 4,
+    ANCHOR_MIDDLE_RIGHT = 5,
+    ANCHOR_BOTTOM_LEFT = 6,
+    ANCHOR_BOTTOM_CENTER = 7,
+    ANCHOR_BOTTOM_RIGHT = 8,
+}} UIAnchor;
+
+// Canvas dimensions
+#define UI_CANVAS_WIDTH {canvas_width}
+#define UI_CANVAS_HEIGHT {canvas_height}
+
+// Label key defines (generated from Koui Editor canvas JSON)
+{label_defines}
+
+#define UI_LABEL_COUNT {label_count}
+
+// Initialize UI canvas for a specific scene (clears and reloads labels)
+void ui_canvas_scene_init(SceneId scene_id);
+
+// Get label by index
+KouiLabel* ui_canvas_get_label(int index);
+
+#ifdef __cplusplus
+}}
+#endif

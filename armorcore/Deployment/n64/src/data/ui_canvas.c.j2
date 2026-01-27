@@ -1,0 +1,102 @@
+#include "ui_canvas.h"
+#include <string.h>
+
+// Static label definitions from Koui Editor canvas
+typedef struct {{
+    const char *text;
+    int16_t pos_x;
+    int16_t pos_y;
+    int16_t width;
+    int16_t height;
+    uint8_t anchor;
+    bool visible;
+}} UILabelDef;
+
+#if UI_LABEL_COUNT > 0
+static KouiLabel* g_labels[UI_LABEL_COUNT];
+static int g_label_count = 0;
+
+// Calculate final X position based on anchor
+static int16_t calc_anchor_x(const UILabelDef *def) {{
+    switch (def->anchor) {{
+        case ANCHOR_TOP_LEFT:
+        case ANCHOR_MIDDLE_LEFT:
+        case ANCHOR_BOTTOM_LEFT:
+            return def->pos_x;
+        case ANCHOR_TOP_CENTER:
+        case ANCHOR_MIDDLE_CENTER:
+        case ANCHOR_BOTTOM_CENTER:
+            return (UI_CANVAS_WIDTH / 2) - (def->width / 2) + def->pos_x;
+        case ANCHOR_TOP_RIGHT:
+        case ANCHOR_MIDDLE_RIGHT:
+        case ANCHOR_BOTTOM_RIGHT:
+            return UI_CANVAS_WIDTH - def->width + def->pos_x;
+        default:
+            return def->pos_x;
+    }}
+}}
+
+// Calculate final Y position based on anchor
+static int16_t calc_anchor_y(const UILabelDef *def) {{
+    switch (def->anchor) {{
+        case ANCHOR_TOP_LEFT:
+        case ANCHOR_TOP_CENTER:
+        case ANCHOR_TOP_RIGHT:
+            return def->pos_y;
+        case ANCHOR_MIDDLE_LEFT:
+        case ANCHOR_MIDDLE_CENTER:
+        case ANCHOR_MIDDLE_RIGHT:
+            return (UI_CANVAS_HEIGHT / 2) - (def->height / 2) + def->pos_y;
+        case ANCHOR_BOTTOM_LEFT:
+        case ANCHOR_BOTTOM_CENTER:
+        case ANCHOR_BOTTOM_RIGHT:
+            return UI_CANVAS_HEIGHT - def->height + def->pos_y;
+        default:
+            return def->pos_y;
+    }}
+}}
+
+// Per-canvas label data arrays
+{canvas_label_arrays}
+
+// Helper to load labels from a definition array
+static void load_labels(const UILabelDef *defs, int count) {{
+    for (int i = 0; i < count; i++) {{
+        const UILabelDef *def = &defs[i];
+        KouiLabel *label = koui_create_label(def->text);
+        if (label) {{
+            int16_t final_x = calc_anchor_x(def);
+            int16_t final_y = calc_anchor_y(def);
+            koui_label_set_position(label, final_x, final_y);
+            label->visible = def->visible;
+            koui_add_label(label);
+            g_labels[g_label_count++] = label;
+        }}
+    }}
+}}
+#endif
+
+void ui_canvas_scene_init(SceneId scene_id) {{
+#if UI_LABEL_COUNT > 0
+    // Reset label tracking
+    g_label_count = 0;
+
+    // Load canvas for the specified scene
+    switch (scene_id) {{
+{scene_init_switch_cases}
+        default:
+            break;
+    }}
+#else
+    (void)scene_id;
+#endif
+}}
+
+KouiLabel* ui_canvas_get_label(int index) {{
+#if UI_LABEL_COUNT > 0
+    if (index >= 0 && index < g_label_count) {{
+        return g_labels[index];
+    }}
+#endif
+    return NULL;
+}}

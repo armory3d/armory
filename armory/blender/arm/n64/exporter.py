@@ -2,6 +2,8 @@ import os
 import subprocess
 import math
 import shutil
+import json
+import glob
 import bpy
 
 import arm
@@ -30,6 +32,7 @@ class N64Exporter:
         self.trait_info = {}        # Trait metadata from macro JSON
         self.has_physics = False    # Track if any rigid bodies are exported
         self.has_ui = False         # Track if any UI elements are used
+        self.ui_canvas_data = {}    # Parsed Koui canvas JSON: {canvas_name: {labels: [...], ...}}
 
 
     @classmethod
@@ -172,6 +175,9 @@ class N64Exporter:
                         class_name = trait.class_name_prop
                     else:
                         continue  # No class assigned
+                elif trait.type_prop == 'UI Canvas':
+                    # UI Canvas is handled separately in build_scene_data() - not a runtime trait
+                    continue
                 else:
                     continue  # Unsupported trait type for N64
 
@@ -189,6 +195,15 @@ class N64Exporter:
         scene_name = arm.utils.safesrc(scene.name).lower()
         scene_traits = self._extract_traits(scene)
 
+        # Extract canvas name directly from Blender trait list (UI Canvas is not a runtime trait)
+        canvas_name = None
+        if hasattr(scene, 'arm_traitlist'):
+            for trait in scene.arm_traitlist:
+                if trait.enabled_prop and trait.type_prop == 'UI Canvas':
+                    canvas_name = getattr(trait, 'canvas_name_prop', '')
+                    if canvas_name:
+                        break
+
         # Get gravity from scene (Blender's scene.gravity is the actual gravity vector)
         gravity = [0.0, -9.81, 0.0]  # Default gravity
         if hasattr(scene, 'gravity'):
@@ -204,6 +219,7 @@ class N64Exporter:
             ambient_color = [0.2, 0.2, 0.2]  # Default ambient
 
         self.scene_data[scene_name] = {
+            "canvas": canvas_name,  # UI canvas for this scene (or None)
             "world": {
                 "clear_color": n64_utils.get_clear_color(scene),
                 "ambient_color": ambient_color,
@@ -442,7 +458,8 @@ class N64Exporter:
         if self.has_ui:
             koui_sources = '''src +=\\
     src/koui/koui.c \\
-    src/data/fonts.c'''
+    src/data/fonts.c \\
+    src/data/ui_canvas.c'''
         else:
             koui_sources = '# No UI'
 
@@ -547,33 +564,210 @@ class N64Exporter:
         # Copy koui directory
         n64_utils.copy_dir('koui', 'src')
 
+    def detect_ui_canvas(self):
+        """Detect and parse Koui canvas JSON files referenced by scenes.
+
+        Only parses canvases that are actually attached to scenes via UI Canvas trait.
+        Sets has_ui = True if any canvas with labels is found.
+        Stores parsed data in self.ui_canvas_data for code generation.
+        """
+        bundled_dir = os.path.join(arm.utils.get_fp(), 'Bundled', 'koui_canvas')
+        if not os.path.exists(bundled_dir):
+            return
+
+        # Collect canvas names referenced by scenes
+        referenced_canvases = set()
+        for scene_name, data in self.scene_data.items():
+            canvas_name = data.get('canvas')
+            if canvas_name:
+                referenced_canvases.add(canvas_name)
+
+        if not referenced_canvases:
+            return  # No scenes use UI Canvas trait
+
+        for canvas_name in referenced_canvases:
+            json_path = os.path.join(bundled_dir, f'{canvas_name}.json')
+            if not os.path.exists(json_path):
+                log.warn(f'UI Canvas "{canvas_name}" not found at {json_path}')
+                continue
+
+            try:
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    canvas_data = json.load(f)
+
+                canvas_info = canvas_data.get('canvas', {})
+                canvas_width = canvas_info.get('width')
+                canvas_height = canvas_info.get('height')
+
+                labels = []
+                for scene in canvas_data.get('scenes', []):
+                    for elem in scene.get('elements', []):
+                        if elem.get('type') == 'Label':
+                            props = elem.get('properties', {})
+                            label_data = {
+                                'key': elem['key'],
+                                'text': props.get('text', ''),
+                                'pos_x': elem['posX'],
+                                'pos_y': elem['posY'],
+                                'width': elem['width'],
+                                'height': elem['height'],
+                                'anchor': elem['anchor'],
+                                'visible': elem['visible'],
+                                'align_h': props.get('alignmentHor', 0),
+                                'align_v': props.get('alignmentVert', 0),
+                            }
+                            labels.append(label_data)
+
+                if labels:
+                    self.ui_canvas_data[canvas_name] = {
+                        'width': canvas_width,
+                        'height': canvas_height,
+                        'labels': labels
+                    }
+                    self.has_ui = True
+                    log.info(f'Found UI canvas: {canvas_name} with {len(labels)} label(s)')
+
+            except Exception as e:
+                log.warn(f'Failed to parse Koui canvas {json_path}: {e}')
+
+    def write_ui_canvas(self):
+        """Generate ui_canvas.c and ui_canvas.h from templates using parsed Koui canvas data."""
+        if not self.ui_canvas_data:
+            return
+
+        self.write_ui_canvas_h()
+        self.write_ui_canvas_c()
+
+    def write_ui_canvas_h(self):
+        """Generate ui_canvas.h from template with per-scene canvas support."""
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'data', 'ui_canvas.h.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'data', 'ui_canvas.h')
+
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
+
+        # Get canvas dimensions from first canvas (all canvases should target same screen resolution)
+        first_canvas = next(iter(self.ui_canvas_data.values()))
+        canvas_width = first_canvas['width']
+        canvas_height = first_canvas['height']
+
+        # Build label defines per canvas
+        label_defines_lines = []
+        label_idx = 0
+        for canvas_name, canvas in self.ui_canvas_data.items():
+            safe_canvas = arm.utils.safesrc(canvas_name).upper()
+            label_defines_lines.append(f'// Canvas: {canvas_name} ({canvas["width"]}x{canvas["height"]})')
+            for label in canvas['labels']:
+                safe_key = arm.utils.safesrc(label['key']).upper()
+                label_defines_lines.append(f'#define UI_LABEL_{safe_canvas}_{safe_key} {label_idx}')
+                label_idx += 1
+
+        output = tmpl_content.format(
+            canvas_width=canvas_width,
+            canvas_height=canvas_height,
+            label_defines='\n'.join(label_defines_lines),
+            label_count=label_idx
+        )
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
+
+    def write_ui_canvas_c(self):
+        """Generate ui_canvas.c from template with per-scene canvas init functions."""
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'data', 'ui_canvas.c.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'data', 'ui_canvas.c')
+
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
+
+        # Build per-canvas label definitions
+        canvas_label_defs = {}
+        for canvas_name, canvas in self.ui_canvas_data.items():
+            lines = []
+            for label in canvas['labels']:
+                text_escaped = label['text'].replace('\\', '\\\\').replace('"', '\\"')
+                visible = 'true' if label['visible'] else 'false'
+                lines.append(f'    {{ "{text_escaped}", {label["pos_x"]}, {label["pos_y"]}, {label["width"]}, {label["height"]}, {label["anchor"]}, {visible} }},')
+            canvas_label_defs[canvas_name] = {
+                'defs': '\n'.join(lines),
+                'count': len(canvas['labels'])
+            }
+
+        # Build per-canvas static arrays
+        canvas_arrays = []
+        for canvas_name, data in canvas_label_defs.items():
+            safe_canvas = arm.utils.safesrc(canvas_name).lower()
+            count = data['count']
+            if count > 0:
+                canvas_arrays.append(f'// Canvas: {canvas_name}')
+                canvas_arrays.append(f'#define {safe_canvas.upper()}_LABEL_COUNT {count}')
+                canvas_arrays.append(f'static const UILabelDef g_{safe_canvas}_label_defs[{safe_canvas.upper()}_LABEL_COUNT] = {{')
+                canvas_arrays.append(data['defs'])
+                canvas_arrays.append('};')
+                canvas_arrays.append('')
+
+        # Build switch cases for scene_id -> canvas loading
+        scene_switch_cases = []
+        for scene_name, data in self.scene_data.items():
+            canvas_name = data.get('canvas')
+            if canvas_name and canvas_name in self.ui_canvas_data:
+                safe_scene = arm.utils.safesrc(scene_name).upper()
+                safe_canvas = arm.utils.safesrc(canvas_name).lower()
+                scene_switch_cases.append(f'        case SCENE_{safe_scene}:')
+                scene_switch_cases.append(f'            load_labels(g_{safe_canvas}_label_defs, {safe_canvas.upper()}_LABEL_COUNT);')
+                scene_switch_cases.append('            break;')
+
+        # Total label count for g_labels array
+        total_labels = sum(d['count'] for d in canvas_label_defs.values())
+
+        output = tmpl_content.format(
+            canvas_label_arrays='\n'.join(canvas_arrays),
+            scene_init_switch_cases='\n'.join(scene_switch_cases),
+            total_label_count=total_labels
+        )
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
+
     def write_fonts(self):
         """Copy font files and generate fonts.c/fonts.h if UI is used."""
         if not self.has_ui:
             return
 
-        # Copy font files from project's Assets folder to n64/assets
-        project_assets = os.path.join(arm.utils.get_fp(), 'Assets')
         n64_assets = os.path.join(arm.utils.build_dir(), 'n64', 'assets')
         os.makedirs(n64_assets, exist_ok=True)
 
-        if os.path.exists(project_assets):
-            import glob
-            # Search recursively in Assets and all subdirectories
-            fonts = glob.glob(os.path.join(project_assets, '**', '*.ttf'), recursive=True)
-            for i, font_path in enumerate(fonts):
-                font_basename = os.path.splitext(os.path.basename(font_path))[0]
-                # Store with index
-                self.exported_fonts[font_basename] = font_basename
-                # Copy with original name
-                dst = os.path.join(n64_assets, f'{font_basename}.ttf')
-                shutil.copy(font_path, dst)
-                log.info(f'Copied font: {font_basename}.ttf')
+        # Search order for fonts:
+        # 1. Project's Assets folder (and subdirectories)
+        # 2. Koui Subprojects Assets folder (default Montserrat fonts)
+        font_search_paths = [
+            os.path.join(arm.utils.get_fp(), 'Assets'),
+            os.path.join(arm.utils.get_fp(), 'Subprojects', 'Koui', 'Assets'),
+        ]
 
-        # Generate fonts.c and fonts.h
-        if self.exported_fonts:
-            self.write_fonts_c()
-            self.write_fonts_h()
+        for search_path in font_search_paths:
+            if os.path.exists(search_path):
+                fonts = glob.glob(os.path.join(search_path, '**', '*.ttf'), recursive=True)
+                for font_path in fonts:
+                    font_basename = os.path.splitext(os.path.basename(font_path))[0]
+                    # Skip if already have a font with this name (project fonts take priority)
+                    if font_basename in self.exported_fonts:
+                        continue
+                    # Store with index
+                    self.exported_fonts[font_basename] = font_basename
+                    # Copy with original name
+                    dst = os.path.join(n64_assets, f'{font_basename}.ttf')
+                    shutil.copy(font_path, dst)
+                    log.info(f'Copied font: {font_basename}.ttf')
+
+        # If no fonts found, warn and use a placeholder
+        if not self.exported_fonts:
+            log.warn('No TTF fonts found for UI. Labels may not render correctly.')
+            # Create a dummy entry so fonts.c/h are still generated
+            self.exported_fonts['default'] = 'default'
+
+        self.write_fonts_c()
+        self.write_fonts_h()
 
     def write_fonts_c(self):
         """Generate fonts.c from template."""
@@ -973,7 +1167,10 @@ class N64Exporter:
         # Compute is_static for all objects after trait_info is loaded
         n64_utils.compute_static_flags(self.scene_data, self.trait_info)
 
-        # Write traits FIRST to detect feature usage (UI, physics from traits)
+        # Detect UI canvas BEFORE write_traits so has_ui is set early
+        self.detect_ui_canvas()
+
+        # Write traits to detect feature usage (UI, physics from traits)
         self.write_traits()
 
         self.write_makefile()
@@ -982,6 +1179,7 @@ class N64Exporter:
         self.write_physics()
         self.write_koui()
         self.write_fonts()
+        self.write_ui_canvas()  # Generate canvas label data
         self.write_main()
         self.write_models()
         self.write_renderer()
