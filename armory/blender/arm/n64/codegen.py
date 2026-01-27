@@ -296,22 +296,12 @@ class IREmitter:
     # =========================================================================
 
     def emit_call(self, node: Dict) -> str:
-        """Function call - handles both generic calls and specific patterns."""
-        # Handle generic calls with value + children (from macro)
+        """Function call - handles generic calls with value + children from macro."""
         func_name = node.get("value", "")
         if func_name:
             children = node.get("children", [])
             arg_strs = [self.emit(a) for a in children if self.emit(a)]
             return f"{func_name}({', '.join(arg_strs)});"
-
-        # Legacy: method + args pattern
-        method = node.get("method", "")
-        args = node.get("args", [])
-        arg_strs = [self.emit(a) for a in args if self.emit(a)]
-
-        if method:
-            print(f"[N64 codegen] WARNING: Unhandled call '{method}' - add to macro")
-            return f"{method}({', '.join(arg_strs)})"
         return ""
 
     def emit_scene_call(self, node: Dict) -> str:
