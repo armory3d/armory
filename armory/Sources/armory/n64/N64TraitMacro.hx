@@ -8,6 +8,23 @@ import haxe.Json;
 import sys.io.File;
 import sys.FileSystem;
 
+// Import modular components
+import armory.n64.IRTypes;
+import armory.n64.mapping.TypeMap;
+import armory.n64.mapping.ButtonMap;
+import armory.n64.mapping.SkipList;
+import armory.n64.converters.ICallConverter;
+import armory.n64.converters.SceneCallConverter;
+import armory.n64.converters.CanvasCallConverter;
+import armory.n64.converters.VecCallConverter;
+import armory.n64.converters.PhysicsCallConverter;
+import armory.n64.converters.TransformCallConverter;
+import armory.n64.converters.MathCallConverter;
+import armory.n64.converters.InputCallConverter;
+import armory.n64.converters.SignalCallConverter;
+import armory.n64.converters.StdCallConverter;
+import armory.n64.converters.ObjectCallConverter;
+
 using haxe.macro.ExprTools;
 using haxe.macro.TypeTools;
 using StringTools;
@@ -203,184 +220,10 @@ class N64TraitMacro {
 }
 
 // ============================================================================
-// IR Types
-// ============================================================================
-
-typedef IRNode = {
-    type: String,
-    ?value: Dynamic,
-    ?children: Array<IRNode>,
-    ?args: Array<IRNode>,
-    ?method: String,
-    ?object: IRNode,
-    ?props: Dynamic,
-    ?c_code: String,
-    ?c_func: String  // Direct C function name for 1:1 translation
-}
-
-typedef MemberIR = {
-    haxeType: String,
-    ctype: String,
-    defaultValue: IRNode
-}
-
-typedef ButtonEventMeta = {
-    event_name: String,      // e.g., "btn_a_started"
-    button: String,          // normalized button name, e.g., "a"
-    c_button: String,        // N64 constant, e.g., "N64_BTN_A"
-    event_type: String       // "started", "released", or "down"
-}
-
-typedef ContactEventMeta = {
-    event_name: String,      // Handler function name, e.g., "onContact"
-    handler_name: String,    // Full C handler name, e.g., "arm_player_player_contact_onContact"
-    subscribe: Bool          // true for notifyOnContact, false for removeContact
-}
-
-typedef SignalMeta = {
-    name: String,            // Signal member name, e.g., "onDeath"
-    arg_types: Array<String>, // C types for emit args, e.g., ["int32_t", "ArmObject*"]
-    max_subs: Int,           // Max subscribers, default 16, configurable via @:n64MaxSubs(N)
-    ?struct_type: String,    // Payload struct type name for 2+ args
-    ?struct_def: String      // Full C struct definition for 2+ args
-}
-
-typedef SignalHandlerMeta = {
-    handler_name: String,    // Function name used as callback, e.g., "onEnemyDeath"
-    signal_name: String,     // Which signal it connects to, e.g., "onDeath"
-    ?preamble: String        // C code for payload unpacking, generated after arg_types known
-}
-
-typedef TraitMeta = {
-    uses_input: Bool,
-    uses_transform: Bool,
-    mutates_transform: Bool,   // True if trait modifies transform (translate, rotate, etc.)
-    uses_time: Bool,
-    uses_physics: Bool,
-    buttons_used: Array<String>,
-    button_events: Array<ButtonEventMeta>,  // structured button event info
-    contact_events: Array<ContactEventMeta>, // physics contact subscriptions
-    signals: Array<SignalMeta>, // per-instance signal declarations
-    signal_handlers: Array<SignalHandlerMeta>, // functions used as signal callbacks
-    global_signals: Array<String> // global signals used (e.g., "g_gameevents_gemCollected")
-}
-
-typedef TraitIR = {
-    name: String,
-    module: String,
-    cName: String,
-    needsData: Bool,
-    members: Map<String, MemberIR>,
-    events: Map<String, Array<IRNode>>,
-    meta: TraitMeta
-}
-
-// ============================================================================
-// Type Mapping (Haxe → C)
-// ============================================================================
-
-class TypeMap {
-    public static var haxeToCType:Map<String, String> = [
-        "Float" => "float",
-        "float" => "float",
-        "Int" => "int32_t",
-        "int" => "int32_t",
-        "Bool" => "bool",
-        "bool" => "bool",
-        "String" => "const char*",
-        "SceneId" => "SceneId",
-        "SceneFormat" => "SceneId",
-        "TSceneFormat" => "SceneId",
-        "Vec2" => "ArmVec2",
-        "Vec3" => "ArmVec3",
-        "Vec4" => "ArmVec4",
-    ];
-
-    public static function getCType(haxeType:String):String {
-        return haxeToCType.exists(haxeType) ? haxeToCType.get(haxeType) : "void*";
-    }
-
-    public static function isSupported(haxeType:String):Bool {
-        return haxeToCType.exists(haxeType);
-    }
-}
-
-// ============================================================================
-// Button Mapping (Armory → N64)
-// ============================================================================
-
-class ButtonMap {
-    // Map common button names to N64 button identifiers
-    // Matches config.py BUTTON_MAP
-    public static var map:Map<String, String> = [
-        // PlayStation-style
-        "cross" => "a", "square" => "b", "circle" => "cright", "triangle" => "cleft",
-        // Xbox-style
-        "a" => "a", "b" => "cright", "x" => "b", "y" => "cleft",
-        // Shoulders/Triggers
-        "r1" => "cdown", "r2" => "r", "r3" => "cup",
-        "l1" => "z", "l2" => "l", "l3" => "cup",
-        // System
-        "start" => "start", "options" => "start", "share" => "start",
-        // D-Pad
-        "up" => "dup", "down" => "ddown", "left" => "dleft", "right" => "dright",
-        "dup" => "dup", "ddown" => "ddown", "dleft" => "dleft", "dright" => "dright",
-        // C-Buttons direct
-        "cup" => "cup", "cdown" => "cdown", "cleft" => "cleft", "cright" => "cright",
-        // N64 native
-        "l" => "l", "r" => "r", "z" => "z",
-    ];
-
-    // Map normalized button name to N64_BTN_* constant
-    public static var n64Const:Map<String, String> = [
-        "a" => "N64_BTN_A", "b" => "N64_BTN_B", "z" => "N64_BTN_Z",
-        "start" => "N64_BTN_START", "l" => "N64_BTN_L", "r" => "N64_BTN_R",
-        "dup" => "N64_BTN_DUP", "ddown" => "N64_BTN_DDOWN", "dleft" => "N64_BTN_DLEFT", "dright" => "N64_BTN_DRIGHT",
-        "cup" => "N64_BTN_CUP", "cdown" => "N64_BTN_CDOWN", "cleft" => "N64_BTN_CLEFT", "cright" => "N64_BTN_CRIGHT",
-    ];
-
-    public static function normalize(button:String):String {
-        var lower = button.toLowerCase();
-        return map.exists(lower) ? map.get(lower) : lower;
-    }
-
-    public static function toN64Const(button:String):String {
-        var normalized = normalize(button);
-        return n64Const.exists(normalized) ? n64Const.get(normalized) : "N64_BTN_A";
-    }
-}
-
-// ============================================================================
-// Skip Lists
-// ============================================================================
-
-class SkipList {
-    public static var members:Map<String, Bool> = [
-        "object" => true, "transform" => true, "name" => true,
-        "gamepad" => true, "keyboard" => true, "mouse" => true,
-        "physics" => true, "rb" => true, "rigidBody" => true,
-    ];
-
-    public static var classes:Map<String, Bool> = [
-        "PhysicsWorld" => true, "RigidBody" => true,
-        "Tween" => true, "Audio" => true, "Network" => true,
-        "Graphics" => true,  // kha.graphics2.Graphics - not available on N64
-    ];
-
-    public static function shouldSkipMember(name:String):Bool {
-        return members.exists(name);
-    }
-
-    public static function shouldSkipClass(name:String):Bool {
-        return classes.exists(name);
-    }
-}
-
-// ============================================================================
 // Trait Extractor
 // ============================================================================
 
-class TraitExtractor {
+class TraitExtractor implements IExtractorContext {
     var className:String;
     var modulePath:String;
     var fields:Array<Field>;
@@ -388,10 +231,13 @@ class TraitExtractor {
     var memberNames:Array<String>;
     var methodMap:Map<String, Function>;
     var events:Map<String, Array<IRNode>>;
-    var meta:TraitMeta;
+    public var meta(default, null):TraitMeta;
     var localVarTypes:Map<String, String>;  // Track local variable types
     var memberTypes:Map<String, String>;    // Track member types for signal detection
-    var cName:String;  // C-safe name for this trait
+    public var cName(default, null):String;  // C-safe name for this trait
+
+    // Call converters for modular method call handling
+    var converters:Array<ICallConverter>;
 
     public function new(className:String, modulePath:String, fields:Array<Field>) {
         this.className = className;
@@ -409,6 +255,7 @@ class TraitExtractor {
             mutates_transform: false,
             uses_time: false,
             uses_physics: false,
+            uses_ui: false,
             buttons_used: [],
             button_events: [],
             contact_events: [],
@@ -425,6 +272,20 @@ class TraitExtractor {
         } else {
             this.cName = (modulePath.replace(".", "_") + "_" + className).toLowerCase();
         }
+
+        // Initialize call converters
+        this.converters = [
+            new VecCallConverter(),
+            new PhysicsCallConverter(),
+            new TransformCallConverter(),
+            new MathCallConverter(),
+            new InputCallConverter(),
+            new SignalCallConverter(),
+            new StdCallConverter(),
+            new ObjectCallConverter(),
+            new SceneCallConverter(),
+            new CanvasCallConverter(),
+        ];
     }
 
     public function extract():TraitIR {
@@ -696,11 +557,112 @@ class TraitExtractor {
         return null;
     }
 
-    function extractStringArg(e:Expr):String {
+    // IExtractorContext interface implementation
+    public function extractStringArg(e:Expr):String {
         return switch (e.expr) {
             case EConst(CString(s)): s;
             case EConst(CIdent(s)): s;
             default: null;
+        };
+    }
+
+    public function getMemberType(name:String):String {
+        return memberTypes.exists(name) ? memberTypes.get(name) : null;
+    }
+
+    public function getMethod(name:String):Function {
+        return methodMap.exists(name) ? methodMap.get(name) : null;
+    }
+
+    // Interface methods for converters
+    public function getMeta():TraitMeta {
+        return meta;
+    }
+
+    public function getCName():String {
+        return cName;
+    }
+
+    public function getEvents():Map<String, Array<IRNode>> {
+        return events;
+    }
+
+    // Signal handler support for SignalCallConverter
+    public function addSignalHandler(handlerName:String, signalName:String):Void {
+        // Check if already tracked
+        for (h in meta.signal_handlers) {
+            if (h.handler_name == handlerName) return;
+        }
+
+        // Track this handler
+        meta.signal_handlers.push({
+            handler_name: handlerName,
+            signal_name: signalName
+        });
+
+        // Extract the handler method body as an event
+        if (methodMap.exists(handlerName)) {
+            var func = methodMap.get(handlerName);
+            if (!events.exists("signal_" + handlerName)) {
+                events.set("signal_" + handlerName, []);
+                extractSignalHandler(handlerName, func, events.get("signal_" + handlerName));
+            }
+        }
+    }
+
+    function extractSignalHandler(name:String, func:Function, eventNodes:Array<IRNode>):Void {
+        if (func.expr == null) return;
+
+        switch (func.expr.expr) {
+            case EBlock(exprs):
+                for (expr in exprs) {
+                    var node = exprToIR(expr);
+                    if (node != null && node.type != "skip") {
+                        eventNodes.push(node);
+                    }
+                }
+            default:
+                var node = exprToIR(func.expr);
+                if (node != null && node.type != "skip") {
+                    eventNodes.push(node);
+                }
+        }
+    }
+
+    public function updateSignalArgTypes(signalName:String, params:Array<Expr>):Void {
+        // Find the signal in meta and update its arg_types based on emit() call
+        for (signal in meta.signals) {
+            if (signal.name == signalName) {
+                // Only update if not already populated (first emit() wins)
+                if (signal.arg_types.length == 0) {
+                    for (param in params) {
+                        var haxeType = inferExprType(param);
+                        var cType = TypeMap.getCType(haxeType);
+                        signal.arg_types.push(cType);
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    public function inferExprType(e:Expr):String {
+        // Infer the Haxe type of an expression for signal arg typing
+        return switch (e.expr) {
+            case EConst(CInt(_)): "Int";
+            case EConst(CFloat(_)): "Float";
+            case EConst(CString(_)): "String";
+            case EConst(CIdent("true")), EConst(CIdent("false")): "Bool";
+            case EConst(CIdent("object")), EConst(CIdent("this")): "ArmObject";
+            case EConst(CIdent(name)):
+                // Check local vars first, then members
+                if (localVarTypes.exists(name)) localVarTypes.get(name);
+                else if (members.exists(name)) members.get(name).haxeType;
+                else "Dynamic";
+            case EField(obj, field):
+                // Could be object.transform, etc. - simplified for now
+                "Dynamic";
+            default: "Dynamic";
         };
     }
 
@@ -728,7 +690,7 @@ class TraitExtractor {
         };
     }
 
-    function exprToIR(e:Expr):IRNode {
+    public function exprToIR(e:Expr):IRNode {
         if (e == null) return null;
 
         return switch (e.expr) {
@@ -755,6 +717,17 @@ class TraitExtractor {
                         {
                             type: "transform_call",
                             c_code: "it_set_scale(&((ArmObject*)obj)->transform, ({0}).x * 0.015625f, ({0}).z * 0.015625f, ({0}).y * 0.015625f);",
+                            args: [valueIR]
+                        };
+                    }
+                    // Special case: label.text = value -> emit label_set_text
+                    else if (isLabelTextAssign(e1)) {
+                        var labelName = extractLabelFromTextAssign(e1);
+                        var valueIR = exprToIR(e2);
+                        meta.uses_ui = true;
+                        {
+                            type: "label_set_text",
+                            props: { label: labelName },
                             args: [valueIR]
                         };
                     } else {
@@ -888,6 +861,31 @@ class TraitExtractor {
         return false;
     }
 
+    // Check if expression is assignment to label.text (Label type variable)
+    function isLabelTextAssign(expr:Expr):Bool {
+        switch (expr.expr) {
+            case EField(obj, "text"):
+                // Check if the object is a Label-typed variable
+                var objType = getExprType(obj);
+                if (objType == "Label") return true;
+            default:
+        }
+        return false;
+    }
+
+    // Extract the label variable name from label.text assignment
+    function extractLabelFromTextAssign(expr:Expr):String {
+        switch (expr.expr) {
+            case EField(obj, "text"):
+                switch (obj.expr) {
+                    case EConst(CIdent(name)): return name;
+                    default:
+                }
+            default:
+        }
+        return null;
+    }
+
     function convertFieldAccess(obj:Expr, field:String):IRNode {
         // Handle transform access
         switch (obj.expr) {
@@ -924,7 +922,7 @@ class TraitExtractor {
      * Unified type inference from Haxe expressions.
      * Returns the Haxe type name (Int, Float, String, Vec2, Label, Signal, etc.) or "Dynamic" if unknown.
      */
-    function getExprType(e:Expr):String {
+    public function getExprType(e:Expr):String {
         if (e == null) return "Dynamic";
 
         switch (e.expr) {
@@ -1021,127 +1019,32 @@ class TraitExtractor {
     function convertCall(callExpr:Expr, params:Array<Expr>):IRNode {
         var args = [for (p in params) exprToIR(p)];
 
+        // Try modular converters first (handles Vec, Physics, Transform, Math, Input, Signal, Std, Object, Scene, Canvas)
         switch (callExpr.expr) {
             case EField(obj, method):
-                // FIRST: Check if this is a Vec method call (before specific object checks)
-                // This handles cases like gamepad.leftStick.mult() where the object
-                // is a complex expression that getExprType can resolve
-                var vecMethods = ["mult", "add", "sub", "dot", "normalize", "length", "clone", "cross", "set", "setFrom"];
-                if (Lambda.has(vecMethods, method)) {
-                    var objType = getExprType(obj);
-                    if (objType != null && StringTools.startsWith(objType, "Vec")) {
-                        var objIR = exprToIR(obj);
-                        return convertVecCall(method, objIR, args, objType);
-                    }
+                for (conv in converters) {
+                    var result = conv.tryConvert(obj, method, args, params, this);
+                    if (result != null) return result;
                 }
 
-                // SECOND: Check for physics contact subscription methods
-                // rb.notifyOnContact(handler) or rb.removeContact(handler)
-                if (method == "notifyOnContact" || method == "removeContact") {
-                    meta.uses_physics = true;
-                    return convertContactSubscription(method, args, params);
-                }
-
-                // THIRD: Check if this is a physics method call on any object (rigid_body.applyForce, body.applyForce, etc.)
-                var physicsMethods = ["applyForce", "applyImpulse", "setLinearVelocity", "getLinearVelocity",
-                                      "setAngularVelocity", "getAngularVelocity", "setLinearFactor", "setAngularFactor"];
-                if (Lambda.has(physicsMethods, method)) {
-                    meta.uses_physics = true;
-                    // For N64, physics always applies to the current object
-                    return convertPhysicsCall(method, { type: "ident", value: "object" }, args);
-                }
-
+                // Unsupported APIs - explicitly skip
                 switch (obj.expr) {
-                    // Scene.setActive("Level_02") -> scene_switch_to(SCENE_X)
-                    case EConst(CIdent("Scene")):
-                        return convertSceneCall(method, args, params);
-
-                    // transform.translate(...) -> it_translate(...)
-                    case EField(_, "transform"), EConst(CIdent("transform")):
-                        meta.uses_transform = true;
-                        meta.uses_transform = true;
-                        return convertTransformCall(method, args);
-
-                    // Math.sin(x) -> sinf(x)
-                    case EConst(CIdent("Math")):
-                        return convertMathCall(method, args);
-
-                    // gamepad.started("a") or keyboard/mouse - should be extracted as event
-                    case EConst(CIdent("gamepad")), EConst(CIdent("keyboard")), EConst(CIdent("mouse")), EConst(CIdent("Input")):
-                        meta.uses_input = true;
-                        if (params.length > 0) {
-                            var btn = extractStringArg(params[0]);
-                            if (btn != null) {
-                                var normalized = ButtonMap.normalize(btn);
-                                if (!Lambda.has(meta.buttons_used, normalized)) {
-                                    meta.buttons_used.push(normalized);
-                                }
-                            }
-                        }
-                        return convertInputCall(method, args);
-
-                    // object.physics.applyForce(...) -> physics call on object
-                    case EField(innerObj, "physics"):
-                        meta.uses_physics = true;
-                        var objIR = exprToIR(innerObj);
-                        return convertPhysicsCall(method, objIR, args);
-
-                    // physics.applyForce(...) -> physics call on self (this.physics)
-                    case EConst(CIdent("physics")):
-                        meta.uses_physics = true;
-                        return convertPhysicsCall(method, { type: "ident", value: "object" }, args);
-
-                    // Std.int(), Std.parseFloat(), etc. -> type casts
-                    case EConst(CIdent("Std")):
-                        return convertStdCall(method, args);
-
-                    // object.remove(), object.getTrait(), etc. -> object lifecycle
-                    case EConst(CIdent("object")), EConst(CIdent("this")):
-                        return convertObjectCall(method, args);
-
-                    // Unsupported APIs - explicitly skip with no codegen fallback
-                    case EConst(CIdent("Audio")), EConst(CIdent("Tween")), EConst(CIdent("Network")), EConst(CIdent("canvas")), EConst(CIdent("Koui")):
+                    case EConst(CIdent("Audio")), EConst(CIdent("Tween")), EConst(CIdent("Network")), EConst(CIdent("Koui")):
                         return { type: "skip" };
-
                     default:
-                        // Check if this is a Signal method call (connect/disconnect/emit)
-                        // First try getExprType, then check memberTypes directly
-                        var objType = getExprType(obj);
-                        if (objType == "Signal") {
-                            return convertSignalCall(method, obj, args, params);
-                        }
-                        // Direct check: if method is connect/disconnect/emit and obj is a member
-                        if (method == "connect" || method == "disconnect" || method == "emit") {
-                            var memberName = switch (obj.expr) {
-                                case EConst(CIdent(name)): name;
-                                case EField(_, fieldName): fieldName;
-                                default: null;
-                            };
-                            if (memberName != null && memberTypes.exists(memberName) && memberTypes.get(memberName) == "Signal") {
-                                return convertSignalCall(method, obj, args, params);
-                            }
-                            // Check for global signal pattern: GameEvents.signalName.method()
-                            // or SomeClass.signalName.method()
-                            switch (obj.expr) {
-                                case EField(classExpr, signalName):
-                                    switch (classExpr.expr) {
-                                        case EConst(CIdent(className)):
-                                            // This is ClassName.signalName.method() - global signal
-                                            return convertGlobalSignalCall(method, className, signalName, args, params);
-                                        default:
-                                    }
-                                default:
-                            }
-                        }
-                        // Fallback: generic call with object
-                        return {
-                            type: "call",
-                            method: method,
-                            object: exprToIR(obj),
-                            args: args
-                        };
                 }
 
+                // Fallback: generic call with object (for unknown method calls)
+                return {
+                    type: "call",
+                    method: method,
+                    object: exprToIR(obj),
+                    args: args
+                };
+            default:
+        }
+
+        switch (callExpr.expr) {
             case EConst(CIdent(funcName)):
                 // Skip lifecycle registration calls - they're handled by scanForLifecycles
                 // notifyOnRender2D is skipped entirely - N64 doesn't have 2D graphics layer
@@ -1155,14 +1058,6 @@ class TraitExtractor {
                 // trace() -> debugf() for N64 debug output
                 if (funcName == "trace") {
                     return { type: "debug_call", args: args };
-                }
-
-                // Physics methods called directly (applyForce, applyImpulse, etc.)
-                var physicsMethods = ["applyForce", "applyImpulse", "setLinearVelocity", "getLinearVelocity",
-                                      "setAngularVelocity", "getAngularVelocity", "setLinearFactor", "setAngularFactor"];
-                if (Lambda.has(physicsMethods, funcName)) {
-                    meta.uses_physics = true;
-                    return convertPhysicsCall(funcName, { type: "ident", value: "object" }, args);
                 }
 
                 return { type: "call", method: funcName, args: args };
@@ -1249,738 +1144,6 @@ class TraitExtractor {
         };
     }
 
-    // =========================================================================
-    // Physics call conversion - emit ready-to-use C with placeholders
-    // Placeholders: {obj} = object, {0}, {1}, etc. = args
-    // Coord conversion: Blender (X,Y,Z) → N64 (X,Z,-Y)
-    // =========================================================================
-
-    function convertPhysicsCall(method:String, objIR:IRNode, args:Array<IRNode>):IRNode {
-        // Physics calls use OimoVec3 which needs coordinate swizzle
-        // Template uses {obj} for object and {0} for first arg (vec)
-        var c_code = switch (method) {
-            case "applyForce":
-                "{ OimoVec3 _f = (OimoVec3){({0}).x, ({0}).z, -({0}).y}; physics_apply_force({obj}->rigid_body, &_f); }";
-            case "applyImpulse":
-                "{ OimoVec3 _i = (OimoVec3){({0}).x, ({0}).z, -({0}).y}; physics_apply_impulse({obj}->rigid_body, &_i); }";
-            case "setLinearVelocity":
-                "{ OimoVec3 _v = (OimoVec3){({0}).x, ({0}).z, -({0}).y}; physics_set_linear_velocity({obj}->rigid_body, &_v); }";
-            case "getLinearVelocity":
-                "physics_get_linear_velocity({obj}->rigid_body)";
-            default:
-                null;
-        };
-
-        if (c_code == null) return { type: "skip" };
-
-        return {
-            type: "physics_call",
-            c_code: c_code,
-            object: objIR,
-            args: args
-        };
-    }
-
-    // =========================================================================
-    // Contact subscription - notifyOnContact(handler), removeContact(handler)
-    // Records metadata for Python to emit subscription calls at init time
-    // =========================================================================
-
-    function convertContactSubscription(method:String, args:Array<IRNode>, params:Array<Expr>):IRNode {
-        // Extract handler function name from first argument
-        // e.g., rb.notifyOnContact(onContact) -> handler = "onContact"
-        if (params.length == 0) return { type: "skip" };
-
-        var handlerName:String = null;
-        switch (params[0].expr) {
-            case EConst(CIdent(name)):
-                handlerName = name;
-            case EField(_, name):
-                handlerName = name;
-            default:
-        }
-
-        if (handlerName == null) return { type: "skip" };
-
-        // Record the handler method for extraction
-        // The handler will be extracted as a contact event (similar to button events)
-        var isSubscribe = (method == "notifyOnContact");
-
-        // Build full C handler name: {c_name}_contact_{handlerName}
-        var fullHandlerName = cName + "_contact_" + handlerName;
-
-        meta.contact_events.push({
-            event_name: handlerName,
-            handler_name: fullHandlerName,
-            subscribe: isSubscribe
-        });
-
-        // If subscribing, extract the handler method body as an event
-        if (isSubscribe && methodMap.exists(handlerName)) {
-            var func = methodMap.get(handlerName);
-            if (!events.exists("contact_" + handlerName)) {
-                events.set("contact_" + handlerName, []);
-                extractContactHandler(handlerName, func, events.get("contact_" + handlerName));
-            }
-        }
-
-        // Return a no-op - the actual subscription is done at init time by Python
-        return { type: "skip" };
-    }
-
-    function extractContactHandler(name:String, func:Function, eventNodes:Array<IRNode>):Void {
-        // Contact handlers have signature: function onContact(body: RigidBody)
-        // We need to convert this to the C handler signature: (obj, data, other)
-        // The "body" parameter becomes "other" ArmObject in C
-
-        if (func.expr == null) return;
-
-        switch (func.expr.expr) {
-            case EBlock(exprs):
-                for (expr in exprs) {
-                    var node = exprToIR(expr);
-                    if (node != null && node.type != "skip") {
-                        eventNodes.push(node);
-                    }
-                }
-            default:
-                var node = exprToIR(func.expr);
-                if (node != null && node.type != "skip") {
-                    eventNodes.push(node);
-                }
-        }
-    }
-
-    // =========================================================================
-    // Vec call conversion - emit ready-to-use C with placeholders
-    // Placeholders: {v} = vector object, {0}, {1} = args
-    // =========================================================================
-
-    function convertVecCall(method:String, objIR:IRNode, args:Array<IRNode>, vecType:String):IRNode {
-        // Determine C type based on Haxe type
-        var cType = switch (vecType) {
-            case "Vec4": "ArmVec4";
-            case "Vec3": "ArmVec3";
-            default: "ArmVec2";
-        };
-        var is3D = (vecType == "Vec3" || vecType == "Vec4");
-
-        // Template uses {v} for vector, {0} for first arg
-        var c_code = switch (method) {
-            case "length":
-                is3D ? "sqrtf({v}.x*{v}.x + {v}.y*{v}.y + {v}.z*{v}.z)"
-                     : "sqrtf({v}.x*{v}.x + {v}.y*{v}.y)";
-            case "mult":
-                is3D ? "(" + cType + "){{v}.x*({0}), {v}.y*({0}), {v}.z*({0})}"
-                     : "(" + cType + "){{v}.x*({0}), {v}.y*({0})}";
-            case "add":
-                is3D ? "(" + cType + "){{v}.x+({0}).x, {v}.y+({0}).y, {v}.z+({0}).z}"
-                     : "(" + cType + "){{v}.x+({0}).x, {v}.y+({0}).y}";
-            case "sub":
-                is3D ? "(" + cType + "){{v}.x-({0}).x, {v}.y-({0}).y, {v}.z-({0}).z}"
-                     : "(" + cType + "){{v}.x-({0}).x, {v}.y-({0}).y}";
-            case "dot":
-                is3D ? "({v}.x*({0}).x + {v}.y*({0}).y + {v}.z*({0}).z)"
-                     : "({v}.x*({0}).x + {v}.y*({0}).y)";
-            case "normalize":
-                // Note: normalize modifies in-place, needs the original var name
-                // We use {vraw} placeholder for unparenthesized var
-                is3D ? "{ float _l=sqrtf({v}.x*{v}.x+{v}.y*{v}.y+{v}.z*{v}.z); if(_l>0.0f){ {vraw}.x/=_l; {vraw}.y/=_l; {vraw}.z/=_l; } }"
-                     : "{ float _l=sqrtf({v}.x*{v}.x+{v}.y*{v}.y); if(_l>0.0f){ {vraw}.x/=_l; {vraw}.y/=_l; } }";
-            case "clone":
-                // Clone creates a copy - type depends on target
-                // Special case: transform.scale is stored with SCALE_FACTOR (1/64), so multiply by 64 to get Blender values
-                var isScaleClone = (objIR.type == "field" && objIR.value == "transform.scale");
-                if (isScaleClone) {
-                    // Inverse of SCALE_FACTOR (0.015625 = 1/64) = 64
-                    if (cType == "ArmVec4") "(" + cType + "){{v}.x*64.0f, {v}.y*64.0f, {v}.z*64.0f, 1.0f}";
-                    else if (cType == "ArmVec3") "(" + cType + "){{v}.x*64.0f, {v}.y*64.0f, {v}.z*64.0f}";
-                    else "(" + cType + "){{v}.x*64.0f, {v}.y*64.0f}";
-                } else {
-                    if (cType == "ArmVec4") "(" + cType + "){{v}.x, {v}.y, {v}.z, 1.0f}";
-                    else if (cType == "ArmVec3") "(" + cType + "){{v}.x, {v}.y, {v}.z}";
-                    else "(" + cType + "){{v}.x, {v}.y}";
-                }
-            default:
-                null;
-        };
-
-        if (c_code == null) return { type: "skip" };
-
-        return {
-            type: "vec_call",
-            c_code: c_code,
-            object: objIR,
-            args: args,
-            props: {
-                vecType: vecType,
-                cType: cType,
-                is3D: is3D
-            }
-        };
-    }
-
-    // =========================================================================
-    // Scene call conversion - Scene.setActive() -> scene_switch_to()
-    // =========================================================================
-
-    function convertSceneCall(method:String, args:Array<IRNode>, rawParams:Array<Expr>):IRNode {
-        if (method == "setActive" && rawParams.length > 0) {
-            // Try to extract constant scene name first
-            var result = analyzeSceneArg(rawParams[0]);
-
-            switch (result.kind) {
-                case "constant":
-                    // Compile-time known scene: Scene.setActive("Level_01")
-                    var sceneNameUpper = result.value.toUpperCase();
-                    return {
-                        type: "scene_call",
-                        method: "setActive",
-                        c_code: 'scene_switch_to(SCENE_$sceneNameUpper)'
-                    };
-
-                case "current_scene":
-                    // Scene.active.raw.name -> restart current scene
-                    return {
-                        type: "scene_call",
-                        method: "setActive",
-                        c_code: 'scene_switch_to(scene_get_current_id())'
-                    };
-
-                case "member_string":
-                    // Member variable of type String: Scene.setActive(nextLevel)
-                    // Runtime lookup by name - pass member node so Python emits correctly
-                    return {
-                        type: "scene_call",
-                        method: "setActive",
-                        args: [{ type: "member", value: result.value }]
-                    };
-
-                case "expression":
-                    // Fallback: convert the expression to IR and let codegen handle it
-                    // This generates scene_switch_to_by_name with the expression
-                    return {
-                        type: "scene_call",
-                        method: "setActive",
-                        args: args  // Pass the converted argument
-                    };
-            }
-        }
-        return { type: "skip" };
-    }
-
-    /**
-     * Analyze Scene.setActive argument and classify it:
-     * - "constant": compile-time string literal, value = the scene name
-     * - "current_scene": Scene.active.raw.name pattern
-     * - "member_string": identifier that's a String member variable, value = member name
-     * - "expression": anything else, needs runtime lookup
-     */
-    function analyzeSceneArg(expr:Expr):{ kind:String, value:String } {
-        if (expr == null) return { kind: "expression", value: null };
-
-        switch (expr.expr) {
-            // Direct string literal: "Level_01"
-            case EConst(CString(s)):
-                return { kind: "constant", value: s };
-
-            // Identifier - could be a member variable
-            case EConst(CIdent(name)):
-                if (members.exists(name)) {
-                    var member = members.get(name);
-                    // Check type - String members use runtime lookup
-                    if (member.haxeType == "String") {
-                        return { kind: "member_string", value: name };
-                    }
-                    // SceneId type might have constant default
-                    if (member.haxeType == "SceneId" || member.haxeType == "TSceneFormat" || member.haxeType == "SceneFormat") {
-                        var sceneName = extractSceneFromIRNode(member.defaultValue);
-                        if (sceneName != null) {
-                            return { kind: "constant", value: sceneName };
-                        }
-                    }
-                }
-                return { kind: "expression", value: null };
-
-            // Field access chain: Scene.active.raw.name, myScene.raw.name, etc.
-            case EField(innerExpr, fieldName):
-                if (fieldName == "name") {
-                    // Check for .raw.name pattern
-                    switch (innerExpr.expr) {
-                        case EField(innerInner, "raw"):
-                            // Could be Scene.active.raw or memberVar.raw
-                            switch (innerInner.expr) {
-                                case EField(sceneExpr, "active"):
-                                    // Check if it's Scene.active
-                                    switch (sceneExpr.expr) {
-                                        case EConst(CIdent("Scene")):
-                                            return { kind: "current_scene", value: null };
-                                        default:
-                                    }
-                                case EConst(CIdent(memberName)):
-                                    // memberVar.raw.name - check if it's a member
-                                    if (members.exists(memberName)) {
-                                        var member = members.get(memberName);
-                                        var sceneName = extractSceneFromIRNode(member.defaultValue);
-                                        if (sceneName != null) {
-                                            return { kind: "constant", value: sceneName };
-                                        }
-                                    }
-                                default:
-                            }
-                        default:
-                    }
-                }
-                return { kind: "expression", value: null };
-
-            default:
-                return { kind: "expression", value: null };
-        }
-    }
-
-    function extractSceneFromIRNode(node:IRNode):Null<String> {
-        if (node == null) return null;
-        if (node.type == "string" && node.value != null) {
-            return Std.string(node.value);
-        }
-        if (node.type == "ident" && node.value != null) {
-            // Could be a scene enum like Level_01
-            return Std.string(node.value);
-        }
-        return null;
-    }
-
-    // =========================================================================
-    // Signal call conversion - signal.connect(), signal.disconnect(), signal.emit()
-    // Per-instance signals with max 4 subscribers
-    // =========================================================================
-
-    function convertSignalCall(method:String, signalExpr:Expr, args:Array<IRNode>, params:Array<Expr>):IRNode {
-        // Get the signal member name from the expression
-        var signalName = switch (signalExpr.expr) {
-            case EConst(CIdent(name)): name;
-            case EField(_, fieldName): fieldName;
-            default: null;
-        };
-
-        if (signalName == null) {
-            return { type: "skip" };
-        }
-
-        switch (method) {
-            case "connect":
-                // signal.connect(callback) -> signal_connect(&data->signalName, callback_func, data)
-                if (params.length > 0) {
-                    var callbackName = extractFunctionRef(params[0]);
-                    if (callbackName != null) {
-                        addSignalHandler(callbackName, signalName);
-                        // c_code with {signal_ptr} and {handler} placeholders
-                        return {
-                            type: "signal_call",
-                            value: "connect",
-                            c_code: 'signal_connect({signal_ptr}, {handler}, data);',
-                            props: {
-                                signal_name: signalName,
-                                callback: callbackName
-                            }
-                        };
-                    }
-                }
-                return { type: "skip" };
-
-            case "disconnect":
-                if (params.length > 0) {
-                    var callbackName = extractFunctionRef(params[0]);
-                    if (callbackName != null) {
-                        return {
-                            type: "signal_call",
-                            value: "disconnect",
-                            c_code: 'signal_disconnect({signal_ptr}, {handler});',
-                            props: {
-                                signal_name: signalName,
-                                callback: callbackName
-                            }
-                        };
-                    }
-                }
-                return { type: "skip" };
-
-            case "emit":
-                updateSignalArgTypes(signalName, params);
-                var argCount = params.length;
-
-                // Generate c_code based on arg count
-                var c_code:String;
-                if (argCount == 0) {
-                    c_code = 'signal_emit({signal_ptr}, NULL);';
-                } else if (argCount == 1) {
-                    c_code = 'signal_emit({signal_ptr}, (void*)(uintptr_t)({0}));';
-                } else {
-                    // Multiple args - generate struct init + emit
-                    // {struct_type} _p = {{0}, {1}, ...}; signal_emit({signal_ptr}, &_p);
-                    var argPlaceholders = [for (i in 0...argCount) '{$i}'];
-                    c_code = '{struct_type} _p = {' + argPlaceholders.join(', ') + '}; signal_emit({signal_ptr}, &_p);';
-                }
-
-                return {
-                    type: "signal_call",
-                    value: "emit",
-                    c_code: c_code,
-                    props: {
-                        signal_name: signalName,
-                        arg_count: argCount
-                    },
-                    args: args
-                };
-
-            default:
-                return { type: "skip" };
-        }
-    }
-
-    function convertGlobalSignalCall(method:String, className:String, signalName:String, args:Array<IRNode>, params:Array<Expr>):IRNode {
-        // Handle global/static signals: GameEvents.gemCollected.emit()
-        // These are stored as global ArmSignal structs: g_classname_signalname
-
-        var globalSignalName = 'g_${className.toLowerCase()}_$signalName';
-
-        // Track this global signal for declaration generation
-        if (!Lambda.has(meta.global_signals, globalSignalName)) {
-            meta.global_signals.push(globalSignalName);
-        }
-
-        switch (method) {
-            case "connect":
-                if (params.length > 0) {
-                    var callbackName = extractFunctionRef(params[0]);
-                    if (callbackName != null) {
-                        addSignalHandler(callbackName, signalName);
-                        return {
-                            type: "global_signal_call",
-                            c_code: 'signal_connect({signal_ptr}, {handler}, data);',
-                            props: {
-                                global_signal: globalSignalName,
-                                callback: callbackName
-                            }
-                        };
-                    }
-                }
-                return { type: "skip" };
-
-            case "disconnect":
-                if (params.length > 0) {
-                    var callbackName = extractFunctionRef(params[0]);
-                    if (callbackName != null) {
-                        return {
-                            type: "global_signal_call",
-                            c_code: 'signal_disconnect({signal_ptr}, {handler});',
-                            props: {
-                                global_signal: globalSignalName,
-                                callback: callbackName
-                            }
-                        };
-                    }
-                }
-                return { type: "skip" };
-
-            case "emit":
-                var argCount = params.length;
-                var c_code:String;
-                if (argCount == 0) {
-                    c_code = 'signal_emit({signal_ptr}, NULL);';
-                } else if (argCount == 1) {
-                    c_code = 'signal_emit({signal_ptr}, (void*)(uintptr_t)({0}));';
-                } else {
-                    // Multiple args - for global signals, user should pass a struct pointer
-                    c_code = 'signal_emit({signal_ptr}, (void*){0});';
-                }
-                return {
-                    type: "global_signal_call",
-                    c_code: c_code,
-                    props: {
-                        global_signal: globalSignalName
-                    },
-                    args: args
-                };
-
-            default:
-                return { type: "skip" };
-        }
-    }
-
-    function extractFunctionRef(e:Expr):String {
-        // Extract function name from expression like `onEnemyDeath` or `this.onEnemyDeath`
-        return switch (e.expr) {
-            case EConst(CIdent(name)): name;
-            case EField(_, fieldName): fieldName;
-            default: null;
-        };
-    }
-
-    function updateSignalArgTypes(signalName:String, params:Array<Expr>):Void {
-        // Find the signal in meta and update its arg_types based on emit() call
-        for (signal in meta.signals) {
-            if (signal.name == signalName) {
-                // Only update if not already populated (first emit() wins)
-                if (signal.arg_types.length == 0) {
-                    for (param in params) {
-                        var haxeType = inferExprType(param);
-                        var cType = TypeMap.getCType(haxeType);
-                        signal.arg_types.push(cType);
-                    }
-                }
-                break;
-            }
-        }
-    }
-
-    function inferExprType(e:Expr):String {
-        // Infer the Haxe type of an expression for signal arg typing
-        return switch (e.expr) {
-            case EConst(CInt(_)): "Int";
-            case EConst(CFloat(_)): "Float";
-            case EConst(CString(_)): "String";
-            case EConst(CIdent("true")), EConst(CIdent("false")): "Bool";
-            case EConst(CIdent("object")), EConst(CIdent("this")): "ArmObject";
-            case EConst(CIdent(name)):
-                // Check local vars first, then members
-                if (localVarTypes.exists(name)) localVarTypes.get(name);
-                else if (members.exists(name)) members.get(name).haxeType;
-                else "Dynamic";
-            case EField(obj, field):
-                // Could be object.transform, etc. - simplified for now
-                "Dynamic";
-            default: "Dynamic";
-        };
-    }
-
-    function addSignalHandler(handlerName:String, signalName:String):Void {
-        // Check if already tracked
-        for (h in meta.signal_handlers) {
-            if (h.handler_name == handlerName) return;
-        }
-
-        // Track this handler
-        meta.signal_handlers.push({
-            handler_name: handlerName,
-            signal_name: signalName
-        });
-
-        // Extract the handler method body as an event
-        if (methodMap.exists(handlerName)) {
-            var func = methodMap.get(handlerName);
-            if (!events.exists("signal_" + handlerName)) {
-                events.set("signal_" + handlerName, []);
-                extractSignalHandler(handlerName, func, events.get("signal_" + handlerName));
-            }
-        }
-    }
-
-    function extractSignalHandler(name:String, func:Function, eventNodes:Array<IRNode>):Void {
-        // Signal handlers have signature matching ArmSignalHandler:
-        // void (*)(void* ctx, void* payload)
-        // ctx = the trait data pointer passed to signal_connect
-        // payload = the data pointer passed to signal_emit
-
-        if (func.expr == null) return;
-
-        switch (func.expr.expr) {
-            case EBlock(exprs):
-                for (expr in exprs) {
-                    var node = exprToIR(expr);
-                    if (node != null && node.type != "skip") {
-                        eventNodes.push(node);
-                    }
-                }
-            default:
-                var node = exprToIR(func.expr);
-                if (node != null && node.type != "skip") {
-                    eventNodes.push(node);
-                }
-        }
-    }
-
-    // =========================================================================
-    // Transform call conversion - with coordinate swizzle Blender→N64
-    // Blender: X=right, Y=forward, Z=up
-    // N64/T3D: X=right, Y=up, Z=back (so Y→Z, Z→-Y)
-    // =========================================================================
-
-    function convertTransformCall(method:String, args:Array<IRNode>):IRNode {
-        // Mark as mutating if it's a transform-modifying method
-        if (method == "translate" || method == "rotate" || method == "move" ||
-            method == "setMatrix" || method == "multMatrix" || method == "setRotation" ||
-            method == "buildMatrix" || method == "applyParent" || method == "applyParentInverse" ||
-            method == "reset") {
-            meta.mutates_transform = true;
-        }
-
-        // Template uses {0}, {1}, {2} for args
-        // Coord conversion: Blender (X,Y,Z) → N64 (X,Z,-Y)
-        var c_code = switch (method) {
-            case "translate":
-                // translate(x, y, z) -> it_translate(transform, x, z, -y)
-                "it_translate(&((ArmObject*)obj)->transform, {0}, {2}, -({1}));";
-            case "rotate":
-                // rotate(axis, angle) -> it_rotate_axis_global(transform, axis.x, axis.z, -axis.y, angle)
-                "it_rotate_axis_global(&((ArmObject*)obj)->transform, ({0}).x, ({0}).z, -({0}).y, {1});";
-            case "move":
-                // move(axis, ?scale) -> it_move(transform, axis.x, axis.z, -axis.y, scale)
-                "it_move(&((ArmObject*)obj)->transform, ({0}).x, ({0}).z, -({0}).y, {1});";
-            case "setRotation":
-                // setRotation(x, y, z) -> it_set_rot_euler(transform, x, z, -y)
-                "it_set_rot_euler(&((ArmObject*)obj)->transform, {0}, {2}, -({1}));";
-            case "look":
-                "{ T3DVec3 _dir; it_look(&((ArmObject*)obj)->transform, &_dir); _dir; }";
-            case "right":
-                "{ T3DVec3 _dir; it_right(&((ArmObject*)obj)->transform, &_dir); _dir; }";
-            case "up":
-                "{ T3DVec3 _dir; it_up(&((ArmObject*)obj)->transform, &_dir); _dir; }";
-            case "worldx":
-                "it_world_x(&((ArmObject*)obj)->transform)";
-            case "worldy":
-                // Blender Y -> N64 Z
-                "it_world_z(&((ArmObject*)obj)->transform)";
-            case "worldz":
-                // Blender Z -> N64 -Y
-                "(-it_world_y(&((ArmObject*)obj)->transform))";
-            case "reset":
-                "it_reset(&((ArmObject*)obj)->transform);";
-            case "buildMatrix":
-                // N64 uses dirty flag system - just mark as dirty, matrix rebuilds automatically
-                "((ArmObject*)obj)->transform.dirty = 1;";
-            default:
-                null;
-        };
-
-        if (c_code == null) return { type: "skip" };
-
-        return {
-            type: "transform_call",
-            c_code: c_code,
-            args: args
-        };
-    }
-
-    // =========================================================================
-    // Math call conversion - Math.sin() -> fm_sinf(), etc.
-    // Uses libdragon's fast math functions where available (16x faster)
-    // =========================================================================
-
-    function convertMathCall(method:String, args:Array<IRNode>):IRNode {
-        // Map Haxe Math methods to C math.h functions
-        // Use libdragon's fm_* functions for sin/cos/atan2 (much faster on N64)
-        var cFunc = switch (method) {
-            case "sin": "fm_sinf";      // ~50 ticks vs ~800 ticks for sinf
-            case "cos": "fm_cosf";      // ~50 ticks vs ~800 ticks for cosf
-            case "tan": "tanf";
-            case "asin": "asinf";
-            case "acos": "acosf";
-            case "atan": "atanf";
-            case "atan2": "fm_atan2f";  // libdragon fast version
-            case "sqrt": "sqrtf";
-            case "pow": "powf";
-            case "abs": "fabsf";
-            case "floor": "fm_floorf"; // libdragon fast version
-            case "ceil": "ceilf";
-            case "round": "roundf";
-            case "min": "fminf";
-            case "max": "fmaxf";
-            case "exp": "fm_exp";       // libdragon fast version (~3% error)
-            case "log": "logf";
-            default: method;
-        };
-        return {
-            type: "math_call",
-            value: cFunc,
-            args: args
-        };
-    }
-
-    // =========================================================================
-    // Input call conversion - gamepad.started("a") -> input_started(N64_BTN_A)
-    // =========================================================================
-
-    function convertInputCall(method:String, args:Array<IRNode>):IRNode {
-        // Map button to N64_BTN_* constant
-        var n64Button = "N64_BTN_A"; // default button
-        if (args.length > 0) {
-            var btnArg = args[0];
-            if (btnArg.type == "string") {
-                var btnName = btnArg.value;
-                n64Button = ButtonMap.toN64Const(btnName);
-            }
-        }
-
-        // Emit ready-to-use C code
-        // Note: down() returns float (intensity 0.0-1.0), started/released return bool
-        var cCode = switch(method) {
-            case "started": 'input_started($n64Button)';
-            case "released": 'input_released($n64Button)';
-            case "down": 'input_down($n64Button)';
-            case "getStickX": 'input_stick_x()';
-            case "getStickY": 'input_stick_y()';
-            default: '0'; // unsupported input method - return neutral value
-        };
-
-        return {
-            type: "input_call",
-            c_code: cCode,
-            method: method
-        };
-    }
-
-    // =========================================================================
-    // Std call conversion - Std.int() -> (int32_t), Std.parseFloat() -> strtof()
-    // =========================================================================
-
-    function convertStdCall(method:String, args:Array<IRNode>):IRNode {
-        return switch (method) {
-            case "int":
-                { type: "cast_call", value: "(int32_t)", args: args };
-            case "parseFloat":
-                { type: "math_call", value: "strtof", args: args };  // Note: strtof needs NULL as 2nd arg
-            case "string":
-                // Std.string(value) used standalone (not in concatenation)
-                // In a + expression, StringConcatBuilder handles this
-                // For standalone use, emit sprintf with single arg
-                if (args.length > 0) {
-                    var argType = args[0].type;
-                    var format = switch (argType) {
-                        case "float": "%.2f";
-                        case "int": "%d";
-                        case "member": "%d";  // Assume int for members
-                        default: "%d";
-                    };
-                    { type: "sprintf", value: format, args: args };
-                } else {
-                    { type: "string", value: "" };
-                }
-            default:
-                { type: "skip" };
-        };
-    }
-
-    // =========================================================================
-    // Object call conversion - object.remove(), object.getTrait(), etc.
-    // =========================================================================
-
-    function convertObjectCall(method:String, args:Array<IRNode>):IRNode {
-        return switch (method) {
-            case "remove":
-                // object.remove() -> object_remove((ArmObject*)obj)
-                { type: "object_call", c_code: "object_remove((ArmObject*)obj)" };
-            case "getTrait", "addTrait", "removeTrait":
-                // Trait system not supported on N64 - skip silently
-                { type: "skip" };
-            case "getChildren", "getChild":
-                // Children access not yet supported - skip
-                { type: "skip" };
-            default:
-                // Unknown object method - skip to avoid codegen fallback
-                { type: "skip" };
-        };
-    }
 }
 
 #end

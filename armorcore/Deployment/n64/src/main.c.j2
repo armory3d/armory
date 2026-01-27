@@ -18,7 +18,6 @@
 #if ENGINE_ENABLE_UI
 #include "data/fonts.h"
 #include "data/ui_canvas.h"
-#include "koui/koui.h"
 #endif
 
 #define FIXED_TIMESTEP ({fixed_timestep}f)
@@ -42,7 +41,7 @@ int main(void)
 #endif
 #if ENGINE_ENABLE_UI
     fonts_init();
-    koui_init();
+    ui_canvas_init();
 #endif
 
     T3DViewport viewport = t3d_viewport_create_buffered(FB_COUNT);
@@ -85,7 +84,7 @@ int main(void)
             scene_clear_pending();
             scene_clear(current_scene);
 #if ENGINE_ENABLE_UI
-            koui_clear();
+            ui_canvas_clear();
 #endif
             trait_events_clear();
 #if ENGINE_ENABLE_PHYSICS
@@ -106,7 +105,7 @@ int main(void)
         renderer_begin_frame(&viewport, scene);
         renderer_draw_scene(&viewport, scene);
 #if ENGINE_ENABLE_UI
-        koui_render();
+        ui_canvas_render();
 #endif
         renderer_end_frame(&viewport);
 

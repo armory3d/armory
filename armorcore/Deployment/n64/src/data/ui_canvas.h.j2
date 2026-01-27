@@ -1,39 +1,84 @@
 #pragma once
 
-#include "../koui/koui.h"
+#include <stdint.h>
+#include <stdbool.h>
 #include "scenes.h"
 
 #ifdef __cplusplus
 extern "C" {{
 #endif
 
-// Anchor enum (matches Koui Editor)
-typedef enum {{
-    ANCHOR_TOP_LEFT = 0,
-    ANCHOR_TOP_CENTER = 1,
-    ANCHOR_TOP_RIGHT = 2,
-    ANCHOR_MIDDLE_LEFT = 3,
-    ANCHOR_MIDDLE_CENTER = 4,
-    ANCHOR_MIDDLE_RIGHT = 5,
-    ANCHOR_BOTTOM_LEFT = 6,
-    ANCHOR_BOTTOM_CENTER = 7,
-    ANCHOR_BOTTOM_RIGHT = 8,
-}} UIAnchor;
-
-// Canvas dimensions
-#define UI_CANVAS_WIDTH {canvas_width}
-#define UI_CANVAS_HEIGHT {canvas_height}
-
 // Label key defines (generated from Koui Editor canvas JSON)
 {label_defines}
 
 #define UI_LABEL_COUNT {label_count}
 
-// Initialize UI canvas for a specific scene (clears and reloads labels)
+#if UI_LABEL_COUNT > 0
+
+// Max UI elements
+#ifndef UI_MAX_LABELS
+#define UI_MAX_LABELS 32
+#endif
+
+// Max text length for labels
+#ifndef UI_LABEL_TEXT_SIZE
+#define UI_LABEL_TEXT_SIZE 64
+#endif
+
+// Canvas dimensions
+#define UI_CANVAS_WIDTH {canvas_width}
+#define UI_CANVAS_HEIGHT {canvas_height}
+
+// Anchor enum (matches Koui Editor)
+typedef enum {{
+    UI_ANCHOR_TOP_LEFT = 0,
+    UI_ANCHOR_TOP_CENTER = 1,
+    UI_ANCHOR_TOP_RIGHT = 2,
+    UI_ANCHOR_MIDDLE_LEFT = 3,
+    UI_ANCHOR_MIDDLE_CENTER = 4,
+    UI_ANCHOR_MIDDLE_RIGHT = 5,
+    UI_ANCHOR_BOTTOM_LEFT = 6,
+    UI_ANCHOR_BOTTOM_CENTER = 7,
+    UI_ANCHOR_BOTTOM_RIGHT = 8,
+}} UIAnchor;
+
+// Label element
+typedef struct {{
+    int16_t pos_x, pos_y;
+    char text[UI_LABEL_TEXT_SIZE];  // Owned buffer, not pointer
+    uint8_t font_id;
+    bool visible;
+}} UILabel;
+
+// Initialize UI canvas system (call once at startup)
+void ui_canvas_init(void);
+
+// Initialize canvas for a specific scene (clears and reloads labels)
 void ui_canvas_scene_init(SceneId scene_id);
 
-// Get label by index
-KouiLabel* ui_canvas_get_label(int index);
+// Clear all labels and reset pool (call on scene change)
+void ui_canvas_clear(void);
+
+// Label management
+UILabel* ui_label_create(const char *text);           // Create label (not added to scene)
+void ui_label_add(UILabel *label);                    // Add label to render list
+void ui_label_remove(UILabel *label);                 // Remove label from render list
+void ui_label_set_position(UILabel *label, int16_t x, int16_t y);
+void ui_label_set_text(UILabel *label, const char *text);  // Set label text (copies string)
+
+// Get label by index (for canvas-defined labels)
+UILabel* ui_canvas_get_label(int index);
+
+// Render all UI elements (call after 3D rendering, before display_show)
+void ui_canvas_render(void);
+
+#else
+// Stubs when no UI labels exist
+static inline void ui_canvas_init(void) {{}}
+static inline void ui_canvas_scene_init(SceneId scene_id) {{ (void)scene_id; }}
+static inline void ui_canvas_clear(void) {{}}
+static inline void ui_canvas_render(void) {{}}
+#endif
 
 #ifdef __cplusplus
 }}

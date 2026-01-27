@@ -454,21 +454,20 @@ class N64Exporter:
         else:
             physics_sources = '# No physics'
 
-        # UI source files (only if Koui UI elements are used)
+        # UI source files (only if UI elements are used)
         if self.has_ui:
-            koui_sources = '''src +=\\
-    src/koui/koui.c \\
+            ui_sources = '''src +=\\
     src/data/fonts.c \\
     src/data/ui_canvas.c'''
         else:
-            koui_sources = '# No UI'
+            ui_sources = '# No UI'
 
         output = tmpl_content.format(
             tiny3d_path=os.path.join(arm.utils.get_sdk_path(), 'lib', 'tiny3d').replace('\\', '/'),
             game_title=arm.utils.safestr(wrd.arm_project_name),
             scene_files=scene_files,
             physics_sources=physics_sources,
-            koui_sources=koui_sources
+            koui_sources=ui_sources
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
@@ -492,7 +491,11 @@ class N64Exporter:
     def write_traits(self):
         # Collect all type overrides from all trait instances across all scenes
         type_overrides = self._collect_type_overrides()
-        features = codegen.write_traits_files(type_overrides)
+
+        # Build label_map: {label_key: canvas_name} for UI label resolution
+        label_map = self._build_label_map()
+
+        features = codegen.write_traits_files(type_overrides, label_map)
 
         # Update feature flags based on trait analysis
         if features:
@@ -500,6 +503,22 @@ class N64Exporter:
                 self.has_ui = True
             if features.get('has_physics'):
                 self.has_physics = True
+
+    def _build_label_map(self) -> dict:
+        """Build mapping from label key to canvas name for UI label resolution.
+
+        Returns:
+            dict mapping label_key -> canvas_name
+        """
+        label_map = {}
+        for canvas_name, canvas_data in self.ui_canvas_data.items():
+            for label in canvas_data.get('labels', []):
+                label_key = label.get('key', '')
+                if label_key:
+                    if label_key in label_map:
+                        log.warn(f'Duplicate label key "{label_key}" in canvas "{canvas_name}" - already in "{label_map[label_key]}"')
+                    label_map[label_key] = canvas_name
+        return label_map
 
     def _collect_type_overrides(self) -> dict:
         """Collect all type overrides from trait instances across all scenes.
@@ -555,14 +574,6 @@ class N64Exporter:
 
         with open(out_path, 'w', encoding='utf-8') as f:
             f.write(output)
-
-    def write_koui(self):
-        """Copy Koui UI wrapper files if UI is used."""
-        if not self.has_ui:
-            return
-
-        # Copy koui directory
-        n64_utils.copy_dir('koui', 'src')
 
     def detect_ui_canvas(self):
         """Detect and parse Koui canvas JSON files referenced by scenes.
@@ -651,22 +662,25 @@ class N64Exporter:
         canvas_width = first_canvas['width']
         canvas_height = first_canvas['height']
 
-        # Build label defines per canvas
+        # Build label defines per canvas - indices are per-canvas (0, 1, 2...) since
+        # each scene loads only its canvas's labels into g_canvas_labels[]
         label_defines_lines = []
-        label_idx = 0
+        total_label_count = 0
         for canvas_name, canvas in self.ui_canvas_data.items():
             safe_canvas = arm.utils.safesrc(canvas_name).upper()
             label_defines_lines.append(f'// Canvas: {canvas_name} ({canvas["width"]}x{canvas["height"]})')
+            label_idx = 0  # Reset to 0 for each canvas
             for label in canvas['labels']:
                 safe_key = arm.utils.safesrc(label['key']).upper()
                 label_defines_lines.append(f'#define UI_LABEL_{safe_canvas}_{safe_key} {label_idx}')
                 label_idx += 1
+            total_label_count = max(total_label_count, label_idx)
 
         output = tmpl_content.format(
             canvas_width=canvas_width,
             canvas_height=canvas_height,
             label_defines='\n'.join(label_defines_lines),
-            label_count=label_idx
+            label_count=total_label_count
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
@@ -1178,7 +1192,6 @@ class N64Exporter:
         self.write_types()
         self.write_engine()
         self.write_physics()
-        self.write_koui()
         self.write_fonts()
         self.write_ui_canvas()  # Generate canvas label data
         self.write_main()

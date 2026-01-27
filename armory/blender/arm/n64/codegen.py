@@ -62,11 +62,13 @@ from arm.n64 import utils as n64_utils
 class IREmitter:
     """Emits C code from IR nodes. No semantic analysis, just translation."""
 
-    def __init__(self, trait_name: str, c_name: str, member_names: List[str]):
+    def __init__(self, trait_name: str, c_name: str, member_names: List[str], label_map: Dict[str, str] = None):
         self.trait_name = trait_name
         self.c_name = c_name
         self.member_names = member_names
         self.data_type = f"{trait_name}Data"
+        # label_map: {label_key: canvas_name} for resolving UI_LABEL_{CANVAS}_{KEY}
+        self.label_map = label_map or {}
 
     def emit(self, node: Optional[Dict]) -> str:
         """Emit C code for an IR node."""
@@ -325,6 +327,44 @@ class IREmitter:
             return f"scene_switch_to(scene_get_id_by_name({scene_expr}));"
         return ""
 
+    def emit_canvas_get_label(self, node: Dict) -> str:
+        """canvas.getElementAs(Label, "key") -> ui_canvas_get_label(UI_LABEL_{CANVAS}_{KEY})"""
+        import arm.utils
+        props = node.get("props", {})
+        label_key = props.get("key", "")
+        if not label_key:
+            return "NULL"
+
+        # Look up which canvas this label belongs to
+        canvas_name = self.label_map.get(label_key, "")
+        if canvas_name:
+            safe_canvas = arm.utils.safesrc(canvas_name).upper()
+            safe_key = arm.utils.safesrc(label_key).upper()
+            return f"ui_canvas_get_label(UI_LABEL_{safe_canvas}_{safe_key})"
+        else:
+            # Fallback: try just the key (maybe single canvas)
+            safe_key = arm.utils.safesrc(label_key).upper()
+            print(f"[N64 codegen] WARNING: Label '{label_key}' canvas not found, using UI_LABEL_{safe_key}")
+            return f"ui_canvas_get_label(UI_LABEL_{safe_key})"
+
+    def emit_label_set_text(self, node: Dict) -> str:
+        """label.text = value -> ui_label_set_text(label, value)"""
+        props = node.get("props", {})
+        label_name = props.get("label", "")
+        args = node.get("args", [])
+
+        if not label_name or not args:
+            return ""
+
+        # Check if this is a member variable (stored in data struct) or local variable
+        if label_name in self.member_names:
+            label_expr = f"(({self.data_type}*)data)->{label_name}"
+        else:
+            label_expr = label_name
+
+        value = self.emit(args[0])
+        return f"ui_label_set_text({label_expr}, {value});"
+
     def emit_transform_call(self, node: Dict) -> str:
         """Transform calls - substitute placeholders in macro-provided c_code."""
         c_code = node.get("c_code", "")
@@ -527,7 +567,7 @@ class TraitCodeGenerator:
     Pure 1:1 emitter - all data comes from macro-generated IR.
     """
 
-    def __init__(self, name: str, ir: Dict, type_overrides: Dict = None):
+    def __init__(self, name: str, ir: Dict, type_overrides: Dict = None, label_map: Dict[str, str] = None):
         self.name = name
         self.c_name = ir.get("c_name", "")  # Must be provided by macro
         self.members = ir.get("members", [])
@@ -536,7 +576,7 @@ class TraitCodeGenerator:
         self.type_overrides = type_overrides or {}
 
         member_names = [m.get("name") for m in self.members]
-        self.emitter = IREmitter(name, self.c_name, member_names)
+        self.emitter = IREmitter(name, self.c_name, member_names, label_map)
 
     def _get_member_ctype(self, member: Dict) -> str:
         """Get the C type for a member, applying overrides if present."""
@@ -819,14 +859,15 @@ def convert_scene_data(scene_data: dict) -> dict:
 # Traits File Generation
 # =============================================================================
 
-def write_traits_files(type_overrides: dict = None):
+def write_traits_files(type_overrides: dict = None, label_map: dict = None):
     """Generate traits.h and traits.c from IR JSON using templates.
 
     Args:
         type_overrides: Optional dict of {trait_name: {member_name: ctype}} overrides
+        label_map: Optional dict of {label_key: canvas_name} for UI label resolution
 
     Returns:
-        dict with feature flags: {'has_physics': bool}
+        dict with feature flags: {'has_physics': bool, 'has_ui': bool}
     """
     import arm.utils
 
@@ -849,10 +890,10 @@ def write_traits_files(type_overrides: dict = None):
             f.write("// Auto-generated empty traits header\n#ifndef _TRAITS_H_\n#define _TRAITS_H_\n#endif\n")
         with open(c_path, 'w') as f:
             f.write("// Auto-generated empty traits implementation\n#include \"traits.h\"\n")
-        return {'has_physics': False}
+        return {'has_physics': False, 'has_ui': False}
 
     # Generate template substitution data and detect features
-    template_data, features = _prepare_traits_template_data(traits, type_overrides)
+    template_data, features = _prepare_traits_template_data(traits, type_overrides, label_map)
 
     # Generate traits.h from template
     h_tmpl_path = os.path.join(tmpl_dir, "traits.h.j2")
@@ -904,10 +945,15 @@ def _detect_features_in_nodes(nodes) -> dict:
     return features
 
 
-def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> tuple:
+def _prepare_traits_template_data(traits: dict, type_overrides: dict = None, label_map: dict = None) -> tuple:
     """Prepare data for traits.h.j2 and traits.c.j2 templates.
 
     Uses TraitCodeGenerator for each trait to avoid code duplication.
+
+    Args:
+        traits: Dict of trait_name -> trait_ir from JSON
+        type_overrides: Optional dict of {trait_name: {member_name: ctype}} overrides
+        label_map: Optional dict of {label_key: canvas_name} for UI label resolution
 
     Returns:
         tuple of (template_data dict, features dict)
@@ -919,10 +965,10 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
     global_signals = set()  # Collect unique global signals
 
     # Track features across all traits
-    all_features = {'has_physics': False}
+    all_features = {'has_physics': False, 'has_ui': False}
 
     for trait_name, trait_ir in traits.items():
-        gen = TraitCodeGenerator(trait_name, trait_ir, type_overrides)
+        gen = TraitCodeGenerator(trait_name, trait_ir, type_overrides, label_map)
 
         # Header data: signal payload structs + data struct + declarations
         payload_structs = gen.generate_signal_payload_structs()
@@ -942,6 +988,10 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
         meta = trait_ir.get("meta", {})
         for gs in meta.get("global_signals", []):
             global_signals.add(gs)
+
+        # Check if this trait uses UI
+        if meta.get("uses_ui"):
+            all_features['has_ui'] = True
 
         # Implementation data
         trait_implementations.append(gen.generate_all_event_implementations())

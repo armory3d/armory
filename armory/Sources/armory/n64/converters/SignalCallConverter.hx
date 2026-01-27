@@ -1,0 +1,209 @@
+package armory.n64.converters;
+
+#if macro
+import haxe.macro.Expr;
+import armory.n64.IRTypes;
+import armory.n64.mapping.TypeMap;
+import armory.n64.converters.ICallConverter;
+
+/**
+ * Converts Signal method calls to C signal_* functions.
+ * Handles: connect, disconnect, emit for both instance and global signals.
+ */
+class SignalCallConverter implements ICallConverter {
+    public function new() {}
+
+    public function tryConvert(obj:Expr, method:String, args:Array<IRNode>, rawParams:Array<Expr>, ctx:IExtractorContext):IRNode {
+        // Only handle Signal methods
+        if (method != "connect" && method != "disconnect" && method != "emit") {
+            return null;
+        }
+
+        // Check if object is a Signal type
+        var objType = ctx.getExprType(obj);
+        if (objType == "Signal") {
+            return convertSignalCall(method, obj, args, rawParams, ctx);
+        }
+
+        // Check memberTypes directly for this.signalName pattern
+        var memberName = switch (obj.expr) {
+            case EConst(CIdent(name)): name;
+            case EField(_, fieldName): fieldName;
+            default: null;
+        };
+
+        if (memberName != null && ctx.getMemberType(memberName) == "Signal") {
+            return convertSignalCall(method, obj, args, rawParams, ctx);
+        }
+
+        // Check for global signal pattern: ClassName.signalName.method()
+        switch (obj.expr) {
+            case EField(classExpr, signalName):
+                switch (classExpr.expr) {
+                    case EConst(CIdent(className)):
+                        // This is ClassName.signalName.method() - global signal
+                        return convertGlobalSignalCall(method, className, signalName, args, rawParams, ctx);
+                    default:
+                }
+            default:
+        }
+
+        return null;
+    }
+
+    function convertSignalCall(method:String, signalExpr:Expr, args:Array<IRNode>, params:Array<Expr>, ctx:IExtractorContext):IRNode {
+        // Get the signal member name from the expression
+        var signalName = switch (signalExpr.expr) {
+            case EConst(CIdent(name)): name;
+            case EField(_, fieldName): fieldName;
+            default: null;
+        };
+
+        if (signalName == null) {
+            return { type: "skip" };
+        }
+
+        switch (method) {
+            case "connect":
+                if (params.length > 0) {
+                    var callbackName = extractFunctionRef(params[0]);
+                    if (callbackName != null) {
+                        ctx.addSignalHandler(callbackName, signalName);
+                        return {
+                            type: "signal_call",
+                            value: "connect",
+                            c_code: 'signal_connect({signal_ptr}, {handler}, data);',
+                            props: {
+                                signal_name: signalName,
+                                callback: callbackName
+                            }
+                        };
+                    }
+                }
+                return { type: "skip" };
+
+            case "disconnect":
+                if (params.length > 0) {
+                    var callbackName = extractFunctionRef(params[0]);
+                    if (callbackName != null) {
+                        return {
+                            type: "signal_call",
+                            value: "disconnect",
+                            c_code: 'signal_disconnect({signal_ptr}, {handler});',
+                            props: {
+                                signal_name: signalName,
+                                callback: callbackName
+                            }
+                        };
+                    }
+                }
+                return { type: "skip" };
+
+            case "emit":
+                ctx.updateSignalArgTypes(signalName, params);
+                var argCount = params.length;
+
+                var c_code:String;
+                if (argCount == 0) {
+                    c_code = 'signal_emit({signal_ptr}, NULL);';
+                } else if (argCount == 1) {
+                    c_code = 'signal_emit({signal_ptr}, (void*)(uintptr_t)({0}));';
+                } else {
+                    var argPlaceholders = [for (i in 0...argCount) '{$i}'];
+                    c_code = '{struct_type} _p = {' + argPlaceholders.join(', ') + '}; signal_emit({signal_ptr}, &_p);';
+                }
+
+                return {
+                    type: "signal_call",
+                    value: "emit",
+                    c_code: c_code,
+                    props: {
+                        signal_name: signalName,
+                        arg_count: argCount
+                    },
+                    args: args
+                };
+
+            default:
+                return { type: "skip" };
+        }
+    }
+
+    function convertGlobalSignalCall(method:String, className:String, signalName:String, args:Array<IRNode>, params:Array<Expr>, ctx:IExtractorContext):IRNode {
+        // Handle global/static signals: GameEvents.gemCollected.emit()
+        var globalSignalName = 'g_${className.toLowerCase()}_$signalName';
+
+        // Track this global signal
+        var meta = ctx.getMeta();
+        if (!Lambda.has(meta.global_signals, globalSignalName)) {
+            meta.global_signals.push(globalSignalName);
+        }
+
+        switch (method) {
+            case "connect":
+                if (params.length > 0) {
+                    var callbackName = extractFunctionRef(params[0]);
+                    if (callbackName != null) {
+                        ctx.addSignalHandler(callbackName, signalName);
+                        return {
+                            type: "global_signal_call",
+                            c_code: 'signal_connect({signal_ptr}, {handler}, data);',
+                            props: {
+                                global_signal: globalSignalName,
+                                callback: callbackName
+                            }
+                        };
+                    }
+                }
+                return { type: "skip" };
+
+            case "disconnect":
+                if (params.length > 0) {
+                    var callbackName = extractFunctionRef(params[0]);
+                    if (callbackName != null) {
+                        return {
+                            type: "global_signal_call",
+                            c_code: 'signal_disconnect({signal_ptr}, {handler});',
+                            props: {
+                                global_signal: globalSignalName,
+                                callback: callbackName
+                            }
+                        };
+                    }
+                }
+                return { type: "skip" };
+
+            case "emit":
+                var argCount = params.length;
+                var c_code:String;
+                if (argCount == 0) {
+                    c_code = 'signal_emit({signal_ptr}, NULL);';
+                } else if (argCount == 1) {
+                    c_code = 'signal_emit({signal_ptr}, (void*)(uintptr_t)({0}));';
+                } else {
+                    c_code = 'signal_emit({signal_ptr}, (void*){0});';
+                }
+                return {
+                    type: "global_signal_call",
+                    c_code: c_code,
+                    props: {
+                        global_signal: globalSignalName
+                    },
+                    args: args
+                };
+
+            default:
+                return { type: "skip" };
+        }
+    }
+
+    function extractFunctionRef(e:Expr):String {
+        return switch (e.expr) {
+            case EConst(CIdent(name)): name;
+            case EField(_, fieldName): fieldName;
+            default: null;
+        };
+    }
+}
+
+#end

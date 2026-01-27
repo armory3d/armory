@@ -2,6 +2,7 @@ package armory.n64;
 
 #if macro
 import haxe.macro.Expr;
+import armory.n64.IRTypes;
 
 using haxe.macro.ExprTools;
 using StringTools;
@@ -13,15 +14,15 @@ using StringTools;
  * into a single sprintf node: { type: "sprintf", value: "Score: %ld pts", args: [score] }
  */
 class StringConcatBuilder {
-    var members:Map<String, N64TraitMacro.MemberIR>;
+    var members:Map<String, MemberIR>;
     var localVarTypes:Map<String, String>;
-    var exprToIRFunc:Expr->N64TraitMacro.IRNode;
+    var exprToIRFunc:Expr->IRNode;
     var getExprTypeFunc:Expr->String;
 
     public function new(
-        members:Map<String, N64TraitMacro.MemberIR>,
+        members:Map<String, MemberIR>,
         localVarTypes:Map<String, String>,
-        exprToIRFunc:Expr->N64TraitMacro.IRNode,
+        exprToIRFunc:Expr->IRNode,
         getExprTypeFunc:Expr->String
     ) {
         this.members = members;
@@ -34,9 +35,9 @@ class StringConcatBuilder {
      * Build a flattened string concatenation node.
      * Collects all parts and emits a single sprintf node.
      */
-    public function build(e1:Expr, e2:Expr):N64TraitMacro.IRNode {
+    public function build(e1:Expr, e2:Expr):IRNode {
         var formatParts:Array<String> = [];
-        var args:Array<N64TraitMacro.IRNode> = [];
+        var args:Array<IRNode> = [];
 
         collectParts(e1, formatParts, args);
         collectParts(e2, formatParts, args);
@@ -51,7 +52,7 @@ class StringConcatBuilder {
     /**
      * Recursively collect parts of a string concatenation.
      */
-    function collectParts(e:Expr, formatParts:Array<String>, args:Array<N64TraitMacro.IRNode>):Void {
+    function collectParts(e:Expr, formatParts:Array<String>, args:Array<IRNode>):Void {
         if (e == null) return;
 
         switch (e.expr) {
@@ -118,7 +119,7 @@ class StringConcatBuilder {
      * Add a typed format specifier for an expression.
      * Note: On N64, int32_t is 'long int', so we use %ld for integers.
      */
-    function addTyped(e:Expr, exprType:String, formatParts:Array<String>, args:Array<N64TraitMacro.IRNode>):Void {
+    function addTyped(e:Expr, exprType:String, formatParts:Array<String>, args:Array<IRNode>):Void {
         var format = switch (exprType) {
             case "Int": "%ld";      // int32_t is long on N64
             case "Float": "%.2f";
@@ -133,7 +134,7 @@ class StringConcatBuilder {
     /**
      * Add any expression to format (infer type).
      */
-    function addExpr(e:Expr, formatParts:Array<String>, args:Array<N64TraitMacro.IRNode>):Void {
+    function addExpr(e:Expr, formatParts:Array<String>, args:Array<IRNode>):Void {
         var exprType = getExprTypeFunc(e);
         addTyped(e, exprType, formatParts, args);
     }
