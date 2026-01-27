@@ -5,6 +5,7 @@ import haxe.macro.Expr;
 import armory.n64.IRTypes;
 import armory.n64.mapping.TypeMap;
 import armory.n64.converters.ICallConverter;
+import armory.n64.util.ExprUtils;
 
 /**
  * Converts Signal method calls to C signal_* functions.
@@ -26,11 +27,7 @@ class SignalCallConverter implements ICallConverter {
         }
 
         // Check memberTypes directly for this.signalName pattern
-        var memberName = switch (obj.expr) {
-            case EConst(CIdent(name)): name;
-            case EField(_, fieldName): fieldName;
-            default: null;
-        };
+        var memberName = ExprUtils.extractIdentName(obj);
 
         if (memberName != null && ctx.getMemberType(memberName) == "Signal") {
             return convertSignalCall(method, obj, args, rawParams, ctx);
@@ -53,11 +50,7 @@ class SignalCallConverter implements ICallConverter {
 
     function convertSignalCall(method:String, signalExpr:Expr, args:Array<IRNode>, params:Array<Expr>, ctx:IExtractorContext):IRNode {
         // Get the signal member name from the expression
-        var signalName = switch (signalExpr.expr) {
-            case EConst(CIdent(name)): name;
-            case EField(_, fieldName): fieldName;
-            default: null;
-        };
+        var signalName = ExprUtils.extractIdentName(signalExpr);
 
         if (signalName == null) {
             return { type: "skip" };
@@ -198,11 +191,7 @@ class SignalCallConverter implements ICallConverter {
     }
 
     function extractFunctionRef(e:Expr):String {
-        return switch (e.expr) {
-            case EConst(CIdent(name)): name;
-            case EField(_, fieldName): fieldName;
-            default: null;
-        };
+        return ExprUtils.extractIdentName(e);
     }
 }
 

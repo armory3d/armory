@@ -4,6 +4,7 @@ package armory.n64.converters;
 import haxe.macro.Expr;
 import armory.n64.IRTypes;
 import armory.n64.converters.ICallConverter;
+import armory.n64.util.ExprUtils;
 
 /**
  * Canvas Call Converter
@@ -29,8 +30,8 @@ class CanvasCallConverter implements ICallConverter {
     function convertCanvasCall(method:String, args:Array<IRNode>, rawParams:Array<Expr>, ctx:IExtractorContext):IRNode {
         if (method == "getElementAs" && rawParams.length >= 2) {
             // canvas.getElementAs(Label, "score_label")
-            var elementType = extractTypeIdent(rawParams[0]);
-            var labelKey = extractStringLiteral(rawParams[1]);
+            var elementType = ExprUtils.extractIdentName(rawParams[0]);
+            var labelKey = ExprUtils.extractString(rawParams[1]);
 
             if (elementType == "Label" && labelKey != null) {
                 ctx.getMeta().uses_ui = true;
@@ -52,22 +53,6 @@ class CanvasCallConverter implements ICallConverter {
             }
         }
         return { type: "skip" };
-    }
-
-    function extractTypeIdent(e:Expr):String {
-        if (e == null) return null;
-        switch (e.expr) {
-            case EConst(CIdent(name)): return name;
-            default: return null;
-        }
-    }
-
-    function extractStringLiteral(e:Expr):String {
-        if (e == null) return null;
-        switch (e.expr) {
-            case EConst(CString(s)): return s;
-            default: return null;
-        }
     }
 }
 #end

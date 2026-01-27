@@ -4,6 +4,7 @@ package armory.n64.converters;
 import haxe.macro.Expr;
 import armory.n64.IRTypes;
 import armory.n64.converters.ICallConverter;
+import armory.n64.util.ExprUtils;
 
 using StringTools;
 
@@ -79,14 +80,7 @@ class PhysicsCallConverter implements ICallConverter {
         // Extract handler function name from first argument
         if (params.length == 0) return { type: "skip" };
 
-        var handlerName:String = null;
-        switch (params[0].expr) {
-            case EConst(CIdent(name)):
-                handlerName = name;
-            case EField(_, name):
-                handlerName = name;
-            default:
-        }
+        var handlerName = ExprUtils.extractIdentName(params[0]);
 
         if (handlerName == null) return { type: "skip" };
 

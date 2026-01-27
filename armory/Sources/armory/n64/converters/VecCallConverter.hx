@@ -4,6 +4,7 @@ package armory.n64.converters;
 import haxe.macro.Expr;
 import haxe.ds.StringMap;
 import armory.n64.IRTypes;
+import armory.n64.mapping.Constants;
 import armory.n64.converters.ICallConverter;
 
 using StringTools;
@@ -62,13 +63,13 @@ class VecCallConverter implements ICallConverter {
                      : "{ float _l=sqrtf({v}.x*{v}.x+{v}.y*{v}.y); if(_l>0.0f){ {vraw}.x/=_l; {vraw}.y/=_l; } }";
             case "clone":
                 // Clone creates a copy - type depends on target
-                // Special case: transform.scale is stored with SCALE_FACTOR (1/64), so multiply by 64 to get Blender values
+                // Special case: transform.scale is stored with SCALE_FACTOR, so multiply by inverse to get Blender values
                 var isScaleClone = (objIR.type == "field" && objIR.value == "transform.scale");
                 if (isScaleClone) {
-                    // Inverse of SCALE_FACTOR (0.015625 = 1/64) = 64
-                    if (cType == "ArmVec4") "(" + cType + "){{v}.x*64.0f, {v}.y*64.0f, {v}.z*64.0f, 1.0f}";
-                    else if (cType == "ArmVec3") "(" + cType + "){{v}.x*64.0f, {v}.y*64.0f, {v}.z*64.0f}";
-                    else "(" + cType + "){{v}.x*64.0f, {v}.y*64.0f}";
+                    var inv = Constants.SCALE_FACTOR_INV_C;
+                    if (cType == "ArmVec4") '($cType){{v}.x*$inv, {v}.y*$inv, {v}.z*$inv, 1.0f}';
+                    else if (cType == "ArmVec3") '($cType){{v}.x*$inv, {v}.y*$inv, {v}.z*$inv}';
+                    else '($cType){{v}.x*$inv, {v}.y*$inv}';
                 } else {
                     if (cType == "ArmVec4") "(" + cType + "){{v}.x, {v}.y, {v}.z, 1.0f}";
                     else if (cType == "ArmVec3") "(" + cType + "){{v}.x, {v}.y, {v}.z}";

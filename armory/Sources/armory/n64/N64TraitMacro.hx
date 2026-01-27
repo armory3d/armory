@@ -10,6 +10,7 @@ import sys.FileSystem;
 
 // Import modular components
 import armory.n64.IRTypes;
+import armory.n64.mapping.Constants;
 import armory.n64.mapping.TypeMap;
 import armory.n64.mapping.ButtonMap;
 import armory.n64.mapping.SkipList;
@@ -713,10 +714,11 @@ class TraitExtractor implements IExtractorContext {
                     // Special case: transform.scale = value -> emit transform_call with it_set_scale()
                     if (isTransformScaleAssign(e1)) {
                         var valueIR = exprToIR(e2);
-                        // Swizzle: Blender (x, y, z) → N64 (x, z, y) and multiply by SCALE_FACTOR (0.015625 = 1/64)
+                        // Swizzle: Blender (x, y, z) → N64 (x, z, y) and multiply by SCALE_FACTOR
+                        var sf = Constants.SCALE_FACTOR_C;
                         {
                             type: "transform_call",
-                            c_code: "it_set_scale(&((ArmObject*)obj)->transform, ({0}).x * 0.015625f, ({0}).z * 0.015625f, ({0}).y * 0.015625f);",
+                            c_code: 'it_set_scale(&((ArmObject*)obj)->transform, ({0}).x * $sf, ({0}).z * $sf, ({0}).y * $sf);',
                             args: [valueIR]
                         };
                     }
