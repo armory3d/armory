@@ -492,10 +492,10 @@ class N64Exporter:
         # Collect all type overrides from all trait instances across all scenes
         type_overrides = self._collect_type_overrides()
 
-        # Build label_map: {label_key: canvas_name} for UI label resolution
-        label_map = self._build_label_map()
+        # Build canvas_map: {trait_class: canvas_name} from scene context
+        canvas_map = self._build_canvas_map()
 
-        features = codegen.write_traits_files(type_overrides, label_map)
+        features = codegen.write_traits_files(type_overrides, canvas_map)
 
         # Update feature flags based on trait analysis
         if features:
@@ -504,21 +504,45 @@ class N64Exporter:
             if features.get('has_physics'):
                 self.has_physics = True
 
-    def _build_label_map(self) -> dict:
-        """Build mapping from label key to canvas name for UI label resolution.
+    def _build_canvas_map(self) -> dict:
+        """Build mapping from trait class to canvas name from scene context.
+
+        Each scene has at most one canvas. Traits in that scene inherit the scene's canvas.
+        This allows codegen to emit fully qualified UI_LABEL_{CANVAS}_{KEY} defines.
 
         Returns:
-            dict mapping label_key -> canvas_name
+            dict mapping trait_class -> canvas_name
         """
-        label_map = {}
-        for canvas_name, canvas_data in self.ui_canvas_data.items():
-            for label in canvas_data.get('labels', []):
-                label_key = label.get('key', '')
-                if label_key:
-                    if label_key in label_map:
-                        log.warn(f'Duplicate label key "{label_key}" in canvas "{canvas_name}" - already in "{label_map[label_key]}"')
-                    label_map[label_key] = canvas_name
-        return label_map
+        canvas_map = {}
+
+        def collect_from_traits(traits, canvas_name):
+            for trait in traits:
+                class_name = trait.get("class_name", "")
+                if class_name and canvas_name:
+                    if class_name in canvas_map and canvas_map[class_name] != canvas_name:
+                        log.warn(f'Trait "{class_name}" used in multiple scenes with different canvases: '
+                                 f'"{canvas_map[class_name]}" vs "{canvas_name}". Using first.')
+                    else:
+                        canvas_map[class_name] = canvas_name
+
+        for scene_name, scene_data in self.scene_data.items():
+            canvas_name = scene_data.get("canvas")  # May be None if scene has no canvas
+            if not canvas_name:
+                continue
+
+            # Scene-level traits
+            collect_from_traits(scene_data.get("traits", []), canvas_name)
+            # Camera traits
+            for cam in scene_data.get("cameras", []):
+                collect_from_traits(cam.get("traits", []), canvas_name)
+            # Light traits
+            for light in scene_data.get("lights", []):
+                collect_from_traits(light.get("traits", []), canvas_name)
+            # Object traits
+            for obj in scene_data.get("objects", []):
+                collect_from_traits(obj.get("traits", []), canvas_name)
+
+        return canvas_map
 
     def _collect_type_overrides(self) -> dict:
         """Collect all type overrides from trait instances across all scenes.
