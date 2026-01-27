@@ -16,8 +16,8 @@
 #endif
 #endif
 #if ENGINE_ENABLE_UI
-#include "data/fonts.h"
-#include "data/ui_canvas.h"
+#include "ui/fonts.h"
+#include "ui/canvas.h"
 #endif
 
 #define FIXED_TIMESTEP ({fixed_timestep}f)
@@ -41,14 +41,14 @@ int main(void)
 #endif
 #if ENGINE_ENABLE_UI
     fonts_init();
-    ui_canvas_init();
+    canvas_init();
 #endif
 
     T3DViewport viewport = t3d_viewport_create_buffered(FB_COUNT);
 
     SceneId current_scene = {initial_scene_id};
 #if ENGINE_ENABLE_UI
-    ui_canvas_scene_init(current_scene);
+    canvas_scene_init(current_scene);
 #endif
     scene_init(current_scene);
 
@@ -83,9 +83,6 @@ int main(void)
         if (pending < SCENE_COUNT) {{
             scene_clear_pending();
             scene_clear(current_scene);
-#if ENGINE_ENABLE_UI
-            ui_canvas_clear();
-#endif
             trait_events_clear();
 #if ENGINE_ENABLE_PHYSICS
             physics_reset();
@@ -96,7 +93,7 @@ int main(void)
             frame_count = 0;  // Reset frame counter for new scene
             current_scene = pending;
 #if ENGINE_ENABLE_UI
-            ui_canvas_scene_init(current_scene);  // Load canvas for new scene
+            canvas_scene_init(current_scene);  // Clears old labels and loads new canvas
 #endif
             scene_init(current_scene);
             scene = scene_get(current_scene);
@@ -105,7 +102,7 @@ int main(void)
         renderer_begin_frame(&viewport, scene);
         renderer_draw_scene(&viewport, scene);
 #if ENGINE_ENABLE_UI
-        ui_canvas_render();
+        canvas_render();
 #endif
         renderer_end_frame(&viewport);
 

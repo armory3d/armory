@@ -90,6 +90,7 @@ class N64Exporter:
         os.makedirs(f'{build_dir}/n64/src/oimo', exist_ok=True)
         os.makedirs(f'{build_dir}/n64/src/scenes', exist_ok=True)
         os.makedirs(f'{build_dir}/n64/src/system', exist_ok=True)
+        os.makedirs(f'{build_dir}/n64/src/ui', exist_ok=True)
 
 
     def export_meshes(self):
@@ -457,8 +458,8 @@ class N64Exporter:
         # UI source files (only if UI elements are used)
         if self.has_ui:
             ui_sources = '''src +=\\
-    src/data/fonts.c \\
-    src/data/ui_canvas.c'''
+    src/ui/fonts.c \\
+    src/ui/canvas.c'''
         else:
             ui_sources = '# No UI'
 
@@ -467,7 +468,7 @@ class N64Exporter:
             game_title=arm.utils.safestr(wrd.arm_project_name),
             scene_files=scene_files,
             physics_sources=physics_sources,
-            koui_sources=ui_sources
+            canvas_sources=ui_sources
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
@@ -492,10 +493,7 @@ class N64Exporter:
         # Collect all type overrides from all trait instances across all scenes
         type_overrides = self._collect_type_overrides()
 
-        # Build canvas_map: {trait_class: canvas_name} from scene context
-        canvas_map = self._build_canvas_map()
-
-        features = codegen.write_traits_files(type_overrides, canvas_map)
+        features = codegen.write_traits_files(type_overrides)
 
         # Update feature flags based on trait analysis
         if features:
@@ -503,46 +501,6 @@ class N64Exporter:
                 self.has_ui = True
             if features.get('has_physics'):
                 self.has_physics = True
-
-    def _build_canvas_map(self) -> dict:
-        """Build mapping from trait class to canvas name from scene context.
-
-        Each scene has at most one canvas. Traits in that scene inherit the scene's canvas.
-        This allows codegen to emit fully qualified UI_LABEL_{CANVAS}_{KEY} defines.
-
-        Returns:
-            dict mapping trait_class -> canvas_name
-        """
-        canvas_map = {}
-
-        def collect_from_traits(traits, canvas_name):
-            for trait in traits:
-                class_name = trait.get("class_name", "")
-                if class_name and canvas_name:
-                    if class_name in canvas_map and canvas_map[class_name] != canvas_name:
-                        log.warn(f'Trait "{class_name}" used in multiple scenes with different canvases: '
-                                 f'"{canvas_map[class_name]}" vs "{canvas_name}". Using first.')
-                    else:
-                        canvas_map[class_name] = canvas_name
-
-        for scene_name, scene_data in self.scene_data.items():
-            canvas_name = scene_data.get("canvas")  # May be None if scene has no canvas
-            if not canvas_name:
-                continue
-
-            # Scene-level traits
-            collect_from_traits(scene_data.get("traits", []), canvas_name)
-            # Camera traits
-            for cam in scene_data.get("cameras", []):
-                collect_from_traits(cam.get("traits", []), canvas_name)
-            # Light traits
-            for light in scene_data.get("lights", []):
-                collect_from_traits(light.get("traits", []), canvas_name)
-            # Object traits
-            for obj in scene_data.get("objects", []):
-                collect_from_traits(obj.get("traits", []), canvas_name)
-
-        return canvas_map
 
     def _collect_type_overrides(self) -> dict:
         """Collect all type overrides from trait instances across all scenes.
@@ -665,18 +623,18 @@ class N64Exporter:
             except Exception as e:
                 log.warn(f'Failed to parse Koui canvas {json_path}: {e}')
 
-    def write_ui_canvas(self):
-        """Generate ui_canvas.c and ui_canvas.h from templates using parsed Koui canvas data."""
+    def write_canvas(self):
+        """Generate canvas.c and canvas.h from templates using parsed Koui canvas data."""
         if not self.ui_canvas_data:
             return
 
-        self.write_ui_canvas_h()
-        self.write_ui_canvas_c()
+        self.write_canvas_h()
+        self.write_canvas_c()
 
-    def write_ui_canvas_h(self):
-        """Generate ui_canvas.h from template with per-scene canvas support."""
-        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'data', 'ui_canvas.h.j2')
-        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'data', 'ui_canvas.h')
+    def write_canvas_h(self):
+        """Generate canvas.h from template with per-scene canvas support."""
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'ui', 'canvas.h.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'ui', 'canvas.h')
 
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
@@ -686,19 +644,35 @@ class N64Exporter:
         canvas_width = first_canvas['width']
         canvas_height = first_canvas['height']
 
-        # Build label defines per canvas - indices are per-canvas (0, 1, 2...) since
-        # each scene loads only its canvas's labels into g_canvas_labels[]
+        # Build key-only label defines - indices are per-canvas (0, 1, 2...)
+        # Traits use these key-only defines, which work for any canvas that has
+        # a label with that key at that index. This allows traits to be reused
+        # across scenes with different canvases (as long as label keys match).
         label_defines_lines = []
         total_label_count = 0
+        seen_keys = {}  # Track key -> index for validation
+
         for canvas_name, canvas in self.ui_canvas_data.items():
-            safe_canvas = arm.utils.safesrc(canvas_name).upper()
             label_defines_lines.append(f'// Canvas: {canvas_name} ({canvas["width"]}x{canvas["height"]})')
-            label_idx = 0  # Reset to 0 for each canvas
+            label_idx = 0
             for label in canvas['labels']:
                 safe_key = arm.utils.safesrc(label['key']).upper()
-                label_defines_lines.append(f'#define UI_LABEL_{safe_canvas}_{safe_key} {label_idx}')
+                define_name = f'UI_LABEL_{safe_key}'
+
+                if safe_key in seen_keys:
+                    # Key already defined - check index matches for trait compatibility
+                    if seen_keys[safe_key] != label_idx:
+                        log.warn(f'Label key "{label["key"]}" has different indices across canvases '
+                                 f'(index {seen_keys[safe_key]} vs {label_idx}). '
+                                 f'Traits using this label may not work correctly across scenes.')
+                else:
+                    # First time seeing this key - emit define
+                    label_defines_lines.append(f'#define {define_name} {label_idx}')
+                    seen_keys[safe_key] = label_idx
+
                 label_idx += 1
             total_label_count = max(total_label_count, label_idx)
+            label_defines_lines.append('')  # Blank line between canvases
 
         output = tmpl_content.format(
             canvas_width=canvas_width,
@@ -710,10 +684,10 @@ class N64Exporter:
         with open(out_path, 'w', encoding='utf-8') as f:
             f.write(output)
 
-    def write_ui_canvas_c(self):
-        """Generate ui_canvas.c from template with per-scene canvas init functions."""
-        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'data', 'ui_canvas.c.j2')
-        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'data', 'ui_canvas.c')
+    def write_canvas_c(self):
+        """Generate canvas.c from template with per-scene canvas init functions."""
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'ui', 'canvas.c.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'ui', 'canvas.c')
 
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
@@ -809,8 +783,8 @@ class N64Exporter:
 
     def write_fonts_c(self):
         """Generate fonts.c from template."""
-        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'data', 'fonts.c.j2')
-        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'data', 'fonts.c')
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'ui', 'fonts.c.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'ui', 'fonts.c')
 
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
@@ -830,8 +804,8 @@ class N64Exporter:
 
     def write_fonts_h(self):
         """Generate fonts.h from template."""
-        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'data', 'fonts.h.j2')
-        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'data', 'fonts.h')
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'ui', 'fonts.h.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'ui', 'fonts.h')
 
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
@@ -1217,7 +1191,7 @@ class N64Exporter:
         self.write_engine()
         self.write_physics()
         self.write_fonts()
-        self.write_ui_canvas()  # Generate canvas label data
+        self.write_canvas()  # Generate canvas label data
         self.write_main()
         self.write_models()
         self.write_renderer()

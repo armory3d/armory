@@ -1,4 +1,4 @@
-#include "ui_canvas.h"
+#include "canvas.h"
 #include "fonts.h"
 #include <libdragon.h>
 #include <string.h>
@@ -6,7 +6,7 @@
 #if UI_LABEL_COUNT > 0
 
 // ============================================================================
-// Label pool and render list (merged from koui.c)
+// Label pool and render list
 // ============================================================================
 
 // Static label pool - avoids malloc() in hot paths
@@ -49,11 +49,11 @@ static int16_t calc_anchor_x(const UILabelDef *def) {{
         case UI_ANCHOR_TOP_CENTER:
         case UI_ANCHOR_MIDDLE_CENTER:
         case UI_ANCHOR_BOTTOM_CENTER:
-            return (UI_CANVAS_WIDTH / 2) - (def->width / 2) + def->pos_x;
+            return (CANVAS_WIDTH / 2) - (def->width / 2) + def->pos_x;
         case UI_ANCHOR_TOP_RIGHT:
         case UI_ANCHOR_MIDDLE_RIGHT:
         case UI_ANCHOR_BOTTOM_RIGHT:
-            return UI_CANVAS_WIDTH - def->width + def->pos_x;
+            return CANVAS_WIDTH - def->width + def->pos_x;
         default:
             return def->pos_x;
     }}
@@ -69,11 +69,11 @@ static int16_t calc_anchor_y(const UILabelDef *def) {{
         case UI_ANCHOR_MIDDLE_LEFT:
         case UI_ANCHOR_MIDDLE_CENTER:
         case UI_ANCHOR_MIDDLE_RIGHT:
-            return (UI_CANVAS_HEIGHT / 2) - (def->height / 2) + def->pos_y;
+            return (CANVAS_HEIGHT / 2) - (def->height / 2) + def->pos_y;
         case UI_ANCHOR_BOTTOM_LEFT:
         case UI_ANCHOR_BOTTOM_CENTER:
         case UI_ANCHOR_BOTTOM_RIGHT:
-            return UI_CANVAS_HEIGHT - def->height + def->pos_y;
+            return CANVAS_HEIGHT - def->height + def->pos_y;
         default:
             return def->pos_y;
     }}
@@ -102,7 +102,7 @@ static void load_labels(const UILabelDef *defs, int count) {{
 // Public API
 // ============================================================================
 
-void ui_canvas_init(void)
+void canvas_init(void)
 {{
     if (g_initialized) return;
     g_initialized = true;
@@ -125,9 +125,9 @@ void ui_canvas_init(void)
     }}
 }}
 
-void ui_canvas_scene_init(SceneId scene_id) {{
-    // Reset canvas label tracking
-    g_canvas_label_count = 0;
+void canvas_scene_init(SceneId scene_id) {{
+    // Clear previous scene's labels first
+    canvas_clear();
 
     // Load canvas for the specified scene
     switch (scene_id) {{
@@ -137,7 +137,7 @@ void ui_canvas_scene_init(SceneId scene_id) {{
     }}
 }}
 
-void ui_canvas_clear(void)
+void canvas_clear(void)
 {{
     // Reset label pool and render list (call on scene change)
     g_label_pool_used = 0;
@@ -163,6 +163,7 @@ UILabel* ui_label_create(const char *text)
     }}
     label->pos_x = 0;
     label->pos_y = 0;
+    label->baseline_offset = 12;  // Default baseline offset for typical font sizes
     label->font_id = g_default_font_rdpq_id;
     label->visible = true;
 
@@ -185,13 +186,11 @@ void ui_label_remove(UILabel *label)
 {{
     if (!label) return;
 
-    // Find in render list
+    // Find in render list and swap-and-pop (O(1) removal)
     for (uint8_t i = 0; i < g_render_count; i++) {{
         if (g_render_list[i] == label) {{
-            // Shift remaining down
-            for (uint8_t j = i; j < g_render_count - 1; j++) {{
-                g_render_list[j] = g_render_list[j + 1];
-            }}
+            // Swap with last element and decrement count
+            g_render_list[i] = g_render_list[g_render_count - 1];
             g_render_count--;
             break;
         }}
@@ -216,14 +215,14 @@ void ui_label_set_text(UILabel *label, const char *text)
     }}
 }}
 
-UILabel* ui_canvas_get_label(int index) {{
+UILabel* canvas_get_label(int index) {{
     if (index >= 0 && index < g_canvas_label_count) {{
         return g_canvas_labels[index];
     }}
     return NULL;
 }}
 
-void ui_canvas_render(void)
+void canvas_render(void)
 {{
     // Early exit if nothing to render
     if (g_render_count == 0 || g_default_font_rdpq_id == 0) return;
@@ -241,7 +240,7 @@ void ui_canvas_render(void)
         UILabel *label = g_render_list[i];
         if (!label || !label->visible) continue;
 
-        rdpq_text_print(NULL, label->font_id, label->pos_x, label->pos_y + 15, label->text);
+        rdpq_text_print(NULL, label->font_id, label->pos_x, label->pos_y + label->baseline_offset, label->text);
     }}
 }}
 

@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "scenes.h"
+#include "../data/scenes.h"
 
 #ifdef __cplusplus
 extern "C" {{
@@ -26,8 +26,8 @@ extern "C" {{
 #endif
 
 // Canvas dimensions
-#define UI_CANVAS_WIDTH {canvas_width}
-#define UI_CANVAS_HEIGHT {canvas_height}
+#define CANVAS_WIDTH {canvas_width}
+#define CANVAS_HEIGHT {canvas_height}
 
 // Anchor enum (matches Koui Editor)
 typedef enum {{
@@ -45,19 +45,20 @@ typedef enum {{
 // Label element
 typedef struct {{
     int16_t pos_x, pos_y;
-    char text[UI_LABEL_TEXT_SIZE];  // Owned buffer, not pointer
+    int16_t baseline_offset;                // Vertical offset for text baseline (font-dependent)
+    char text[UI_LABEL_TEXT_SIZE];          // Owned buffer, not pointer
     uint8_t font_id;
     bool visible;
 }} UILabel;
 
-// Initialize UI canvas system (call once at startup)
-void ui_canvas_init(void);
+// Initialize canvas system (call once at startup)
+void canvas_init(void);
 
 // Initialize canvas for a specific scene (clears and reloads labels)
-void ui_canvas_scene_init(SceneId scene_id);
+void canvas_scene_init(SceneId scene_id);
 
 // Clear all labels and reset pool (call on scene change)
-void ui_canvas_clear(void);
+void canvas_clear(void);
 
 // Label management
 UILabel* ui_label_create(const char *text);           // Create label (not added to scene)
@@ -67,17 +68,17 @@ void ui_label_set_position(UILabel *label, int16_t x, int16_t y);
 void ui_label_set_text(UILabel *label, const char *text);  // Set label text (copies string)
 
 // Get label by index (for canvas-defined labels)
-UILabel* ui_canvas_get_label(int index);
+UILabel* canvas_get_label(int index);
 
 // Render all UI elements (call after 3D rendering, before display_show)
-void ui_canvas_render(void);
+void canvas_render(void);
 
 #else
 // Stubs when no UI labels exist
-static inline void ui_canvas_init(void) {{}}
-static inline void ui_canvas_scene_init(SceneId scene_id) {{ (void)scene_id; }}
-static inline void ui_canvas_clear(void) {{}}
-static inline void ui_canvas_render(void) {{}}
+static inline void canvas_init(void) {{}}
+static inline void canvas_scene_init(SceneId scene_id) {{ (void)scene_id; }}
+static inline void canvas_clear(void) {{}}
+static inline void canvas_render(void) {{}}
 #endif
 
 #ifdef __cplusplus
