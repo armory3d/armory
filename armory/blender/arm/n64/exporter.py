@@ -256,6 +256,7 @@ class N64Exporter:
         self.theme_parser = None    # Koui theme parser instance
         self.color_style_map = {}   # Map of (r,g,b,a) -> style_id for font styles
         self.font_id_map = {}       # Map of size -> font_id for label assignment
+        self.autoload_info = {}     # Autoload metadata from codegen
 
 
     @classmethod
@@ -759,10 +760,12 @@ class N64Exporter:
             f.write(output)
 
     def write_traits(self):
+        """Generate traits.h and traits.c files."""
         # Collect all type overrides from all trait instances across all scenes
         type_overrides = self._collect_type_overrides()
 
-        features = codegen.write_traits_files(type_overrides)
+        # Get template data from codegen
+        template_data, features = codegen.prepare_traits_template_data(type_overrides)
 
         # Update feature flags based on trait analysis
         if features:
@@ -770,6 +773,49 @@ class N64Exporter:
                 self.has_ui = True
             if features.get('has_physics'):
                 self.has_physics = True
+
+        # Write files
+        if template_data is None:
+            # No traits - create empty stubs
+            self.write_traits_h_empty()
+            self.write_traits_c_empty()
+        else:
+            self.write_traits_h(template_data)
+            self.write_traits_c(template_data)
+
+    def write_traits_h(self, template_data: dict):
+        """Generate traits.h from template."""
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'data', 'traits.h.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'data', 'traits.h')
+
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            template = f.read()
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(template.format(**template_data))
+
+    def write_traits_c(self, template_data: dict):
+        """Generate traits.c from template."""
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'data', 'traits.c.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'data', 'traits.c')
+
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            template = f.read()
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(template.format(**template_data))
+
+    def write_traits_h_empty(self):
+        """Generate empty traits.h stub."""
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'data', 'traits.h')
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write("// Auto-generated empty traits header\n#ifndef _TRAITS_H_\n#define _TRAITS_H_\n#endif\n")
+
+    def write_traits_c_empty(self):
+        """Generate empty traits.c stub."""
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'data', 'traits.c')
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write("// Auto-generated empty traits implementation\n#include \"traits.h\"\n")
 
     def _collect_type_overrides(self) -> dict:
         """Collect all type overrides from trait instances across all scenes.
@@ -803,6 +849,65 @@ class N64Exporter:
 
         return overrides
 
+    def write_autoloads(self):
+        """Generate autoload C files from IR JSON.
+
+        Autoloads are singleton classes marked with @:n64autoload.
+        They become globally accessible C modules.
+        """
+        # Get template data from codegen
+        autoload_data, master_data = codegen.prepare_autoload_template_data()
+
+        if not autoload_data:
+            self.autoload_info = {'autoloads': [], 'has_autoloads': False}
+            return
+
+        autoloads_dir = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'autoloads')
+        os.makedirs(autoloads_dir, exist_ok=True)
+
+        autoload_names = []
+        for c_name, tmpl_data in autoload_data:
+            autoload_names.append(c_name)
+            self.write_autoload_h(c_name, tmpl_data)
+            self.write_autoload_c(c_name, tmpl_data)
+
+        # Write master autoloads.h
+        self.write_autoloads_h(master_data)
+
+        self.autoload_info = {'autoloads': autoload_names, 'has_autoloads': True}
+
+    def write_autoload_h(self, c_name: str, template_data: dict):
+        """Generate individual autoload .h file."""
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'autoloads', 'autoload.h.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'autoloads', f'{c_name}.h')
+
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            template = f.read()
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(template.format(**template_data))
+
+    def write_autoload_c(self, c_name: str, template_data: dict):
+        """Generate individual autoload .c file."""
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'autoloads', 'autoload.c.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'autoloads', f'{c_name}.c')
+
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            template = f.read()
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(template.format(**template_data))
+
+    def write_autoloads_h(self, template_data: dict):
+        """Generate master autoloads.h that includes all autoloads."""
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'autoloads', 'autoloads.h.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'autoloads', 'autoloads.h')
+
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            template = f.read()
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(template.format(**template_data))
 
     def write_engine(self):
         n64_utils.copy_src('engine.c', 'src')
@@ -1326,10 +1431,17 @@ class N64Exporter:
         # Get physics debug mode
         physics_debug_mode = n64_utils.get_physics_debug_mode()
 
+        # Autoload include and init
+        has_autoloads = self.autoload_info.get('has_autoloads', False)
+        autoloads_include = '#include "autoloads/autoloads.h"' if has_autoloads else ''
+        autoloads_init = '    autoloads_init();\n' if has_autoloads else ''
+
         output = tmpl_content.format(
             initial_scene_id=f'SCENE_{arm.utils.safesrc(wrd.arm_exporterlist[wrd.arm_exporterlist_index].arm_project_scene.name).upper()}',
             fixed_timestep=fixed_timestep,
-            physics_debug_mode=physics_debug_mode
+            physics_debug_mode=physics_debug_mode,
+            autoloads_include=autoloads_include,
+            autoloads_init=autoloads_init
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
@@ -1624,6 +1736,9 @@ class N64Exporter:
 
         # Write traits to detect feature usage (UI, physics from traits)
         self.write_traits()
+
+        # Write autoloads (singletons with @:n64autoload)
+        self.write_autoloads()
 
         self.write_types()
         self.write_engine()

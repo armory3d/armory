@@ -19,6 +19,7 @@
 #include "ui/fonts.h"
 #include "ui/canvas.h"
 #endif
+{autoloads_include}
 
 #define FIXED_TIMESTEP ({fixed_timestep}f)
 
@@ -33,7 +34,7 @@ static float get_time_s(void)
 int main(void)
 {{
     engine_init();
-    trait_events_init();
+{autoloads_init}    trait_events_init();
 #if ENGINE_ENABLE_PHYSICS && ENGINE_ENABLE_PHYSICS_DEBUG
     physics_debug_init();
     physics_debug_set_mode({physics_debug_mode});

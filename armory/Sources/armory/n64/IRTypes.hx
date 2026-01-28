@@ -76,3 +76,40 @@ typedef TraitIR = {
     events: Map<String, Array<IRNode>>,
     meta: TraitMeta
 }
+
+// ============================================================================
+// Autoload IR Types
+// ============================================================================
+
+typedef AutoloadFunctionIR = {
+    name: String,            // Haxe function name, e.g., "doSomething"
+    cName: String,           // C function name, e.g., "myautoload_doSomething"
+    returnType: String,      // C return type, e.g., "float" or "void"
+    params: Array<AutoloadParamIR>,  // Function parameters
+    body: Array<IRNode>,     // Function body as IR nodes
+    isPublic: Bool           // Whether function is public (exported) or private (internal)
+}
+
+typedef AutoloadParamIR = {
+    name: String,            // Parameter name
+    haxeType: String,        // Haxe type
+    ctype: String            // C type
+}
+
+typedef AutoloadMeta = {
+    order: Int,              // Initialization order (lower = earlier)
+    signals: Array<SignalMeta>,           // Static signal declarations
+    signal_handlers: Array<SignalHandlerMeta>, // Functions used as signal callbacks
+    global_signals: Array<String>         // Global signals used by this autoload
+}
+
+typedef AutoloadIR = {
+    name: String,            // Class name, e.g., "GameEvents"
+    module: String,          // Full module path, e.g., "arm.autoload.GameEvents"
+    cName: String,           // C-safe prefix, e.g., "gameevents"
+    order: Int,              // Initialization order
+    members: Map<String, MemberIR>,       // Static members (non-Signal)
+    functions: Map<String, AutoloadFunctionIR>,  // Static functions
+    hasInit: Bool,           // Whether class has init() function
+    meta: AutoloadMeta
+}
