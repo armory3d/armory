@@ -35,7 +35,10 @@ typedef struct {{
     int16_t pos_y;
     int16_t width;
     int16_t height;
+    int16_t baseline_offset;  // Vertical offset for text baseline (proportional to font size)
     uint8_t anchor;
+    uint8_t style_id;   // Font style ID for text color (from Koui theme)
+    uint8_t font_id;    // Font ID for font size variant (from Koui theme)
     bool visible;
 }} UILabelDef;
 
@@ -91,6 +94,10 @@ static void load_labels(const UILabelDef *defs, int count) {{
             int16_t final_x = calc_anchor_x(def);
             int16_t final_y = calc_anchor_y(def);
             ui_label_set_position(label, final_x, final_y);
+            label->baseline_offset = def->baseline_offset;
+            label->style_id = def->style_id;
+            // Convert font index to rdpq font ID
+            label->font_id = fonts_get_rdpq_id(def->font_id);
             label->visible = def->visible;
             ui_label_add(label);
             g_canvas_labels[g_canvas_label_count++] = label;
@@ -114,15 +121,16 @@ void canvas_init(void)
     memset(g_render_list, 0, sizeof(g_render_list));
     memset(g_canvas_labels, 0, sizeof(g_canvas_labels));
 
-    // Get the first font (index 0) as default for UI labels
+    // Load all fonts (each size variant) and get the default rdpq ID
+    // This ensures fonts are loaded before canvas_scene_init() assigns font_ids
     rdpq_font_t *font = fonts_get(0);
     if (font) {{
         g_default_font_rdpq_id = fonts_get_rdpq_id(0);
-        // Set default style 0 to white
-        rdpq_font_style(font, 0, &(rdpq_fontstyle_t){{
-            .color = RGBA32(255, 255, 255, 255)
-        }});
     }}
+
+    // Load additional font size variants and register font styles
+    // (generated from Koui theme - styles must be registered on ALL font variants)
+{font_style_registration}
 }}
 
 void canvas_scene_init(SceneId scene_id) {{
@@ -165,6 +173,7 @@ UILabel* ui_label_create(const char *text)
     label->pos_y = 0;
     label->baseline_offset = 12;  // Default baseline offset for typical font sizes
     label->font_id = g_default_font_rdpq_id;
+    label->style_id = 0;          // Default style (will be overridden by load_labels if needed)
     label->visible = true;
 
     return label;
@@ -240,7 +249,9 @@ void canvas_render(void)
         UILabel *label = g_render_list[i];
         if (!label || !label->visible) continue;
 
-        rdpq_text_print(NULL, label->font_id, label->pos_x, label->pos_y + label->baseline_offset, label->text);
+        // Use style_id from Koui theme for text color
+        rdpq_textparms_t parms = {{ .style_id = label->style_id }};
+        rdpq_text_print(&parms, label->font_id, label->pos_x, label->pos_y + label->baseline_offset, label->text);
     }}
 }}
 

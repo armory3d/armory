@@ -48,6 +48,7 @@ typedef struct {{
     int16_t baseline_offset;                // Vertical offset for text baseline (font-dependent)
     char text[UI_LABEL_TEXT_SIZE];          // Owned buffer, not pointer
     uint8_t font_id;
+    uint8_t style_id;                       // Font style ID for text color (from Koui theme)
     bool visible;
 }} UILabel;
 

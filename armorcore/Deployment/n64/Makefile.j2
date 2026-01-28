@@ -32,10 +32,12 @@ src = \
 
 assets_png = $(wildcard assets/*.png)
 assets_gltf = $(wildcard assets/*.gltf)
-assets_ttf = $(wildcard assets/*.ttf)
 assets_conv = $(addprefix filesystem/,$(notdir $(assets_png:%.png=%.sprite))) \
-			  $(addprefix filesystem/,$(notdir $(assets_ttf:%.ttf=%.font64))) \
-			  $(addprefix filesystem/,$(notdir $(assets_gltf:%.gltf=%.t3dm)))
+			  $(addprefix filesystem/,$(notdir $(assets_gltf:%.gltf=%.t3dm))) \
+			  $(font_conv)
+
+# Font assets - generated explicitly for each size variant
+{font_targets}
 
 all: $(ROM_NAME).z64
 
@@ -44,10 +46,8 @@ filesystem/%.sprite: assets/%.png
 	@echo "    [SPRITE] $@"
 	$(N64_MKSPRITE) $(MKSPRITE_FLAGS) -o filesystem "$<"
 
-filesystem/%.font64: assets/%.ttf
-	@mkdir -p $(dir $@)
-	@echo "    [FONT] $@"
-	$(N64_MKFONT) $(MKFONT_FLAGS) -o filesystem "$<"
+# Font rules for each size variant
+{font_rules}
 
 filesystem/%.t3dm: assets/%.gltf
 	@mkdir -p $(dir $@)

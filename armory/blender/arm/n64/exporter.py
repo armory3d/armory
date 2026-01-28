@@ -22,17 +22,240 @@ else:
     arm.enable_reload(__name__)
 
 
+class KouiThemeParser:
+    """Parser for Koui .ksn theme files with inheritance resolution."""
+
+    def __init__(self):
+        self.globals = {}           # @globals variables
+        self.selectors = {}         # Parsed selector styles: {selector_name: {properties}}
+        self.resolved = {}          # Fully resolved styles (inheritance flattened)
+
+    def parse_file(self, path: str):
+        """Parse a .ksn theme file and merge into current state."""
+        if not os.path.exists(path):
+            return
+
+        with open(path, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        current_section = None      # '@rules', '@globals', or selector name
+        current_selector = None
+        current_parent = None
+        indent_stack = []           # Track indentation for nested properties
+        property_path = []          # Current property path (e.g., ['color', 'text'])
+
+        for line in content.split('\n'):
+            # Skip comments and empty lines
+            stripped = line.split('//')[0].rstrip()
+            if not stripped:
+                continue
+
+            # Detect indentation level
+            indent = len(line) - len(line.lstrip('\t'))
+
+            # Section headers
+            if stripped == '@rules:':
+                current_section = 'rules'
+                current_selector = None
+                continue
+            elif stripped == '@globals:':
+                current_section = 'globals'
+                current_selector = None
+                continue
+            elif stripped.endswith(':') and not stripped.startswith('\t'):
+                # Selector line: "selector_name:" or "selector > parent:"
+                current_section = 'selector'
+                selector_part = stripped[:-1].strip()
+
+                if ' > ' in selector_part:
+                    current_selector, current_parent = selector_part.split(' > ')
+                    current_selector = current_selector.strip()
+                    current_parent = current_parent.strip()
+                else:
+                    current_selector = selector_part
+                    current_parent = None
+
+                if current_selector not in self.selectors:
+                    self.selectors[current_selector] = {'_parent': current_parent}
+                elif current_parent:
+                    self.selectors[current_selector]['_parent'] = current_parent
+
+                indent_stack = []
+                property_path = []
+                continue
+
+            # Skip @rules section (schema definition)
+            if current_section == 'rules':
+                continue
+
+            # Parse @globals
+            if current_section == 'globals':
+                if ': ' in stripped:
+                    key, value = stripped.split(': ', 1)
+                    self.globals[key.strip()] = value.strip()
+                continue
+
+            # Parse selector properties
+            if current_section == 'selector' and current_selector:
+                # Adjust property path based on indentation
+                while indent_stack and indent <= indent_stack[-1]:
+                    indent_stack.pop()
+                    if property_path:
+                        property_path.pop()
+
+                if ': ' in stripped:
+                    # Property assignment: "key: value"
+                    key, value = stripped.split(': ', 1)
+                    key = key.strip()
+                    value = value.strip()
+
+                    # Resolve variable references ($@globals.VAR or $_selector.path)
+                    if value.startswith('$@globals.'):
+                        var_name = value[10:]
+                        value = self.globals.get(var_name, value)
+                    elif value.startswith('$_'):
+                        # Reference to another selector's property - skip for now
+                        pass
+
+                    # Build full property path
+                    full_path = property_path + [key]
+                    self._set_nested_property(self.selectors[current_selector], full_path, value)
+
+                elif stripped.endswith(':'):
+                    # Start of nested property group
+                    key = stripped[:-1].strip()
+                    if key.startswith('?'):
+                        key = key[1:]  # Remove optional marker
+                    indent_stack.append(indent)
+                    property_path.append(key)
+
+    def _set_nested_property(self, obj: dict, path: list, value):
+        """Set a nested property in a dict using a path list."""
+        for key in path[:-1]:
+            if key not in obj:
+                obj[key] = {}
+            obj = obj[key]
+        obj[path[-1]] = value
+
+    def _get_nested_property(self, obj: dict, path: list, default=None):
+        """Get a nested property from a dict using a path list."""
+        for key in path:
+            if not isinstance(obj, dict) or key not in obj:
+                return default
+            obj = obj[key]
+        return obj
+
+    def resolve_all(self):
+        """Resolve all selectors with inheritance, flattening parent styles."""
+        self.resolved = {}
+        for selector in self.selectors:
+            self.resolved[selector] = self._resolve_selector(selector)
+
+    def _resolve_selector(self, selector: str, visited: set = None) -> dict:
+        """Recursively resolve a selector's full style including parent inheritance."""
+        if visited is None:
+            visited = set()
+
+        if selector in visited:
+            return {}  # Circular reference protection
+        visited.add(selector)
+
+        if selector not in self.selectors:
+            return {}
+
+        raw = self.selectors[selector]
+        parent_name = raw.get('_parent')
+
+        # Start with parent's resolved style
+        if parent_name:
+            result = self._resolve_selector(parent_name, visited).copy()
+            result = self._deep_merge(result, {})  # Deep copy
+        else:
+            result = {}
+
+        # Merge current selector's properties (override parent)
+        for key, value in raw.items():
+            if key == '_parent':
+                continue
+            if isinstance(value, dict):
+                if key not in result:
+                    result[key] = {}
+                result[key] = self._deep_merge(result[key], value)
+            else:
+                result[key] = value
+
+        return result
+
+    def _deep_merge(self, base: dict, override: dict) -> dict:
+        """Deep merge two dicts, with override taking precedence."""
+        result = base.copy() if isinstance(base, dict) else {}
+        for key, value in override.items():
+            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+                result[key] = self._deep_merge(result[key], value)
+            else:
+                result[key] = value
+        return result
+
+    def get_style(self, selector: str) -> dict:
+        """Get the fully resolved style for a selector."""
+        return self.resolved.get(selector, {})
+
+    def get_font_size(self, selector: str, default: int = 15) -> int:
+        """Get font.size for a selector."""
+        style = self.get_style(selector)
+        try:
+            return int(self._get_nested_property(style, ['font', 'size'], default))
+        except (ValueError, TypeError):
+            return default
+
+    def get_text_color(self, selector: str, default: str = '#dddddd') -> str:
+        """Get color.text for a selector as hex string."""
+        style = self.get_style(selector)
+        color = self._get_nested_property(style, ['color', 'text'], default)
+        return color if color else default
+
+    @staticmethod
+    def parse_hex_color(hex_color: str) -> tuple:
+        """Parse Koui hex color (#RRGGBB or #RRGGBBAA) to (r, g, b, a) tuple (0-255)."""
+        hex_color = hex_color.lstrip('#')
+        if len(hex_color) == 6:
+            r = int(hex_color[0:2], 16)
+            g = int(hex_color[2:4], 16)
+            b = int(hex_color[4:6], 16)
+            a = 255
+        elif len(hex_color) == 8:
+            r = int(hex_color[0:2], 16)
+            g = int(hex_color[2:4], 16)
+            b = int(hex_color[4:6], 16)
+            a = int(hex_color[6:8], 16)
+        else:
+            return (221, 221, 221, 255)  # Default gray
+        return (r, g, b, a)
+
+
 class N64Exporter:
     """N64 Exporter - Exports Armory scenes to N64 C code."""
+
+    # Font size conversion factor: Kha pixel height -> mkfont point size
+    # Kha uses stbtt_ScaleForPixelHeight (height = ascent - descent)
+    # mkfont/FreeType uses FT_SIZE_REQUEST_TYPE_NOMINAL (em-based sizing)
+    # For most fonts, (ascent - descent) ≈ 1.1-1.3 × em-height
+    # This factor converts Kha's pixel sizes to mkfont's point sizes
+    # Value of 0.82 means: mkfont_size = kha_size * 0.82
+    FONT_SIZE_SCALE = 0.82
 
     def __init__(self):
         self.scene_data = {}
         self.exported_meshes = {}
-        self.exported_fonts = {}    # Track exported fonts: {font_name: font_path}
+        self.exported_fonts = {}    # Track exported fonts: {(font_name, size): font_id}
+        self.font_sizes = set()     # Unique font sizes needed from theme
         self.trait_info = {}        # Trait metadata from macro JSON
         self.has_physics = False    # Track if any rigid bodies are exported
         self.has_ui = False         # Track if any UI elements are used
         self.ui_canvas_data = {}    # Parsed Koui canvas JSON: {canvas_name: {labels: [...], ...}}
+        self.theme_parser = None    # Koui theme parser instance
+        self.color_style_map = {}   # Map of (r,g,b,a) -> style_id for font styles
+        self.font_id_map = {}       # Map of size -> font_id for label assignment
 
 
     @classmethod
@@ -463,16 +686,62 @@ class N64Exporter:
         else:
             ui_sources = '# No UI'
 
+        # Generate font targets and rules for each size variant
+        font_targets, font_rules = self._generate_font_makefile_entries()
+
         output = tmpl_content.format(
             tiny3d_path=os.path.join(arm.utils.get_sdk_path(), 'lib', 'tiny3d').replace('\\', '/'),
             game_title=arm.utils.safestr(wrd.arm_project_name),
             scene_files=scene_files,
             physics_sources=physics_sources,
-            canvas_sources=ui_sources
+            canvas_sources=ui_sources,
+            font_targets=font_targets,
+            font_rules=font_rules
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
             f.write(output)
+
+    def _generate_font_makefile_entries(self):
+        """Generate Makefile entries for font conversion at different sizes.
+
+        Since mkfont names outputs based on input filename, we copy the TTF file
+        to size-specific names (e.g., Montserrat_15.ttf -> Montserrat_15.font64).
+
+        The font sizes are scaled from Kha's pixel height to mkfont's point size
+        using FONT_SIZE_SCALE to account for differences in how each library
+        interprets font sizes.
+
+        Returns:
+            tuple: (font_targets_str, font_rules_str)
+        """
+        if not self.exported_fonts:
+            return 'font_conv =', '# No fonts'
+
+        targets = []
+        rules = []
+
+        for font_key, font_info in self.exported_fonts.items():
+            font_name = font_info['name']
+            kha_size = font_info['size']  # Original Kha pixel size
+            # Scale font size for mkfont (Kha pixel height -> mkfont point size)
+            mkfont_size = max(8, int(kha_size * self.FONT_SIZE_SCALE))
+            # Target: filesystem/FontName_Size.font64
+            target = f'filesystem/{font_key}.font64'
+            targets.append(target)
+
+            # Rule: mkfont uses input filename for output, so we use the size-specific TTF copy
+            # The size-specific TTF was created during write_fonts()
+            rule = f'''{target}: assets/{font_key}.ttf
+	@mkdir -p $(dir $@)
+	@echo "    [FONT] $@ (kha size {kha_size} -> mkfont size {mkfont_size})"
+	$(N64_MKFONT) $(MKFONT_FLAGS) --size {mkfont_size} -o filesystem "$<"'''
+            rules.append(rule)
+
+        font_targets = 'font_conv = ' + ' \\\n             '.join(targets)
+        font_rules = '\n\n'.join(rules)
+
+        return font_targets, font_rules
 
 
     def write_types(self):
@@ -563,6 +832,7 @@ class N64Exporter:
         Only parses canvases that are actually attached to scenes via UI Canvas trait.
         Sets has_ui = True if any canvas with labels is found.
         Stores parsed data in self.ui_canvas_data for code generation.
+        Also parses Koui theme files to extract font size and text color per label.
         """
         bundled_dir = os.path.join(arm.utils.get_fp(), 'Bundled', 'koui_canvas')
         if not os.path.exists(bundled_dir):
@@ -577,6 +847,9 @@ class N64Exporter:
 
         if not referenced_canvases:
             return  # No scenes use UI Canvas trait
+
+        # Parse Koui theme files for style information
+        self._parse_koui_themes()
 
         for canvas_name in referenced_canvases:
             json_path = os.path.join(bundled_dir, f'{canvas_name}.json')
@@ -597,6 +870,23 @@ class N64Exporter:
                     for elem in scene.get('elements', []):
                         if elem.get('type') == 'Label':
                             props = elem.get('properties', {})
+                            tid = elem.get('tID', '_label')
+
+                            # Get font size and text color from theme
+                            font_size = 15
+                            text_color = (221, 221, 221, 255)  # Default #dddddd
+
+                            if self.theme_parser:
+                                font_size = self.theme_parser.get_font_size(tid, 15)
+                                color_hex = self.theme_parser.get_text_color(tid, '#dddddd')
+                                text_color = KouiThemeParser.parse_hex_color(color_hex)
+
+                            # Track unique font sizes needed
+                            self.font_sizes.add(font_size)
+
+                            # Get or create style_id for this color
+                            style_id = self._get_or_create_color_style(text_color)
+
                             label_data = {
                                 'key': elem['key'],
                                 'text': props.get('text', ''),
@@ -608,6 +898,10 @@ class N64Exporter:
                                 'visible': elem['visible'],
                                 'align_h': props.get('alignmentHor', 0),
                                 'align_v': props.get('alignmentVert', 0),
+                                'tID': tid,
+                                'font_size': font_size,
+                                'text_color': text_color,
+                                'style_id': style_id,
                             }
                             labels.append(label_data)
 
@@ -622,6 +916,36 @@ class N64Exporter:
 
             except Exception as e:
                 log.warn(f'Failed to parse Koui canvas {json_path}: {e}')
+
+    def _parse_koui_themes(self):
+        """Parse Koui base theme and project override files."""
+        self.theme_parser = KouiThemeParser()
+
+        # Base theme from Koui Subprojects
+        base_theme_path = os.path.join(arm.utils.get_fp(), 'Subprojects', 'Koui', 'Assets', 'theme.ksn')
+        if os.path.exists(base_theme_path):
+            self.theme_parser.parse_file(base_theme_path)
+            log.info(f'Parsed base Koui theme: {base_theme_path}')
+
+        # Project override from Assets/koui_canvas
+        override_path = os.path.join(arm.utils.get_fp(), 'Assets', 'koui_canvas', 'ui_override.ksn')
+        if os.path.exists(override_path):
+            self.theme_parser.parse_file(override_path)
+            log.info(f'Parsed Koui theme override: {override_path}')
+
+        # Resolve all inheritance chains
+        self.theme_parser.resolve_all()
+
+    def _get_or_create_color_style(self, color: tuple) -> int:
+        """Get or create a style_id for a given (r, g, b, a) color tuple."""
+        if color in self.color_style_map:
+            return self.color_style_map[color]
+
+        # Style IDs start at 0 (which we'll use as default white if no colors defined)
+        # but since we're assigning custom colors, start from 0
+        style_id = len(self.color_style_map)
+        self.color_style_map[color] = style_id
+        return style_id
 
     def write_canvas(self):
         """Generate canvas.c and canvas.h from templates using parsed Koui canvas data."""
@@ -692,14 +1016,18 @@ class N64Exporter:
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
 
-        # Build per-canvas label definitions
+        # Build per-canvas label definitions (with style_id, font_id, and baseline_offset)
         canvas_label_defs = {}
         for canvas_name, canvas in self.ui_canvas_data.items():
             lines = []
             for label in canvas['labels']:
                 text_escaped = label['text'].replace('\\', '\\\\').replace('"', '\\"')
                 visible = 'true' if label['visible'] else 'false'
-                lines.append(f'    {{ "{text_escaped}", {label["pos_x"]}, {label["pos_y"]}, {label["width"]}, {label["height"]}, {label["anchor"]}, {visible} }},')
+                style_id = label.get('style_id', 0)
+                font_id = label.get('font_id', 0)
+                baseline_offset = label.get('baseline_offset', 12)
+                # Order: text, pos_x, pos_y, width, height, baseline_offset, anchor, style_id, font_id, visible
+                lines.append(f'    {{ "{text_escaped}", {label["pos_x"]}, {label["pos_y"]}, {label["width"]}, {label["height"]}, {baseline_offset}, {label["anchor"]}, {style_id}, {font_id}, {visible} }},')
             canvas_label_defs[canvas_name] = {
                 'defs': '\n'.join(lines),
                 'count': len(canvas['labels'])
@@ -729,25 +1057,69 @@ class N64Exporter:
                 scene_switch_cases.append(f'            load_labels(g_{safe_canvas}_label_defs, {safe_canvas.upper()}_LABEL_COUNT);')
                 scene_switch_cases.append('            break;')
 
+        # Generate font style registration code from color_style_map
+        # Styles must be registered on ALL font size variants
+        # Also ensures all font variants are loaded (via fonts_get())
+        style_registration_lines = []
+        if self.exported_fonts:
+            for font_key, font_info in sorted(self.exported_fonts.items(), key=lambda x: x[1]['font_id']):
+                font_id = font_info['font_id']
+                # Skip font 0 - it's already loaded above
+                if font_id == 0:
+                    if self.color_style_map:
+                        style_registration_lines.append(f'    // Font 0 styles (default font loaded above)')
+                        for color, style_id in sorted(self.color_style_map.items(), key=lambda x: x[1]):
+                            r, g, b, a = color
+                            style_registration_lines.append(
+                                f'    rdpq_font_style(font, {style_id}, &(rdpq_fontstyle_t){{ .color = RGBA32({r}, {g}, {b}, {a}) }});'
+                            )
+                    continue
+
+                style_registration_lines.append(f'    // Font {font_id}: {font_key}')
+                style_registration_lines.append(f'    {{')
+                style_registration_lines.append(f'        rdpq_font_t *font_{font_id} = fonts_get({font_id});')
+                if self.color_style_map:
+                    style_registration_lines.append(f'        if (font_{font_id}) {{')
+                    for color, style_id in sorted(self.color_style_map.items(), key=lambda x: x[1]):
+                        r, g, b, a = color
+                        style_registration_lines.append(
+                            f'            rdpq_font_style(font_{font_id}, {style_id}, &(rdpq_fontstyle_t){{ .color = RGBA32({r}, {g}, {b}, {a}) }});'
+                        )
+                    style_registration_lines.append(f'        }}')
+                style_registration_lines.append(f'    }}')
+
+        if not style_registration_lines:
+            style_registration_lines.append('    // No additional fonts or styles defined')
+
         # Total label count for g_labels array
         total_labels = sum(d['count'] for d in canvas_label_defs.values())
 
         output = tmpl_content.format(
             canvas_label_arrays='\n'.join(canvas_arrays),
             scene_init_switch_cases='\n'.join(scene_switch_cases),
-            total_label_count=total_labels
+            total_label_count=total_labels,
+            font_style_registration='\n'.join(style_registration_lines) if style_registration_lines else '        // No custom styles defined'
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
             f.write(output)
 
     def write_fonts(self):
-        """Copy font files and generate fonts.c/fonts.h if UI is used."""
+        """Copy font files and generate fonts.c/fonts.h if UI is used.
+
+        Creates separate .font64 files for each unique font size needed from the theme.
+        Since mkfont names outputs based on input filename, we create size-specific
+        TTF copies (e.g., Montserrat_15.ttf, Montserrat_32.ttf).
+        """
         if not self.has_ui:
             return
 
         n64_assets = os.path.join(arm.utils.build_dir(), 'n64', 'assets')
         os.makedirs(n64_assets, exist_ok=True)
+
+        # Ensure we have at least the default size
+        if not self.font_sizes:
+            self.font_sizes.add(15)
 
         # Search order for fonts:
         # 1. Project's Assets folder (and subdirectories)
@@ -757,32 +1129,59 @@ class N64Exporter:
             os.path.join(arm.utils.get_fp(), 'Subprojects', 'Koui', 'Assets'),
         ]
 
+        base_font_name = None
+        base_font_path = None
+
         for search_path in font_search_paths:
             if os.path.exists(search_path):
                 fonts = glob.glob(os.path.join(search_path, '**', '*.ttf'), recursive=True)
                 for font_path in fonts:
                     font_basename = os.path.splitext(os.path.basename(font_path))[0]
-                    # Skip if already have a font with this name (project fonts take priority)
-                    if font_basename in self.exported_fonts:
-                        continue
-                    # Store with index
-                    self.exported_fonts[font_basename] = font_basename
-                    # Copy with original name
-                    dst = os.path.join(n64_assets, f'{font_basename}.ttf')
-                    shutil.copy(font_path, dst)
-                    log.info(f'Copied font: {font_basename}.ttf')
+                    # Use first font found as the base font
+                    if base_font_name is None:
+                        base_font_name = font_basename
+                        base_font_path = font_path
+                        break  # Only need the first font
+            if base_font_name:
+                break
 
-        # If no fonts found, warn and use a placeholder
-        if not self.exported_fonts:
+        if not base_font_name or not base_font_path:
             log.warn('No TTF fonts found for UI. Labels may not render correctly.')
-            # Create a dummy entry so fonts.c/h are still generated
-            self.exported_fonts['default'] = 'default'
+            base_font_name = 'default'
+            base_font_path = None
+
+        # Create font entries for each unique size
+        # Each size gets its own font64 file and font_id
+        # We copy the TTF to size-specific names so mkfont creates correct output names
+        font_id = 0
+        for size in sorted(self.font_sizes):
+            font_key = f'{base_font_name}_{size}'
+
+            # Copy TTF with size-specific name for Makefile processing
+            if base_font_path:
+                dst = os.path.join(n64_assets, f'{font_key}.ttf')
+                if not os.path.exists(dst):
+                    shutil.copy(base_font_path, dst)
+                    log.info(f'Copied font: {font_key}.ttf (size {size})')
+
+            self.exported_fonts[font_key] = {
+                'name': base_font_name,
+                'size': size,
+                'font_id': font_id
+            }
+            self.font_id_map[size] = font_id
+            font_id += 1
+            log.info(f'Font registered: {font_key} (size {size}, id {font_id - 1})')
 
         self.write_fonts_c()
         self.write_fonts_h()
+        self._assign_font_ids_to_labels()
 
     def write_fonts_c(self):
-        """Generate fonts.c from template."""
+        """Generate fonts.c from template.
+
+        Creates entries for each font size variant (e.g., Montserrat_15.font64, Montserrat_32.font64).
+        """
         tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'ui', 'fonts.c.j2')
         out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'ui', 'fonts.c')
 
@@ -790,8 +1189,11 @@ class N64Exporter:
             tmpl_content = f.read()
 
         lines = []
-        for font_name in self.exported_fonts.values():
-            lines.append(f'    "rom:/{font_name}.font64"')
+        # Sort by font_id to ensure consistent ordering
+        sorted_fonts = sorted(self.exported_fonts.items(), key=lambda x: x[1]['font_id'])
+        for font_key, font_info in sorted_fonts:
+            # font_key is already "FontName_Size"
+            lines.append(f'    "rom:/{font_key}.font64"')
         font_paths = ',\n'.join(lines)
 
         output = tmpl_content.format(
@@ -803,7 +1205,10 @@ class N64Exporter:
             f.write(output)
 
     def write_fonts_h(self):
-        """Generate fonts.h from template."""
+        """Generate fonts.h from template.
+
+        Creates enum entries for each font size variant (e.g., FONT_MONTSERRAT_15, FONT_MONTSERRAT_32).
+        """
         tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'ui', 'fonts.h.j2')
         out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'ui', 'fonts.h')
 
@@ -811,10 +1216,12 @@ class N64Exporter:
             tmpl_content = f.read()
 
         lines = []
-        for i, font_name in enumerate(self.exported_fonts.values()):
+        # Sort by font_id to ensure consistent ordering
+        sorted_fonts = sorted(self.exported_fonts.items(), key=lambda x: x[1]['font_id'])
+        for font_key, font_info in sorted_fonts:
             # Create a safe enum name (uppercase, replace special chars with _)
-            enum_name = font_name.upper().replace('-', '_').replace(' ', '_')
-            lines.append(f'    FONT_{enum_name} = {i},')
+            enum_name = font_key.upper().replace('-', '_').replace(' ', '_')
+            lines.append(f'    FONT_{enum_name} = {font_info["font_id"]},')
         font_enum_entries = '\n'.join(lines)
 
         output = tmpl_content.format(
@@ -824,6 +1231,38 @@ class N64Exporter:
 
         with open(out_path, 'w', encoding='utf-8') as f:
             f.write(output)
+
+    def _assign_font_ids_to_labels(self):
+        """Assign font_id and baseline_offset to each label based on its theme font size.
+
+        The baseline_offset converts from Koui's top-based Y coordinate to
+        libdragon's baseline-based Y coordinate. For most fonts:
+        - Ascent ≈ 80% of pixel height (where text sits above baseline)
+        - But since we scale font sizes for mkfont, we need to scale baseline too
+
+        The actual rendered font height in mkfont is approximately:
+        mkfont_size * 1.22 (due to em-to-pixel-height ratio)
+
+        So baseline_offset ≈ (kha_size * FONT_SIZE_SCALE) * 1.22 * 0.8
+                          ≈ kha_size * FONT_SIZE_SCALE * 0.98
+                          ≈ kha_size * 0.8 (roughly the same as before, but now accurate)
+        """
+        for canvas_name, canvas in self.ui_canvas_data.items():
+            for label in canvas.get('labels', []):
+                # Get the label's font size (default 15 if not specified)
+                kha_size = label.get('font_size', 15)
+                # Look up the font_id for this size
+                font_id = self.font_id_map.get(kha_size, 0)
+                label['font_id'] = font_id
+                # Calculate baseline offset based on scaled font metrics
+                # mkfont_size = kha_size * FONT_SIZE_SCALE
+                # rendered_height ≈ mkfont_size * 1.22 (em to pixel height)
+                # ascent ≈ rendered_height * 0.80
+                mkfont_size = max(8, int(kha_size * self.FONT_SIZE_SCALE))
+                rendered_height = mkfont_size * 1.22  # Approximate em-to-pixel expansion
+                baseline_offset = int(rendered_height * 0.80)
+                label['baseline_offset'] = baseline_offset
+                log.debug(f"Label '{label.get('key', 'unnamed')}': kha size {kha_size} -> mkfont {mkfont_size}, font_id {font_id}, baseline {baseline_offset}")
 
     def write_physics(self):
         """Copy physics engine files if physics is enabled."""
@@ -1186,12 +1625,12 @@ class N64Exporter:
         # Write traits to detect feature usage (UI, physics from traits)
         self.write_traits()
 
-        self.write_makefile()
         self.write_types()
         self.write_engine()
         self.write_physics()
-        self.write_fonts()
-        self.write_canvas()  # Generate canvas label data
+        self.write_fonts()       # Must be before write_makefile (populates exported_fonts)
+        self.write_makefile()    # Uses exported_fonts for font rules
+        self.write_canvas()      # Generate canvas label data
         self.write_main()
         self.write_models()
         self.write_renderer()
