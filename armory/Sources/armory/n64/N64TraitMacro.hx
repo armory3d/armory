@@ -25,6 +25,7 @@ import armory.n64.converters.InputCallConverter;
 import armory.n64.converters.SignalCallConverter;
 import armory.n64.converters.StdCallConverter;
 import armory.n64.converters.ObjectCallConverter;
+import armory.n64.converters.AutoloadCallConverter;
 
 using haxe.macro.ExprTools;
 using haxe.macro.TypeTools;
@@ -286,6 +287,7 @@ class TraitExtractor implements IExtractorContext {
             new ObjectCallConverter(),
             new SceneCallConverter(),
             new CanvasCallConverter(),
+            new AutoloadCallConverter(),
         ];
     }
 

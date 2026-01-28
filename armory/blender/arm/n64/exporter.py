@@ -687,6 +687,17 @@ class N64Exporter:
         else:
             ui_sources = '# No UI'
 
+        # Autoload source files (only if autoloads exist)
+        if self.autoload_info.get('has_autoloads', False):
+            autoload_lines = ['src +=\\']
+            for c_name in self.autoload_info.get('autoloads', []):
+                autoload_lines.append(f'    src/autoloads/{c_name}.c \\')
+            # Remove trailing backslash from last line
+            autoload_lines[-1] = autoload_lines[-1].rstrip(' \\')
+            autoload_sources = '\n'.join(autoload_lines)
+        else:
+            autoload_sources = '# No autoloads'
+
         # Generate font targets and rules for each size variant
         font_targets, font_rules = self._generate_font_makefile_entries()
 
@@ -696,6 +707,7 @@ class N64Exporter:
             scene_files=scene_files,
             physics_sources=physics_sources,
             canvas_sources=ui_sources,
+            autoload_sources=autoload_sources,
             font_targets=font_targets,
             font_rules=font_rules
         )

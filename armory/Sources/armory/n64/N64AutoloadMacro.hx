@@ -19,6 +19,7 @@ import armory.n64.converters.VecCallConverter;
 import armory.n64.converters.MathCallConverter;
 import armory.n64.converters.SignalCallConverter;
 import armory.n64.converters.StdCallConverter;
+import armory.n64.converters.AutoloadCallConverter;
 
 using haxe.macro.ExprTools;
 using haxe.macro.TypeTools;
@@ -280,6 +281,7 @@ class AutoloadExtractor implements IExtractorContext {
             new MathCallConverter(),
             new SignalCallConverter(),
             new StdCallConverter(),
+            new AutoloadCallConverter(),
         ];
     }
 
@@ -445,8 +447,8 @@ class AutoloadExtractor implements IExtractorContext {
     // Expression to IR conversion (shared with TraitExtractor)
     // ========================================================================
 
-    function exprToIR(e:Expr):IRNode {
-        if (e == null) return null;
+    public function exprToIR(e:Expr):IRNode {
+        if (e == null) return { type: "skip" };
 
         switch (e.expr) {
             case EConst(c):
@@ -483,14 +485,30 @@ class AutoloadExtractor implements IExtractorContext {
                     children: [exprToIR(e1), exprToIR(e2)]
                 };
 
-            case EVar(v):
-                localVarTypes.set(v.name, v.type != null ? complexTypeToString(v.type) : "Dynamic");
-                return {
-                    type: "var_decl",
-                    value: v.name,
-                    props: { var_type: TypeMap.getCType(localVarTypes.get(v.name)) },
-                    children: v.expr != null ? [exprToIR(v.expr)] : null
-                };
+            case EVars(vars):
+                for (v in vars) {
+                    localVarTypes.set(v.name, v.type != null ? complexTypeToString(v.type) : "Dynamic");
+                }
+                if (vars.length == 1) {
+                    var v = vars[0];
+                    return {
+                        type: "var_decl",
+                        value: v.name,
+                        props: { var_type: TypeMap.getCType(localVarTypes.get(v.name)) },
+                        children: v.expr != null ? [exprToIR(v.expr)] : null
+                    };
+                } else {
+                    var varDecls:Array<IRNode> = [];
+                    for (v in vars) {
+                        varDecls.push({
+                            type: "var_decl",
+                            value: v.name,
+                            props: { var_type: TypeMap.getCType(localVarTypes.get(v.name)) },
+                            children: v.expr != null ? [exprToIR(v.expr)] : null
+                        });
+                    }
+                    return { type: "block", children: varDecls };
+                }
 
             case EIf(econd, eif, eelse):
                 var children = [exprToIR(econd), exprToIR(eif)];

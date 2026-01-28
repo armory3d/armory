@@ -30,6 +30,9 @@ src = \
 # Canvas/UI sources (conditionally included)
 {canvas_sources}
 
+# Autoload sources (conditionally included)
+{autoload_sources}
+
 assets_png = $(wildcard assets/*.png)
 assets_gltf = $(wildcard assets/*.gltf)
 assets_conv = $(addprefix filesystem/,$(notdir $(assets_png:%.png=%.sprite))) \

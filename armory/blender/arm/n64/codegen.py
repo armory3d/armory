@@ -455,6 +455,31 @@ class IREmitter:
 
         return c_code
 
+    def emit_autoload_call(self, node: Dict) -> str:
+        """Autoload function call - ClassName.method() -> classname_method(args)."""
+        props = node.get("props", {})
+        c_name = props.get("c_name", "")
+        method = props.get("method", "")
+
+        if not c_name or not method:
+            return ""
+
+        args = node.get("args", [])
+        arg_strs = [self.emit(a) for a in args]
+
+        return f"{c_name}_{method}({', '.join(arg_strs)})"
+
+    def emit_autoload_field(self, node: Dict) -> str:
+        """Autoload field access - ClassName.field -> classname_field."""
+        props = node.get("props", {})
+        c_name = props.get("c_name", "")
+        field = props.get("field", "")
+
+        if not c_name or not field:
+            return ""
+
+        return f"{c_name}_{field}"
+
     def emit_remove_object(self, node: Dict) -> str:
         """Remove object call - substitute {obj} placeholder."""
         c_code = node.get("c_code", "")
