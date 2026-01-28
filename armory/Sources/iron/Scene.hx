@@ -224,6 +224,9 @@ class Scene {
 
 		Data.getSceneRaw(sceneName, function(format: TSceneFormat) {
 			Scene.create(format, function(o: Object) {
+				// Allow subsequent setActive calls from traits after scene loads
+				framePassed = true;
+
 				if (done != null) done(o);
 
 				#if (rp_background == "World")
