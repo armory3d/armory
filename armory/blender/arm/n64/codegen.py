@@ -313,24 +313,39 @@ class IREmitter:
     # =========================================================================
 
     def emit_if(self, node: Dict) -> str:
-        """If statement."""
-        children = node.get("children", [])
-        props = node.get("props", {})
+        """If statement.
 
-        if not children:
+        IR format from macro:
+          children[0] = condition
+          children[1] = then body (block or single statement)
+          children[2] = else body (optional, block or single statement)
+        """
+        children = node.get("children", [])
+
+        if len(children) < 2:
             return ""
 
         cond = self.emit(children[0])
         if not cond:
             return ""
 
-        then_nodes = props.get("then", [])
+        # Get then body - could be a block or single statement
+        then_node = children[1]
+        if then_node.get("type") == "block":
+            then_nodes = then_node.get("children", [])
+        else:
+            then_nodes = [then_node]
         then_code = self.emit_statements(then_nodes, "        ")
 
         result = f"if ({cond}) {{\n{then_code}\n    }}"
 
-        else_nodes = props.get("else_")
-        if else_nodes:
+        # Check for else branch
+        if len(children) > 2:
+            else_node = children[2]
+            if else_node.get("type") == "block":
+                else_nodes = else_node.get("children", [])
+            else:
+                else_nodes = [else_node]
             else_code = self.emit_statements(else_nodes, "        ")
             result += f" else {{\n{else_code}\n    }}"
 
@@ -384,6 +399,45 @@ class IREmitter:
             arg_strs = [self.emit(a) for a in args if self.emit(a)]
             return f"{func_name}({', '.join(arg_strs)})"
         return ""
+
+    def emit_method_call(self, node: Dict) -> str:
+        """Method call on object: object.method(args).
+
+        IR format:
+            type: "method_call"
+            method: "play"
+            object: { type: "ident", value: "handle" }
+            args: [...]
+
+        For audio handles, maps to arm_audio_* functions.
+        """
+        method = node.get("method", "")
+        obj_node = node.get("object")
+        args = node.get("args", [])
+
+        if not method or not obj_node:
+            return ""
+
+        obj = self.emit(obj_node)
+        if not obj:
+            return ""
+
+        # Audio handle methods
+        if method == "play":
+            return f"arm_audio_start(&{obj})"
+        elif method == "stop":
+            return f"arm_audio_stop(&{obj})"
+        elif method == "pause":
+            return f"arm_audio_stop(&{obj})"  # No pause in libdragon
+        elif method == "setVolume":
+            vol = "1.0f"
+            if args:
+                vol = self.emit(args[0])
+            return f"arm_audio_set_volume(&{obj}, {vol})"
+
+        # Fallback: unknown method, emit as C function call
+        arg_strs = [self.emit(a) for a in args]
+        return f"{obj}.{method}({', '.join(arg_strs)})"
 
     def emit_scene_call(self, node: Dict) -> str:
         """Scene.setActive() -> scene_switch_to()"""
@@ -612,8 +666,27 @@ class IREmitter:
     # Audio Calls - emit audio nodes from AudioCallConverter
     # =========================================================================
 
+    def emit_audio_load(self, node: Dict) -> str:
+        """Audio load call - loads sound without playing it."""
+        props = node.get("props", {})
+        args = node.get("args", [])
+
+        # Get sound path - either from args or c_code
+        if args:
+            sound_path = self.emit(args[0])
+        else:
+            c_code = node.get("c_code", "")
+            if c_code:
+                return c_code
+            sound_path = '"rom:/sound.wav64"'
+
+        mix_channel = props.get("mix_channel", "AUDIO_MIX_MASTER")
+        loop = props.get("loop", "false")
+
+        return f"arm_audio_load({sound_path}, {mix_channel}, {loop})"
+
     def emit_audio_play(self, node: Dict) -> str:
-        """Audio play call - emit args through emitter for proper prefixing."""
+        """Audio play call - loads and immediately starts playing."""
         props = node.get("props", {})
         args = node.get("args", [])
 
@@ -653,11 +726,11 @@ class IREmitter:
         return node.get("c_code", "")
 
     def emit_audio_handle_play(self, node: Dict) -> str:
-        """Handle play - emit handle with proper prefixing."""
+        """Handle play - starts playback of a loaded handle."""
         children = node.get("children", [])
         if children:
             handle = self.emit(children[0])
-            return f"arm_audio_replay(&{handle})"
+            return f"arm_audio_start(&{handle})"
         return node.get("c_code", "")
 
     def emit_audio_handle_stop(self, node: Dict) -> str:
@@ -717,11 +790,18 @@ class AutoloadIREmitter(IREmitter):
         super().__init__(autoload_name, c_name, member_names)
         self.function_names = function_names
         self.member_types = member_types or {}
+        self.param_types: Dict[str, str] = {}  # Populated when emitting a function
 
     def emit_member(self, node: Dict) -> str:
         """Autoload member access: c_name_member_name (global variable)"""
         name = node.get("value", "")
         return f"{self.c_name}_{name}"
+
+    def _is_null_node(self, node: Dict) -> bool:
+        """Check if a node is a null literal."""
+        if node is None:
+            return False
+        return node.get("type", "") == "null"
 
     def _is_sound_handle(self, node: Dict) -> bool:
         """Check if a node refers to an ArmSoundHandle type."""
@@ -733,23 +813,65 @@ class AutoloadIREmitter(IREmitter):
             return self.member_types.get(name) == "ArmSoundHandle"
         return False
 
+    def _is_string_type(self, node: Dict) -> bool:
+        """Check if a node is a string type (string literal or const char* variable)."""
+        if node is None:
+            return False
+        node_type = node.get("type", "")
+        if node_type == "string":
+            return True
+        if node_type == "ident":
+            name = node.get("value", "")
+            ctype = self.member_types.get(name) or self.param_types.get(name)
+            return ctype == "const char*"
+        return False
+
     def emit_binop(self, node: Dict) -> str:
-        """Binary operator - special handling for ArmSoundHandle comparisons."""
+        """Binary operator - special handling for ArmSoundHandle and string comparisons."""
         op = node.get("value", "+")
         children = node.get("children", [])
         if len(children) >= 2:
             left_node = children[0]
             right_node = children[1]
 
-            # Check for ArmSoundHandle comparison
-            if op in ("==", "!=") and (self._is_sound_handle(left_node) or self._is_sound_handle(right_node)):
+            # Check for ArmSoundHandle assignment with null
+            if op == "=" and self._is_sound_handle(left_node) and self._is_null_node(right_node):
                 left = self.emit(left_node)
-                right = self.emit(right_node)
-                if left and right:
-                    if op == "==":
-                        return f"arm_sound_handle_equals({left}, {right})"
+                if left:
+                    return f"({left} = (ArmSoundHandle){{-1, 0, -1, true}})"
+
+            # Check for ArmSoundHandle comparison (including with null)
+            if op in ("==", "!="):
+                left_is_handle = self._is_sound_handle(left_node)
+                right_is_handle = self._is_sound_handle(right_node)
+                left_is_null = self._is_null_node(left_node)
+                right_is_null = self._is_null_node(right_node)
+
+                if (left_is_handle or right_is_handle) and (left_is_handle or right_is_handle or left_is_null or right_is_null):
+                    # One side is a handle, emit comparison
+                    if left_is_null:
+                        left = "(ArmSoundHandle){-1, 0, -1, true}"
                     else:
-                        return f"!arm_sound_handle_equals({left}, {right})"
+                        left = self.emit(left_node)
+                    if right_is_null:
+                        right = "(ArmSoundHandle){-1, 0, -1, true}"
+                    else:
+                        right = self.emit(right_node)
+                    if left and right:
+                        if op == "==":
+                            return f"arm_sound_handle_equals({left}, {right})"
+                        else:
+                            return f"!arm_sound_handle_equals({left}, {right})"
+
+                # Check for string comparison
+                if self._is_string_type(left_node) or self._is_string_type(right_node):
+                    left = self.emit(left_node)
+                    right = self.emit(right_node)
+                    if left and right:
+                        if op == "==":
+                            return f"(strcmp({left}, {right}) == 0)"
+                        else:
+                            return f"(strcmp({left}, {right}) != 0)"
 
             # Fall back to base implementation
             return super().emit_binop(node)
@@ -1762,6 +1884,11 @@ def _prepare_autoload_template_data(name: str, autoload_ir: dict) -> dict:
         if maybe_unused:
             prefix += "__attribute__((unused)) "
         lines = [f"{prefix}{decl} {{"]
+
+        # Populate param_types for this function so emit_binop can detect string parameters
+        params = func.get("params", [])
+        emitter.param_types = {p.get("name", ""): p.get("ctype", "int32_t") for p in params}
+
         body = func.get("body", [])
         for node in body:
             code = emitter.emit(node)
@@ -1772,6 +1899,10 @@ def _prepare_autoload_template_data(name: str, autoload_ir: dict) -> dict:
                             lines.append(f"    {line};")
                         else:
                             lines.append(f"    {line}")
+
+        # Clear param_types after processing
+        emitter.param_types = {}
+
         lines.append("}")
         return "\n".join(lines)
 

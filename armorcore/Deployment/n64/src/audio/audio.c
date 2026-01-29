@@ -76,9 +76,9 @@ void arm_audio_update(void)
     }
 }
 
-ArmSoundHandle arm_audio_play(const char *sound_path, int mix_channel, bool loop)
+ArmSoundHandle arm_audio_load(const char *sound_path, int mix_channel, bool loop)
 {
-    ArmSoundHandle handle = { .channel = -1, .mix_channel = mix_channel, .finished = true };
+    ArmSoundHandle handle = { .channel = -1, .mix_channel = mix_channel, .sound_slot = -1, .finished = true };
 
     // Validate mix channel
     if (mix_channel < 0 || mix_channel >= AUDIO_MIX_CHANNEL_COUNT) {
@@ -89,25 +89,54 @@ ArmSoundHandle arm_audio_play(const char *sound_path, int mix_channel, bool loop
     LoadedSound *sound = find_or_load_sound(sound_path);
     if (!sound) return handle;
 
-    int ch = allocate_channel(mix_channel);
-    if (ch < 0) {
-        debugf("audio: no channels available\n");
-        return handle;
+    int slot = find_sound_slot(sound_path);
+    sound->loop = loop;  // Store loop setting for later playback
+    handle.sound_slot = slot;
+    return handle;
+}
+
+ArmSoundHandle arm_audio_play(const char *sound_path, int mix_channel, bool loop)
+{
+    ArmSoundHandle handle = arm_audio_load(sound_path, mix_channel, loop);
+    if (handle.sound_slot >= 0) {
+        arm_audio_start(&handle);
+    }
+    return handle;
+}
+
+void arm_audio_start(ArmSoundHandle *handle)
+{
+    if (!handle || handle->sound_slot < 0) return;
+    if (handle->sound_slot >= MAX_LOADED_SOUNDS) return;
+    if (!loaded_sounds[handle->sound_slot].in_use) return;
+
+    // Check if this sound_slot is already playing on a channel
+    for (int ch = 0; ch < AUDIO_MIXER_CHANNELS; ch++) {
+        if (channel_in_use[ch] && channel_sound_slot[ch] == handle->sound_slot) {
+            // Already playing this exact sound, update handle and return
+            handle->channel = ch;
+            handle->finished = false;
+            return;
+        }
     }
 
-    int slot = find_sound_slot(sound_path);
-    wav64_set_loop(&sound->wav, loop);
+    int ch = allocate_channel(handle->mix_channel);
+    if (ch < 0) {
+        debugf("audio: no channels available\n");
+        return;
+    }
+
+    LoadedSound *sound = &loaded_sounds[handle->sound_slot];
+    wav64_set_loop(&sound->wav, sound->loop);
     wav64_play(&sound->wav, ch);
 
     channel_in_use[ch] = true;
-    channel_mix_mapping[ch] = mix_channel;
-    channel_sound_slot[ch] = slot;
+    channel_mix_mapping[ch] = handle->mix_channel;
+    channel_sound_slot[ch] = handle->sound_slot;
     apply_channel_volume(ch);
 
-    handle.channel = ch;
-    handle.sound_slot = slot;
-    handle.finished = false;
-    return handle;
+    handle->channel = ch;
+    handle->finished = false;
 }
 
 void arm_audio_replay(ArmSoundHandle *handle)
@@ -138,11 +167,30 @@ void arm_audio_replay(ArmSoundHandle *handle)
 
 void arm_audio_stop(ArmSoundHandle *handle)
 {
-    if (!handle || handle->channel < 0) return;
+    if (!handle || handle->sound_slot < 0) return;
 
-    mixer_ch_stop(handle->channel);
-    channel_in_use[handle->channel] = false;
-    channel_mix_mapping[handle->channel] = -1;
+    // Find channel by sound_slot since handle might be a copy with stale channel info
+    int ch = -1;
+    if (handle->channel >= 0 && handle->channel < AUDIO_MIXER_CHANNELS &&
+        channel_in_use[handle->channel] && channel_sound_slot[handle->channel] == handle->sound_slot) {
+        ch = handle->channel;
+    } else {
+        // Look up channel by sound_slot
+        for (int i = 0; i < AUDIO_MIXER_CHANNELS; i++) {
+            if (channel_in_use[i] && channel_sound_slot[i] == handle->sound_slot) {
+                ch = i;
+                break;
+            }
+        }
+    }
+
+    if (ch >= 0) {
+        mixer_ch_stop(ch);
+        channel_in_use[ch] = false;
+        channel_mix_mapping[ch] = -1;
+        channel_sound_slot[ch] = -1;
+    }
+
     handle->finished = true;
     handle->channel = -1;
 }

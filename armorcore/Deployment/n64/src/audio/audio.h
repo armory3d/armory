@@ -23,7 +23,9 @@ void arm_audio_init(void);
 void arm_audio_shutdown(void);
 void arm_audio_update(void);
 
+ArmSoundHandle arm_audio_load(const char *path, int mix_channel, bool loop);
 ArmSoundHandle arm_audio_play(const char *path, int mix_channel, bool loop);
+void arm_audio_start(ArmSoundHandle *handle);
 void arm_audio_replay(ArmSoundHandle *handle);
 void arm_audio_stop(ArmSoundHandle *handle);
 bool arm_audio_is_playing(ArmSoundHandle *handle);

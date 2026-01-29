@@ -64,7 +64,7 @@ class AudioCallConverter implements ICallConverter {
         switch (method) {
             case "createCompBufferChannel":
                 // Aura.createCompBufferChannel(sound, loop, mixChannel)
-                // -> arm_audio_play(path, mix_channel, loop)
+                // -> arm_audio_load(path, mix_channel, loop)  (does NOT start playback)
                 if (args.length >= 3) {
                     var soundArg = args[0];
                     var loopArg = args[1];
@@ -77,8 +77,9 @@ class AudioCallConverter implements ICallConverter {
                     var mixCh = extractMixChannelFromArg(rawParams[2]);
 
                     // Return node with args - let emitter handle sound path
+                    // Using audio_load instead of audio_play - doesn't start playing
                     return {
-                        type: "audio_play",
+                        type: "audio_load",
                         args: [soundArg],  // Sound path/variable
                         props: {
                             mix_channel: mixCh,
