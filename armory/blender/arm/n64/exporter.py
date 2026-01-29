@@ -864,7 +864,7 @@ class N64Exporter:
     def write_autoloads(self):
         """Generate autoload C files from IR JSON.
 
-        Autoloads are singleton classes marked with @:n64autoload.
+        Autoloads are singleton classes marked with @:n64Autoload.
         They become globally accessible C modules.
         """
         # Get template data from codegen
@@ -1749,7 +1749,7 @@ class N64Exporter:
         # Write traits to detect feature usage (UI, physics from traits)
         self.write_traits()
 
-        # Write autoloads (singletons with @:n64autoload)
+        # Write autoloads (singletons with @:n64Autoload)
         self.write_autoloads()
 
         self.write_types()

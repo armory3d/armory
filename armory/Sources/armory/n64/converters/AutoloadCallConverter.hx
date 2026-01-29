@@ -18,7 +18,7 @@ using StringTools;
  *   GameEvents.score -> gameevents_score
  *   GameEvents.score = 10 -> gameevents_score = 10
  *
- * Autoload classes are detected by checking for @:n64autoload metadata.
+ * Autoload classes are detected by checking for @:n64Autoload metadata.
  */
 class AutoloadCallConverter implements ICallConverter {
     // Cache of known autoload class names -> c_names
@@ -87,7 +87,7 @@ class AutoloadCallConverter implements ICallConverter {
             return autoloadCache.get(className);
         }
 
-        // Try to resolve the type and check for @:n64autoload metadata
+        // Try to resolve the type and check for @:n64Autoload metadata
         try {
             var type = Context.getType(className);
             if (type == null) {

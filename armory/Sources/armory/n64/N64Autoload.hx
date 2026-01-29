@@ -7,7 +7,7 @@ package armory.n64;
  * applied via @:autoBuild. This provides global singleton-like access in C code.
  *
  * Usage:
- *   @:n64autoload(order=0)  // Optional: control initialization order (lower = earlier)
+ *   @:n64Autoload(order=0)  // Optional: control initialization order (lower = earlier)
  *   class GameEvents implements N64Autoload {
  *       public static var sceneLoaded:Signal = new Signal();
  *       public static var score:Int = 0;

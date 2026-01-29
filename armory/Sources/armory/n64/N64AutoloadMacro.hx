@@ -29,14 +29,14 @@ using Lambda;
 /**
  * N64 Autoload Macro
  *
- * Processes classes marked with @:n64autoload metadata.
+ * Processes classes marked with @:n64Autoload metadata.
  * Autoloads are singleton-like classes that:
  * - Initialize once at engine startup (before scenes)
  * - Persist across scene changes
  * - Are globally accessible from traits and other autoloads
  *
  * Usage:
- *   @:n64autoload(order=0)
+ *   @:n64Autoload(order=0)
  *   class GameEvents {
  *       public static var sceneLoaded: Signal = new Signal();
  *       public static function init() { ... }
@@ -109,7 +109,7 @@ class N64AutoloadMacro {
                                     default:
                                 }
                             case EConst(CInt(v)):
-                                // Just a number: @:n64autoload(5)
+                                // Just a number: @:n64Autoload(5)
                                 order = Std.parseInt(v);
                             default:
                         }
