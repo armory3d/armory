@@ -11,7 +11,7 @@
  *
  *   onDeath.connect(myCallback);           // Subscribe
  *   onDeath.disconnect(myCallback);        // Unsubscribe
- *   onDeath.emit(damage, attacker);        // Emit with args (max 4)
+ *   onDeath.emit(damage, attacker);        // Emit with any number of args
  */
 
 #pragma once

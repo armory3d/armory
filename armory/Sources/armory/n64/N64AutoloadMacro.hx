@@ -196,6 +196,38 @@ class N64AutoloadMacro {
                 }
             }
 
+            // Generate preambles for signal handlers (match N64TraitMacro behavior)
+            for (sh in ir.meta.signal_handlers) {
+                // Find the signal this handler connects to
+                for (sig in ir.meta.signals) {
+                    if (sig.name == sh.signal_name) {
+                        var argTypes = sig.arg_types;
+                        var argCount = argTypes.length;
+
+                        // Autoloads use singleton pattern, ctx is the autoload data pointer
+                        var dataType = '${ir.name}Data';
+                        var dataCast = '$dataType* data = ($dataType*)ctx;';
+
+                        if (argCount == 0) {
+                            sh.preamble = '$dataCast (void)payload;';
+                        } else if (argCount == 1) {
+                            sh.preamble = '$dataCast ${argTypes[0]} arg0 = (${argTypes[0]})(uintptr_t)payload; (void)arg0;';
+                        } else {
+                            // Multiple args - cast to struct
+                            var structType = sig.struct_type;
+                            var preambleLines:Array<String> = [];
+                            preambleLines.push(dataCast);
+                            preambleLines.push('$structType* p = ($structType*)payload;');
+                            for (i in 0...argCount) {
+                                preambleLines.push('${argTypes[i]} arg$i = p->arg$i; (void)arg$i;');
+                            }
+                            sh.preamble = preambleLines.join(" ");
+                        }
+                        break;
+                    }
+                }
+            }
+
             Reflect.setField(autoloads, name, {
                 module: ir.module,
                 c_name: ir.cName,
@@ -380,9 +412,31 @@ class AutoloadExtractor implements IExtractorContext {
                     var haxeType = t != null ? complexTypeToString(t) : "Dynamic";
                     memberTypes.set(field.name, haxeType);
 
-                    var member = extractMember(field.name, t, e);
-                    if (member != null) {
-                        members.set(field.name, member);
+                    // Signal properties should be tracked separately like FVar signals
+                    if (haxeType == "Signal") {
+                        var maxSubs = 16;
+                        if (field.meta != null) {
+                            for (m in field.meta) {
+                                if (m.name == ":n64MaxSubs" || m.name == "n64MaxSubs") {
+                                    if (m.params != null && m.params.length > 0) {
+                                        switch (m.params[0].expr) {
+                                            case EConst(CInt(v)): maxSubs = Std.parseInt(v);
+                                            default:
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        meta.signals.push({
+                            name: field.name,
+                            arg_types: [],
+                            max_subs: maxSubs
+                        });
+                    } else {
+                        var member = extractMember(field.name, t, e);
+                        if (member != null) {
+                            members.set(field.name, member);
+                        }
                     }
 
                 case FFun(func):
@@ -744,6 +798,11 @@ class AutoloadExtractor implements IExtractorContext {
     }
 
     public function addSignalHandler(handlerName:String, signalName:String):Void {
+        // Check if already tracked (avoid duplicates)
+        for (h in meta.signal_handlers) {
+            if (h.handler_name == handlerName) return;
+        }
+
         meta.signal_handlers.push({
             handler_name: handlerName,
             signal_name: signalName
@@ -754,8 +813,9 @@ class AutoloadExtractor implements IExtractorContext {
         for (sig in meta.signals) {
             if (sig.name == signalName && sig.arg_types.length == 0) {
                 for (p in params) {
-                    var ctype = inferExprType(p);
-                    sig.arg_types.push(ctype);
+                    var haxeType = inferExprType(p);
+                    var cType = TypeMap.getCType(haxeType);
+                    sig.arg_types.push(cType);
                 }
                 break;
             }
@@ -763,18 +823,23 @@ class AutoloadExtractor implements IExtractorContext {
     }
 
     public function inferExprType(e:Expr):String {
+        // Return Haxe types (consistent with N64TraitMacro)
+        // Caller uses TypeMap.getCType() to convert to C types
         return switch (e.expr) {
-            case EConst(CInt(_)): "int32_t";
-            case EConst(CFloat(_)): "float";
-            case EConst(CString(_)): "const char*";
+            case EConst(CInt(_)): "Int";
+            case EConst(CFloat(_)): "Float";
+            case EConst(CString(_)): "String";
             case EConst(CIdent(s)):
-                if (s == "true" || s == "false") "bool";
+                if (s == "true" || s == "false") "Bool";
                 else {
                     var t = localVarTypes.get(s);
                     if (t == null) t = memberTypes.get(s);
-                    t != null ? TypeMap.getCType(t) : "void*";
+                    t != null ? t : "Dynamic";
                 }
-            default: "void*";
+            case EField(obj, field):
+                // Could be object.transform, etc. - simplified for now
+                "Dynamic";
+            default: "Dynamic";
         };
     }
 
