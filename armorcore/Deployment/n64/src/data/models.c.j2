@@ -31,13 +31,14 @@ void models_shutdown(void)
 {{
     for (uint8_t i = 0; i < MODEL_COUNT; i++) {{
         if (g_models[i].loaded) {{
-            if (g_models[i].model) {{
-                t3d_model_free(g_models[i].model);
-                g_models[i].model = NULL;
-            }}
+            // Free display list FIRST since it references model data
             if (g_models[i].dpl) {{
                 rspq_block_free(g_models[i].dpl);
                 g_models[i].dpl = NULL;
+            }}
+            if (g_models[i].model) {{
+                t3d_model_free(g_models[i].model);
+                g_models[i].model = NULL;
             }}
             g_models[i].ref_count = 0;
             g_models[i].loaded = 0;
@@ -97,13 +98,14 @@ void models_unload(ModelId id)
 
     ModelEntry *e = &g_models[id];
     if (e->loaded) {{
-        if (e->model) {{
-            t3d_model_free(e->model);
-            e->model = NULL;
-        }}
+        // Free display list FIRST since it references model data
         if (e->dpl) {{
             rspq_block_free(e->dpl);
             e->dpl = NULL;
+        }}
+        if (e->model) {{
+            t3d_model_free(e->model);
+            e->model = NULL;
         }}
         e->ref_count = 0;
         e->loaded = 0;

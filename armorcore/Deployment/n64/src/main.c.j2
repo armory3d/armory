@@ -89,6 +89,8 @@ int main(void)
         SceneId pending = scene_get_pending();
         if (pending < SCENE_COUNT) {{
             scene_clear_pending();
+            // Wait for RSP to finish before freeing display lists
+            rspq_wait();
             scene_clear(current_scene);
             trait_events_clear();
 #if ENGINE_ENABLE_PHYSICS
