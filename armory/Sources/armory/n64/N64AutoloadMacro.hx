@@ -184,50 +184,14 @@ class N64AutoloadMacro {
             }
 
             // Generate struct_type and struct_def for signals with 2+ args
-            for (sig in ir.meta.signals) {
-                var argCount = sig.arg_types.length;
-                if (argCount >= 2) {
-                    sig.struct_type = '${ir.cName}_${sig.name}_payload_t';
-                    var lines:Array<String> = ['typedef struct {'];
-                    for (i in 0...argCount) {
-                        lines.push('    ${sig.arg_types[i]} arg$i;');
-                    }
-                    lines.push('} ${sig.struct_type};');
-                    sig.struct_def = lines.join('\n');
-                }
-            }
+            N64MacroBase.generateSignalStructs(ir.meta.signals, ir.cName);
 
-            // Generate preambles for signal handlers (match N64TraitMacro behavior)
-            for (sh in ir.meta.signal_handlers) {
-                // Find the signal this handler connects to
-                for (sig in ir.meta.signals) {
-                    if (sig.name == sh.signal_name) {
-                        var argTypes = sig.arg_types;
-                        var argCount = argTypes.length;
-
-                        // Autoloads use singleton pattern, ctx is the autoload data pointer
-                        var dataType = '${ir.name}Data';
-                        var dataCast = '$dataType* data = ($dataType*)ctx;';
-
-                        if (argCount == 0) {
-                            sh.preamble = '$dataCast (void)payload;';
-                        } else if (argCount == 1) {
-                            sh.preamble = '$dataCast ${argTypes[0]} arg0 = (${argTypes[0]})(uintptr_t)payload; (void)arg0;';
-                        } else {
-                            // Multiple args - cast to struct
-                            var structType = sig.struct_type;
-                            var preambleLines:Array<String> = [];
-                            preambleLines.push(dataCast);
-                            preambleLines.push('$structType* p = ($structType*)payload;');
-                            for (i in 0...argCount) {
-                                preambleLines.push('${argTypes[i]} arg$i = p->arg$i; (void)arg$i;');
-                            }
-                            sh.preamble = preambleLines.join(" ");
-                        }
-                        break;
-                    }
-                }
-            }
+            // Generate preambles for signal handlers
+            N64MacroBase.generateSignalHandlerPreambles(
+                ir.meta.signal_handlers,
+                ir.meta.signals,
+                '${ir.name}Data'
+            );
 
             Reflect.setField(autoloads, name, {
                 module: ir.module,
@@ -520,7 +484,7 @@ class AutoloadExtractor implements IExtractorContext {
 
         switch (e.expr) {
             case EConst(c):
-                return constToIR(c);
+                return N64MacroBase.constToIR(c);
 
             case EBinop(op, e1, e2):
                 return {
@@ -628,23 +592,6 @@ class AutoloadExtractor implements IExtractorContext {
             default:
                 return { type: "skip" };
         }
-    }
-
-    function constToIR(c:Constant):IRNode {
-        return switch (c) {
-            case CInt(v): { type: "literal", value: v, props: { literal_type: "int" } };
-            case CFloat(f): { type: "literal", value: f, props: { literal_type: "float" } };
-            case CString(s): { type: "literal", value: s, props: { literal_type: "string" } };
-            case CIdent(s):
-                if (s == "true" || s == "false") {
-                    { type: "literal", value: s, props: { literal_type: "bool" } };
-                } else if (s == "null") {
-                    { type: "literal", value: "NULL", props: { literal_type: "null" } };
-                } else {
-                    { type: "ident", value: s };
-                }
-            default: { type: "skip" };
-        };
     }
 
     function convertCall(callExpr:Expr, params:Array<Expr>):IRNode {

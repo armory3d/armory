@@ -58,50 +58,6 @@ class AudioCallConverter implements ICallConverter {
         return null;
     }
 
-    /**
-     * Try to convert a field access on audio-related types.
-     * Called for patterns like:
-     *   Assets.sounds.sound_name -> "rom:/sound_name.wav64"
-     *   handle.finished -> handle.finished (bool)
-     */
-    public static function tryConvertFieldAccess(obj:Expr, field:String, ctx:IExtractorContext):IRNode {
-        switch (obj.expr) {
-            // Assets.sounds.sound_name -> "rom:/sound_name.wav64"
-            case EField(innerObj, "sounds"):
-                switch (innerObj.expr) {
-                    case EConst(CIdent("Assets")):
-                        // Convert sound name from snake_case asset name to ROM path
-                        var soundPath = 'rom:/${field}.wav64';
-                        return {
-                            type: "string",
-                            value: soundPath,
-                            c_code: '"$soundPath"'
-                        };
-                    default:
-                }
-            default:
-        }
-
-        // Check for handle.finished property
-        var objType = getExprTypeSafeStatic(obj);
-        if (objType != null && (objType.indexOf("ChannelHandle") >= 0 || objType.indexOf("Handle") >= 0)) {
-            if (field == "finished") {
-                // Return a node referencing the handle - emitter will prefix it for autoloads
-                // We need the context to convert the expression properly
-                var handleName = extractVarName(obj);
-                if (handleName != null) {
-                    return {
-                        type: "audio_handle_field",
-                        value: field,  // "finished"
-                        props: {handle_name: handleName}
-                    };
-                }
-            }
-        }
-
-        return null;
-    }
-
     function convertAuraCall(method:String, args:Array<IRNode>, rawParams:Array<Expr>, ctx:IExtractorContext):IRNode {
         var meta = ctx.getMeta();
 

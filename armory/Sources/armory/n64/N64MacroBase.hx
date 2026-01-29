@@ -139,6 +139,81 @@ class N64MacroBase {
             default: { type: "skip" };
         };
     }
+
+    /**
+     * Generate struct_type and struct_def for signals with 2+ arguments.
+     *
+     * For signals that pass multiple arguments, we generate a payload struct:
+     *   typedef struct {
+     *       int32_t arg0;
+     *       float arg1;
+     *   } traitname_signalname_payload_t;
+     *
+     * @param signals Array of SignalMeta from IR
+     * @param cName The C-style name prefix (e.g., "arm_node_player")
+     */
+    public static function generateSignalStructs(signals:Array<SignalMeta>, cName:String):Void {
+        for (sig in signals) {
+            var argCount = sig.arg_types.length;
+            if (argCount >= 2) {
+                sig.struct_type = '${cName}_${sig.name}_payload_t';
+                var lines:Array<String> = ['typedef struct {'];
+                for (i in 0...argCount) {
+                    lines.push('    ${sig.arg_types[i]} arg$i;');
+                }
+                lines.push('} ${sig.struct_type};');
+                sig.struct_def = lines.join('\n');
+            }
+        }
+    }
+
+    /**
+     * Generate preamble code for signal handlers.
+     *
+     * The preamble extracts the payload and sets up local variables:
+     * - 0 args: "(void)payload;"
+     * - 1 arg:  "int32_t arg0 = (int32_t)(uintptr_t)payload;"
+     * - 2+ args: Unpack from struct pointer
+     *
+     * @param signalHandlers Array of SignalHandlerMeta from IR
+     * @param signals Array of SignalMeta to lookup arg types
+     * @param dataType The data struct type name (e.g., "PlayerData")
+     */
+    public static function generateSignalHandlerPreambles(
+        signalHandlers:Array<SignalHandlerMeta>,
+        signals:Array<SignalMeta>,
+        dataType:String
+    ):Void {
+        for (sh in signalHandlers) {
+            // Find the signal this handler connects to
+            for (sig in signals) {
+                if (sig.name == sh.signal_name) {
+                    var argTypes = sig.arg_types;
+                    var argCount = argTypes.length;
+
+                    // Cast ctx to data pointer so handler body can use 'data'
+                    var dataCast = '$dataType* data = ($dataType*)ctx;';
+
+                    if (argCount == 0) {
+                        sh.preamble = '$dataCast (void)payload;';
+                    } else if (argCount == 1) {
+                        sh.preamble = '$dataCast ${argTypes[0]} arg0 = (${argTypes[0]})(uintptr_t)payload; (void)arg0;';
+                    } else {
+                        // Multiple args - unpack from struct
+                        var structType = sig.struct_type;
+                        var lines:Array<String> = [];
+                        lines.push(dataCast);
+                        lines.push('$structType* p = ($structType*)payload;');
+                        for (i in 0...argCount) {
+                            lines.push('${argTypes[i]} arg$i = p->arg$i; (void)arg$i;');
+                        }
+                        sh.preamble = lines.join(" ");
+                    }
+                    break;
+                }
+            }
+        }
+    }
 }
 
 #end

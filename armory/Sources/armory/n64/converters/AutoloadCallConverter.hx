@@ -40,29 +40,6 @@ class AutoloadCallConverter implements ICallConverter {
         return null;
     }
 
-    /**
-     * Try to convert a field access on an autoload class.
-     * Called for patterns like GameEvents.score (read) or GameEvents.score = value (write).
-     */
-    public static function tryConvertFieldAccess(className:String, fieldName:String):IRNode {
-        var cName = getAutoloadCName(className);
-        if (cName == null) {
-            return null;
-        }
-
-        // Return a field access node that will be emitted as autoload_fieldname
-        return {
-            type: "autoload_field",
-            value: fieldName,
-            c_code: '${cName}_${fieldName}',
-            props: {
-                autoload: className,
-                c_name: cName,
-                field: fieldName
-            }
-        };
-    }
-
     function convertAutoloadCall(cName:String, method:String, args:Array<IRNode>, ctx:IExtractorContext):IRNode {
         // Generate: autoload_method(args...)
         return {
@@ -124,13 +101,6 @@ class AutoloadCallConverter implements ICallConverter {
         // Cache negative result
         autoloadCache.set(className, null);
         return null;
-    }
-
-    /**
-     * Check if a class is an autoload.
-     */
-    public static function isAutoload(className:String):Bool {
-        return getAutoloadCName(className) != null;
     }
 }
 #end

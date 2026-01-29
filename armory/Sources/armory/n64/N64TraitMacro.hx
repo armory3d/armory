@@ -124,50 +124,14 @@ class N64TraitMacro {
             }
 
             // Generate struct_type and struct_def for signals with 2+ args
-            for (sig in ir.meta.signals) {
-                var argCount = sig.arg_types.length;
-                if (argCount >= 2) {
-                    sig.struct_type = '${ir.cName}_${sig.name}_payload_t';
-                    // Generate full struct definition
-                    var lines:Array<String> = ['typedef struct {'];
-                    for (i in 0...argCount) {
-                        lines.push('    ${sig.arg_types[i]} arg$i;');
-                    }
-                    lines.push('} ${sig.struct_type};');
-                    sig.struct_def = lines.join('\n');
-                }
-            }
+            N64MacroBase.generateSignalStructs(ir.meta.signals, ir.cName);
 
-            for (sh in ir.meta.signal_handlers) {
-                // Find the signal this handler connects to
-                for (sig in ir.meta.signals) {
-                    if (sig.name == sh.signal_name) {
-                        var argTypes = sig.arg_types;
-                        var argCount = argTypes.length;
-
-                        // Always cast ctx to data pointer so handler body can use 'data'
-                        var dataType = '${ir.name}Data';
-                        var dataCast = '$dataType* data = ($dataType*)ctx;';
-
-                        if (argCount == 0) {
-                            sh.preamble = '$dataCast (void)payload;';
-                        } else if (argCount == 1) {
-                            sh.preamble = '$dataCast ${argTypes[0]} arg0 = (${argTypes[0]})(uintptr_t)payload; (void)arg0;';
-                        } else {
-                            // Multiple args - cast to struct (use sig.struct_type)
-                            var structType = sig.struct_type;
-                            var lines:Array<String> = [];
-                            lines.push(dataCast);
-                            lines.push('$structType* p = ($structType*)payload;');
-                            for (i in 0...argCount) {
-                                lines.push('${argTypes[i]} arg$i = p->arg$i; (void)arg$i;');
-                            }
-                            sh.preamble = lines.join(" ");
-                        }
-                        break;
-                    }
-                }
-            }
+            // Generate preambles for signal handlers
+            N64MacroBase.generateSignalHandlerPreambles(
+                ir.meta.signal_handlers,
+                ir.meta.signals,
+                '${ir.name}Data'
+            );
 
             Reflect.setField(traits, name, {
                 module: ir.module,

@@ -99,6 +99,38 @@ class IREmitter:
             result.append(f"{indent}{line}")
         return "\n".join(result)
 
+    def _substitute_placeholders(self, c_code: str, args: List[Dict] = None,
+                                  obj: str = None, vec: str = None,
+                                  vec_raw: str = None, **extra) -> str:
+        """Substitute placeholders in c_code template.
+
+        Handles standard placeholders:
+            {0}, {1}, ... - argument substitution (emitted)
+            {obj} - object reference
+            {v} - vector with parens
+            {vraw} - vector without parens
+
+        Extra keyword args are substituted as {key} -> value.
+        """
+        if args:
+            arg_strs = [self.emit(a) for a in args]
+            for i, arg in enumerate(arg_strs):
+                c_code = c_code.replace("{" + str(i) + "}", arg)
+
+        if obj is not None:
+            c_code = c_code.replace("{obj}", obj)
+
+        if vec is not None:
+            c_code = c_code.replace("{v}", vec)
+
+        if vec_raw is not None:
+            c_code = c_code.replace("{vraw}", vec_raw)
+
+        for key, value in extra.items():
+            c_code = c_code.replace("{" + key + "}", value)
+
+        return c_code
+
     # =========================================================================
     # Literals
     # =========================================================================
@@ -417,7 +449,11 @@ class IREmitter:
         return c_code
 
     def emit_math_call(self, node: Dict) -> str:
-        """Math.sin() -> sinf(), etc."""
+        """Math.sin() -> sinf(), etc. - use c_code if available."""
+        c_code = node.get("c_code", "")
+        if c_code:
+            return self._substitute_placeholders(c_code, node.get("args", []))
+        # Fallback for simple math calls
         c_func = node.get("value", "")
         args = node.get("args", [])
         arg_strs = [self.emit(a) for a in args if self.emit(a)]
@@ -434,20 +470,9 @@ class IREmitter:
             return ""
 
         obj_node = node.get("object")
-        args = node.get("args", [])
-
-        # Get object expression
         obj = self.emit(obj_node) if obj_node else "((ArmObject*)obj)"
 
-        # Emit args
-        arg_strs = [self.emit(a) for a in args]
-
-        # Substitute {obj} and {0}, {1}, etc.
-        c_code = c_code.replace("{obj}", obj)
-        for i, arg in enumerate(arg_strs):
-            c_code = c_code.replace("{" + str(i) + "}", arg)
-
-        return c_code
+        return self._substitute_placeholders(c_code, node.get("args", []), obj=obj)
 
     def emit_signal_call(self, node: Dict) -> str:
         """Signal calls - connect/disconnect/emit on per-instance signals.
@@ -467,17 +492,10 @@ class IREmitter:
         handler_name = f"{self.c_name}_{callback}" if callback else ""
         struct_type = f"{self.c_name}_{signal_name}_payload_t"
 
-        # Substitute placeholders
-        c_code = c_code.replace("{signal_ptr}", signal_ptr)
-        c_code = c_code.replace("{handler}", handler_name)
-        c_code = c_code.replace("{struct_type}", struct_type)
-
-        # Substitute arg placeholders {0}, {1}, etc.
-        args = node.get("args", [])
-        for i, arg in enumerate(args):
-            c_code = c_code.replace("{" + str(i) + "}", self.emit(arg))
-
-        return c_code
+        return self._substitute_placeholders(
+            c_code, node.get("args", []),
+            signal_ptr=signal_ptr, handler=handler_name, struct_type=struct_type
+        )
 
     def emit_global_signal_call(self, node: Dict) -> str:
         """Global signal calls - uses c_code template from macro."""
@@ -493,16 +511,10 @@ class IREmitter:
         signal_ptr = f"&{global_signal}"
         handler_name = f"{self.c_name}_{callback}" if callback else ""
 
-        # Substitute placeholders
-        c_code = c_code.replace("{signal_ptr}", signal_ptr)
-        c_code = c_code.replace("{handler}", handler_name)
-
-        # Substitute arg placeholders {0}, {1}, etc.
-        args = node.get("args", [])
-        for i, arg in enumerate(args):
-            c_code = c_code.replace("{" + str(i) + "}", self.emit(arg))
-
-        return c_code
+        return self._substitute_placeholders(
+            c_code, node.get("args", []),
+            signal_ptr=signal_ptr, handler=handler_name
+        )
 
     def emit_autoload_call(self, node: Dict) -> str:
         """Autoload function call - ClassName.method() -> classname_method(args)."""
@@ -570,27 +582,15 @@ class IREmitter:
             return ""
 
         obj_node = node.get("object")
-        args = node.get("args", [])
-
-        # Get the vector object
         obj = self.emit(obj_node) if obj_node else ""
         if not obj:
             return ""
 
-        # Emit args
-        arg_strs = [self.emit(a) for a in args]
-
         # Determine if we need parentheses around obj
         is_compound = obj.startswith("(Arm")
-        v = f"({obj})" if is_compound else obj
+        vec = f"({obj})" if is_compound else obj
 
-        # Substitute placeholders
-        c_code = c_code.replace("{v}", v)
-        c_code = c_code.replace("{vraw}", obj)  # Raw var name for normalize
-        for i, arg in enumerate(arg_strs):
-            c_code = c_code.replace("{" + str(i) + "}", arg)
-
-        return c_code
+        return self._substitute_placeholders(c_code, node.get("args", []), vec=vec, vec_raw=obj)
 
     # =========================================================================
     # Constructors
@@ -606,12 +606,7 @@ class IREmitter:
         c_code = node.get("c_code", "")
         if not c_code:
             return ""
-        args = node.get("args", [])
-        arg_strs = [self.emit(a) for a in args]
-        # Substitute {0}, {1}, {2}, {3} with args
-        for i, arg in enumerate(arg_strs):
-            c_code = c_code.replace("{" + str(i) + "}", arg)
-        return c_code
+        return self._substitute_placeholders(c_code, node.get("args", []))
 
     # =========================================================================
     # Audio Calls - emit audio nodes from AudioCallConverter
@@ -834,16 +829,13 @@ class AutoloadIREmitter(IREmitter):
         # Use wrapper function for signal handlers (has proper ArmSignalHandler signature)
         handler_name = f"{self.c_name}_{callback}_wrapper" if callback else ""
 
-        # Substitute placeholders
-        c_code = c_code.replace("{signal_ptr}", signal_ptr)
-        c_code = c_code.replace("{handler}", handler_name)
+        # Substitute placeholders, then fix autoload-specific data pattern
+        c_code = self._substitute_placeholders(
+            c_code, node.get("args", []),
+            signal_ptr=signal_ptr, handler=handler_name
+        )
         # Autoloads don't have a data pointer, pass NULL
         c_code = c_code.replace(", data)", ", NULL)")
-
-        # Substitute arg placeholders {0}, {1}, etc.
-        args = node.get("args", [])
-        for i, arg in enumerate(args):
-            c_code = c_code.replace("{" + str(i) + "}", self.emit(arg))
 
         return c_code
 
