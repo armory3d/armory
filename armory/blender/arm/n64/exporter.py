@@ -252,6 +252,7 @@ class N64Exporter:
         self.trait_info = {}        # Trait metadata from macro JSON
         self.has_physics = False    # Track if any rigid bodies are exported
         self.has_ui = False         # Track if any UI elements are used
+        self.has_audio = False      # Track if any audio assets are used
         self.ui_canvas_data = {}    # Parsed Koui canvas JSON: {canvas_name: {labels: [...], ...}}
         self.theme_parser = None    # Koui theme parser instance
         self.color_style_map = {}   # Map of (r,g,b,a) -> style_id for font styles
@@ -937,7 +938,8 @@ class N64Exporter:
         output = tmpl_content.format(
             enable_physics=1 if self.has_physics else 0,
             enable_physics_debug=1 if physics_debug_mode > 0 else 0,
-            enable_ui=1 if self.has_ui else 0
+            enable_ui=1 if self.has_ui else 0,
+            enable_audio=1 if self.has_audio else 0
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:

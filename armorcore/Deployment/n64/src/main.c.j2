@@ -19,6 +19,9 @@
 #include "ui/fonts.h"
 #include "ui/canvas.h"
 #endif
+#if ENGINE_ENABLE_AUDIO
+#include "audio/audio.h"
+#endif
 {autoloads_include}
 
 #define FIXED_TIMESTEP ({fixed_timestep}f)
@@ -63,6 +66,9 @@ int main(void)
         last_time = now;
 
         input_poll();
+#if ENGINE_ENABLE_AUDIO
+        arm_audio_update();
+#endif
         trait_events_dispatch(dt);
 
         ArmScene *scene = scene_get(current_scene);

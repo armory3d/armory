@@ -9,6 +9,9 @@
 #if ENGINE_ENABLE_PHYSICS
 #include "oimo/physics.h"
 #endif
+#if ENGINE_ENABLE_AUDIO
+#include "audio/audio.h"
+#endif
 
 void engine_init(void)
 {
@@ -30,6 +33,9 @@ void engine_init(void)
     input_init();
     models_init();
 
+#if ENGINE_ENABLE_AUDIO
+    arm_audio_init();
+#endif
 #if ENGINE_ENABLE_PHYSICS
     physics_init();
 #endif
@@ -37,6 +43,9 @@ void engine_init(void)
 
 void engine_shutdown(void)
 {
+#if ENGINE_ENABLE_AUDIO
+    arm_audio_shutdown();
+#endif
 #if ENGINE_ENABLE_PHYSICS
     physics_shutdown();
 #endif
