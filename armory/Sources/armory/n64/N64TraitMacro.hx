@@ -891,6 +891,23 @@ class TraitExtractor implements IExtractorContext {
     }
 
     function convertFieldAccess(obj:Expr, field:String):IRNode {
+        // Handle Scene.active.raw.name -> scene_get_name(scene_get_current_id())
+        if (field == "name") {
+            switch (obj.expr) {
+                case EField(innerObj, "raw"):
+                    switch (innerObj.expr) {
+                        case EField(sceneExpr, "active"):
+                            switch (sceneExpr.expr) {
+                                case EConst(CIdent("Scene")):
+                                    return { type: "c_literal", c_code: "scene_get_name(scene_get_current_id())" };
+                                default:
+                            }
+                        default:
+                    }
+                default:
+            }
+        }
+
         // Handle transform access
         switch (obj.expr) {
             case EField(innerObj, "transform"):

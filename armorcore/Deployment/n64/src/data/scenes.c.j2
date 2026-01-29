@@ -337,6 +337,16 @@ SceneId scene_get_id_by_name(const char *name)
     return SCENE_COUNT; // Not found
 }}
 
+const char *scene_get_name(SceneId id)
+{{
+    for (int i = 0; i < {scene_count}; i++) {{
+        if (g_scene_names[i].id == id) {{
+            return g_scene_names[i].name;
+        }}
+    }}
+    return NULL; // Not found
+}}
+
 SceneId scene_get_current_id(void) {{ return g_current_scene; }}
 SceneId scene_get_pending(void) {{ return g_pending_scene; }}
 void scene_switch_to(SceneId id) {{ g_pending_scene = id; }}
