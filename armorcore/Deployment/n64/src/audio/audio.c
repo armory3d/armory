@@ -1,5 +1,6 @@
 #include <libdragon.h>
 #include <string.h>
+#include <malloc.h>
 
 #include "audio.h"
 #include "audio_config.h"
@@ -12,7 +13,7 @@
 #define MAX_LOADED_SOUNDS   16
 
 typedef struct {
-    wav64_t *wav;       // Pointer returned by wav64_load
+    wav64_t wav;        // Embedded wav64_t structure (not pointer)
     char path[64];
     bool in_use;
 } LoadedSound;
@@ -42,6 +43,9 @@ void arm_audio_init(void)
     // Initialize mixer with total channel count
     mixer_init(AUDIO_MIXER_CHANNELS);
 
+    // Initialize compression for opus (level 3) - required before loading opus files
+    wav64_init_compression(3);
+
     // Reset state
     memset(loaded_sounds, 0, sizeof(loaded_sounds));
     memset(channel_in_use, 0, sizeof(channel_in_use));
@@ -67,16 +71,14 @@ void arm_audio_shutdown(void)
 
     // Close all loaded sounds
     for (int i = 0; i < MAX_LOADED_SOUNDS; i++) {
-        if (loaded_sounds[i].in_use && loaded_sounds[i].wav) {
-            wav64_close(loaded_sounds[i].wav);
-            loaded_sounds[i].wav = NULL;
+        if (loaded_sounds[i].in_use) {
+            wav64_close(&loaded_sounds[i].wav);
             loaded_sounds[i].in_use = false;
         }
     }
 
-    // Shutdown mixer and audio
+    // Shutdown mixer
     mixer_close();
-    audio_close();
 }
 
 void arm_audio_update(void)
@@ -105,7 +107,7 @@ ArmSoundHandle arm_audio_play(const char *sound_path, int mix_channel, bool loop
     }
 
     LoadedSound *sound = find_or_load_sound(sound_path);
-    if (!sound || !sound->wav) return handle;
+    if (!sound) return handle;
 
     // Find available mixer channel
     int ch = allocate_channel(mix_channel);
@@ -115,10 +117,10 @@ ArmSoundHandle arm_audio_play(const char *sound_path, int mix_channel, bool loop
     }
 
     // Configure looping
-    wav64_set_loop(sound->wav, loop);
+    wav64_set_loop(&sound->wav, loop);
 
     // Play on allocated channel
-    wav64_play(sound->wav, ch);
+    wav64_play(&sound->wav, ch);
     channel_in_use[ch] = true;
     channel_mix_mapping[ch] = mix_channel;
 
@@ -225,12 +227,8 @@ static LoadedSound* find_or_load_sound(const char *path)
         return NULL;
     }
 
-    // Load the sound using wav64_load (returns pointer, handles allocation)
-    loaded_sounds[slot].wav = wav64_load(path, NULL);
-    if (!loaded_sounds[slot].wav) {
-        debugf("audio: failed to load %s\n", path);
-        return NULL;
-    }
+    // Load the sound using wav64_open (standard libdragon API)
+    wav64_open(&loaded_sounds[slot].wav, path);
 
     strncpy(loaded_sounds[slot].path, path, sizeof(loaded_sounds[slot].path) - 1);
     loaded_sounds[slot].path[sizeof(loaded_sounds[slot].path) - 1] = '\0';

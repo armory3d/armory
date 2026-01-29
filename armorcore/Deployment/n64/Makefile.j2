@@ -33,14 +33,21 @@ src = \
 # Autoload sources (conditionally included)
 {autoload_sources}
 
+# Audio sources (conditionally included)
+{audio_sources}
+
 assets_png = $(wildcard assets/*.png)
 assets_gltf = $(wildcard assets/*.gltf)
 assets_conv = $(addprefix filesystem/,$(notdir $(assets_png:%.png=%.sprite))) \
 			  $(addprefix filesystem/,$(notdir $(assets_gltf:%.gltf=%.t3dm))) \
-			  $(font_conv)
+			  $(font_conv) \
+			  $(audio_conv)
 
 # Font assets - generated explicitly for each size variant
 {font_targets}
+
+# Audio assets - generated explicitly for each audio file
+{audio_targets}
 
 all: $(ROM_NAME).z64
 
@@ -51,6 +58,9 @@ filesystem/%.sprite: assets/%.png
 
 # Font rules for each size variant
 {font_rules}
+
+# Audio rules for each audio file
+{audio_rules}
 
 filesystem/%.t3dm: assets/%.gltf
 	@mkdir -p $(dir $@)

@@ -253,6 +253,7 @@ class N64Exporter:
         self.has_physics = False    # Track if any rigid bodies are exported
         self.has_ui = False         # Track if any UI elements are used
         self.has_audio = False      # Track if any audio assets are used
+        self.exported_audio = {}    # Track exported audio files: {audio_name: {'path': ..., 'loop': bool}}
         self.ui_canvas_data = {}    # Parsed Koui canvas JSON: {canvas_name: {labels: [...], ...}}
         self.theme_parser = None    # Koui theme parser instance
         self.color_style_map = {}   # Map of (r,g,b,a) -> style_id for font styles
@@ -702,6 +703,16 @@ class N64Exporter:
         # Generate font targets and rules for each size variant
         font_targets, font_rules = self._generate_font_makefile_entries()
 
+        # Generate audio targets and rules
+        audio_targets, audio_rules = self._generate_audio_makefile_entries()
+
+        # Audio source files (only if audio is used)
+        if self.has_audio:
+            audio_sources = '''src +=\\
+    src/audio/audio.c'''
+        else:
+            audio_sources = '# No audio'
+
         output = tmpl_content.format(
             tiny3d_path=os.path.join(arm.utils.get_sdk_path(), 'lib', 'tiny3d').replace('\\', '/'),
             game_title=arm.utils.safestr(wrd.arm_project_name),
@@ -709,8 +720,11 @@ class N64Exporter:
             physics_sources=physics_sources,
             canvas_sources=ui_sources,
             autoload_sources=autoload_sources,
+            audio_sources=audio_sources,
             font_targets=font_targets,
-            font_rules=font_rules
+            font_rules=font_rules,
+            audio_targets=audio_targets,
+            audio_rules=audio_rules
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
@@ -1430,6 +1444,139 @@ class N64Exporter:
             n64_utils.copy_src('physics_debug.h', 'src/oimo/debug')
             n64_utils.copy_src('physics_debug.c', 'src/oimo/debug')
 
+    def write_audio(self):
+        """Scan for audio files and copy them to the build assets folder.
+
+        Searches for .wav and .mp3 files in the project's Assets folder
+        (and subdirectories like audio/, music/, sfx/).
+        Sets has_audio = True if any audio files are found.
+        Generates audio_config.h from template with mix channel configuration.
+        """
+        n64_assets = os.path.join(arm.utils.build_dir(), 'n64', 'assets')
+        os.makedirs(n64_assets, exist_ok=True)
+
+        # Search for audio files in Assets folder and subdirectories
+        assets_dir = os.path.join(arm.utils.get_fp(), 'Assets')
+        audio_extensions = ('.wav', '.mp3', '.aiff')
+        audio_files = []
+
+        if os.path.exists(assets_dir):
+            for root, dirs, files in os.walk(assets_dir):
+                for f in files:
+                    if f.lower().endswith(audio_extensions):
+                        audio_files.append(os.path.join(root, f))
+
+        if not audio_files:
+            log.info('No audio files found in Assets folder.')
+            return
+
+        self.has_audio = True
+        log.info(f'Found {len(audio_files)} audio file(s)')
+
+        # Copy audio files to build/n64/assets
+        for src_path in audio_files:
+            filename = os.path.basename(src_path)
+            # Create a safe filename (lowercase, replace spaces)
+            safe_name = filename.lower().replace(' ', '_')
+            dst_path = os.path.join(n64_assets, safe_name)
+
+            # Determine if this is likely music (in music/ folder or long duration)
+            # For now, simple heuristic: files in 'music' subfolder are music
+            rel_path = os.path.relpath(src_path, assets_dir).lower()
+            is_music = 'music' in rel_path
+
+            if not os.path.exists(dst_path):
+                shutil.copy(src_path, dst_path)
+                log.info(f'Copied audio: {safe_name} (music={is_music})')
+
+            # Store audio info (without extension, as audioconv64 changes it)
+            audio_name = os.path.splitext(safe_name)[0]
+            self.exported_audio[audio_name] = {
+                'source_path': src_path,
+                'dest_name': safe_name,
+                'is_music': is_music,
+                'loop': is_music  # Music loops by default
+            }
+
+        # Copy audio module source files
+        n64_utils.copy_dir('audio', 'src')
+
+        # Generate audio_config.h from template
+        self._write_audio_config()
+
+    def _write_audio_config(self):
+        """Generate audio_config.h from template with mix channel configuration.
+
+        For now, uses a default configuration with MASTER, MUSIC, and SFX channels.
+        TODO: Parse Aura.mixChannels from Haxe code to get actual channel names.
+        """
+        tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'audio', 'audio_config.h.j2')
+        out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'audio', 'audio_config.h')
+
+        with open(tmpl_path, 'r', encoding='utf-8') as f:
+            tmpl_content = f.read()
+
+        # Default mix channel configuration
+        # TODO: Parse from Aura.mixChannels in the future
+        mix_channels = ['MASTER', 'MUSIC', 'SFX']
+
+        # Generate mix channel defines
+        mix_channel_defines = []
+        for i, name in enumerate(mix_channels):
+            mix_channel_defines.append(f'#define MIX_CHANNEL_{name} {i}')
+
+        output = tmpl_content.format(
+            audio_mixer_channels=8,  # Total hardware channels
+            audio_mix_channel_count=len(mix_channels),
+            mix_channel_defines='\n'.join(mix_channel_defines)
+        )
+
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(output)
+
+    def _generate_audio_makefile_entries(self):
+        """Generate Makefile entries for audio conversion.
+
+        Uses audioconv64 to convert .wav/.mp3 files to .wav64 format.
+        Music files use opus compression (--wav-compress 3) for smaller size.
+        SFX files use VADPCM compression (--wav-compress 1) for faster decoding.
+
+        Returns:
+            tuple: (audio_targets_str, audio_rules_str)
+        """
+        if not self.exported_audio:
+            return 'audio_conv =', '# No audio'
+
+        targets = []
+        rules = []
+
+        for audio_name, audio_info in self.exported_audio.items():
+            dest_name = audio_info['dest_name']
+            is_music = audio_info['is_music']
+
+            # Target: filesystem/audio_name.wav64
+            target = f'filesystem/{audio_name}.wav64'
+            targets.append(target)
+
+            # Determine compression based on type
+            # Music: opus (smaller, good for streaming)
+            # SFX: vadpcm (faster decode, good for short sounds)
+            if is_music:
+                compress_flag = '--wav-compress 3 --wav-loop true'
+            else:
+                compress_flag = '--wav-compress 1'
+
+            rule = f'''{target}: assets/{dest_name}
+	@mkdir -p $(dir $@)
+	@echo "    [AUDIO] $@"
+	@$(N64_AUDIOCONV) {compress_flag} -o filesystem "$<"'''
+            rules.append(rule)
+
+        audio_targets = 'audio_conv = ' + ' \\\n             '.join(targets)
+        audio_rules = '\n\n'.join(rules)
+
+        return audio_targets, audio_rules
+
 
     def write_main(self):
         wrd = bpy.data.worlds['Arm']
@@ -1757,6 +1904,7 @@ class N64Exporter:
         self.write_types()
         self.write_engine()
         self.write_physics()
+        self.write_audio()       # Must be before write_makefile (populates exported_audio)
         self.write_fonts()       # Must be before write_makefile (populates exported_fonts)
         self.write_makefile()    # Uses exported_fonts for font rules
         self.write_canvas()      # Generate canvas label data
