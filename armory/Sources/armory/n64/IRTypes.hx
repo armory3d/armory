@@ -1,10 +1,62 @@
 package armory.n64;
 
 /**
- * IR Types for N64 Trait Macro
+ * IR Types for N64 Trait/Autoload Macros
  *
  * These types define the intermediate representation (IR) format
- * that the macro emits and Python consumes.
+ * that the macros emit and Python consumes.
+ *
+ * IR Node Types Reference:
+ * ========================
+ *
+ * LITERALS:
+ *   int, float, string, bool, null   - TraitMacro direct types
+ *   literal                          - AutoloadMacro uses props.literal_type
+ *   skip                             - No-op, filtered out
+ *   c_literal                        - Raw C code passthrough
+ *
+ * VARIABLES:
+ *   member                           - Trait data member: data->name
+ *   ident                            - Identifier: local var, dt, object, this
+ *   field_access                     - Field access: object.field, vec.x, this.field
+ *   autoload_field                   - Access to another autoload's member
+ *
+ * OPERATORS:
+ *   assign                           - Assignment: target = value
+ *   binop                            - Binary operator: a + b
+ *   unop                             - Unary operator: !a, -a, ++a
+ *
+ * CONTROL FLOW:
+ *   if                               - Conditional: if/else
+ *   block                            - Code block { ... }
+ *   var, var_decl                    - Local variable declaration
+ *   return                           - Return statement
+ *   while, do_while                  - Loop constructs
+ *   for_range                        - For loop with range
+ *   break, continue                  - Loop control
+ *   ternary                          - Ternary operator a ? b : c
+ *   paren                            - Parenthesized expression
+ *
+ * CALLS:
+ *   call, method_call                - Generic function/method calls
+ *   scene_call, transform_call       - Domain-specific calls
+ *   math_call, input_call            - Domain-specific calls
+ *   physics_call, vec_call           - Domain-specific calls
+ *   signal_call, global_signal_call  - Signal system calls
+ *   canvas_get_label, label_set_text - UI calls
+ *   autoload_call                    - Call to autoload function
+ *   object_call                      - Object method call
+ *   cast_call                        - Type cast
+ *   debug_call                       - trace() -> debugf()
+ *   sprintf                          - String formatting
+ *   remove_object                    - Object removal
+ *
+ * AUDIO:
+ *   audio_play, audio_mix_*          - Audio playback calls
+ *   audio_handle_*                   - Audio handle operations
+ *
+ * CONSTRUCTORS:
+ *   new, new_vec                     - Object/vector creation
  */
 
 typedef IRNode = {

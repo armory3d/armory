@@ -11,6 +11,7 @@ import sys.FileSystem;
 
 // Import shared components
 import armory.n64.IRTypes;
+import armory.n64.N64MacroBase;
 import armory.n64.mapping.Constants;
 import armory.n64.mapping.TypeMap;
 import armory.n64.mapping.SkipList;
@@ -156,7 +157,7 @@ class N64AutoloadMacro {
                     name: memberName,
                     type: m.haxeType,
                     ctype: m.ctype,
-                    default_value: serializeIRNode(m.defaultValue)
+                    default_value: N64MacroBase.serializeIRNode(m.defaultValue)
                 });
             }
 
@@ -177,7 +178,7 @@ class N64AutoloadMacro {
                     c_name: f.cName,
                     return_type: f.returnType,
                     params: paramsArr,
-                    body: [for (n in f.body) serializeIRNode(n)],
+                    body: [for (n in f.body) N64MacroBase.serializeIRNode(n)],
                     is_public: f.isPublic
                 });
             }
@@ -244,43 +245,7 @@ class N64AutoloadMacro {
             autoloads: autoloads
         };
 
-        var json = Json.stringify(output, null, "  ");
-
-        var defines = Context.getDefines();
-        var buildDir = defines.get("arm_build_dir");
-        if (buildDir == null) buildDir = "build";
-
-        var outPath = buildDir + "/n64_autoloads.json";
-        try {
-            var dir = haxe.io.Path.directory(outPath);
-            if (dir != "" && !FileSystem.exists(dir)) {
-                FileSystem.createDirectory(dir);
-            }
-            File.saveContent(outPath, json);
-        } catch (e:Dynamic) {
-            Context.error('Failed to write n64_autoloads.json: $e', Context.currentPos());
-        }
-    }
-
-    static function serializeIRNode(node:IRNode):Dynamic {
-        if (node == null) return null;
-
-        var obj:Dynamic = { type: node.type };
-
-        if (node.value != null) obj.value = node.value;
-        if (node.children != null && node.children.length > 0) {
-            obj.children = [for (c in node.children) serializeIRNode(c)];
-        }
-        if (node.args != null && node.args.length > 0) {
-            obj.args = [for (a in node.args) serializeIRNode(a)];
-        }
-        if (node.method != null) obj.method = node.method;
-        if (node.object != null) obj.object = serializeIRNode(node.object);
-        if (node.props != null) obj.props = node.props;
-        if (node.c_code != null) obj.c_code = node.c_code;
-        if (node.c_func != null) obj.c_func = node.c_func;
-
-        return obj;
+        N64MacroBase.writeJsonFile("n64_autoloads.json", output);
     }
 }
 
@@ -302,7 +267,10 @@ class AutoloadExtractor implements IExtractorContext {
     public var cName(default, null):String;
     var hasInit:Bool;
 
-    // Call converters
+    // Call converters - subset for autoloads
+    // Autoloads don't need: Physics, Transform, Input, Object, Scene, Canvas converters
+    // because they don't have access to 'object' or game loop context.
+    // Add converters here if autoloads need to call those APIs in the future.
     var converters:Array<ICallConverter>;
 
     public function new(className:String, modulePath:String, fields:Array<Field>, order:Int) {
@@ -347,7 +315,7 @@ class AutoloadExtractor implements IExtractorContext {
                 case FVar(t, e):
                     // Detect singleton pattern: static field of the same type as the class
                     if (hasAccess(field.access, AStatic)) {
-                        var haxeType = t != null ? complexTypeToString(t) : "";
+                        var haxeType = t != null ? N64MacroBase.complexTypeToString(t) : "";
                         if (haxeType == className) {
                             isSingleton = true;
                         }
@@ -368,15 +336,15 @@ class AutoloadExtractor implements IExtractorContext {
             // Skip fields whose type matches the class itself (e.g., singleton instance fields)
             var fieldType:String = null;
             switch (field.kind) {
-                case FVar(t, _): fieldType = t != null ? complexTypeToString(t) : null;
-                case FProp(_, _, t, _): fieldType = t != null ? complexTypeToString(t) : null;
+                case FVar(t, _): fieldType = t != null ? N64MacroBase.complexTypeToString(t) : null;
+                case FProp(_, _, t, _): fieldType = t != null ? N64MacroBase.complexTypeToString(t) : null;
                 default:
             }
             if (fieldType == className) continue;
 
             switch (field.kind) {
                 case FVar(t, e):
-                    var haxeType = t != null ? complexTypeToString(t) : "Dynamic";
+                    var haxeType = t != null ? N64MacroBase.complexTypeToString(t) : "Dynamic";
                     memberTypes.set(field.name, haxeType);
 
                     // Signal members tracked separately
@@ -409,7 +377,7 @@ class AutoloadExtractor implements IExtractorContext {
                 case FProp(get, set, t, e):
                     // Haxe property with getter/setter (e.g., public var volume(default, set): Float)
                     // These have a backing field that we need to track as a member
-                    var haxeType = t != null ? complexTypeToString(t) : "Dynamic";
+                    var haxeType = t != null ? N64MacroBase.complexTypeToString(t) : "Dynamic";
                     memberTypes.set(field.name, haxeType);
 
                     // Signal properties should be tracked separately like FVar signals
@@ -475,7 +443,7 @@ class AutoloadExtractor implements IExtractorContext {
     function extractMember(name:String, t:ComplexType, e:Expr):MemberIR {
         if (SkipList.shouldSkipMember(name)) return null;
 
-        var haxeType = t != null ? complexTypeToString(t) : "Dynamic";
+        var haxeType = t != null ? N64MacroBase.complexTypeToString(t) : "Dynamic";
         if (!TypeMap.isSupported(haxeType)) return null;
 
         var defaultNode:IRNode = e != null ? exprToIR(e) : null;
@@ -491,7 +459,7 @@ class AutoloadExtractor implements IExtractorContext {
         // Extract parameters
         var params:Array<AutoloadParamIR> = [];
         for (arg in func.args) {
-            var haxeType = arg.type != null ? complexTypeToString(arg.type) : "Dynamic";
+            var haxeType = arg.type != null ? N64MacroBase.complexTypeToString(arg.type) : "Dynamic";
             var ctype = TypeMap.getCType(haxeType);
             if (ctype == null) ctype = "void*"; // Unknown types become void*
             params.push({
@@ -504,7 +472,7 @@ class AutoloadExtractor implements IExtractorContext {
         }
 
         // Extract return type
-        var returnHaxeType = func.ret != null ? complexTypeToString(func.ret) : "Void";
+        var returnHaxeType = func.ret != null ? N64MacroBase.complexTypeToString(func.ret) : "Void";
         var returnType = returnHaxeType == "Void" ? "void" : TypeMap.getCType(returnHaxeType);
         if (returnType == null) returnType = "void";
 
@@ -543,13 +511,6 @@ class AutoloadExtractor implements IExtractorContext {
         }
     }
 
-    function complexTypeToString(ct:ComplexType):String {
-        return switch (ct) {
-            case TPath(p): p.name;
-            default: "Dynamic";
-        };
-    }
-
     // ========================================================================
     // Expression to IR conversion (shared with TraitExtractor)
     // ========================================================================
@@ -564,14 +525,14 @@ class AutoloadExtractor implements IExtractorContext {
             case EBinop(op, e1, e2):
                 return {
                     type: "binop",
-                    value: binopToString(op),
+                    value: N64MacroBase.binopToString(op),
                     children: [exprToIR(e1), exprToIR(e2)]
                 };
 
             case EUnop(op, postFix, e1):
                 return {
                     type: "unop",
-                    value: unopToString(op),
+                    value: N64MacroBase.unopToString(op),
                     props: { postfix: postFix },
                     children: [exprToIR(e1)]
                 };
@@ -594,7 +555,7 @@ class AutoloadExtractor implements IExtractorContext {
 
             case EVars(vars):
                 for (v in vars) {
-                    localVarTypes.set(v.name, v.type != null ? complexTypeToString(v.type) : "Dynamic");
+                    localVarTypes.set(v.name, v.type != null ? N64MacroBase.complexTypeToString(v.type) : "Dynamic");
                 }
                 if (vars.length == 1) {
                     var v = vars[0];
@@ -683,39 +644,6 @@ class AutoloadExtractor implements IExtractorContext {
                     { type: "ident", value: s };
                 }
             default: { type: "skip" };
-        };
-    }
-
-    function binopToString(op:Binop):String {
-        return switch (op) {
-            case OpAdd: "+";
-            case OpSub: "-";
-            case OpMult: "*";
-            case OpDiv: "/";
-            case OpMod: "%";
-            case OpAssign: "=";
-            case OpEq: "==";
-            case OpNotEq: "!=";
-            case OpGt: ">";
-            case OpGte: ">=";
-            case OpLt: "<";
-            case OpLte: "<=";
-            case OpAnd: "&&";
-            case OpOr: "||";
-            case OpBoolAnd: "&&";
-            case OpBoolOr: "||";
-            case OpAssignOp(op): binopToString(op) + "=";
-            default: "?";
-        };
-    }
-
-    function unopToString(op:Unop):String {
-        return switch (op) {
-            case OpNot: "!";
-            case OpNeg: "-";
-            case OpIncrement: "++";
-            case OpDecrement: "--";
-            default: "?";
         };
     }
 

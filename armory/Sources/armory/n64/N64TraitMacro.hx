@@ -10,6 +10,7 @@ import sys.FileSystem;
 
 // Import modular components
 import armory.n64.IRTypes;
+import armory.n64.N64MacroBase;
 import armory.n64.mapping.Constants;
 import armory.n64.mapping.TypeMap;
 import armory.n64.mapping.ButtonMap;
@@ -111,7 +112,7 @@ class N64TraitMacro {
                     name: memberName,
                     type: m.haxeType,
                     ctype: m.ctype,
-                    default_value: serializeIRNode(m.defaultValue)
+                    default_value: N64MacroBase.serializeIRNode(m.defaultValue)
                 });
             }
 
@@ -119,7 +120,7 @@ class N64TraitMacro {
             var eventsObj:Dynamic = {};
             for (eventName in ir.events.keys()) {
                 var eventNodes = ir.events.get(eventName);
-                Reflect.setField(eventsObj, eventName, [for (n in eventNodes) serializeIRNode(n)]);
+                Reflect.setField(eventsObj, eventName, [for (n in eventNodes) N64MacroBase.serializeIRNode(n)]);
             }
 
             // Generate struct_type and struct_def for signals with 2+ args
@@ -182,43 +183,7 @@ class N64TraitMacro {
             traits: traits
         };
 
-        var json = Json.stringify(output, null, "  ");
-
-        var defines = Context.getDefines();
-        var buildDir = defines.get("arm_build_dir");
-        if (buildDir == null) buildDir = "build";
-
-        var outPath = buildDir + "/n64_traits.json";
-        try {
-            var dir = haxe.io.Path.directory(outPath);
-            if (dir != "" && !FileSystem.exists(dir)) {
-                FileSystem.createDirectory(dir);
-            }
-            File.saveContent(outPath, json);
-        } catch (e:Dynamic) {
-            Context.error('Failed to write n64_traits.json: $e', Context.currentPos());
-        }
-    }
-
-    static function serializeIRNode(node:IRNode):Dynamic {
-        if (node == null) return null;
-
-        var obj:Dynamic = { type: node.type };
-
-        if (node.value != null) obj.value = node.value;
-        if (node.children != null && node.children.length > 0) {
-            obj.children = [for (c in node.children) serializeIRNode(c)];
-        }
-        if (node.args != null && node.args.length > 0) {
-            obj.args = [for (a in node.args) serializeIRNode(a)];
-        }
-        if (node.method != null) obj.method = node.method;
-        if (node.object != null) obj.object = serializeIRNode(node.object);
-        if (node.props != null) obj.props = node.props;
-        if (node.c_code != null) obj.c_code = node.c_code;
-        if (node.c_func != null) obj.c_func = node.c_func;
-
-        return obj;
+        N64MacroBase.writeJsonFile("n64_traits.json", output);
     }
 }
 
@@ -298,7 +263,7 @@ class TraitExtractor implements IExtractorContext {
         for (field in fields) {
             switch (field.kind) {
                 case FVar(t, e):
-                    var haxeType = t != null ? complexTypeToString(t) : "Dynamic";
+                    var haxeType = t != null ? N64MacroBase.complexTypeToString(t) : "Dynamic";
                     memberTypes.set(field.name, haxeType);
 
                     // Signal members are tracked separately, not as regular data members
@@ -372,7 +337,7 @@ class TraitExtractor implements IExtractorContext {
     function extractMember(name:String, t:ComplexType, e:Expr):MemberIR {
         if (SkipList.shouldSkipMember(name)) return null;
 
-        var haxeType = t != null ? complexTypeToString(t) : "Dynamic";
+        var haxeType = t != null ? N64MacroBase.complexTypeToString(t) : "Dynamic";
         if (!TypeMap.isSupported(haxeType)) return null;
 
         var defaultNode:IRNode = e != null ? exprToIR(e) : null;
@@ -381,13 +346,6 @@ class TraitExtractor implements IExtractorContext {
             haxeType: haxeType,
             ctype: TypeMap.getCType(haxeType),
             defaultValue: defaultNode
-        };
-    }
-
-    function complexTypeToString(ct:ComplexType):String {
-        return switch (ct) {
-            case TPath(p): p.name;
-            default: "Dynamic";
         };
     }
 
@@ -710,7 +668,7 @@ class TraitExtractor implements IExtractorContext {
 
             // Binary ops
             case EBinop(op, e1, e2):
-                var opStr = binopToString(op);
+                var opStr = N64MacroBase.binopToString(op);
                 if (op == OpAssign) {
                     // Check if assigning to transform.loc/rot/scale (mutating transform)
                     checkTransformMutation(e1);
@@ -756,7 +714,7 @@ class TraitExtractor implements IExtractorContext {
 
             // Unary ops
             case EUnop(op, postFix, operand):
-                { type: "unop", value: unopToString(op), children: [exprToIR(operand)], props: { postfix: postFix } };
+                { type: "unop", value: N64MacroBase.unopToString(op), children: [exprToIR(operand)], props: { postfix: postFix } };
 
             // Field access
             case EField(obj, field):
@@ -786,7 +744,7 @@ class TraitExtractor implements IExtractorContext {
             case EVars(vars):
                 var varDecls:Array<IRNode> = [];
                 for (v in vars) {
-                    var varType = v.type != null ? complexTypeToString(v.type) : getExprType(v.expr);
+                    var varType = v.type != null ? N64MacroBase.complexTypeToString(v.type) : getExprType(v.expr);
                     var ctype = TypeMap.getCType(varType);
                     if (ctype == null) ctype = "float"; // fallback for unknown types
                     // Track this local variable's type
@@ -926,10 +884,10 @@ class TraitExtractor implements IExtractorContext {
         switch (obj.expr) {
             case EField(innerObj, "transform"):
                 meta.uses_transform = true;
-                return { type: "field", object: { type: "ident", value: "object" }, value: "transform." + field };
+                return { type: "field_access", object: { type: "ident", value: "object" }, value: "transform." + field };
             case EConst(CIdent("transform")):
                 meta.uses_transform = true;
-                return { type: "field", object: { type: "ident", value: "object" }, value: "transform." + field };
+                return { type: "field_access", object: { type: "ident", value: "object" }, value: "transform." + field };
             case EConst(CIdent("Time")):
                 if (field == "delta") {
                     meta.uses_time = true;
@@ -947,10 +905,10 @@ class TraitExtractor implements IExtractorContext {
 
         // Vec3 component access
         if (field == "x" || field == "y" || field == "z") {
-            return { type: "field", object: exprToIR(obj), value: field };
+            return { type: "field_access", object: exprToIR(obj), value: field };
         }
 
-        return { type: "field", object: exprToIR(obj), value: field };
+        return { type: "field_access", object: exprToIR(obj), value: field };
     }
 
     /**
@@ -1141,44 +1099,6 @@ class TraitExtractor implements IExtractorContext {
             args: args
         };
     }
-
-    function binopToString(op:Binop):String {
-        return switch (op) {
-            case OpAdd: "+";
-            case OpSub: "-";
-            case OpMult: "*";
-            case OpDiv: "/";
-            case OpMod: "%";
-            case OpEq: "==";
-            case OpNotEq: "!=";
-            case OpLt: "<";
-            case OpLte: "<=";
-            case OpGt: ">";
-            case OpGte: ">=";
-            case OpAnd: "&";      // Bitwise AND
-            case OpOr: "|";       // Bitwise OR
-            case OpBoolAnd: "&&"; // Logical AND
-            case OpBoolOr: "||";  // Logical OR
-            case OpXor: "^";      // Bitwise XOR
-            case OpShl: "<<";     // Shift left
-            case OpShr: ">>";     // Shift right
-            case OpUShr: ">>>";   // Unsigned shift right
-            case OpAssign: "=";
-            case OpAssignOp(op): binopToString(op) + "=";
-            default: "?";
-        };
-    }
-
-    function unopToString(op:Unop):String {
-        return switch (op) {
-            case OpNeg: "-";
-            case OpNot: "!";
-            case OpIncrement: "++";
-            case OpDecrement: "--";
-            default: "?";
-        };
-    }
-
 }
 
 #end

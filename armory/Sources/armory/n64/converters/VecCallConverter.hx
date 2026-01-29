@@ -11,10 +11,12 @@ using StringTools;
 
 /**
  * Converts Vec2/Vec3/Vec4 method calls to C struct operations.
- * Handles: mult, add, sub, dot, normalize, length, clone, cross, set, setFrom
+ * Handles: mult, add, sub, dot, normalize, length, clone
+ *
+ * Note: cross, set, setFrom are not yet implemented (add when needed).
  */
 class VecCallConverter implements ICallConverter {
-    static var vecMethods = ["mult", "add", "sub", "dot", "normalize", "length", "clone", "cross", "set", "setFrom"];
+    static var vecMethods = ["mult", "add", "sub", "dot", "normalize", "length", "clone"];
 
     public function new() {}
 
@@ -64,7 +66,7 @@ class VecCallConverter implements ICallConverter {
             case "clone":
                 // Clone creates a copy - type depends on target
                 // Special case: transform.scale is stored with SCALE_FACTOR, so multiply by inverse to get Blender values
-                var isScaleClone = (objIR.type == "field" && objIR.value == "transform.scale");
+                var isScaleClone = (objIR.type == "field_access" && objIR.value == "transform.scale");
                 if (isScaleClone) {
                     var inv = Constants.SCALE_FACTOR_INV_C;
                     if (cType == "ArmVec4") '($cType){{v}.x*$inv, {v}.y*$inv, {v}.z*$inv, 1.0f}';

@@ -185,27 +185,8 @@ class IREmitter:
             return "dt"
         return name
 
-    def emit_field(self, node: Dict) -> str:
-        """Field access: object.field or vec.x"""
-        obj = self.emit(node.get("object"))
-        field = node.get("value", "")
-
-        if not obj:
-            return field
-
-        # Transform field access
-        if "transform." in field:
-            subfield = field.replace("transform.", "")
-            return f"{obj}->transform.{subfield}"
-
-        # Object pointer access (ArmObject*, etc.)
-        if "ArmObject*" in obj or "ArmCamera*" in obj or "ArmLight*" in obj:
-            return f"{obj}->{field}"
-
-        return f"({obj}).{field}"
-
     def emit_field_access(self, node: Dict) -> str:
-        """Field access node from IR - handles this.field and obj.field patterns."""
+        """Field access: object.field, vec.x, this.field, etc."""
         obj_node = node.get("object")
         field = node.get("value", "")
 
@@ -220,9 +201,8 @@ class IREmitter:
                     # Convert to ROM path: "rom:/sound_name.wav64"
                     return f'"rom:/{field}.wav64"'
 
-            # this.field -> member access (for traits: data->field, handled by subclasses)
+            # this.field -> member access (for traits: data->field)
             if obj_type == "ident" and obj_value == "this":
-                # For base IREmitter (traits), this becomes data->field
                 if field in self.member_names:
                     return f"(({self.data_type}*)data)->{field}"
                 return field
@@ -233,9 +213,18 @@ class IREmitter:
                     return f"(({self.data_type}*)data)->{field}"
                 return field
 
-            # Regular field access: emit object and access field
+            # Emit object and access field
             obj = self.emit(obj_node)
             if obj:
+                # Transform field access: object->transform.loc
+                if "transform." in field:
+                    subfield = field.replace("transform.", "")
+                    return f"{obj}->transform.{subfield}"
+
+                # Object pointer access (ArmObject*, etc.)
+                if "ArmObject*" in obj or "ArmCamera*" in obj or "ArmLight*" in obj:
+                    return f"{obj}->{field}"
+
                 return f"({obj}).{field}"
 
         return field
