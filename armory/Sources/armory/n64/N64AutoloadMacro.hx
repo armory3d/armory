@@ -20,6 +20,7 @@ import armory.n64.converters.MathCallConverter;
 import armory.n64.converters.SignalCallConverter;
 import armory.n64.converters.StdCallConverter;
 import armory.n64.converters.AutoloadCallConverter;
+import armory.n64.converters.AudioCallConverter;
 
 using haxe.macro.ExprTools;
 using haxe.macro.TypeTools;
@@ -45,6 +46,24 @@ using Lambda;
 class N64AutoloadMacro {
     static var autoloadData:Map<String, AutoloadIR> = new Map();
     static var initialized:Bool = false;
+
+    /**
+     * Called via --macro from khafile to register autoload processing.
+     * This adds @:build metadata to the user's arm package where autoloads live.
+     */
+    public static function register():Void {
+        #if macro
+        // Add build macro to all types in the 'arm' package (user code)
+        // The build() function will then check for @:n64Autoload metadata
+        haxe.macro.Compiler.addGlobalMetadata(
+            "arm",  // user package
+            "@:build(armory.n64.N64AutoloadMacro.build())",
+            true,   // recursive
+            true,   // toTypes
+            false   // toFields
+        );
+        #end
+    }
 
     macro public static function build():Array<Field> {
         var defines = Context.getDefines();
@@ -92,7 +111,7 @@ class N64AutoloadMacro {
 
     static function getAutoloadOrder(meta:Array<MetadataEntry>):Null<Int> {
         for (m in meta) {
-            if (m.name == ":n64autoload" || m.name == "n64autoload") {
+            if (m.name == ":n64Autoload" || m.name == "n64Autoload") {
                 // Default order is 100 if not specified
                 var order = 100;
                 if (m.params != null) {
@@ -282,23 +301,46 @@ class AutoloadExtractor implements IExtractorContext {
             new SignalCallConverter(),
             new StdCallConverter(),
             new AutoloadCallConverter(),
+            new AudioCallConverter(),
         ];
     }
 
     public function extract():AutoloadIR {
-        // Pass 1: Collect all methods first
+        // Pass 1: Collect all methods and detect singleton pattern
+        var isSingleton = false;
         for (field in fields) {
             switch (field.kind) {
                 case FFun(func):
                     methodMap.set(field.name, func);
+                case FVar(t, e):
+                    // Detect singleton pattern: static field of the same type as the class
+                    if (hasAccess(field.access, AStatic)) {
+                        var haxeType = t != null ? complexTypeToString(t) : "";
+                        if (haxeType == className) {
+                            isSingleton = true;
+                        }
+                    }
                 default:
             }
         }
 
         // Pass 2: Extract static members and functions
         for (field in fields) {
-            // Only process static members
-            if (!hasAccess(field.access, AStatic)) continue;
+            var isStatic = hasAccess(field.access, AStatic);
+
+            // For singletons, also process instance members/methods
+            // Skip fields of the same type as the class (singleton instance) and constructor
+            if (!isStatic && !isSingleton) continue;
+            if (field.name == "new") continue;
+
+            // Skip fields whose type matches the class itself (e.g., singleton instance fields)
+            var fieldType:String = null;
+            switch (field.kind) {
+                case FVar(t, _): fieldType = t != null ? complexTypeToString(t) : null;
+                case FProp(_, _, t, _): fieldType = t != null ? complexTypeToString(t) : null;
+                default:
+            }
+            if (fieldType == className) continue;
 
             switch (field.kind) {
                 case FVar(t, e):
@@ -330,6 +372,17 @@ class AutoloadExtractor implements IExtractorContext {
                         if (member != null) {
                             members.set(field.name, member);
                         }
+                    }
+
+                case FProp(get, set, t, e):
+                    // Haxe property with getter/setter (e.g., public var volume(default, set): Float)
+                    // These have a backing field that we need to track as a member
+                    var haxeType = t != null ? complexTypeToString(t) : "Dynamic";
+                    memberTypes.set(field.name, haxeType);
+
+                    var member = extractMember(field.name, t, e);
+                    if (member != null) {
+                        members.set(field.name, member);
                     }
 
                 case FFun(func):

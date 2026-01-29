@@ -16,6 +16,9 @@ class TypeMap {
         "bool" => "bool",
         "String" => "const char*",
 
+        // Kha types
+        "FastFloat" => "float",
+
         // Scene types
         "SceneId" => "SceneId",
         "SceneFormat" => "SceneId",
@@ -29,6 +32,10 @@ class TypeMap {
         // UI types
         "Label" => "UILabel*",
         "KouiCanvas" => "void*",  // Canvas is metadata-only, not stored at runtime
+
+        // Audio types
+        "Sound" => "const char*",  // Sound asset reference (ROM path)
+        "BaseChannelHandle" => "ArmSoundHandle",  // Playback handle
     ];
 
     public static function getCType(haxeType:String):String {

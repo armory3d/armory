@@ -144,6 +144,29 @@ class IREmitter:
     def emit_skip(self, node: Dict) -> str:
         return ""
 
+    def emit_literal(self, node: Dict) -> str:
+        """Emit a literal value based on its type."""
+        value = node.get("value", "")
+        props = node.get("props", {})
+        literal_type = props.get("literal_type", "")
+
+        if literal_type == "float":
+            # Ensure float format with f suffix
+            val_str = str(value)
+            if "." not in val_str:
+                val_str = f"{val_str}.0"
+            return f"{val_str}f"
+        elif literal_type == "int":
+            return str(value)
+        elif literal_type == "string":
+            return f'"{value}"'
+        elif literal_type == "bool":
+            return "true" if value == "true" else "false"
+        elif literal_type == "null":
+            return "NULL"
+        else:
+            return str(value)
+
     # =========================================================================
     # Variables
     # =========================================================================
@@ -180,6 +203,42 @@ class IREmitter:
             return f"{obj}->{field}"
 
         return f"({obj}).{field}"
+
+    def emit_field_access(self, node: Dict) -> str:
+        """Field access node from IR - handles this.field and obj.field patterns."""
+        obj_node = node.get("object")
+        field = node.get("value", "")
+
+        if obj_node:
+            obj_type = obj_node.get("type", "")
+            obj_value = obj_node.get("value", "")
+
+            # Check for Assets.sounds.sound_name pattern -> ROM path
+            if obj_type == "field_access" and obj_node.get("value") == "sounds":
+                inner_obj = obj_node.get("object", {})
+                if inner_obj.get("type") == "ident" and inner_obj.get("value") == "Assets":
+                    # Convert to ROM path: "rom:/sound_name.wav64"
+                    return f'"rom:/{field}.wav64"'
+
+            # this.field -> member access (for traits: data->field, handled by subclasses)
+            if obj_type == "ident" and obj_value == "this":
+                # For base IREmitter (traits), this becomes data->field
+                if field in self.member_names:
+                    return f"(({self.data_type}*)data)->{field}"
+                return field
+
+            # inst.field -> also a member access for singleton patterns
+            if obj_type == "ident" and obj_value == "inst":
+                if field in self.member_names:
+                    return f"(({self.data_type}*)data)->{field}"
+                return field
+
+            # Regular field access: emit object and access field
+            obj = self.emit(obj_node)
+            if obj:
+                return f"({obj}).{field}"
+
+        return field
 
     def emit_c_literal(self, node: Dict) -> str:
         """Literal C code from macro - pure 1:1."""
@@ -296,12 +355,13 @@ class IREmitter:
     # =========================================================================
 
     def emit_call(self, node: Dict) -> str:
-        """Function call - handles generic calls with value + children from macro."""
+        """Function call - handles generic calls with value + args from macro."""
         func_name = node.get("value", "")
         if func_name:
-            children = node.get("children", [])
-            arg_strs = [self.emit(a) for a in children if self.emit(a)]
-            return f"{func_name}({', '.join(arg_strs)});"
+            # IR uses 'args' for call arguments
+            args = node.get("args", []) or node.get("children", [])
+            arg_strs = [self.emit(a) for a in args if self.emit(a)]
+            return f"{func_name}({', '.join(arg_strs)})"
         return ""
 
     def emit_scene_call(self, node: Dict) -> str:
@@ -563,6 +623,252 @@ class IREmitter:
         for i, arg in enumerate(arg_strs):
             c_code = c_code.replace("{" + str(i) + "}", arg)
         return c_code
+
+    # =========================================================================
+    # Audio Calls - emit audio nodes from AudioCallConverter
+    # =========================================================================
+
+    def emit_audio_play(self, node: Dict) -> str:
+        """Audio play call - emit args through emitter for proper prefixing."""
+        props = node.get("props", {})
+        args = node.get("args", [])
+
+        # Get sound path - either from args or c_code
+        if args:
+            sound_path = self.emit(args[0])
+        else:
+            # Fallback to c_code if present
+            c_code = node.get("c_code", "")
+            if c_code:
+                return c_code
+            sound_path = '"rom:/sound.wav64"'
+
+        mix_channel = props.get("mix_channel", "AUDIO_MIX_MASTER")
+        loop = props.get("loop", "false")
+
+        return f"arm_audio_play({sound_path}, {mix_channel}, {loop})"
+
+    def emit_audio_mix_volume(self, node: Dict) -> str:
+        """Mix channel volume set - emit args through emitter for proper prefixing."""
+        props = node.get("props", {})
+        channel = props.get("channel", "AUDIO_MIX_MASTER")
+        volume_str = props.get("volume", "1.0f")
+
+        # If volume is an identifier, emit it to get proper prefixing
+        # Check if it looks like an identifier (no operators, quotes, or parens)
+        if volume_str and not any(c in volume_str for c in '"()+-*/=<>'):
+            # It's likely a variable name - emit through ident to get prefixing
+            if volume_str in self.member_names:
+                # For traits: data->volume, for autoloads: c_name_volume
+                volume_str = self.emit({"type": "ident", "value": volume_str})
+
+        return f"arm_audio_set_mix_volume({channel}, {volume_str})"
+
+    def emit_audio_mix_volume_get(self, node: Dict) -> str:
+        """Mix channel volume get."""
+        return node.get("c_code", "")
+
+    def emit_audio_handle_play(self, node: Dict) -> str:
+        """Handle play - emit handle with proper prefixing."""
+        children = node.get("children", [])
+        if children:
+            handle = self.emit(children[0])
+            return f"arm_audio_replay(&{handle})"
+        return node.get("c_code", "")
+
+    def emit_audio_handle_stop(self, node: Dict) -> str:
+        """Handle stop - emit handle with proper prefixing."""
+        children = node.get("children", [])
+        if children:
+            handle = self.emit(children[0])
+            return f"arm_audio_stop(&{handle})"
+        return node.get("c_code", "")
+
+    def emit_audio_handle_pause(self, node: Dict) -> str:
+        """Handle pause - uses stop since libdragon lacks pause."""
+        children = node.get("children", [])
+        if children:
+            handle = self.emit(children[0])
+            return f"arm_audio_stop(&{handle})"
+        return node.get("c_code", "")
+
+    def emit_audio_handle_volume(self, node: Dict) -> str:
+        """Handle volume set - emit handle with proper prefixing."""
+        children = node.get("children", [])
+        args = node.get("args", [])
+        if children:
+            handle = self.emit(children[0])
+            vol = "1.0f"
+            if args:
+                vol = self.emit(args[0])
+            return f"arm_audio_set_volume(&{handle}, {vol})"
+        return node.get("c_code", "")
+
+    def emit_audio_handle_field(self, node: Dict) -> str:
+        """Handle field access (e.g., handle.finished).
+
+        For autoloads, the handle_name in props needs to be prefixed with c_name_
+        if it's a member. The AutoloadIREmitter overrides this method.
+        """
+        props = node.get("props", {})
+        handle_name = props.get("handle_name", "")
+        field = node.get("value", "")
+        if handle_name and field:
+            return f"{handle_name}.{field}"
+        return node.get("c_code", "")
+
+
+# =============================================================================
+# Autoload IR Emitter - Extends IREmitter for autoload classes
+# =============================================================================
+
+class AutoloadIREmitter(IREmitter):
+    """Emits C code from IR nodes for autoload classes.
+
+    Unlike traits which use a data pointer (data->member), autoloads use
+    global variables prefixed with c_name (music_volume, music_play(), etc.)
+    """
+
+    def __init__(self, autoload_name: str, c_name: str, member_names: List[str], function_names: List[str], member_types: Dict[str, str] = None):
+        super().__init__(autoload_name, c_name, member_names)
+        self.function_names = function_names
+        self.member_types = member_types or {}
+
+    def emit_member(self, node: Dict) -> str:
+        """Autoload member access: c_name_member_name (global variable)"""
+        name = node.get("value", "")
+        return f"{self.c_name}_{name}"
+
+    def _is_sound_handle(self, node: Dict) -> bool:
+        """Check if a node refers to an ArmSoundHandle type."""
+        if node is None:
+            return False
+        node_type = node.get("type", "")
+        if node_type == "ident":
+            name = node.get("value", "")
+            return self.member_types.get(name) == "ArmSoundHandle"
+        return False
+
+    def emit_binop(self, node: Dict) -> str:
+        """Binary operator - special handling for ArmSoundHandle comparisons."""
+        op = node.get("value", "+")
+        children = node.get("children", [])
+        if len(children) >= 2:
+            left_node = children[0]
+            right_node = children[1]
+
+            # Check for ArmSoundHandle comparison
+            if op in ("==", "!=") and (self._is_sound_handle(left_node) or self._is_sound_handle(right_node)):
+                left = self.emit(left_node)
+                right = self.emit(right_node)
+                if left and right:
+                    if op == "==":
+                        return f"arm_sound_handle_equals({left}, {right})"
+                    else:
+                        return f"!arm_sound_handle_equals({left}, {right})"
+
+            # Fall back to base implementation
+            return super().emit_binop(node)
+        return ""
+
+    def emit_ident(self, node: Dict) -> str:
+        """Identifier - prefix members and functions with c_name."""
+        name = node.get("value", "")
+        # Check if this is a reference to one of the autoload's own members
+        if name in self.member_names:
+            return f"{self.c_name}_{name}"
+        # Check if this is a reference to one of the autoload's own functions
+        if name in self.function_names:
+            return f"{self.c_name}_{name}"
+        # Otherwise use base implementation
+        return super().emit_ident(node)
+
+    def emit_field_access(self, node: Dict) -> str:
+        """Field access for autoloads - this.field and inst.field -> c_name_field."""
+        obj_node = node.get("object")
+        field = node.get("value", "")
+
+        if obj_node:
+            obj_type = obj_node.get("type", "")
+            obj_value = obj_node.get("value", "")
+
+            # Check for Assets.sounds.sound_name pattern -> ROM path
+            if obj_type == "field_access" and obj_node.get("value") == "sounds":
+                inner_obj = obj_node.get("object", {})
+                if inner_obj.get("type") == "ident" and inner_obj.get("value") == "Assets":
+                    # Convert to ROM path: "rom:/sound_name.wav64"
+                    return f'"rom:/{field}.wav64"'
+
+            # this.field or inst.field -> c_name_field (global variable)
+            if obj_type == "ident" and obj_value in ("this", "inst"):
+                if field in self.member_names:
+                    return f"{self.c_name}_{field}"
+                return field
+
+            # Regular field access
+            obj = self.emit(obj_node)
+            if obj:
+                return f"({obj}).{field}"
+
+        return field
+
+    def emit_call(self, node: Dict) -> str:
+        """Function call - prefix autoload functions with c_name."""
+        func_name = node.get("value", "")
+        if func_name:
+            # Prefix if it's one of this autoload's functions
+            if func_name in self.function_names:
+                func_name = f"{self.c_name}_{func_name}"
+            # IR uses 'args' for call arguments
+            args = node.get("args", []) or node.get("children", [])
+            arg_strs = [self.emit(a) for a in args if self.emit(a)]
+            return f"{func_name}({', '.join(arg_strs)})"
+        return ""
+
+    def emit_global_signal_call(self, node: Dict) -> str:
+        """Global signal calls - uses c_code template from macro.
+
+        For autoloads, the callback is a module-level function and there's
+        no data pointer (unlike traits), so we pass NULL.
+        Signal handlers need a wrapper for proper signature matching.
+        """
+        c_code = node.get("c_code", "")
+        if not c_code:
+            return ""
+
+        props = node.get("props", {})
+        global_signal = props.get("global_signal", "")
+        callback = props.get("callback", "")
+
+        # Build signal pointer and handler name
+        signal_ptr = f"&{global_signal}"
+        # Use wrapper function for signal handlers (has proper ArmSignalHandler signature)
+        handler_name = f"{self.c_name}_{callback}_wrapper" if callback else ""
+
+        # Substitute placeholders
+        c_code = c_code.replace("{signal_ptr}", signal_ptr)
+        c_code = c_code.replace("{handler}", handler_name)
+        # Autoloads don't have a data pointer, pass NULL
+        c_code = c_code.replace(", data)", ", NULL)")
+
+        # Substitute arg placeholders {0}, {1}, etc.
+        args = node.get("args", [])
+        for i, arg in enumerate(args):
+            c_code = c_code.replace("{" + str(i) + "}", self.emit(arg))
+
+        return c_code
+
+    def emit_audio_handle_field(self, node: Dict) -> str:
+        """Handle field access - prefix handle name if it's a member."""
+        props = node.get("props", {})
+        handle_name = props.get("handle_name", "")
+        field = node.get("value", "")
+        if handle_name and field:
+            # If handle_name is a member of this autoload, prefix it
+            if handle_name in self.member_names:
+                handle_name = f"{self.c_name}_{handle_name}"
+            return f"{handle_name}.{field}"
+        return node.get("c_code", "")
 
 
 # =============================================================================
@@ -931,6 +1237,8 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
     Returns:
         tuple of (template_data dict, features dict)
     """
+    import arm.utils
+
     trait_data_structs = []
     trait_declarations = []
     event_handler_declarations = []
@@ -976,10 +1284,20 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
             if node_features['has_physics']:
                 all_features['has_physics'] = True
 
+    # Also collect global signals from autoloads (they may use signals from other classes)
+    build_dir = arm.utils.build_dir()
+    autoload_data = load_autoloads_json(build_dir)
+    for autoload_name, autoload_ir in autoload_data.get("autoloads", {}).items():
+        meta = autoload_ir.get("meta", {})
+        for gs in meta.get("global_signals", []):
+            global_signals.add(gs)
+
     # Generate global signal declarations with explicit zero initialization
     global_signal_decls = []
+    global_signal_externs = []
     for gs in sorted(global_signals):
         global_signal_decls.append(f"ArmSignal {gs} = {{0}};")
+        global_signal_externs.append(f"extern ArmSignal {gs};")
 
     template_data = {
         "trait_data_structs": "\n\n".join(trait_data_structs),
@@ -987,6 +1305,7 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
         "event_handler_declarations": "\n".join(event_handler_declarations),
         "trait_implementations": "\n".join(trait_implementations),
         "global_signals": "\n".join(global_signal_decls),
+        "global_signal_externs": "\n".join(global_signal_externs),
     }
 
     return template_data, all_features
@@ -1419,9 +1738,11 @@ def _prepare_autoload_template_data(name: str, autoload_ir: dict) -> dict:
     meta = autoload_ir.get("meta", {})
     signals = meta.get("signals", [])
 
-    # Create emitter for code generation
+    # Create emitter for code generation - use AutoloadIREmitter for proper prefixing
     member_names = [m["name"] for m in members]
-    emitter = IREmitter(name, c_name, member_names)
+    member_types = {m["name"]: m.get("ctype", "int32_t") for m in members}
+    function_names = [f["name"] for f in functions]
+    emitter = AutoloadIREmitter(name, c_name, member_names, function_names, member_types)
 
     # Helper to emit default value
     def emit_default_value(default: dict, ctype: str) -> str:
@@ -1434,6 +1755,8 @@ def _prepare_autoload_template_data(name: str, autoload_ir: dict) -> dict:
                 return "false"
             elif ctype == "const char*":
                 return '""'
+            elif ctype == "ArmSoundHandle":
+                return "{-1, 0, -1, true}"  # channel=-1, mix_channel=0, sound_slot=-1, finished=true
             else:
                 return "0"
         return emitter.emit(default)
@@ -1450,11 +1773,14 @@ def _prepare_autoload_template_data(name: str, autoload_ir: dict) -> dict:
         return f"{return_type} {func_c_name}({param_str})"
 
     # Helper to generate function implementation
-    def generate_function_implementation(func: dict, is_static: bool = False) -> str:
+    def generate_function_implementation(func: dict, is_static: bool = False, maybe_unused: bool = False) -> str:
         decl = generate_function_declaration(func)
+        prefix = ""
         if is_static:
-            decl = "static " + decl
-        lines = [f"{decl} {{"]
+            prefix = "static "
+        if maybe_unused:
+            prefix += "__attribute__((unused)) "
+        lines = [f"{prefix}{decl} {{"]
         body = func.get("body", [])
         for node in body:
             code = emitter.emit(node)
@@ -1524,8 +1850,53 @@ def _prepare_autoload_template_data(name: str, autoload_ir: dict) -> dict:
     private_func_lines = []
     private_funcs = [f for f in functions if not f.get("is_public", False) and f.get("name") != "init"]
     for func in private_funcs:
-        impl = generate_function_implementation(func, is_static=True)
+        # Mark as maybe_unused since setters might not be called externally
+        impl = generate_function_implementation(func, is_static=True, maybe_unused=True)
         private_func_lines.append(impl)
+
+    # Build signal handler wrappers
+    # When a function is connected to a signal, we need a wrapper with the correct signature
+    signal_handlers = meta.get("signal_handlers", [])
+    signal_wrapper_lines = []
+    for sh in signal_handlers:
+        handler_name = sh.get("handler_name", "")
+        if handler_name:
+            # Find the function to get its parameters
+            handler_func = next((f for f in functions if f["name"] == handler_name), None)
+            params = handler_func.get("params", []) if handler_func else []
+
+            # Generate wrapper that calls the actual function
+            # Wrapper has ArmSignalHandler signature: void (*)(void* ctx, void* payload)
+            wrapper_lines = [
+                f"static void {c_name}_{handler_name}_wrapper(void* ctx, void* payload) {{",
+                f"    (void)ctx;",
+            ]
+
+            if not params:
+                # No parameters - just suppress payload warning and call
+                wrapper_lines.append(f"    (void)payload;")
+                wrapper_lines.append(f"    {c_name}_{handler_name}();")
+            elif len(params) == 1:
+                # Single parameter - check if signal provides this or if it's ignored
+                # For signals like sceneLoaded that send const char*, cast payload
+                p = params[0]
+                ptype = p.get("ctype", "void*")
+                if ptype == "const char*":
+                    # If payload is NULL, pass empty string to avoid crash
+                    wrapper_lines.append(f"    {c_name}_{handler_name}(payload ? (const char*)payload : \"\");")
+                elif ptype in ("int32_t", "int"):
+                    wrapper_lines.append(f"    {c_name}_{handler_name}((int32_t)(intptr_t)payload);")
+                elif ptype == "float":
+                    wrapper_lines.append(f"    {c_name}_{handler_name}(payload ? *(float*)payload : 0.0f);")
+                else:
+                    wrapper_lines.append(f"    {c_name}_{handler_name}(({ptype})payload);")
+            else:
+                # Multiple parameters - assume payload is a struct pointer
+                wrapper_lines.append(f"    (void)payload;  // TODO: unpack struct")
+                wrapper_lines.append(f"    // {c_name}_{handler_name}(...);")
+
+            wrapper_lines.append(f"}}")
+            signal_wrapper_lines.append("\n".join(wrapper_lines))
 
     # Build public function implementations
     public_func_lines = []
@@ -1559,6 +1930,7 @@ def _prepare_autoload_template_data(name: str, autoload_ir: dict) -> dict:
         'member_definitions': '\n'.join(member_def_lines),
         'signal_definitions': '\n'.join(signal_def_lines),
         'private_functions': '\n\n'.join(private_func_lines),
+        'signal_wrappers': '\n\n'.join(signal_wrapper_lines),
         'public_functions': '\n\n'.join(public_func_lines),
         'init_body': '\n'.join(init_body_lines),
     }
@@ -1568,9 +1940,10 @@ def prepare_autoload_template_data():
     """Prepare template data for autoload file generation.
 
     Returns:
-        tuple of (list of (c_name, template_data), master_data) or ([], None) if no autoloads
+        tuple of (list of (c_name, template_data), master_data, features) or ([], None, {}) if no autoloads
         - list contains tuples of (c_name, template_data_dict) for each autoload
         - master_data is dict with 'includes' and 'init_calls' for autoloads.h
+        - features is dict with 'has_audio', etc.
     """
     import arm.utils
 
@@ -1579,16 +1952,29 @@ def prepare_autoload_template_data():
     autoloads = data.get("autoloads", {})
 
     if not autoloads:
-        return [], None
+        return [], None, {}
 
     # Sort autoloads by order
     sorted_autoloads = sorted(autoloads.items(), key=lambda x: x[1].get("order", 100))
     autoload_data = []
     autoload_names = []
+    all_global_signals = set()
+    features = {'has_audio': False}
 
     for name, autoload_ir in sorted_autoloads:
         c_name = autoload_ir.get("c_name", name.lower())
         autoload_names.append(c_name)
+
+        # Collect global signals from this autoload
+        meta = autoload_ir.get("meta", {})
+        for gs in meta.get("global_signals", []):
+            all_global_signals.add(gs)
+
+        # Detect audio usage in functions
+        for func in autoload_ir.get("functions", []):
+            if _detect_audio_in_nodes(func.get("body", [])):
+                features['has_audio'] = True
+                break
 
         # Prepare template data for this autoload
         tmpl_data = _prepare_autoload_template_data(name, autoload_ir)
@@ -1598,6 +1984,25 @@ def prepare_autoload_template_data():
     master_data = {
         'includes': '\n'.join(f'#include "{c_name}.h"' for c_name in autoload_names),
         'init_calls': '\n'.join(f'    {c_name}_init();' for c_name in autoload_names),
+        'global_signals': list(all_global_signals),  # Pass to caller for merging with traits
     }
 
-    return autoload_data, master_data
+    return autoload_data, master_data, features
+
+
+def _detect_audio_in_nodes(nodes: list) -> bool:
+    """Recursively detect audio-related IR nodes."""
+    for node in nodes:
+        if not isinstance(node, dict):
+            continue
+        node_type = node.get("type", "")
+        if node_type.startswith("audio_"):
+            return True
+        # Check children recursively
+        if _detect_audio_in_nodes(node.get("children", [])):
+            return True
+        if _detect_audio_in_nodes(node.get("args", [])):
+            return True
+        if _detect_audio_in_nodes(node.get("body", [])):
+            return True
+    return False

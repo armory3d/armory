@@ -5,71 +5,55 @@
 #include "audio.h"
 #include "audio_config.h"
 
-// Audio configuration
-#define AUDIO_FREQUENCY     32000   // 32kHz - good balance of quality/performance for N64
-#define AUDIO_BUFFERS       4       // Number of audio buffers
-
-// Maximum number of simultaneously loaded WAV64 files
+#define AUDIO_FREQUENCY     44100
+#define AUDIO_BUFFERS       4
 #define MAX_LOADED_SOUNDS   16
 
 typedef struct {
-    wav64_t wav;        // Embedded wav64_t structure (not pointer)
+    wav64_t wav;
     char path[64];
     bool in_use;
+    bool loop;
 } LoadedSound;
 
-// Mix channel volumes (indexed by mix channel id)
 static float mix_volumes[AUDIO_MIX_CHANNEL_COUNT];
-
-// Loaded sounds cache
+static float channel_volumes[AUDIO_MIXER_CHANNELS];
 static LoadedSound loaded_sounds[MAX_LOADED_SOUNDS];
-
-// Track which mixer channels are in use
 static bool channel_in_use[AUDIO_MIXER_CHANNELS];
-
-// Track which mix channel each mixer channel belongs to
 static int channel_mix_mapping[AUDIO_MIXER_CHANNELS];
+static int channel_sound_slot[AUDIO_MIXER_CHANNELS];
 
-// Forward declarations
 static LoadedSound* find_or_load_sound(const char *path);
 static int allocate_channel(int mix_channel);
 static void apply_channel_volume(int ch);
+static int find_sound_slot(const char *path);
 
 void arm_audio_init(void)
 {
-    // Initialize libdragon audio subsystem
     audio_init(AUDIO_FREQUENCY, AUDIO_BUFFERS);
-
-    // Initialize mixer with total channel count
     mixer_init(AUDIO_MIXER_CHANNELS);
+    wav64_init_compression(3);  // Required for opus
 
-    // Initialize compression for opus (level 3) - required before loading opus files
-    wav64_init_compression(3);
-
-    // Reset state
     memset(loaded_sounds, 0, sizeof(loaded_sounds));
     memset(channel_in_use, 0, sizeof(channel_in_use));
 
-    // Initialize channel to mix channel mapping
     for (int i = 0; i < AUDIO_MIXER_CHANNELS; i++) {
         channel_mix_mapping[i] = -1;
+        channel_sound_slot[i] = -1;
+        channel_volumes[i] = 1.0f;
     }
 
-    // Set default volumes (all at 1.0)
     for (int i = 0; i < AUDIO_MIX_CHANNEL_COUNT; i++) {
         mix_volumes[i] = 1.0f;
     }
 
-    // Apply master volume
     mixer_set_vol(1.0f);
 }
 
 void arm_audio_shutdown(void)
 {
-    // Stop all sounds
     arm_audio_stop_all();
 
-    // Close all loaded sounds
     for (int i = 0; i < MAX_LOADED_SOUNDS; i++) {
         if (loaded_sounds[i].in_use) {
             wav64_close(&loaded_sounds[i].wav);
@@ -77,17 +61,13 @@ void arm_audio_shutdown(void)
         }
     }
 
-    // Shutdown mixer
     mixer_close();
 }
 
 void arm_audio_update(void)
 {
-    // Use libdragon's recommended helper for audio mixing
-    // This handles streaming from ROM and mixing efficiently
     mixer_try_play();
 
-    // Update channel_in_use flags based on actual playback state
     for (int ch = 0; ch < AUDIO_MIXER_CHANNELS; ch++) {
         if (channel_in_use[ch] && !mixer_ch_playing(ch)) {
             channel_in_use[ch] = false;
@@ -109,27 +89,51 @@ ArmSoundHandle arm_audio_play(const char *sound_path, int mix_channel, bool loop
     LoadedSound *sound = find_or_load_sound(sound_path);
     if (!sound) return handle;
 
-    // Find available mixer channel
     int ch = allocate_channel(mix_channel);
     if (ch < 0) {
-        debugf("audio: no channels available for mix channel %d\n", mix_channel);
+        debugf("audio: no channels available\n");
         return handle;
     }
 
-    // Configure looping
+    int slot = find_sound_slot(sound_path);
     wav64_set_loop(&sound->wav, loop);
-
-    // Play on allocated channel
     wav64_play(&sound->wav, ch);
+
     channel_in_use[ch] = true;
     channel_mix_mapping[ch] = mix_channel;
-
-    // Apply volume
+    channel_sound_slot[ch] = slot;
     apply_channel_volume(ch);
 
     handle.channel = ch;
+    handle.sound_slot = slot;
     handle.finished = false;
     return handle;
+}
+
+void arm_audio_replay(ArmSoundHandle *handle)
+{
+    if (!handle || handle->sound_slot < 0) return;
+    if (handle->sound_slot >= MAX_LOADED_SOUNDS) return;
+    if (!loaded_sounds[handle->sound_slot].in_use) return;
+
+    // Stop current playback if any
+    if (handle->channel >= 0 && channel_in_use[handle->channel]) {
+        mixer_ch_stop(handle->channel);
+    }
+
+    int ch = allocate_channel(handle->mix_channel);
+    if (ch < 0) return;
+
+    LoadedSound *sound = &loaded_sounds[handle->sound_slot];
+    wav64_play(&sound->wav, ch);
+
+    channel_in_use[ch] = true;
+    channel_mix_mapping[ch] = handle->mix_channel;
+    channel_sound_slot[ch] = handle->sound_slot;
+    apply_channel_volume(ch);
+
+    handle->channel = ch;
+    handle->finished = false;
 }
 
 void arm_audio_stop(ArmSoundHandle *handle)
@@ -157,27 +161,21 @@ bool arm_audio_is_playing(ArmSoundHandle *handle)
 void arm_audio_set_volume(ArmSoundHandle *handle, float volume)
 {
     if (!handle || handle->channel < 0) return;
-
-    // Clamp
     if (volume < 0.0f) volume = 0.0f;
     if (volume > 1.0f) volume = 1.0f;
 
-    // Apply with mix channel attenuation
-    float effective = volume * mix_volumes[handle->mix_channel];
-    mixer_ch_set_vol(handle->channel, effective, effective);
+    channel_volumes[handle->channel] = volume;
+    apply_channel_volume(handle->channel);
 }
 
 void arm_audio_set_mix_volume(int mix_channel, float volume)
 {
     if (mix_channel < 0 || mix_channel >= AUDIO_MIX_CHANNEL_COUNT) return;
-
-    // Clamp volume
     if (volume < 0.0f) volume = 0.0f;
     if (volume > 1.0f) volume = 1.0f;
 
     mix_volumes[mix_channel] = volume;
 
-    // Update all playing channels that belong to this mix channel
     for (int ch = 0; ch < AUDIO_MIXER_CHANNELS; ch++) {
         if (channel_in_use[ch] && channel_mix_mapping[ch] == mix_channel) {
             apply_channel_volume(ch);
@@ -202,18 +200,14 @@ void arm_audio_stop_all(void)
     }
 }
 
-// --- Internal functions ---
-
 static LoadedSound* find_or_load_sound(const char *path)
 {
-    // Check if already loaded
     for (int i = 0; i < MAX_LOADED_SOUNDS; i++) {
         if (loaded_sounds[i].in_use && strcmp(loaded_sounds[i].path, path) == 0) {
             return &loaded_sounds[i];
         }
     }
 
-    // Find empty slot
     int slot = -1;
     for (int i = 0; i < MAX_LOADED_SOUNDS; i++) {
         if (!loaded_sounds[i].in_use) {
@@ -223,13 +217,11 @@ static LoadedSound* find_or_load_sound(const char *path)
     }
 
     if (slot < 0) {
-        debugf("audio: no slots available for %s\n", path);
+        debugf("audio: no slots for %s\n", path);
         return NULL;
     }
 
-    // Load the sound using wav64_open (standard libdragon API)
     wav64_open(&loaded_sounds[slot].wav, path);
-
     strncpy(loaded_sounds[slot].path, path, sizeof(loaded_sounds[slot].path) - 1);
     loaded_sounds[slot].path[sizeof(loaded_sounds[slot].path) - 1] = '\0';
     loaded_sounds[slot].in_use = true;
@@ -237,12 +229,22 @@ static LoadedSound* find_or_load_sound(const char *path)
     return &loaded_sounds[slot];
 }
 
+static int find_sound_slot(const char *path)
+{
+    for (int i = 0; i < MAX_LOADED_SOUNDS; i++) {
+        if (loaded_sounds[i].in_use && strcmp(loaded_sounds[i].path, path) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 static int allocate_channel(int mix_channel)
 {
-    // Simple allocation: find any free channel
-    // Could be extended to prefer channels or limit per mix channel
     for (int ch = 0; ch < AUDIO_MIXER_CHANNELS; ch++) {
         if (!channel_in_use[ch]) {
+            // Allow playback of audio files up to 48000 Hz
+            mixer_ch_set_limits(ch, 0, 48000, 0);
             return ch;
         }
     }
@@ -254,6 +256,6 @@ static void apply_channel_volume(int ch)
     int mix_ch = channel_mix_mapping[ch];
     if (mix_ch < 0) return;
 
-    float vol = mix_volumes[mix_ch];
+    float vol = channel_volumes[ch] * mix_volumes[mix_ch];
     mixer_ch_set_vol(ch, vol, vol);
 }

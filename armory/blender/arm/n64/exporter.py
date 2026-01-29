@@ -883,11 +883,15 @@ class N64Exporter:
         They become globally accessible C modules.
         """
         # Get template data from codegen
-        autoload_data, master_data = codegen.prepare_autoload_template_data()
+        autoload_data, master_data, features = codegen.prepare_autoload_template_data()
 
         if not autoload_data:
             self.autoload_info = {'autoloads': [], 'has_autoloads': False}
             return
+
+        # Update feature flags from autoload analysis
+        if features.get('has_audio'):
+            self.has_audio = True
 
         autoloads_dir = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'autoloads')
         os.makedirs(autoloads_dir, exist_ok=True)
@@ -1507,8 +1511,9 @@ class N64Exporter:
     def _write_audio_config(self):
         """Generate audio_config.h from template with mix channel configuration.
 
-        For now, uses a default configuration with MASTER, MUSIC, and SFX channels.
-        TODO: Parse Aura.mixChannels from Haxe code to get actual channel names.
+        Parses trait IR files to find Aura.mixChannels usage and generates
+        the appropriate AUDIO_MIX_* constants. Falls back to default channels
+        if no audio usage is detected.
         """
         tmpl_path = os.path.join(arm.utils.get_n64_deployment_path(), 'src', 'audio', 'audio_config.h.j2')
         out_path = os.path.join(arm.utils.build_dir(), 'n64', 'src', 'audio', 'audio_config.h')
@@ -1516,23 +1521,79 @@ class N64Exporter:
         with open(tmpl_path, 'r', encoding='utf-8') as f:
             tmpl_content = f.read()
 
-        # Default mix channel configuration
-        # TODO: Parse from Aura.mixChannels in the future
-        mix_channels = ['MASTER', 'MUSIC', 'SFX']
+        # Collect mix channel names from trait IR
+        mix_channel_names = self._collect_mix_channels_from_ir()
 
-        # Generate mix channel defines
+        # Ensure we have at least the default Aura channels
+        default_channels = ['master', 'music', 'fx']
+        for ch in default_channels:
+            if ch not in mix_channel_names:
+                mix_channel_names.append(ch)
+
+        # Generate mix channel defines: AUDIO_MIX_MASTER, AUDIO_MIX_MUSIC, etc.
         mix_channel_defines = []
-        for i, name in enumerate(mix_channels):
-            mix_channel_defines.append(f'#define MIX_CHANNEL_{name} {i}')
+        for i, name in enumerate(mix_channel_names):
+            const_name = f'AUDIO_MIX_{name.upper()}'
+            mix_channel_defines.append(f'#define {const_name} {i}')
 
         output = tmpl_content.format(
             audio_mixer_channels=8,  # Total hardware channels
-            audio_mix_channel_count=len(mix_channels),
+            audio_mix_channel_count=len(mix_channel_names),
             mix_channel_defines='\n'.join(mix_channel_defines)
         )
 
         with open(out_path, 'w', encoding='utf-8') as f:
             f.write(output)
+
+    def _collect_mix_channels_from_ir(self):
+        """Scan trait IR files to find Aura.mixChannels usage.
+
+        Returns:
+            list: List of mix channel names found (e.g., ['music', 'sfx'])
+        """
+        mix_channels = []
+        ir_dir = os.path.join(arm.utils.build_dir(), 'n64', 'trait_ir')
+
+        if not os.path.exists(ir_dir):
+            return mix_channels
+
+        # Scan all IR JSON files for audio_mix_volume nodes
+        for filename in os.listdir(ir_dir):
+            if not filename.endswith('.json'):
+                continue
+
+            ir_path = os.path.join(ir_dir, filename)
+            try:
+                with open(ir_path, 'r', encoding='utf-8') as f:
+                    ir_data = json.load(f)
+
+                # Recursively search for audio-related IR nodes
+                self._find_mix_channels_in_ir(ir_data, mix_channels)
+            except (json.JSONDecodeError, IOError):
+                continue
+
+        return mix_channels
+
+    def _find_mix_channels_in_ir(self, node, channels):
+        """Recursively search IR for mix channel references."""
+        if isinstance(node, dict):
+            # Check for audio_mix_volume type with channel prop
+            if node.get('type') == 'audio_mix_volume':
+                props = node.get('props', {})
+                channel = props.get('channel', '')
+                # Extract channel name from AUDIO_MIX_NAME format
+                if channel.startswith('AUDIO_MIX_'):
+                    name = channel[10:].lower()  # Remove prefix and lowercase
+                    if name and name not in channels:
+                        channels.append(name)
+
+            # Recurse into all values
+            for v in node.values():
+                self._find_mix_channels_in_ir(v, channels)
+
+        elif isinstance(node, list):
+            for item in node:
+                self._find_mix_channels_in_ir(item, channels)
 
     def _generate_audio_makefile_entries(self):
         """Generate Makefile entries for audio conversion.

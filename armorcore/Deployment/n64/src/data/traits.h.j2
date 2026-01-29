@@ -3,6 +3,7 @@
 #include "scenes.h"
 #include "../types.h"
 #include "../engine.h"
+#include "../system/signal.h"
 #include "../events/trait_events.h"
 #include "../iron/system/input.h"
 
@@ -13,6 +14,9 @@
 #ifdef __cplusplus
 extern "C" {{
 #endif
+
+// Global signals (shared across traits and autoloads)
+{global_signal_externs}
 
 // Trait data structures (for per-instance data)
 {trait_data_structs}

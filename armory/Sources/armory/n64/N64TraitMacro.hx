@@ -26,6 +26,7 @@ import armory.n64.converters.SignalCallConverter;
 import armory.n64.converters.StdCallConverter;
 import armory.n64.converters.ObjectCallConverter;
 import armory.n64.converters.AutoloadCallConverter;
+import armory.n64.converters.AudioCallConverter;
 
 using haxe.macro.ExprTools;
 using haxe.macro.TypeTools;
@@ -288,6 +289,7 @@ class TraitExtractor implements IExtractorContext {
             new SceneCallConverter(),
             new CanvasCallConverter(),
             new AutoloadCallConverter(),
+            new AudioCallConverter(),
         ];
     }
 
@@ -906,6 +908,18 @@ class TraitExtractor implements IExtractorContext {
                     }
                 default:
             }
+        }
+
+        // Handle Assets.sounds.sound_name -> "rom:/sound_name.wav64"
+        switch (obj.expr) {
+            case EField(innerObj, "sounds"):
+                switch (innerObj.expr) {
+                    case EConst(CIdent("Assets")):
+                        var soundPath = 'rom:/${field}.wav64';
+                        return { type: "string", value: soundPath, c_code: '"$soundPath"' };
+                    default:
+                }
+            default:
         }
 
         // Handle transform access
