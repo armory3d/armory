@@ -22,6 +22,7 @@ import armory.n64.converters.SignalCallConverter;
 import armory.n64.converters.StdCallConverter;
 import armory.n64.converters.AutoloadCallConverter;
 import armory.n64.converters.AudioCallConverter;
+import armory.n64.converters.TweenCallConverter;
 
 using haxe.macro.ExprTools;
 using haxe.macro.TypeTools;
@@ -266,6 +267,7 @@ class AutoloadExtractor implements IExtractorContext {
             new StdCallConverter(),
             new AutoloadCallConverter(),
             new AudioCallConverter(),
+            new TweenCallConverter(),
         ];
     }
 
@@ -600,6 +602,16 @@ class AutoloadExtractor implements IExtractorContext {
                     type: "ternary",
                     children: [exprToIR(econd), exprToIR(eif), exprToIR(eelse)]
                 };
+
+            case ENew(typePath, params):
+                // Handle constructor calls
+                var typeName = typePath.name;
+                if (typeName == "Tween") {
+                    // Tween allocation from pool
+                    return { type: "tween_alloc" };
+                }
+                // Generic new - skip for now
+                return { type: "skip" };
 
             default:
                 return { type: "skip" };

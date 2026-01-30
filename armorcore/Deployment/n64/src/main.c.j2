@@ -10,6 +10,7 @@
 #include "events/trait_events.h"
 #include "iron/system/input.h"
 #include "system/time.h"
+#include "system/tween.h"
 #if ENGINE_ENABLE_PHYSICS
 #include "oimo/physics.h"
 #if ENGINE_ENABLE_PHYSICS_DEBUG
@@ -64,6 +65,7 @@ int main(void)
 #if ENGINE_ENABLE_AUDIO
         arm_audio_update();
 #endif
+        tween_update_all(dt);
         trait_events_dispatch(dt);
 
         ArmScene *scene = scene_get(current_scene);

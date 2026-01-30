@@ -36,6 +36,9 @@ class TypeMap {
         // Audio types
         "Sound" => "const char*",  // Sound asset reference (ROM path)
         "BaseChannelHandle" => "ArmSoundHandle",  // Playback handle
+
+        // Tween types
+        "Tween" => "ArmTween*",  // Tween instance (pointer to pool entry)
     ];
 
     public static function getCType(haxeType:String):String {
