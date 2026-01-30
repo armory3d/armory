@@ -84,9 +84,8 @@ class AutoloadCallConverter implements ICallConverter {
                     if (meta != null) {
                         for (m in meta) {
                             if (m.name == ":n64Autoload" || m.name == "n64Autoload") {
-                                // Found an autoload - compute c_name
-                                var modulePath = classType.module;
-                                var cName = modulePath.toLowerCase().replace(".", "_");
+                                // Found an autoload - compute c_name (just class name, lowercased)
+                                var cName = classType.name.toLowerCase();
                                 autoloadCache.set(className, cName);
                                 return cName;
                             }

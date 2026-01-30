@@ -1301,8 +1301,8 @@ def prepare_traits_template_data(type_overrides: dict = None):
 
 
 def _detect_features_in_nodes(nodes) -> dict:
-    """Recursively scan IR nodes for feature usage (physics, etc.)."""
-    features = {'has_physics': False}
+    """Recursively scan IR nodes for feature usage (physics, autoloads, etc.)."""
+    features = {'has_physics': False, 'autoloads': set()}
 
     def scan(node):
         if not node or not isinstance(node, dict):
@@ -1310,6 +1310,12 @@ def _detect_features_in_nodes(nodes) -> dict:
         node_type = node.get("type", "")
         if node_type == "physics_call":
             features['has_physics'] = True
+        elif node_type == "autoload_call":
+            # Extract autoload c_name from the call
+            props = node.get("props", {})
+            c_name = props.get("c_name", "")
+            if c_name:
+                features['autoloads'].add(c_name)
 
         # Recursively scan children and args
         for child in node.get("children", []):
@@ -1386,6 +1392,8 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
             node_features = _detect_features_in_nodes(event_nodes)
             if node_features['has_physics']:
                 all_features['has_physics'] = True
+            # Collect autoloads used by this trait
+            all_features.setdefault('autoloads', set()).update(node_features.get('autoloads', set()))
 
     # Also collect global signals from autoloads (they may use signals from other classes)
     build_dir = arm.utils.build_dir()
@@ -1402,6 +1410,12 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
         global_signal_decls.append(f"ArmSignal {gs} = {{0}};")
         global_signal_externs.append(f"extern ArmSignal {gs};")
 
+    # Generate autoload include directives
+    autoloads_used = all_features.get('autoloads', set())
+    autoload_includes = []
+    for autoload_cname in sorted(autoloads_used):
+        autoload_includes.append(f'#include "../autoloads/{autoload_cname}.h"')
+
     template_data = {
         "trait_data_structs": "\n\n".join(trait_data_structs),
         "trait_declarations": "\n".join(trait_declarations),
@@ -1409,6 +1423,7 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
         "trait_implementations": "\n".join(trait_implementations),
         "global_signals": "\n".join(global_signal_decls),
         "global_signal_externs": "\n".join(global_signal_externs),
+        "autoload_includes": "\n".join(autoload_includes),
     }
 
     return template_data, all_features
