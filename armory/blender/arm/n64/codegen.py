@@ -89,14 +89,19 @@ class IREmitter:
         return [c for c in (self.emit(n) for n in nodes) if c]
 
     def emit_statements(self, nodes: List[Dict], indent: str = "    ") -> str:
-        """Emit list of nodes as statements, adding semicolons where needed."""
+        """Emit list of nodes as statements, adding semicolons where needed.
+
+        Handles multi-line statements by indenting each line properly.
+        """
         lines = self.emit_list(nodes)
         result = []
         for line in lines:
             # Add semicolon if line doesn't end with ; or } or is empty
             if line and not line.rstrip().endswith((';', '}', '{')):
                 line = line + ';'
-            result.append(f"{indent}{line}")
+            # Handle multi-line statements by indenting each line
+            for subline in line.split('\n'):
+                result.append(f"{indent}{subline}")
         return "\n".join(result)
 
     def _substitute_placeholders(self, c_code: str, args: List[Dict] = None,
@@ -315,39 +320,34 @@ class IREmitter:
     def emit_if(self, node: Dict) -> str:
         """If statement.
 
-        IR format from macro:
+        Unified IR format from both trait and autoload macros:
           children[0] = condition
-          children[1] = then body (block or single statement)
-          children[2] = else body (optional, block or single statement)
+          props.then = array of then body statement nodes
+          props.else_ = array of else body statement nodes (optional, can be null)
         """
         children = node.get("children", [])
+        props = node.get("props", {})
 
-        if len(children) < 2:
+        if len(children) < 1:
             return ""
 
         cond = self.emit(children[0])
         if not cond:
             return ""
 
-        # Get then body - could be a block or single statement
-        then_node = children[1]
-        if then_node.get("type") == "block":
-            then_nodes = then_node.get("children", [])
-        else:
-            then_nodes = [then_node]
-        then_code = self.emit_statements(then_nodes, "        ")
+        then_nodes = props.get("then", [])
+        if not then_nodes:
+            return ""
 
-        result = f"if ({cond}) {{\n{then_code}\n    }}"
+        # Emit body with single indent level (caller adds outer indent via emit_statements)
+        then_code = self.emit_statements(then_nodes, "    ")
+        result = f"if ({cond}) {{\n{then_code}\n}}"
 
         # Check for else branch
-        if len(children) > 2:
-            else_node = children[2]
-            if else_node.get("type") == "block":
-                else_nodes = else_node.get("children", [])
-            else:
-                else_nodes = [else_node]
-            else_code = self.emit_statements(else_nodes, "        ")
-            result += f" else {{\n{else_code}\n    }}"
+        else_nodes = props.get("else_")
+        if else_nodes:
+            else_code = self.emit_statements(else_nodes, "    ")
+            result += f" else {{\n{else_code}\n}}"
 
         return result
 
@@ -1234,8 +1234,20 @@ class TraitCodeGenerator:
 
         # on_ready - no dt parameter
         event_nodes = self.events.get("on_ready", [])
-        body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
         impl_lines.append(f"void {self.c_name}_on_ready(void* obj, void* data) {{")
+
+        # Allocate tweens at the start of on_ready (before user code)
+        tween_alloc_lines = []
+        for member in self.members:
+            mtype = member.get("ctype", "")
+            mname = member.get("name", "")
+            if mtype == "ArmTween*":
+                tween_alloc_lines.append(f"    (({self.name}Data*)data)->{mname} = tween_alloc();")
+
+        if tween_alloc_lines:
+            impl_lines.extend(tween_alloc_lines)
+
+        body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
         impl_lines.append(body)
         impl_lines.append("}")
         impl_lines.append("")
@@ -1493,7 +1505,7 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
     global_signals = set()  # Collect unique global signals
 
     # Track features across all traits
-    all_features = {'has_physics': False, 'has_ui': False}
+    all_features = {'has_physics': False, 'has_ui': False, 'has_tween': False}
 
     for trait_name, trait_ir in traits.items():
         gen = TraitCodeGenerator(trait_name, trait_ir, type_overrides)
@@ -1520,6 +1532,16 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
         # Check if this trait uses UI
         if meta.get("uses_ui"):
             all_features['has_ui'] = True
+
+        # Check if this trait uses Tween (from meta flag or member type)
+        if meta.get("uses_tween"):
+            all_features['has_tween'] = True
+
+        # Also check if any member is of type ArmTween*
+        for member in trait_ir.get("members", []):
+            if member.get("ctype") == "ArmTween*":
+                all_features['has_tween'] = True
+                break
 
         # Implementation data
         trait_implementations.append(gen.generate_all_event_implementations())
@@ -1562,6 +1584,7 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
         "global_signals": "\n".join(global_signal_decls),
         "global_signal_externs": "\n".join(global_signal_externs),
         "autoload_includes": "\n".join(autoload_includes),
+        "tween_include": '#include "../system/tween.h"' if all_features['has_tween'] else "",
     }
 
     return template_data, all_features

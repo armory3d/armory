@@ -28,6 +28,7 @@ import armory.n64.converters.StdCallConverter;
 import armory.n64.converters.ObjectCallConverter;
 import armory.n64.converters.AutoloadCallConverter;
 import armory.n64.converters.AudioCallConverter;
+import armory.n64.converters.TweenCallConverter;
 
 using haxe.macro.ExprTools;
 using haxe.macro.TypeTools;
@@ -188,6 +189,7 @@ class TraitExtractor implements IExtractorContext {
             uses_time: false,
             uses_physics: false,
             uses_ui: false,
+            uses_tween: false,
             buttons_used: [],
             button_events: [],
             contact_events: [],
@@ -219,6 +221,7 @@ class TraitExtractor implements IExtractorContext {
             new CanvasCallConverter(),
             new AutoloadCallConverter(),
             new AudioCallConverter(),
+            new TweenCallConverter(),
         ];
     }
 
@@ -1022,7 +1025,9 @@ class TraitExtractor implements IExtractorContext {
                 if (funcName == "notifyOnInit" || funcName == "notifyOnUpdate" ||
                     funcName == "notifyOnFixedUpdate" || funcName == "notifyOnLateUpdate" ||
                     funcName == "notifyOnRemove" || funcName == "notifyOnAdd" ||
-                    funcName == "notifyOnRender2D" || funcName == "notifyOnRender") {
+                    funcName == "notifyOnRender2D" || funcName == "notifyOnRender" ||
+                    funcName == "removeUpdate" || funcName == "removeFixedUpdate" ||
+                    funcName == "removeLateUpdate") {
                     return { type: "skip" };
                 }
 

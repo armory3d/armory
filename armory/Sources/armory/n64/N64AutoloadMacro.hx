@@ -557,11 +557,23 @@ class AutoloadExtractor implements IExtractorContext {
                 }
 
             case EIf(econd, eif, eelse):
-                var children = [exprToIR(econd), exprToIR(eif)];
-                if (eelse != null) children.push(exprToIR(eelse));
+                // Use same IR format as traits: condition in children[0], bodies in props
+                var thenNodes:Array<IRNode> = [];
+                extractFunctionBody(eif, thenNodes);
+
+                var elseNodes:Array<IRNode> = null;
+                if (eelse != null) {
+                    elseNodes = [];
+                    extractFunctionBody(eelse, elseNodes);
+                }
+
                 return {
                     type: "if",
-                    children: children
+                    children: [exprToIR(econd)],
+                    props: {
+                        then: thenNodes,
+                        else_: elseNodes
+                    }
                 };
 
             case EWhile(econd, ebody, normalWhile):
@@ -761,6 +773,7 @@ class AutoloadExtractor implements IExtractorContext {
             uses_time: false,
             uses_physics: false,
             uses_ui: false,
+            uses_tween: false,
             buttons_used: [],
             button_events: [],
             contact_events: [],

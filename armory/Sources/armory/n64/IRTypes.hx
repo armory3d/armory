@@ -111,6 +111,7 @@ typedef TraitMeta = {
     uses_time: Bool,
     uses_physics: Bool,
     uses_ui: Bool,             // True if trait uses UI labels (canvas.getElementAs, label.text)
+    uses_tween: Bool,          // True if trait uses Tween (tween.float, tween.delay, etc.)
     buttons_used: Array<String>,
     button_events: Array<ButtonEventMeta>,  // structured button event info
     contact_events: Array<ContactEventMeta>, // physics contact subscriptions

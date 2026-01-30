@@ -85,7 +85,7 @@ class TweenCallConverter implements ICallConverter {
 
         // Mark that we're using tweens
         var meta = ctx.getMeta();
-        Reflect.setField(meta, "uses_tween", true);
+        meta.uses_tween = true;
 
         return {
             type: "tween_float",
@@ -114,7 +114,7 @@ class TweenCallConverter implements ICallConverter {
         }
 
         var meta = ctx.getMeta();
-        Reflect.setField(meta, "uses_tween", true);
+        meta.uses_tween = true;
 
         return {
             type: "tween_vec4",
@@ -134,7 +134,7 @@ class TweenCallConverter implements ICallConverter {
         var onDone = extractCallback(rawParams, 1, "done", ctx);
 
         var meta = ctx.getMeta();
-        Reflect.setField(meta, "uses_tween", true);
+        meta.uses_tween = true;
 
         return {
             type: "tween_delay",
