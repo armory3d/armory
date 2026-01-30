@@ -231,7 +231,7 @@ TYPE_DEFAULTS = {
     "const char*": "NULL", "SceneId": "SCENE_UNKNOWN",
     "ArmVec2": "(ArmVec2){0, 0}", "ArmVec3": "(ArmVec3){0, 0, 0}",
     "ArmVec4": "(ArmVec4){0, 0, 0, 0}", "void*": "NULL",
-    "KouiLabel*": "NULL",
+    "KouiLabel*": "NULL", "ArmTween*": "NULL",
 }
 
 def get_type_default(ctype: str) -> str:
