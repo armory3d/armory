@@ -885,7 +885,7 @@ class AutoloadIREmitter(IREmitter):
             if op == "=" and self._is_sound_handle(left_node) and self._is_null_node(right_node):
                 left = self.emit(left_node)
                 if left:
-                    return f"({left} = (ArmSoundHandle){{-1, 0, -1, true}})"
+                    return f"({left} = (ArmSoundHandle){{-1, 0, -1, 1.0f, true}})"
 
             # Check for ArmSoundHandle comparison (including with null)
             if op in ("==", "!="):
@@ -897,11 +897,11 @@ class AutoloadIREmitter(IREmitter):
                 if (left_is_handle or right_is_handle) and (left_is_handle or right_is_handle or left_is_null or right_is_null):
                     # One side is a handle, emit comparison
                     if left_is_null:
-                        left = "(ArmSoundHandle){-1, 0, -1, true}"
+                        left = "(ArmSoundHandle){-1, 0, -1, 1.0f, true}"
                     else:
                         left = self.emit(left_node)
                     if right_is_null:
-                        right = "(ArmSoundHandle){-1, 0, -1, true}"
+                        right = "(ArmSoundHandle){-1, 0, -1, 1.0f, true}"
                     else:
                         right = self.emit(right_node)
                     if left and right:
@@ -2012,7 +2012,7 @@ def _prepare_autoload_template_data(name: str, autoload_ir: dict) -> dict:
             elif ctype == "const char*":
                 return '""'
             elif ctype == "ArmSoundHandle":
-                return "{-1, 0, -1, true}"  # channel=-1, mix_channel=0, sound_slot=-1, finished=true
+                return "{-1, 0, -1, 1.0f, true}"  # channel=-1, mix_channel=0, sound_slot=-1, volume=1.0, finished=true
             elif ctype == "ArmTween*":
                 return "NULL"  # Tweens allocated in init, not at global scope
             else:

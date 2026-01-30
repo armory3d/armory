@@ -78,7 +78,7 @@ void arm_audio_update(void)
 
 ArmSoundHandle arm_audio_load(const char *sound_path, int mix_channel, bool loop)
 {
-    ArmSoundHandle handle = { .channel = -1, .mix_channel = mix_channel, .sound_slot = -1, .finished = true };
+    ArmSoundHandle handle = { .channel = -1, .mix_channel = mix_channel, .sound_slot = -1, .volume = 1.0f, .finished = true };
 
     // Validate mix channel
     if (mix_channel < 0 || mix_channel >= AUDIO_MIX_CHANNEL_COUNT) {
@@ -116,6 +116,9 @@ void arm_audio_start(ArmSoundHandle *handle)
             // Already playing this exact sound, update handle and return
             handle->channel = ch;
             handle->finished = false;
+            // Apply handle's volume to the channel
+            channel_volumes[ch] = handle->volume;
+            apply_channel_volume(ch);
             return;
         }
     }
@@ -133,6 +136,8 @@ void arm_audio_start(ArmSoundHandle *handle)
     channel_in_use[ch] = true;
     channel_mix_mapping[ch] = handle->mix_channel;
     channel_sound_slot[ch] = handle->sound_slot;
+    // Apply handle's volume to the channel
+    channel_volumes[ch] = handle->volume;
     apply_channel_volume(ch);
 
     handle->channel = ch;
@@ -208,12 +213,29 @@ bool arm_audio_is_playing(ArmSoundHandle *handle)
 
 void arm_audio_set_volume(ArmSoundHandle *handle, float volume)
 {
-    if (!handle || handle->channel < 0) return;
+    if (!handle) return;
     if (volume < 0.0f) volume = 0.0f;
     if (volume > 1.0f) volume = 1.0f;
 
-    channel_volumes[handle->channel] = volume;
-    apply_channel_volume(handle->channel);
+    // Always store volume in handle (for use when starting)
+    handle->volume = volume;
+
+    // If channel is -1, try to find it from sound_slot
+    int ch = handle->channel;
+    if (ch < 0 && handle->sound_slot >= 0) {
+        for (int i = 0; i < AUDIO_MIXER_CHANNELS; i++) {
+            if (channel_in_use[i] && channel_sound_slot[i] == handle->sound_slot) {
+                ch = i;
+                break;
+            }
+        }
+    }
+
+    // If we found a channel, apply volume immediately
+    if (ch >= 0) {
+        channel_volumes[ch] = volume;
+        apply_channel_volume(ch);
+    }
 }
 
 void arm_audio_set_mix_volume(int mix_channel, float volume)

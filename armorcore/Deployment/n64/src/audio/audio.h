@@ -11,6 +11,7 @@ typedef struct {
     int channel;        // Mixer channel (-1 if not playing)
     int mix_channel;
     int sound_slot;     // For replay
+    float volume;       // Handle-specific volume (applied on start)
     bool finished;
 } ArmSoundHandle;
 
