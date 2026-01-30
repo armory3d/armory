@@ -1599,8 +1599,8 @@ class N64Exporter:
         """Generate Makefile entries for audio conversion.
 
         Uses audioconv64 to convert .wav/.mp3 files to .wav64 format.
-        Music files use opus compression (--wav-compress 3) for smaller size.
-        SFX files use VADPCM compression (--wav-compress 1) for faster decoding.
+        All audio uses VADPCM compression (--wav-compress 1) for stability with t3d.
+        Opus (level 3) has known RSP conflicts with t3d rendering on real hardware.
 
         Returns:
             tuple: (audio_targets_str, audio_rules_str)
@@ -1619,11 +1619,10 @@ class N64Exporter:
             target = f'filesystem/{audio_name}.wav64'
             targets.append(target)
 
-            # Determine compression based on type
-            # Music: opus (smaller, good for streaming)
-            # SFX: vadpcm (faster decode, good for short sounds)
+            # Use VADPCM (level 1) for all audio - stable with t3d
+            # Opus (level 3) causes RSP conflicts with t3d rendering
             if is_music:
-                compress_flag = '--wav-compress 3 --wav-loop true'
+                compress_flag = '--wav-compress 1 --wav-loop true'
             else:
                 compress_flag = '--wav-compress 1'
 

@@ -112,6 +112,11 @@ int main(void)
 #endif
         renderer_end_frame(&viewport);
 
+        // Feed audio samples to hardware - MUST be after render like brew-volley pattern
+#if ENGINE_ENABLE_AUDIO
+        arm_audio_mixer_poll();
+#endif
+
         // Build static display list after initial frames (matrices computed for all buffers)
         if (frame_count == STATIC_DPL_BUILD_FRAME) {{
             renderer_build_static_dpl(scene);

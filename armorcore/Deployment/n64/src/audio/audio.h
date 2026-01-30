@@ -1,6 +1,5 @@
 #pragma once
 
-#include <stdint.h>
 #include <stdbool.h>
 
 #ifdef __cplusplus
@@ -8,14 +7,13 @@ extern "C" {
 #endif
 
 typedef struct {
-    int channel;        // Mixer channel (-1 if not playing)
+    int channel;
     int mix_channel;
-    int sound_slot;     // For replay
-    float volume;       // Handle-specific volume (applied on start)
+    int sound_slot;
+    float volume;
     bool finished;
 } ArmSoundHandle;
 
-// Helper for comparing sound handles (compares channel and sound_slot)
 static inline bool arm_sound_handle_equals(ArmSoundHandle a, ArmSoundHandle b) {
     return a.channel == b.channel && a.sound_slot == b.sound_slot;
 }
@@ -23,6 +21,7 @@ static inline bool arm_sound_handle_equals(ArmSoundHandle a, ArmSoundHandle b) {
 void arm_audio_init(void);
 void arm_audio_shutdown(void);
 void arm_audio_update(void);
+void arm_audio_mixer_poll(void);
 
 ArmSoundHandle arm_audio_load(const char *path, int mix_channel, bool loop);
 ArmSoundHandle arm_audio_play(const char *path, int mix_channel, bool loop);
