@@ -1874,6 +1874,12 @@ class N64Exporter:
         n64_utils.copy_src('signal.h', 'src/system')
 
 
+    def write_time(self):
+        """Copy time system files."""
+        n64_utils.copy_src('time.c', 'src/system')
+        n64_utils.copy_src('time.h', 'src/system')
+
+
     def reset_materials_to_bsdf(self):
         """Reset materials back to BSDF format (requires Fast64 addon)."""
         try:
@@ -1976,6 +1982,7 @@ class N64Exporter:
         self.write_scenes()
         self.write_iron()
         self.write_signal()
+        self.write_time()
 
         self.reset_materials_to_bsdf()
         log.info('Info: N64 export completed.')

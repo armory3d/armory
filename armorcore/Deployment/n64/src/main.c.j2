@@ -9,6 +9,7 @@
 #include "data/models.h"
 #include "events/trait_events.h"
 #include "iron/system/input.h"
+#include "system/time.h"
 #if ENGINE_ENABLE_PHYSICS
 #include "oimo/physics.h"
 #if ENGINE_ENABLE_PHYSICS_DEBUG
@@ -29,14 +30,10 @@
 // Build static display list after this many frames (for triple-buffering)
 #define STATIC_DPL_BUILD_FRAME (FB_COUNT + 1)
 
-static float get_time_s(void)
-{{
-    return (float)((double)get_ticks_ms() / 1000.0);
-}}
-
 int main(void)
 {{
     engine_init();
+    time_init();
 {autoloads_init}    trait_events_init();
 #if ENGINE_ENABLE_PHYSICS && ENGINE_ENABLE_PHYSICS_DEBUG
     physics_debug_init();
@@ -56,14 +53,12 @@ int main(void)
 #endif
     scene_init(current_scene);
 
-    float last_time = get_time_s();
     float fixed_time = 0.0f;
     uint8_t frame_count = 0;  // Track frames for static DPL building
 
     for (;;) {{
-        float now = get_time_s();
-        float dt = now - last_time;
-        last_time = now;
+        time_update();
+        float dt = time_delta;
 
         input_poll();
 #if ENGINE_ENABLE_AUDIO

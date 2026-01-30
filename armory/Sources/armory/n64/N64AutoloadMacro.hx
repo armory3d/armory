@@ -502,6 +502,18 @@ class AutoloadExtractor implements IExtractorContext {
                 };
 
             case EField(obj, field):
+                // Check for Time.delta / Time.scale special cases
+                switch (obj.expr) {
+                    case EConst(CIdent("Time")):
+                        if (field == "delta") {
+                            // Time.delta -> time_delta (global variable from system/time.h)
+                            return { type: "ident", value: "time_delta" };
+                        } else if (field == "scale") {
+                            // Time.scale -> time_scale (global variable from system/time.h)
+                            return { type: "ident", value: "time_scale" };
+                        }
+                    default:
+                }
                 return {
                     type: "field_access",
                     value: field,
@@ -600,6 +612,15 @@ class AutoloadExtractor implements IExtractorContext {
         // Try converters first
         switch (callExpr.expr) {
             case EField(obj, method):
+                // Check for Time.time() special case
+                switch (obj.expr) {
+                    case EConst(CIdent("Time")):
+                        if (method == "time") {
+                            // Time.time() -> time_get()
+                            return { type: "call", value: "time_get", args: [] };
+                        }
+                    default:
+                }
                 for (conv in converters) {
                     var result = conv.tryConvert(obj, method, args, params, this);
                     if (result != null) return result;

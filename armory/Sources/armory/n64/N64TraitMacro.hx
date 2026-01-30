@@ -856,6 +856,9 @@ class TraitExtractor implements IExtractorContext {
                 if (field == "delta") {
                     meta.uses_time = true;
                     return { type: "ident", value: "dt" };
+                } else if (field == "scale") {
+                    meta.uses_time = true;
+                    return { type: "ident", value: "time_scale" };
                 }
             case EConst(CIdent("gamepad")):
                 // gamepad.leftStick, gamepad.rightStick
@@ -979,6 +982,17 @@ class TraitExtractor implements IExtractorContext {
         // Try modular converters first (handles Vec, Physics, Transform, Math, Input, Signal, Std, Object, Scene, Canvas)
         switch (callExpr.expr) {
             case EField(obj, method):
+                // Check for Time.time() special case
+                switch (obj.expr) {
+                    case EConst(CIdent("Time")):
+                        if (method == "time") {
+                            meta.uses_time = true;
+                            // Time.time() -> time_get()
+                            return { type: "call", value: "time_get", args: [] };
+                        }
+                    default:
+                }
+
                 for (conv in converters) {
                     var result = conv.tryConvert(obj, method, args, params, this);
                     if (result != null) return result;
