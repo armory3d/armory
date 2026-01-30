@@ -32,7 +32,12 @@ void arm_audio_init(void)
 {
     audio_init(AUDIO_FREQUENCY, AUDIO_BUFFERS);
     mixer_init(AUDIO_MIXER_CHANNELS);
-    wav64_init_compression(1);  // VADPCM - stable with t3d
+    wav64_init_compression(3);
+
+    // Opus uses 48kHz, need to raise channel frequency limits
+    for (int i = 0; i < AUDIO_MIXER_CHANNELS; i++) {
+        mixer_ch_set_limits(i, 0, 48000, 0);
+    }
 
     memset(sound_slots, 0, sizeof(sound_slots));
     memset(&state, 0, sizeof(state));
