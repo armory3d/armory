@@ -5,6 +5,7 @@ import haxe.macro.Expr;
 import haxe.macro.Context;
 import armory.n64.IRTypes;
 import armory.n64.converters.ICallConverter;
+import armory.n64.util.ExprUtils;
 
 using StringTools;
 
@@ -201,11 +202,31 @@ class TweenCallConverter implements ICallConverter {
             case EConst(CIdent("null")):
                 return null;
             case EFunction(kind, func):
+                // Anonymous function: function(v) { ... }
                 return extractFunctionBody(func, callbackType, ctx);
+            case EConst(CIdent(name)):
+                // Declared function reference: onUpdate
+                return extractMethodRef(name, callbackType, ctx, param.pos);
+            case EField(_, fieldName):
+                // Field access function reference: this.onUpdate
+                return extractMethodRef(fieldName, callbackType, ctx, param.pos);
             default:
-                // Could be a method reference - not supported yet
+                Context.error('Tween callback must be a function or method reference, got: ${param.expr}', param.pos);
                 return null;
         }
+    }
+
+    /**
+     * Extract a callback from a declared method reference.
+     * Looks up the method in the current class and extracts its body.
+     */
+    function extractMethodRef(methodName:String, callbackType:String, ctx:IExtractorContext, pos:Position):Dynamic {
+        var func = ctx.getMethod(methodName);
+        if (func == null) {
+            Context.error('Tween callback method "$methodName" not found in class. Make sure it is defined as a static or instance method.', pos);
+            return null;
+        }
+        return extractFunctionBody(func, callbackType, ctx);
     }
 
     function extractFunctionBody(func:Function, callbackType:String, ctx:IExtractorContext):Dynamic {
