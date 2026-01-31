@@ -18,6 +18,8 @@ class TypeMap {
 
         // Kha types
         "FastFloat" => "float",
+        "Color" => "color_t",  // libdragon RGBA32 format
+        "kha.Color" => "color_t",
 
         // Scene types
         "SceneId" => "SceneId",

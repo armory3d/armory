@@ -110,6 +110,7 @@ int main(void)
 #if ENGINE_ENABLE_UI
         canvas_render();
 #endif
+        scene_on_render2d(current_scene);
         renderer_end_frame(&viewport);
 
         // Feed audio samples to hardware - MUST be after render like brew-volley pattern

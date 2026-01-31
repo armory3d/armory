@@ -1721,6 +1721,7 @@ class N64Exporter:
         n64_utils.copy_src('renderer.c', 'src')
         n64_utils.copy_src('renderer.h', 'src')
         n64_utils.copy_src('utils.h', 'src')
+        n64_utils.copy_src('render2d.h', 'src')
 
 
     def write_scenes(self):

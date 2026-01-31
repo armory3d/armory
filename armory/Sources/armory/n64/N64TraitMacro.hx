@@ -29,6 +29,7 @@ import armory.n64.converters.ObjectCallConverter;
 import armory.n64.converters.AutoloadCallConverter;
 import armory.n64.converters.AudioCallConverter;
 import armory.n64.converters.TweenCallConverter;
+import armory.n64.converters.Graphics2CallConverter;
 
 using haxe.macro.ExprTools;
 using haxe.macro.TypeTools;
@@ -208,7 +209,8 @@ class TraitExtractor implements IExtractorContext {
             signal_handlers: [],
             global_signals: [],
             has_remove_update: false,
-            has_remove_late_update: false
+            has_remove_late_update: false,
+            has_remove_render2d: false
         };
 
         // Generate C-safe name early so it's available during extraction
@@ -235,6 +237,7 @@ class TraitExtractor implements IExtractorContext {
             new AutoloadCallConverter(),
             new AudioCallConverter(),
             new TweenCallConverter(),
+            new Graphics2CallConverter(),
         ];
     }
 
@@ -299,6 +302,9 @@ class TraitExtractor implements IExtractorContext {
         if (lifecycles.remove != null) {
             extractEvents("on_remove", lifecycles.remove);
         }
+        if (lifecycles.render2d != null) {
+            extractEvents("on_render2d", lifecycles.render2d);
+        }
 
         // Auto-add _update_enabled member if trait uses removeUpdate() or notifyOnUpdate() at runtime
         if (meta.has_remove_update) {
@@ -318,6 +324,16 @@ class TraitExtractor implements IExtractorContext {
                 defaultValue: { type: "bool", value: true }
             });
             memberNames.push("_late_update_enabled");
+        }
+
+        // Auto-add _render2d_enabled member if trait uses removeRender2D() or notifyOnRender2D() at runtime
+        if (meta.has_remove_render2d) {
+            members.set("_render2d_enabled", {
+                haxeType: "Bool",
+                ctype: "bool",
+                defaultValue: { type: "bool", value: true }
+            });
+            memberNames.push("_render2d_enabled");
         }
 
         // Generate C-safe name is now done in constructor
@@ -349,8 +365,8 @@ class TraitExtractor implements IExtractorContext {
         };
     }
 
-    function findLifecycles():{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr} {
-        var result = {init: null, update: null, fixed_update: null, late_update: null, remove: null};
+    function findLifecycles():{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr} {
+        var result = {init: null, update: null, fixed_update: null, late_update: null, remove: null, render2d: null};
 
         // Scan ALL methods in the trait for lifecycle registrations
         // This allows notifyOnUpdate to be called from any method, not just constructor
@@ -364,7 +380,7 @@ class TraitExtractor implements IExtractorContext {
         return result;
     }
 
-    function scanForLifecycles(e:Expr, result:{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr}):Void {
+    function scanForLifecycles(e:Expr, result:{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr}):Void {
         if (e == null) return;
 
         switch (e.expr) {
@@ -378,9 +394,12 @@ class TraitExtractor implements IExtractorContext {
                         case "notifyOnFixedUpdate": result.fixed_update = body;
                         case "notifyOnLateUpdate": result.late_update = body;
                         case "notifyOnRemove": result.remove = body;
+                        case "notifyOnRender2D": result.render2d = body;
                         default:
                     }
                 }
+                // Scan parameters AND the callExpr (for chained calls like tween.float(...).start())
+                scanForLifecycles(callExpr, result);
                 for (p in params) scanForLifecycles(p, result);
             case EBlock(exprs):
                 for (expr in exprs) scanForLifecycles(expr, result);
@@ -703,6 +722,18 @@ class TraitExtractor implements IExtractorContext {
                             props: { label: labelName },
                             args: [valueIR]
                         };
+                    }
+                    // Special case: g2.color = value -> emit render2d_set_color
+                    else if (isGraphics2ColorAssign(e1)) {
+                        var valueIR = exprToIR(e2);
+                        {
+                            type: "render2d_set_color",
+                            args: [valueIR]
+                        };
+                    }
+                    // Skip other g2 property assignments (imageScaleQuality, etc.)
+                    else if (isGraphics2PropertyAssign(e1)) {
+                        { type: "skip" };
                     } else {
                         { type: "assign", children: [exprToIR(e1), exprToIR(e2)] };
                     }
@@ -846,6 +877,39 @@ class TraitExtractor implements IExtractorContext {
         return false;
     }
 
+    // Check if expression is assignment to g2.color (Graphics2 color property)
+    function isGraphics2ColorAssign(expr:Expr):Bool {
+        switch (expr.expr) {
+            case EField(obj, "color"):
+                switch (obj.expr) {
+                    case EConst(CIdent(name)):
+                        // Check for common graphics2 parameter names or type
+                        if (name == "g" || name == "g2") return true;
+                        var objType = getExprType(obj);
+                        if (objType == "kha.graphics2.Graphics" || objType == "Graphics") return true;
+                    default:
+                }
+            default:
+        }
+        return false;
+    }
+
+    // Check if expression is assignment to any g2 property (for skipping unsupported ones)
+    function isGraphics2PropertyAssign(expr:Expr):Bool {
+        switch (expr.expr) {
+            case EField(obj, _):
+                switch (obj.expr) {
+                    case EConst(CIdent(name)):
+                        if (name == "g" || name == "g2") return true;
+                        var objType = getExprType(obj);
+                        if (objType == "kha.graphics2.Graphics" || objType == "Graphics") return true;
+                    default:
+                }
+            default:
+        }
+        return false;
+    }
+
     // Extract the label variable name from label.text assignment
     function extractLabelFromTextAssign(expr:Expr):String {
         switch (expr.expr) {
@@ -860,6 +924,34 @@ class TraitExtractor implements IExtractorContext {
     }
 
     function convertFieldAccess(obj:Expr, field:String):IRNode {
+        // Handle kha.Window.get(0).width/height -> render2d_get_width()/height()
+        if (field == "width" || field == "height") {
+            switch (obj.expr) {
+                case ECall(callExpr, _):
+                    // Check if this is kha.Window.get(0) or Window.get(0)
+                    switch (callExpr.expr) {
+                        case EField(windowExpr, "get"):
+                            switch (windowExpr.expr) {
+                                case EConst(CIdent("Window")):
+                                    // Window.get(0).width/height
+                                    var funcName = field == "width" ? "render2d_get_width()" : "render2d_get_height()";
+                                    return { type: "c_literal", c_code: funcName };
+                                case EField(khaExpr, "Window"):
+                                    // kha.Window.get(0).width/height
+                                    switch (khaExpr.expr) {
+                                        case EConst(CIdent("kha")):
+                                            var funcName = field == "width" ? "render2d_get_width()" : "render2d_get_height()";
+                                            return { type: "c_literal", c_code: funcName };
+                                        default:
+                                    }
+                                default:
+                            }
+                        default:
+                    }
+                default:
+            }
+        }
+
         // Handle Scene.active.raw.name -> scene_get_name(scene_get_current_id())
         if (field == "name") {
             switch (obj.expr) {
@@ -875,6 +967,22 @@ class TraitExtractor implements IExtractorContext {
                     }
                 default:
             }
+        }
+
+        // Handle Color.Black, Color.White, etc. -> RGBA32 for N64
+        switch (obj.expr) {
+            case EConst(CIdent("Color")):
+                var colorValue = switch (field) {
+                    case "Black": "RGBA32(0, 0, 0, 255)";
+                    case "White": "RGBA32(255, 255, 255, 255)";
+                    case "Red": "RGBA32(255, 0, 0, 255)";
+                    case "Green": "RGBA32(0, 255, 0, 255)";
+                    case "Blue": "RGBA32(0, 0, 255, 255)";
+                    case "Transparent": "RGBA32(0, 0, 0, 0)";
+                    default: "RGBA32(0, 0, 0, 255)";
+                };
+                return { type: "c_literal", c_code: colorValue };
+            default:
         }
 
         // Handle Assets.sounds.sound_name -> "rom:/sound_name.wav64"
@@ -1042,6 +1150,16 @@ class TraitExtractor implements IExtractorContext {
                             // Time.time() -> time_get()
                             return { type: "call", value: "time_get", args: [] };
                         }
+                    // Handle Color.fromFloats(r, g, b, a) -> ARGB uint32 construction
+                    case EConst(CIdent("Color")):
+                        if (method == "fromFloats") {
+                            // Color.fromFloats(r, g, b, a) -> RGBA32 macro inverted to ARGB for storage
+                            // We'll emit a helper that constructs the uint32 at runtime
+                            return {
+                                type: "color_from_floats",
+                                args: args
+                            };
+                        }
                     default:
                 }
 
@@ -1071,11 +1189,11 @@ class TraitExtractor implements IExtractorContext {
         switch (callExpr.expr) {
             case EConst(CIdent(funcName)):
                 // Skip lifecycle registration calls - they're handled by scanForLifecycles
-                // notifyOnRender2D is skipped entirely - N64 doesn't have 2D graphics layer
+                // Note: notifyOnRender2D is now handled separately, not skipped
                 if (funcName == "notifyOnInit" ||
                     funcName == "notifyOnFixedUpdate" || funcName == "notifyOnLateUpdate" ||
                     funcName == "notifyOnRemove" || funcName == "notifyOnAdd" ||
-                    funcName == "notifyOnRender2D" || funcName == "notifyOnRender" ||
+                    funcName == "notifyOnRender" ||
                     funcName == "removeFixedUpdate") {
                     return { type: "skip" };
                 }
@@ -1103,6 +1221,16 @@ class TraitExtractor implements IExtractorContext {
                     return { type: "remove_late_update", value: callbackName };
                 }
 
+                // removeRender2D(callback) -> set _render2d_enabled = false
+                if (funcName == "removeRender2D") {
+                    meta.has_remove_render2d = true;
+                    var callbackName:String = null;
+                    if (params.length > 0) {
+                        callbackName = extractStringArg(params[0]);
+                    }
+                    return { type: "remove_render2d", value: callbackName };
+                }
+
                 // notifyOnUpdate(callback) outside constructor -> re-enable updates
                 // In constructor it's handled by scanForLifecycles, but runtime calls enable updates
                 if (funcName == "notifyOnUpdate") {
@@ -1115,9 +1243,44 @@ class TraitExtractor implements IExtractorContext {
                     return { type: "notify_update", value: callbackName };
                 }
 
+                // notifyOnRender2D(callback) outside init -> re-enable render2D
+                if (funcName == "notifyOnRender2D") {
+                    // Always enable the toggle mechanism when runtime notifyOnRender2D is used
+                    meta.has_remove_render2d = true;
+                    var callbackName:String = null;
+                    if (params.length > 0) {
+                        callbackName = extractStringArg(params[0]);
+                    }
+                    return { type: "notify_render2d", value: callbackName };
+                }
+
                 // trace() -> debugf() for N64 debug output
                 if (funcName == "trace") {
                     return { type: "debug_call", args: args };
+                }
+
+                // Check if this is a call to a local method - inline its body
+                if (methodMap.exists(funcName)) {
+                    var method = methodMap.get(funcName);
+                    if (method != null && method.expr != null) {
+                        // Convert the method body to IR and wrap in a block
+                        var bodyNodes:Array<IRNode> = [];
+                        switch (method.expr.expr) {
+                            case EBlock(exprs):
+                                for (e in exprs) {
+                                    var node = exprToIR(e);
+                                    if (node != null && node.type != "skip") {
+                                        bodyNodes.push(node);
+                                    }
+                                }
+                            default:
+                                var node = exprToIR(method.expr);
+                                if (node != null && node.type != "skip") {
+                                    bodyNodes.push(node);
+                                }
+                        }
+                        return { type: "block", children: bodyNodes };
+                    }
                 }
 
                 return { type: "call", method: funcName, args: args };

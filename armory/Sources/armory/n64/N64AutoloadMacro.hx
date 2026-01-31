@@ -781,7 +781,8 @@ class AutoloadExtractor implements IExtractorContext {
             signal_handlers: meta.signal_handlers,
             global_signals: meta.global_signals,
             has_remove_update: false,
-            has_remove_late_update: false
+            has_remove_late_update: false,
+            has_remove_render2d: false
         };
     }
 

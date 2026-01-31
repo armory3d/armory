@@ -84,6 +84,7 @@ typedef void (*ArmTraitFixedUpdateFn)(void *entity, float dt, void *data);
 typedef void (*ArmTraitUpdateFn)(void *entity, float dt, void *data);
 typedef void (*ArmTraitLateUpdateFn)(void *entity, float dt, void *data);
 typedef void (*ArmTraitRemoveFn)(void *entity, void *data);
+typedef void (*ArmTraitRender2DFn)(void *entity, void *data);
 
 typedef struct {{
     ArmTraitReadyFn on_ready;
@@ -91,6 +92,7 @@ typedef struct {{
     ArmTraitUpdateFn on_update;
     ArmTraitLateUpdateFn on_late_update;
     ArmTraitRemoveFn on_remove;
+    ArmTraitRender2DFn on_render2d;
     void *data;
 }} ArmTrait;
 

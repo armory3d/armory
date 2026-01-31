@@ -194,9 +194,46 @@ class IREmitter:
         """removeLateUpdate() -> disable on_late_update callback via _late_update_enabled flag."""
         return f"(({self.data_type}*)data)->_late_update_enabled = false;"
 
+    def emit_remove_render2d(self, node: Dict) -> str:
+        """removeRender2D() -> disable on_render2d callback via _render2d_enabled flag."""
+        return f"(({self.data_type}*)data)->_render2d_enabled = false;"
+
     def emit_notify_update(self, node: Dict) -> str:
         """notifyOnUpdate() at runtime -> re-enable on_update callback."""
         return f"(({self.data_type}*)data)->_update_enabled = true;"
+
+    def emit_notify_render2d(self, node: Dict) -> str:
+        """notifyOnRender2D() at runtime -> re-enable on_render2d callback."""
+        return f"(({self.data_type}*)data)->_render2d_enabled = true;"
+
+    def emit_render2d_set_color(self, node: Dict) -> str:
+        """g2.color = value -> assign color (already in RGBA32 format)."""
+        args = node.get("args", [])
+        if not args:
+            return "_g2_color = RGBA32(0, 0, 0, 255);"
+        color_val = self.emit(args[0])
+        return f"_g2_color = {color_val};"
+
+    def emit_render2d_fill_rect(self, node: Dict) -> str:
+        """g2.fillRect(x, y, w, h) -> render2d_fill_rect(x, y, x+w, y+h, _g2_color)."""
+        props = node.get("props", {})
+        x = self.emit(props.get("x", {})) or "0"
+        y = self.emit(props.get("y", {})) or "0"
+        width = self.emit(props.get("width", {})) or "0"
+        height = self.emit(props.get("height", {})) or "0"
+        # N64 fill_rectangle takes x0, y0, x1, y1 (corners, not width/height)
+        return f"render2d_fill_rect({x}, {y}, ({x}) + ({width}), ({y}) + ({height}), _g2_color);"
+
+    def emit_color_from_floats(self, node: Dict) -> str:
+        """Color.fromFloats(r, g, b, a) -> RGBA32 directly."""
+        args = node.get("args", [])
+        if len(args) >= 4:
+            r = self.emit(args[0])
+            g = self.emit(args[1])
+            b = self.emit(args[2])
+            a = self.emit(args[3])
+            return f"RGBA32((uint8_t)(({r}) * 255.0f), (uint8_t)(({g}) * 255.0f), (uint8_t)(({b}) * 255.0f), (uint8_t)(({a}) * 255.0f))"
+        return "RGBA32(0, 0, 0, 255)"
 
     def emit_literal(self, node: Dict) -> str:
         """Emit a literal value based on its type."""
@@ -408,8 +445,12 @@ class IREmitter:
     # =========================================================================
 
     def emit_call(self, node: Dict) -> str:
-        """Function call - handles generic calls with value + args from macro."""
-        func_name = node.get("value", "")
+        """Function call - handles generic calls from macro.
+
+        Trait macro uses 'method' field, autoload macro uses 'value' field.
+        Support both for compatibility.
+        """
+        func_name = node.get("method", "") or node.get("value", "")
         if func_name:
             # IR uses 'args' for call arguments
             args = node.get("args", []) or node.get("children", [])
@@ -1331,11 +1372,13 @@ class TraitCodeGenerator:
         # ArmTraitUpdateFn: (void *entity, float dt, void *data)
         # ArmTraitLateUpdateFn: (void *entity, float dt, void *data)
         # ArmTraitRemoveFn: (void *entity, void *data) - no dt
+        # ArmTraitRender2DFn: (void *entity, void *data) - no dt, for 2D overlay rendering
         decls.append(f"void {self.c_name}_on_ready(void* obj, void* data);")
         decls.append(f"void {self.c_name}_on_fixed_update(void* obj, float dt, void* data);")
         decls.append(f"void {self.c_name}_on_update(void* obj, float dt, void* data);")
         decls.append(f"void {self.c_name}_on_late_update(void* obj, float dt, void* data);")
         decls.append(f"void {self.c_name}_on_remove(void* obj, void* data);")
+        decls.append(f"void {self.c_name}_on_render2d(void* obj, void* data);")
         return decls
 
     def generate_button_event_declarations(self) -> List[str]:
@@ -1425,6 +1468,25 @@ class TraitCodeGenerator:
         body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
         impl_lines.append(f"void {self.c_name}_on_remove(void* obj, void* data) {{")
         impl_lines.append(body)
+        impl_lines.append("}")
+        impl_lines.append("")
+
+        # on_render2d - no dt parameter, for 2D overlay rendering
+        event_nodes = self.events.get("on_render2d", [])
+        has_render2d_content = event_nodes and len(event_nodes) > 0
+        body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
+        impl_lines.append(f"void {self.c_name}_on_render2d(void* obj, void* data) {{")
+        # Add early return guard if trait uses removeRender2D()
+        if self.meta.get("has_remove_render2d", False):
+            impl_lines.append(f"    if (!(({self.name}Data*)data)->_render2d_enabled) return;")
+        # Only add render2d infrastructure if there's actual content
+        if has_render2d_content:
+            impl_lines.append("    color_t _g2_color = RGBA32(255, 255, 255, 255);")
+            impl_lines.append("    render2d_begin();")
+            impl_lines.append(body)
+            impl_lines.append("    render2d_end();")
+        else:
+            impl_lines.append(body)
         impl_lines.append("}")
         impl_lines.append("")
 
@@ -1807,6 +1869,7 @@ def generate_trait_block(prefix: str, traits: List[Dict],
             lines.append(f'    {prefix}.traits[{t_idx}].on_update = {c_name}_on_update;')
             lines.append(f'    {prefix}.traits[{t_idx}].on_late_update = {c_name}_on_late_update;')
             lines.append(f'    {prefix}.traits[{t_idx}].on_remove = {c_name}_on_remove;')
+            lines.append(f'    {prefix}.traits[{t_idx}].on_render2d = {c_name}_on_render2d;')
 
             # Trait data
             if n64_utils.trait_needs_data(trait_info, trait_class):
@@ -2091,6 +2154,7 @@ def generate_scene_traits_block(traits: List[Dict], trait_info: dict, scene_name
         lines.append(f'    scene_traits[{i}].on_update = {c_name}_on_update;')
         lines.append(f'    scene_traits[{i}].on_late_update = {c_name}_on_late_update;')
         lines.append(f'    scene_traits[{i}].on_remove = {c_name}_on_remove;')
+        lines.append(f'    scene_traits[{i}].on_render2d = {c_name}_on_render2d;')
 
         if n64_utils.trait_needs_data(trait_info, trait_class):
             struct_name = f'{trait_class}Data'

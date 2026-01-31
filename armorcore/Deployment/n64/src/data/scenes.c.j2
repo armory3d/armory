@@ -197,6 +197,44 @@ void scene_on_late_update(SceneId id, float dt)
 	}}
 }}
 
+void scene_on_render2d(SceneId id)
+{{
+	ArmScene *s = &g_scenes[id];
+
+	// Scene-level traits
+	for (uint8_t i = 0; i < s->trait_count; i++) {{
+		if (s->traits[i].on_render2d) s->traits[i].on_render2d(s, s->traits[i].data);
+	}}
+
+	// Cameras
+	if (s->cameras) {{
+		for (uint8_t i = 0; i < s->camera_count; i++) {{
+			for (uint8_t t = 0; t < s->cameras[i].trait_count; t++) {{
+				if (s->cameras[i].traits[t].on_render2d) s->cameras[i].traits[t].on_render2d(&s->cameras[i], s->cameras[i].traits[t].data);
+			}}
+		}}
+	}}
+
+	// Lights
+	if (s->lights) {{
+		for (uint8_t i = 0; i < s->light_count; i++) {{
+			for (uint8_t t = 0; t < s->lights[i].trait_count; t++) {{
+				if (s->lights[i].traits[t].on_render2d) s->lights[i].traits[t].on_render2d(&s->lights[i], s->lights[i].traits[t].data);
+			}}
+		}}
+	}}
+
+	// Objects
+	if (s->objects) {{
+		for (uint16_t i = 0; i < s->object_count; i++) {{
+			if (s->objects[i].is_removed) continue;
+			for (uint8_t t = 0; t < s->objects[i].trait_count; t++) {{
+				if (s->objects[i].traits[t].on_render2d) s->objects[i].traits[t].on_render2d(&s->objects[i], s->objects[i].traits[t].data);
+			}}
+		}}
+	}}
+}}
+
 void scene_on_remove(SceneId id)
 {{
 	ArmScene *s = &g_scenes[id];

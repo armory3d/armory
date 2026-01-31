@@ -211,6 +211,9 @@ def extract_default_value(node, member_ctype: str) -> str:
             return "SCENE_UNKNOWN" if member_ctype == "SceneId" else "NULL"
         elif node_type == "new":
             return _extract_vec_constructor(value, node.get("args", []))
+        elif node_type == "c_literal":
+            # Direct C code literal - use c_code field directly
+            return node.get("c_code", get_type_default(member_ctype))
 
     if isinstance(node, (int, float, str, bool)):
         return to_c_literal(node, member_ctype)

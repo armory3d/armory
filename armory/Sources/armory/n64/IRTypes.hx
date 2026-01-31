@@ -119,7 +119,8 @@ typedef TraitMeta = {
     signal_handlers: Array<SignalHandlerMeta>, // functions used as signal callbacks
     global_signals: Array<String>, // global signals used (e.g., "g_gameevents_gemCollected")
     has_remove_update: Bool,       // True if trait calls removeUpdate() - adds _update_enabled guard
-    has_remove_late_update: Bool   // True if trait calls removeLateUpdate()
+    has_remove_late_update: Bool,  // True if trait calls removeLateUpdate()
+    has_remove_render2d: Bool      // True if trait calls removeRender2D() - adds _render2d_enabled guard
 }
 
 typedef TraitIR = {
