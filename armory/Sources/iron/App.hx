@@ -92,13 +92,14 @@ class App {
 		var i = 0;
 		var l = traitUpdates.length;
 		while (i < l) {
-			if (traitInits.length > 0) {
-				for (f in traitInits) {
-					traitInits.length > 0 ? f() : break;
-				}
-				traitInits.splice(0, traitInits.length);
+			while (traitInits.length > 0) {
+				var f = traitInits.shift();
+				if (f != null) f();
 			}
-			traitUpdates[i]();
+			// Re-check bounds after processing inits (scene switch may have removed traits)
+			if (i < traitUpdates.length) {
+				traitUpdates[i]();
+			}
 			// Account for removed traits
 			l <= traitUpdates.length ? i++ : l = traitUpdates.length;
 		}
@@ -134,11 +135,9 @@ class App {
 		startTime = kha.Scheduler.realTime();
 		#end
 
-		if (traitInits.length > 0) {
-			for (f in traitInits) {
-				traitInits.length > 0 ? f() : break;
-			}
-			traitInits.splice(0, traitInits.length);
+		while (traitInits.length > 0) {
+			var f = traitInits.shift();
+			if (f != null) f();
 		}
 
 		Scene.active.renderFrame(frame.g4);
