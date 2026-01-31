@@ -284,7 +284,10 @@ class TraitExtractor implements IExtractorContext {
         }
 
         // Pass 2: Find lifecycle registrations and extract events
+        // This finds ALL registered lifecycles (for code extraction)
         var lifecycles = findLifecycles();
+        // This finds only STATICALLY registered lifecycles (for initial enabled state)
+        var staticLifecycles = findStaticLifecycles();
 
         // Pass 3: Convert lifecycle functions to events
         if (lifecycles.init != null) {
@@ -307,31 +310,37 @@ class TraitExtractor implements IExtractorContext {
         }
 
         // Auto-add _update_enabled member if trait uses removeUpdate() or notifyOnUpdate() at runtime
+        // Initial value: true if trait has STATIC update function, false if only dynamic registration
         if (meta.has_remove_update) {
+            var hasStaticUpdate = staticLifecycles.update != null;
             members.set("_update_enabled", {
                 haxeType: "Bool",
                 ctype: "bool",
-                defaultValue: { type: "bool", value: true }
+                defaultValue: { type: "bool", value: hasStaticUpdate }
             });
             memberNames.push("_update_enabled");
         }
 
         // Auto-add _late_update_enabled member if trait uses removeLateUpdate()
+        // Initial value: true if trait has STATIC late_update function, false if only dynamic registration
         if (meta.has_remove_late_update) {
+            var hasStaticLateUpdate = staticLifecycles.late_update != null;
             members.set("_late_update_enabled", {
                 haxeType: "Bool",
                 ctype: "bool",
-                defaultValue: { type: "bool", value: true }
+                defaultValue: { type: "bool", value: hasStaticLateUpdate }
             });
             memberNames.push("_late_update_enabled");
         }
 
         // Auto-add _render2d_enabled member if trait uses removeRender2D() or notifyOnRender2D() at runtime
+        // Initial value: true if trait has STATIC render2d function, false if only dynamic registration
         if (meta.has_remove_render2d) {
+            var hasStaticRender2d = staticLifecycles.render2d != null;
             members.set("_render2d_enabled", {
                 haxeType: "Bool",
                 ctype: "bool",
-                defaultValue: { type: "bool", value: true }
+                defaultValue: { type: "bool", value: hasStaticRender2d }
             });
             memberNames.push("_render2d_enabled");
         }
@@ -368,19 +377,33 @@ class TraitExtractor implements IExtractorContext {
     function findLifecycles():{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr} {
         var result = {init: null, update: null, fixed_update: null, late_update: null, remove: null, render2d: null};
 
-        // Scan ALL methods in the trait for lifecycle registrations
-        // This allows notifyOnUpdate to be called from any method, not just constructor
+        // Scan ALL methods for lifecycle registrations (for code extraction)
         for (methodName in methodMap.keys()) {
             var method = methodMap.get(methodName);
             if (method != null && method.expr != null) {
-                scanForLifecycles(method.expr, result);
+                scanForLifecycles(method.expr, result, true);
             }
         }
 
         return result;
     }
 
-    function scanForLifecycles(e:Expr, result:{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr}):Void {
+    // Find only STATICALLY registered lifecycles (called from constructor/init path)
+    // Used to determine initial enabled state for dynamic toggle flags
+    function findStaticLifecycles():{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr} {
+        var result = {init: null, update: null, fixed_update: null, late_update: null, remove: null, render2d: null};
+
+        // Only scan constructor - lifecycle registrations elsewhere are "dynamic"
+        var ctor = methodMap.get("new");
+        if (ctor != null && ctor.expr != null) {
+            scanForStaticLifecycles(ctor.expr, result, true);
+        }
+
+        return result;
+    }
+
+    // Scan for lifecycle registrations (finds all, for code extraction)
+    function scanForLifecycles(e:Expr, result:{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr}, inInitPath:Bool):Void {
         if (e == null) return;
 
         switch (e.expr) {
@@ -399,16 +422,54 @@ class TraitExtractor implements IExtractorContext {
                     }
                 }
                 // Scan parameters AND the callExpr (for chained calls like tween.float(...).start())
-                scanForLifecycles(callExpr, result);
-                for (p in params) scanForLifecycles(p, result);
+                scanForLifecycles(callExpr, result, inInitPath);
+                for (p in params) scanForLifecycles(p, result, inInitPath);
             case EBlock(exprs):
-                for (expr in exprs) scanForLifecycles(expr, result);
+                for (expr in exprs) scanForLifecycles(expr, result, inInitPath);
             case EFunction(_, f):
-                // Continue scanning inside function body to find nested lifecycle registrations
-                // e.g., notifyOnUpdate(update) inside notifyOnInit(function() { ... })
-                if (f.expr != null) scanForLifecycles(f.expr, result);
+                // Preserve inInitPath - if we're scanning a function passed to notifyOnInit,
+                // the body is still part of the init path. The path only breaks when
+                // scanning params of non-init callbacks (handled in ECall case above).
+                if (f.expr != null) scanForLifecycles(f.expr, result, inInitPath);
             default:
-                e.iter(function(sub) scanForLifecycles(sub, result));
+                e.iter(function(sub) scanForLifecycles(sub, result, inInitPath));
+        }
+    }
+
+    // Scan for STATIC lifecycle registrations only (for initial enabled state)
+    function scanForStaticLifecycles(e:Expr, result:{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr}, inInitPath:Bool):Void {
+        if (e == null) return;
+
+        switch (e.expr) {
+            case ECall(callExpr, params):
+                var funcName = getFuncName(callExpr);
+                if (params.length > 0) {
+                    var body = resolveCallback(params[0]);
+                    // Only record lifecycle registrations if we're in the init path
+                    if (inInitPath) {
+                        switch (funcName) {
+                            case "notifyOnInit": result.init = body;
+                            case "notifyOnUpdate": result.update = body;
+                            case "notifyOnFixedUpdate": result.fixed_update = body;
+                            case "notifyOnLateUpdate": result.late_update = body;
+                            case "notifyOnRemove": result.remove = body;
+                            case "notifyOnRender2D": result.render2d = body;
+                            default:
+                        }
+                    }
+                    // Determine if we should continue in init path
+                    var isInitCallback = funcName == "notifyOnInit" || funcName == "notifyOnAdd";
+                    for (p in params) scanForStaticLifecycles(p, result, inInitPath && isInitCallback);
+                }
+                // Scan the callExpr for chained calls - stay in init path
+                scanForStaticLifecycles(callExpr, result, inInitPath);
+            case EBlock(exprs):
+                for (expr in exprs) scanForStaticLifecycles(expr, result, inInitPath);
+            case EFunction(_, f):
+                // Preserve inInitPath through function bodies
+                if (f.expr != null) scanForStaticLifecycles(f.expr, result, inInitPath);
+            default:
+                e.iter(function(sub) scanForStaticLifecycles(sub, result, inInitPath));
         }
     }
 
