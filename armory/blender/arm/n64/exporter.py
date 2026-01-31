@@ -1621,10 +1621,11 @@ class N64Exporter:
 
             # Use VADPCM (level 1) for all audio - stable with t3d
             # Opus (level 3) causes RSP conflicts with t3d rendering
+            # Use Opus (level 3) for smallest file size
             if is_music:
-                compress_flag = '--wav-compress 3 --wav-loop true'
+                compress_flag = '--wav-compress 1 --wav-loop true'
             else:
-                compress_flag = '--wav-compress 3'
+                compress_flag = '--wav-compress 1'
 
             rule = f'''{target}: assets/{dest_name}
 	@mkdir -p $(dir $@)
