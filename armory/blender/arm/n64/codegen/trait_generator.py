@@ -11,6 +11,7 @@ from typing import Dict, List
 
 from arm import log
 from arm.n64.codegen.trait_emitter import TraitEmitter
+from arm.n64.codegen import tween_helper
 
 
 # =============================================================================
@@ -134,37 +135,8 @@ class TraitCodeGenerator:
 
     def _find_tween_callbacks(self, nodes: list) -> list:
         """Recursively find all tween callbacks in IR nodes."""
-        callbacks = []
-        for node in nodes:
-            if node is None:
-                continue
-            node_type = node.get("type", "")
-            if node_type in ("tween_float", "tween_vec4", "tween_delay"):
-                props = node.get("props", {})
-                on_update = props.get("on_update")
-                on_done = props.get("on_done")
-                if on_update:
-                    callbacks.append(on_update)
-                if on_done:
-                    callbacks.append(on_done)
-            # Recurse into children, args, body
-            for key in ("children", "args", "body"):
-                children = node.get(key, [])
-                if children:
-                    callbacks.extend(self._find_tween_callbacks(children))
-            # Also recurse into object (for method_call nodes wrapping tweens like .start())
-            obj = node.get("object")
-            if obj and isinstance(obj, dict):
-                callbacks.extend(self._find_tween_callbacks([obj]))
-            # Recurse into then/else_ for if nodes
-            props = node.get("props", {})
-            then_nodes = props.get("then", [])
-            if then_nodes:
-                callbacks.extend(self._find_tween_callbacks(then_nodes))
-            else_nodes = props.get("else_", [])
-            if else_nodes:
-                callbacks.extend(self._find_tween_callbacks(else_nodes))
-        return callbacks
+        # Delegate to shared helper
+        return tween_helper.find_tween_callbacks(nodes)
 
     def _generate_tween_callback(self, callback_info: dict) -> str:
         """Generate a static C callback function for a tween.
@@ -172,48 +144,13 @@ class TraitCodeGenerator:
         For traits, callbacks can access the trait data via the 'data' pointer
         which is passed through the tween's obj/data parameters.
         """
-        if not callback_info:
-            return ""
-
-        cb_name = callback_info.get("callback_name", "")
-        cb_type = callback_info.get("callback_type", "")
-        body_nodes = callback_info.get("body", [])
-        param_name = callback_info.get("param_name") or "v"  # Handle null from JSON
-
-        if not cb_name or not body_nodes:
-            return ""
-
-        lines = []
-
-        if cb_type == "float":
-            # Float callback: void name_float(float value, void* obj, void* data)
-            lines.append(f"static void {cb_name}_float(float {param_name}, void* obj, void* data) {{")
-            lines.append("    (void)obj;")
-        elif cb_type == "vec4":
-            # Vec4 callback: void name_vec4(ArmVec4* value, void* obj, void* data)
-            lines.append(f"static void {cb_name}_vec4(ArmVec4* {param_name}, void* obj, void* data) {{")
-            lines.append("    (void)obj;")
-        elif cb_type == "done":
-            # Done callback: void name_done(void* obj, void* data)
-            lines.append(f"static void {cb_name}_done(void* obj, void* data) {{")
-            lines.append("    (void)obj;")
-        else:
-            return ""
-
-        # For traits, the emitter already handles member access via data->member
-        # Emit body using the trait's emitter
-        for node in body_nodes:
-            code = self.emitter.emit(node)
-            if code and code != "":
-                for line in code.split('\n'):
-                    if line.strip():
-                        if not line.strip().endswith((';', '{', '}')):
-                            lines.append(f"    {line};")
-                        else:
-                            lines.append(f"    {line}")
-
-        lines.append("}")
-        return "\n".join(lines)
+        # Delegate to shared helper with is_trait=True
+        return tween_helper.generate_tween_callback(
+            callback_info,
+            self.emitter,
+            c_name="",
+            is_trait=True
+        )
 
     def _collect_tween_callbacks(self):
         """Scan all events for tween callbacks and store them."""

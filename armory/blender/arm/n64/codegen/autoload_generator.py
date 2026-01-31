@@ -11,6 +11,7 @@ from typing import Dict, List
 
 from arm import log
 from arm.n64.codegen.autoload_emitter import AutoloadEmitter
+from arm.n64.codegen import tween_helper
 
 
 def load_autoloads_json(build_dir: str = None) -> dict:
@@ -130,209 +131,30 @@ def _prepare_autoload_template_data(name: str, autoload_ir: dict) -> dict:
         lines.append("}")
         return "\n".join(lines)
 
-    # Helper to find all identifiers in IR nodes
-    def find_all_idents(nodes: list) -> set:
-        """Find all identifier names referenced in IR nodes."""
-        idents = set()
-        for node in nodes:
-            if node is None:
-                continue
-            node_type = node.get("type", "")
-            if node_type == "ident":
-                idents.add(node.get("value", ""))
-            # Recurse into all possible children
-            for key in ("children", "args", "body", "then", "else"):
-                children = node.get(key, [])
-                if children:
-                    idents.update(find_all_idents(children))
-            obj = node.get("object")
-            if obj and isinstance(obj, dict):
-                idents.update(find_all_idents([obj]))
-        return idents
-
-    # Helper to find all tween callbacks in function bodies
-    def find_tween_callbacks(nodes: list) -> list:
-        """Recursively find all tween callbacks in IR nodes."""
-        callbacks = []
-        for node in nodes:
-            if node is None:
-                continue
-            node_type = node.get("type", "")
-            if node_type in ("tween_float", "tween_vec4", "tween_delay"):
-                props = node.get("props", {})
-                on_update = props.get("on_update")
-                on_done = props.get("on_done")
-                if on_update:
-                    callbacks.append(on_update)
-                if on_done:
-                    callbacks.append(on_done)
-            # Recurse into children, args, body
-            for key in ("children", "args", "body"):
-                children = node.get(key, [])
-                if children:
-                    callbacks.extend(find_tween_callbacks(children))
-            # Also recurse into object (for method_call nodes wrapping tweens like .start())
-            obj = node.get("object")
-            if obj and isinstance(obj, dict):
-                callbacks.extend(find_tween_callbacks([obj]))
-        return callbacks
-
-    # Helper to generate a tween callback function
-    def generate_tween_callback(callback_info: dict) -> str:
-        """Generate a static C callback function for a tween."""
-        if not callback_info:
-            return ""
-
-        cb_name = callback_info.get("callback_name", "")
-        cb_type = callback_info.get("callback_type", "")
-        body_nodes = callback_info.get("body", [])
-        param_name = callback_info.get("param_name") or "v"  # Handle null from JSON
-        captures = callback_info.get("captures", [])
-
-        if not cb_name or not body_nodes:
-            return ""
-
-        # Build map of captured param names to their capture global names
-        # For is_param captures, we use a global variable to store the value
-        param_captures = {c["name"]: f"{c_name}_capture_{c['name']}"
-                         for c in captures if c.get("is_param", False)}
-
-        lines = []
-
-        if cb_type == "float":
-            # Float callback: void name_float(float value, void* obj, void* data)
-            lines.append(f"static void {cb_name}_float(float {param_name}, void* obj, void* data) {{")
-            lines.append("    (void)obj; (void)data;")
-        elif cb_type == "vec4":
-            # Vec4 callback: void name_vec4(ArmVec4* value, void* obj, void* data)
-            lines.append(f"static void {cb_name}_vec4(ArmVec4* {param_name}, void* obj, void* data) {{")
-            lines.append("    (void)obj; (void)data;")
-        elif cb_type == "done":
-            # Done callback: void name_done(void* obj, void* data)
-            lines.append(f"static void {cb_name}_done(void* obj, void* data) {{")
-            lines.append("    (void)obj; (void)data;")
-        else:
-            return ""
-
-        # Create a modified emitter that substitutes captured params with their globals
-        class CaptureEmitter:
-            def __init__(self, base_emitter, param_captures):
-                self.base = base_emitter
-                self.param_captures = param_captures
-
-            def emit(self, node):
-                if node is None:
-                    return ""
-                # Intercept ident nodes that are captured params
-                if node.get("type") == "ident":
-                    name = node.get("value", "")
-                    if name in self.param_captures:
-                        return self.param_captures[name]
-                # For other nodes, recurse but check children too
-                return self.emit_with_capture_substitution(node)
-
-            def emit_with_capture_substitution(self, node):
-                if node is None:
-                    return ""
-                node_type = node.get("type", "")
-
-                # For ident nodes, substitute captured params
-                if node_type == "ident":
-                    name = node.get("value", "")
-                    if name in self.param_captures:
-                        return self.param_captures[name]
-                    return self.base.emit(node)
-
-                # For method_call, handle the object specially
-                if node_type == "method_call":
-                    obj = node.get("object")
-                    method = node.get("method", "")
-                    args = node.get("args", [])
-
-                    # Check if object is a captured param
-                    if obj and obj.get("type") == "ident":
-                        obj_name = obj.get("value", "")
-                        if obj_name in self.param_captures:
-                            # Substitute the object with the capture global
-                            captured_obj = self.param_captures[obj_name]
-                            # Emit args
-                            arg_strs = [self.emit(a) for a in args]
-                            # Handle audio methods
-                            if method == "stop":
-                                return f"arm_audio_stop(&{captured_obj})"
-                            elif method == "play":
-                                return f"arm_audio_start(&{captured_obj})"
-                            # Fallback
-                            return f"{captured_obj}.{method}({', '.join(arg_strs)})"
-
-                # Default: use base emitter
-                return self.base.emit(node)
-
-        capture_emitter = CaptureEmitter(emitter, param_captures) if param_captures else emitter
-
-        # Emit body
-        for node in body_nodes:
-            code = capture_emitter.emit(node)
-            if code and code != "":
-                for line in code.split('\n'):
-                    if line.strip():
-                        if not line.strip().endswith((';', '{', '}')):
-                            lines.append(f"    {line};")
-                        else:
-                            lines.append(f"    {line}")
-
-        lines.append("}")
-        return "\n".join(lines)
-
-    # Collect all tween callbacks from all functions, along with function param info
+    # Collect all tween callbacks from all functions using shared helper
     all_tween_callbacks = []
-    # Map from callback_name to list of captured function params (name, ctype)
-    callback_param_captures = {}
-
     for func in functions:
         body = func.get("body", [])
         func_params = {p.get("name"): p.get("ctype", "int32_t") for p in func.get("params", [])}
-        found = find_tween_callbacks(body)
+        found = tween_helper.find_tween_callbacks(body)
 
-        # For each callback, check if any idents match function params
-        for cb in found:
-            cb_name = cb.get("callback_name", "")
-            cb_body = cb.get("body", [])
-            idents = find_all_idents(cb_body)
+        # Use shared helper to collect captures
+        found, _ = tween_helper.collect_callback_captures(
+            found, func_params, member_names, c_name
+        )
+        all_tween_callbacks.extend(found)
 
-            # Find which idents are function params (not members, not callback param)
-            cb_param_name = cb.get("param_name") or ""
-            param_caps = []
-            for ident_name in idents:
-                if ident_name in func_params and ident_name != cb_param_name:
-                    if ident_name not in member_names:  # Not a class member
-                        param_caps.append((ident_name, func_params[ident_name]))
+    # Build capture info map
+    callback_param_captures = {}
+    for cb in all_tween_callbacks:
+        cb_name = cb.get("callback_name", "")
+        captures = cb.get("captures", [])
+        param_caps = [(c["name"], c["ctype"]) for c in captures if c.get("is_param", False)]
+        if param_caps:
+            callback_param_captures[cb_name] = param_caps
 
-            if param_caps:
-                # Store in the callback's captures
-                existing_captures = cb.get("captures", [])
-                for pname, pctype in param_caps:
-                    existing_captures.append({
-                        "name": pname,
-                        "type": pctype,
-                        "is_member": False,
-                        "is_param": True,
-                        "ctype": pctype
-                    })
-                cb["captures"] = existing_captures
-                callback_param_captures[cb_name] = param_caps
-
-            all_tween_callbacks.append(cb)
-
-    # Generate capture globals for function params
-    capture_global_lines = []
-    seen_capture_globals = set()
-    for cb_name, param_caps in callback_param_captures.items():
-        for pname, pctype in param_caps:
-            global_name = f"{c_name}_capture_{pname}"
-            if global_name not in seen_capture_globals:
-                seen_capture_globals.add(global_name)
-                capture_global_lines.append(f"static {pctype} {global_name};")
+    # Generate capture globals using shared helper
+    capture_global_lines = tween_helper.generate_capture_globals(callback_param_captures, c_name)
 
     # Generate tween callback functions (deduplicated by name)
     tween_callback_lines = []
@@ -341,7 +163,7 @@ def _prepare_autoload_template_data(name: str, autoload_ir: dict) -> dict:
         cb_name = cb.get("callback_name", "")
         if cb_name and cb_name not in seen_callbacks:
             seen_callbacks.add(cb_name)
-            cb_code = generate_tween_callback(cb)
+            cb_code = tween_helper.generate_tween_callback(cb, emitter, c_name, is_trait=False)
             if cb_code:
                 tween_callback_lines.append(cb_code)
 
