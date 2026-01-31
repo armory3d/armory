@@ -42,12 +42,19 @@ class CanvasCallConverter implements ICallConverter {
             }
         }
         else if (method == "notifyOnReady" && rawParams.length >= 1) {
-            // canvas.notifyOnReady(function() { ... })
+            // canvas.notifyOnReady(function() { ... }) or canvas.notifyOnReady(methodName)
             // On N64, canvas is always ready (sync loading), so flatten callback inline
             switch (rawParams[0].expr) {
                 case EFunction(_, func):
+                    // Inline anonymous function
                     if (func.expr != null) {
                         return ctx.exprToIR(func.expr);
+                    }
+                case EConst(CIdent(methodName)):
+                    // Method reference: canvas.notifyOnReady(onCanvasReady)
+                    var methodFunc = ctx.getMethod(methodName);
+                    if (methodFunc != null && methodFunc.expr != null) {
+                        return ctx.exprToIR(methodFunc.expr);
                     }
                 default:
             }

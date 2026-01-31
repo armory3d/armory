@@ -351,10 +351,16 @@ class TraitExtractor implements IExtractorContext {
 
     function findLifecycles():{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr} {
         var result = {init: null, update: null, fixed_update: null, late_update: null, remove: null};
-        var constructor = methodMap.get("new");
-        if (constructor != null && constructor.expr != null) {
-            scanForLifecycles(constructor.expr, result);
+
+        // Scan ALL methods in the trait for lifecycle registrations
+        // This allows notifyOnUpdate to be called from any method, not just constructor
+        for (methodName in methodMap.keys()) {
+            var method = methodMap.get(methodName);
+            if (method != null && method.expr != null) {
+                scanForLifecycles(method.expr, result);
+            }
         }
+
         return result;
     }
 
