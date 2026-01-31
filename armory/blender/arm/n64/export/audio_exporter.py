@@ -119,31 +119,38 @@ def write_audio_config(exporter):
 
 
 def collect_mix_channels_from_ir():
-    """Scan trait IR files to find Aura.mixChannels usage.
+    """Scan trait and autoload IR files to find Aura.mixChannels usage.
 
     Returns:
         list: List of mix channel names found (e.g., ['music', 'sfx'])
     """
     mix_channels = []
-    ir_dir = os.path.join(arm.utils.build_dir(), 'n64', 'trait_ir')
+    build_dir = arm.utils.build_dir()
 
-    if not os.path.exists(ir_dir):
-        return mix_channels
+    # Scan both trait_ir and autoload_ir directories
+    ir_dirs = [
+        os.path.join(build_dir, 'n64', 'trait_ir'),
+        os.path.join(build_dir, 'n64', 'autoload_ir'),
+    ]
 
-    # Scan all IR JSON files for audio_mix_volume nodes
-    for filename in os.listdir(ir_dir):
-        if not filename.endswith('.json'):
+    for ir_dir in ir_dirs:
+        if not os.path.exists(ir_dir):
             continue
 
-        ir_path = os.path.join(ir_dir, filename)
-        try:
-            with open(ir_path, 'r', encoding='utf-8') as f:
-                ir_data = json.load(f)
+        # Scan all IR JSON files for audio_mix_volume nodes
+        for filename in os.listdir(ir_dir):
+            if not filename.endswith('.json'):
+                continue
 
-            # Recursively search for audio-related IR nodes
-            _find_mix_channels_in_ir(ir_data, mix_channels)
-        except (json.JSONDecodeError, IOError):
-            continue
+            ir_path = os.path.join(ir_dir, filename)
+            try:
+                with open(ir_path, 'r', encoding='utf-8') as f:
+                    ir_data = json.load(f)
+
+                # Recursively search for audio-related IR nodes
+                _find_mix_channels_in_ir(ir_data, mix_channels)
+            except (json.JSONDecodeError, IOError):
+                continue
 
     return mix_channels
 
