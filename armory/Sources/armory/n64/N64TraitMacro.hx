@@ -864,6 +864,30 @@ class TraitExtractor implements IExtractorContext {
             case EReturn(retExpr):
                 { type: "return", children: retExpr != null ? [exprToIR(retExpr)] : null };
 
+            // While loop
+            case EWhile(econd, ebody, normalWhile):
+                { type: normalWhile ? "while" : "do_while", children: [exprToIR(econd), exprToIR(ebody)] };
+
+            // For loop (range-based)
+            case EFor(it, ebody):
+                convertForLoop(it, ebody);
+
+            // Break statement
+            case EBreak:
+                { type: "break" };
+
+            // Continue statement
+            case EContinue:
+                { type: "continue" };
+
+            // Ternary operator
+            case ETernary(econd, eif, eelse):
+                { type: "ternary", children: [exprToIR(econd), exprToIR(eif), exprToIR(eelse)] };
+
+            // Array access
+            case EArray(e1, e2):
+                { type: "array_access", children: [exprToIR(e1), exprToIR(e2)] };
+
             default:
                 { type: "skip" };
         };
@@ -885,6 +909,30 @@ class TraitExtractor implements IExtractorContext {
             return { type: "skip" };
         }
         return { type: "ident", value: name };
+    }
+
+    // Convert for loop: for (i in 0...10) pattern
+    function convertForLoop(it:Expr, body:Expr):IRNode {
+        switch (it.expr) {
+            case EBinop(OpIn, e1, e2):
+                var varName = switch (e1.expr) {
+                    case EConst(CIdent(s)): s;
+                    default: "_i";
+                };
+                localVarTypes.set(varName, "Int");
+
+                switch (e2.expr) {
+                    case EBinop(OpInterval, start, end):
+                        return {
+                            type: "for_range",
+                            value: varName,
+                            children: [exprToIR(start), exprToIR(end), exprToIR(body)]
+                        };
+                    default:
+                }
+            default:
+        }
+        return { type: "skip" };
     }
 
     // Check if expression is an assignment to transform properties (loc, rot, scale, dirty)
