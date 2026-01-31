@@ -779,7 +779,9 @@ class AutoloadExtractor implements IExtractorContext {
             contact_events: [],
             signals: meta.signals,
             signal_handlers: meta.signal_handlers,
-            global_signals: meta.global_signals
+            global_signals: meta.global_signals,
+            has_remove_update: false,
+            has_remove_late_update: false
         };
     }
 

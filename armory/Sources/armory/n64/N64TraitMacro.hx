@@ -206,7 +206,9 @@ class TraitExtractor implements IExtractorContext {
             contact_events: [],
             signals: [],
             signal_handlers: [],
-            global_signals: []
+            global_signals: [],
+            has_remove_update: false,
+            has_remove_late_update: false
         };
 
         // Generate C-safe name early so it's available during extraction
@@ -296,6 +298,26 @@ class TraitExtractor implements IExtractorContext {
         }
         if (lifecycles.remove != null) {
             extractEvents("on_remove", lifecycles.remove);
+        }
+
+        // Auto-add _update_enabled member if trait uses removeUpdate() or notifyOnUpdate() at runtime
+        if (meta.has_remove_update) {
+            members.set("_update_enabled", {
+                haxeType: "Bool",
+                ctype: "bool",
+                defaultValue: { type: "bool", value: true }
+            });
+            memberNames.push("_update_enabled");
+        }
+
+        // Auto-add _late_update_enabled member if trait uses removeLateUpdate()
+        if (meta.has_remove_late_update) {
+            members.set("_late_update_enabled", {
+                haxeType: "Bool",
+                ctype: "bool",
+                defaultValue: { type: "bool", value: true }
+            });
+            memberNames.push("_late_update_enabled");
         }
 
         // Generate C-safe name is now done in constructor
@@ -1044,13 +1066,47 @@ class TraitExtractor implements IExtractorContext {
             case EConst(CIdent(funcName)):
                 // Skip lifecycle registration calls - they're handled by scanForLifecycles
                 // notifyOnRender2D is skipped entirely - N64 doesn't have 2D graphics layer
-                if (funcName == "notifyOnInit" || funcName == "notifyOnUpdate" ||
+                if (funcName == "notifyOnInit" ||
                     funcName == "notifyOnFixedUpdate" || funcName == "notifyOnLateUpdate" ||
                     funcName == "notifyOnRemove" || funcName == "notifyOnAdd" ||
                     funcName == "notifyOnRender2D" || funcName == "notifyOnRender" ||
-                    funcName == "removeUpdate" || funcName == "removeFixedUpdate" ||
-                    funcName == "removeLateUpdate") {
+                    funcName == "removeFixedUpdate") {
                     return { type: "skip" };
+                }
+
+                // removeUpdate(callback) -> set _update_enabled = false
+                // On N64, we only have one update per trait, so we just disable it
+                // The callback parameter is for Haxe compatibility
+                if (funcName == "removeUpdate") {
+                    meta.has_remove_update = true;
+                    // Extract callback name for documentation/debugging (optional)
+                    var callbackName:String = null;
+                    if (params.length > 0) {
+                        callbackName = extractStringArg(params[0]);
+                    }
+                    return { type: "remove_update", value: callbackName };
+                }
+
+                // removeLateUpdate(callback) -> set _late_update_enabled = false
+                if (funcName == "removeLateUpdate") {
+                    meta.has_remove_late_update = true;
+                    var callbackName:String = null;
+                    if (params.length > 0) {
+                        callbackName = extractStringArg(params[0]);
+                    }
+                    return { type: "remove_late_update", value: callbackName };
+                }
+
+                // notifyOnUpdate(callback) outside constructor -> re-enable updates
+                // In constructor it's handled by scanForLifecycles, but runtime calls enable updates
+                if (funcName == "notifyOnUpdate") {
+                    // Always enable the toggle mechanism when runtime notifyOnUpdate is used
+                    meta.has_remove_update = true;
+                    var callbackName:String = null;
+                    if (params.length > 0) {
+                        callbackName = extractStringArg(params[0]);
+                    }
+                    return { type: "notify_update", value: callbackName };
                 }
 
                 // trace() -> debugf() for N64 debug output

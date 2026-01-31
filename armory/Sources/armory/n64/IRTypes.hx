@@ -117,7 +117,9 @@ typedef TraitMeta = {
     contact_events: Array<ContactEventMeta>, // physics contact subscriptions
     signals: Array<SignalMeta>, // per-instance signal declarations
     signal_handlers: Array<SignalHandlerMeta>, // functions used as signal callbacks
-    global_signals: Array<String> // global signals used (e.g., "g_gameevents_gemCollected")
+    global_signals: Array<String>, // global signals used (e.g., "g_gameevents_gemCollected")
+    has_remove_update: Bool,       // True if trait calls removeUpdate() - adds _update_enabled guard
+    has_remove_late_update: Bool   // True if trait calls removeLateUpdate()
 }
 
 typedef TraitIR = {

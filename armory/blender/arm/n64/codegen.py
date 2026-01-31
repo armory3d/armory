@@ -182,6 +182,22 @@ class IREmitter:
     def emit_skip(self, node: Dict) -> str:
         return ""
 
+    # =========================================================================
+    # Lifecycle Control (removeUpdate, notifyOnUpdate at runtime)
+    # =========================================================================
+
+    def emit_remove_update(self, node: Dict) -> str:
+        """removeUpdate() -> disable on_update callback via _update_enabled flag."""
+        return f"(({self.data_type}*)data)->_update_enabled = false;"
+
+    def emit_remove_late_update(self, node: Dict) -> str:
+        """removeLateUpdate() -> disable on_late_update callback via _late_update_enabled flag."""
+        return f"(({self.data_type}*)data)->_late_update_enabled = false;"
+
+    def emit_notify_update(self, node: Dict) -> str:
+        """notifyOnUpdate() at runtime -> re-enable on_update callback."""
+        return f"(({self.data_type}*)data)->_update_enabled = true;"
+
     def emit_literal(self, node: Dict) -> str:
         """Emit a literal value based on its type."""
         value = node.get("value", "")
@@ -1386,6 +1402,9 @@ class TraitCodeGenerator:
         event_nodes = self.events.get("on_update", [])
         body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
         impl_lines.append(f"void {self.c_name}_on_update(void* obj, float dt, void* data) {{")
+        # Add early return guard if trait uses removeUpdate()
+        if self.meta.get("has_remove_update", False):
+            impl_lines.append(f"    if (!(({self.name}Data*)data)->_update_enabled) return;")
         impl_lines.append(body)
         impl_lines.append("}")
         impl_lines.append("")
@@ -1394,6 +1413,9 @@ class TraitCodeGenerator:
         event_nodes = self.events.get("on_late_update", [])
         body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
         impl_lines.append(f"void {self.c_name}_on_late_update(void* obj, float dt, void* data) {{")
+        # Add early return guard if trait uses removeLateUpdate()
+        if self.meta.get("has_remove_late_update", False):
+            impl_lines.append(f"    if (!(({self.name}Data*)data)->_late_update_enabled) return;")
         impl_lines.append(body)
         impl_lines.append("}")
         impl_lines.append("")
