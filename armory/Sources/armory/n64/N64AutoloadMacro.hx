@@ -513,6 +513,9 @@ class AutoloadExtractor implements IExtractorContext {
                         } else if (field == "scale") {
                             // Time.scale -> time_scale (global variable from system/time.h)
                             return { type: "ident", value: "time_scale" };
+                        } else if (field == "fixedStep") {
+                            // Time.fixedStep -> time_fixed_step (global variable from system/time.h)
+                            return { type: "ident", value: "time_fixed_step" };
                         }
                     default:
                 }

@@ -1073,6 +1073,9 @@ class TraitExtractor implements IExtractorContext {
                 } else if (field == "scale") {
                     meta.uses_time = true;
                     return { type: "ident", value: "time_scale" };
+                } else if (field == "fixedStep") {
+                    meta.uses_time = true;
+                    return { type: "ident", value: "time_fixed_step" };
                 }
             case EConst(CIdent("gamepad")):
                 // gamepad.leftStick, gamepad.rightStick

@@ -4,6 +4,7 @@
 
 float time_delta = 0.0f;
 float time_scale = 1.0f;
+float time_fixed_step = 0.0f;  // Set by main.c from FIXED_TIMESTEP
 
 static uint64_t time_start_ticks = 0;
 static uint64_t time_last_ticks = 0;

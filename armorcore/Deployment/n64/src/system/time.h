@@ -7,8 +7,9 @@
 extern "C" {
 #endif
 
-extern float time_delta;  // Frame delta in seconds (Time.delta)
-extern float time_scale;  // Time scale factor (Time.scale)
+extern float time_delta;       // Frame delta in seconds (Time.delta)
+extern float time_scale;       // Time scale factor (Time.scale)
+extern float time_fixed_step;  // Fixed timestep in seconds (Time.fixedStep)
 
 void time_init(void);
 void time_update(void);

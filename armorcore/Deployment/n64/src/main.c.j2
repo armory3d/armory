@@ -35,6 +35,7 @@ int main(void)
 {{
     engine_init();
     time_init();
+    time_fixed_step = FIXED_TIMESTEP;
 {autoloads_init}    trait_events_init();
 #if ENGINE_ENABLE_PHYSICS && ENGINE_ENABLE_PHYSICS_DEBUG
     physics_debug_init();
