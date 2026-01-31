@@ -14,10 +14,11 @@
 
 // Tween type enum
 typedef enum {
-    TWEEN_NONE = 0,
-    TWEEN_FLOAT = 1,
-    TWEEN_VEC4 = 2,
-    TWEEN_DELAY = 3
+    TWEEN_NONE = 0,       // Slot is free
+    TWEEN_ALLOCATED = 1,  // Slot is allocated but not yet configured
+    TWEEN_FLOAT = 2,
+    TWEEN_VEC4 = 3,
+    TWEEN_DELAY = 4
 } TweenType;
 
 // Easing enum

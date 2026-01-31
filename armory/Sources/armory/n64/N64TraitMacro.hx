@@ -950,12 +950,19 @@ class TraitExtractor implements IExtractorContext {
                                 if (method == "parseFloat") return "Float";
                             default:
                         }
-                        // Vec method calls return same Vec type
                         var objType = getExprType(obj);
+                        // Vec method calls return same Vec type
                         if (objType != null && StringTools.startsWith(objType, "Vec")) {
                             if (method == "mult" || method == "add" || method == "sub" ||
                                 method == "normalize" || method == "clone" || method == "cross") {
                                 return objType;
+                            }
+                        }
+                        // Tween method calls return Tween (for chaining)
+                        if (objType != null && objType.indexOf("Tween") >= 0) {
+                            if (method == "float" || method == "vec4" || method == "delay" ||
+                                method == "start" || method == "pause" || method == "stop") {
+                                return "Tween";
                             }
                         }
                     default:
@@ -1009,8 +1016,9 @@ class TraitExtractor implements IExtractorContext {
                 }
 
                 // Fallback: generic call with object (for unknown method calls)
+                // Use method_call type to match autoload behavior and ensure proper handling
                 return {
-                    type: "call",
+                    type: "method_call",
                     method: method,
                     object: exprToIR(obj),
                     args: args

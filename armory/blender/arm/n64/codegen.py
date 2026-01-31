@@ -62,11 +62,12 @@ from arm.n64 import utils as n64_utils
 class IREmitter:
     """Emits C code from IR nodes. No semantic analysis, just translation."""
 
-    def __init__(self, trait_name: str, c_name: str, member_names: List[str]):
+    def __init__(self, trait_name: str, c_name: str, member_names: List[str], is_trait: bool = True):
         self.trait_name = trait_name
         self.c_name = c_name
         self.member_names = member_names
         self.data_type = f"{trait_name}Data"
+        self.is_trait = is_trait  # True for traits (use obj/data), False for autoloads (use NULL)
 
     def emit(self, node: Optional[Dict]) -> str:
         """Emit C code for an IR node."""
@@ -705,10 +706,6 @@ class IREmitter:
             return ""
         return self._substitute_placeholders(c_code, node.get("args", []))
 
-    def emit_tween_alloc(self, node: Dict) -> str:
-        """Tween allocation from fixed pool."""
-        return "tween_alloc()"
-
     # =========================================================================
     # Audio Calls - emit audio nodes from AudioCallConverter
     # =========================================================================
@@ -821,6 +818,108 @@ class IREmitter:
             return f"{handle_name}.{field}"
         return node.get("c_code", "")
 
+    # =========================================================================
+    # Tween emit methods
+    # =========================================================================
+
+    def emit_tween_alloc(self, node: Dict) -> str:
+        """Tween allocation from fixed pool."""
+        return "tween_alloc()"
+
+    def emit_tween_float(self, node: Dict) -> str:
+        """Emit tween_float() call.
+
+        The actual callback functions are generated separately at the autoload level.
+        Here we just emit the setup and start calls.
+        """
+        obj = node.get("object")
+        args = node.get("args", [])
+        props = node.get("props", {})
+
+        tween_var = self.emit(obj) if obj else "NULL"
+        from_val = self.emit(args[0]) if args else "0.0f"
+        to_val = self.emit(args[1]) if len(args) > 1 else "0.0f"
+        duration = self.emit(args[2]) if len(args) > 2 else "1.0f"
+
+        ease = props.get("ease", "EASE_LINEAR")
+        on_update = props.get("on_update")
+        on_done = props.get("on_done")
+
+        # Get callback names
+        update_cb = on_update.get("callback_name") if on_update else None
+        done_cb = on_done.get("callback_name") if on_done else None
+
+        update_str = f"{update_cb}_float" if update_cb else "NULL"
+        done_str = f"{done_cb}_done" if done_cb else "NULL"
+
+        # Tween returns itself for chaining, so emit setup
+        # tween_float(tween, from, to, duration, on_update, on_done, ease, obj, data)
+        # For traits, pass obj/data so callbacks can access trait members
+        # For autoloads, pass NULL (callbacks access globals directly)
+        obj_param = "obj" if self.is_trait else "NULL"
+        data_param = "data" if self.is_trait else "NULL"
+        return f"tween_float({tween_var}, {from_val}, {to_val}, {duration}, {update_str}, {done_str}, {ease}, {obj_param}, {data_param})"
+
+    def emit_tween_vec4(self, node: Dict) -> str:
+        """Emit tween_vec4() call."""
+        obj = node.get("object")
+        args = node.get("args", [])
+        props = node.get("props", {})
+
+        tween_var = self.emit(obj) if obj else "NULL"
+        from_val = self.emit(args[0]) if args else "NULL"
+        to_val = self.emit(args[1]) if len(args) > 1 else "NULL"
+        duration = self.emit(args[2]) if len(args) > 2 else "1.0f"
+
+        ease = props.get("ease", "EASE_LINEAR")
+        on_update = props.get("on_update")
+        on_done = props.get("on_done")
+
+        update_cb = on_update.get("callback_name") if on_update else None
+        done_cb = on_done.get("callback_name") if on_done else None
+
+        update_str = f"{update_cb}_vec4" if update_cb else "NULL"
+        done_str = f"{done_cb}_done" if done_cb else "NULL"
+
+        obj_param = "obj" if self.is_trait else "NULL"
+        data_param = "data" if self.is_trait else "NULL"
+        return f"tween_vec4({tween_var}, &{from_val}, &{to_val}, {duration}, {update_str}, {done_str}, {ease}, {obj_param}, {data_param})"
+
+    def emit_tween_delay(self, node: Dict) -> str:
+        """Emit tween_delay() call."""
+        obj = node.get("object")
+        args = node.get("args", [])
+        props = node.get("props", {})
+
+        tween_var = self.emit(obj) if obj else "NULL"
+        duration = self.emit(args[0]) if args else "1.0f"
+
+        on_done = props.get("on_done")
+        done_cb = on_done.get("callback_name") if on_done else None
+        done_str = f"{done_cb}_done" if done_cb else "NULL"
+
+        obj_param = "obj" if self.is_trait else "NULL"
+        data_param = "data" if self.is_trait else "NULL"
+        return f"tween_delay({tween_var}, {duration}, {done_str}, {obj_param}, {data_param})"
+
+    def emit_tween_start(self, node: Dict) -> str:
+        """Emit tween_start() call."""
+        obj = node.get("object")
+        tween_var = self.emit(obj) if obj else "NULL"
+        return f"tween_start({tween_var})"
+
+    def emit_tween_pause(self, node: Dict) -> str:
+        """Emit tween_pause() call."""
+        obj = node.get("object")
+        tween_var = self.emit(obj) if obj else "NULL"
+        return f"tween_pause({tween_var})"
+
+    def emit_tween_stop(self, node: Dict) -> str:
+        """Emit tween_stop() call."""
+        obj = node.get("object")
+        tween_var = self.emit(obj) if obj else "NULL"
+        return f"tween_stop({tween_var})"
+
 
 # =============================================================================
 # Autoload IR Emitter - Extends IREmitter for autoload classes
@@ -834,7 +933,7 @@ class AutoloadIREmitter(IREmitter):
     """
 
     def __init__(self, autoload_name: str, c_name: str, member_names: List[str], function_names: List[str], member_types: Dict[str, str] = None):
-        super().__init__(autoload_name, c_name, member_names)
+        super().__init__(autoload_name, c_name, member_names, is_trait=False)
         self.function_names = function_names
         self.member_types = member_types or {}
         self.param_types: Dict[str, str] = {}  # Populated when emitting a function
@@ -1020,97 +1119,6 @@ class AutoloadIREmitter(IREmitter):
             return f"{handle_name}.{field}"
         return node.get("c_code", "")
 
-    # =========================================================================
-    # Tween emit methods
-    # =========================================================================
-
-    def emit_tween_float(self, node: Dict) -> str:
-        """Emit tween_float() call.
-
-        The actual callback functions are generated separately at the autoload level.
-        Here we just emit the setup and start calls.
-        """
-        obj = node.get("object")
-        args = node.get("args", [])
-        props = node.get("props", {})
-
-        tween_var = self.emit(obj) if obj else "NULL"
-        from_val = self.emit(args[0]) if args else "0.0f"
-        to_val = self.emit(args[1]) if len(args) > 1 else "0.0f"
-        duration = self.emit(args[2]) if len(args) > 2 else "1.0f"
-
-        ease = props.get("ease", "EASE_LINEAR")
-        on_update = props.get("on_update")
-        on_done = props.get("on_done")
-
-        # Get callback names
-        update_cb = on_update.get("callback_name") if on_update else None
-        done_cb = on_done.get("callback_name") if on_done else None
-
-        update_str = f"{update_cb}_float" if update_cb else "NULL"
-        done_str = f"{done_cb}_done" if done_cb else "NULL"
-
-        # Tween returns itself for chaining, so emit setup
-        # tween_float(tween, from, to, duration, on_update, on_done, ease, obj, data)
-        # For autoloads, obj and data are NULL (callbacks access globals directly)
-        return f"tween_float({tween_var}, {from_val}, {to_val}, {duration}, {update_str}, {done_str}, {ease}, NULL, NULL)"
-
-    def emit_tween_vec4(self, node: Dict) -> str:
-        """Emit tween_vec4() call."""
-        obj = node.get("object")
-        args = node.get("args", [])
-        props = node.get("props", {})
-
-        tween_var = self.emit(obj) if obj else "NULL"
-        from_val = self.emit(args[0]) if args else "NULL"
-        to_val = self.emit(args[1]) if len(args) > 1 else "NULL"
-        duration = self.emit(args[2]) if len(args) > 2 else "1.0f"
-
-        ease = props.get("ease", "EASE_LINEAR")
-        on_update = props.get("on_update")
-        on_done = props.get("on_done")
-
-        update_cb = on_update.get("callback_name") if on_update else None
-        done_cb = on_done.get("callback_name") if on_done else None
-
-        update_str = f"{update_cb}_vec4" if update_cb else "NULL"
-        done_str = f"{done_cb}_done" if done_cb else "NULL"
-
-        return f"tween_vec4({tween_var}, &{from_val}, &{to_val}, {duration}, {update_str}, {done_str}, {ease}, NULL, NULL)"
-
-    def emit_tween_delay(self, node: Dict) -> str:
-        """Emit tween_delay() call."""
-        obj = node.get("object")
-        args = node.get("args", [])
-        props = node.get("props", {})
-
-        tween_var = self.emit(obj) if obj else "NULL"
-        duration = self.emit(args[0]) if args else "1.0f"
-
-        on_done = props.get("on_done")
-        done_cb = on_done.get("callback_name") if on_done else None
-        done_str = f"{done_cb}_done" if done_cb else "NULL"
-
-        return f"tween_delay({tween_var}, {duration}, {done_str}, NULL, NULL)"
-
-    def emit_tween_start(self, node: Dict) -> str:
-        """Emit tween_start() call."""
-        obj = node.get("object")
-        tween_var = self.emit(obj) if obj else "NULL"
-        return f"tween_start({tween_var})"
-
-    def emit_tween_pause(self, node: Dict) -> str:
-        """Emit tween_pause() call."""
-        obj = node.get("object")
-        tween_var = self.emit(obj) if obj else "NULL"
-        return f"tween_pause({tween_var})"
-
-    def emit_tween_stop(self, node: Dict) -> str:
-        """Emit tween_stop() call."""
-        obj = node.get("object")
-        tween_var = self.emit(obj) if obj else "NULL"
-        return f"tween_stop({tween_var})"
-
 
 # =============================================================================
 # Trait Code Generator
@@ -1132,6 +1140,7 @@ class TraitCodeGenerator:
 
         member_names = [m.get("name") for m in self.members]
         self.emitter = IREmitter(name, self.c_name, member_names)
+        self._tween_callbacks = []  # Collected tween callbacks from all events
 
     def _get_member_ctype(self, member: Dict) -> str:
         """Get the C type for a member, applying overrides if present."""
@@ -1165,6 +1174,119 @@ class TraitCodeGenerator:
                 lines.append(f"    ArmSignal {sig_name};")
 
         lines.append(f"}} {self.name}Data;")
+
+        return "\n".join(lines)
+
+    def _find_tween_callbacks(self, nodes: list) -> list:
+        """Recursively find all tween callbacks in IR nodes."""
+        callbacks = []
+        for node in nodes:
+            if node is None:
+                continue
+            node_type = node.get("type", "")
+            if node_type in ("tween_float", "tween_vec4", "tween_delay"):
+                props = node.get("props", {})
+                on_update = props.get("on_update")
+                on_done = props.get("on_done")
+                if on_update:
+                    callbacks.append(on_update)
+                if on_done:
+                    callbacks.append(on_done)
+            # Recurse into children, args, body
+            for key in ("children", "args", "body"):
+                children = node.get(key, [])
+                if children:
+                    callbacks.extend(self._find_tween_callbacks(children))
+            # Also recurse into object (for method_call nodes wrapping tweens like .start())
+            obj = node.get("object")
+            if obj and isinstance(obj, dict):
+                callbacks.extend(self._find_tween_callbacks([obj]))
+            # Recurse into then/else_ for if nodes
+            props = node.get("props", {})
+            then_nodes = props.get("then", [])
+            if then_nodes:
+                callbacks.extend(self._find_tween_callbacks(then_nodes))
+            else_nodes = props.get("else_", [])
+            if else_nodes:
+                callbacks.extend(self._find_tween_callbacks(else_nodes))
+        return callbacks
+
+    def _generate_tween_callback(self, callback_info: dict) -> str:
+        """Generate a static C callback function for a tween.
+
+        For traits, callbacks can access the trait data via the 'data' pointer
+        which is passed through the tween's obj/data parameters.
+        """
+        if not callback_info:
+            return ""
+
+        cb_name = callback_info.get("callback_name", "")
+        cb_type = callback_info.get("callback_type", "")
+        body_nodes = callback_info.get("body", [])
+        param_name = callback_info.get("param_name") or "v"  # Handle null from JSON
+
+        if not cb_name or not body_nodes:
+            return ""
+
+        lines = []
+
+        if cb_type == "float":
+            # Float callback: void name_float(float value, void* obj, void* data)
+            lines.append(f"static void {cb_name}_float(float {param_name}, void* obj, void* data) {{")
+            lines.append("    (void)obj;")
+        elif cb_type == "vec4":
+            # Vec4 callback: void name_vec4(ArmVec4* value, void* obj, void* data)
+            lines.append(f"static void {cb_name}_vec4(ArmVec4* {param_name}, void* obj, void* data) {{")
+            lines.append("    (void)obj;")
+        elif cb_type == "done":
+            # Done callback: void name_done(void* obj, void* data)
+            lines.append(f"static void {cb_name}_done(void* obj, void* data) {{")
+            lines.append("    (void)obj;")
+        else:
+            return ""
+
+        # For traits, the emitter already handles member access via data->member
+        # Emit body using the trait's emitter
+        for node in body_nodes:
+            code = self.emitter.emit(node)
+            if code and code != "":
+                for line in code.split('\n'):
+                    if line.strip():
+                        if not line.strip().endswith((';', '{', '}')):
+                            lines.append(f"    {line};")
+                        else:
+                            lines.append(f"    {line}")
+
+        lines.append("}")
+        return "\n".join(lines)
+
+    def _collect_tween_callbacks(self):
+        """Scan all events for tween callbacks and store them."""
+        if self._tween_callbacks:
+            return  # Already collected
+
+        for event_name, event_nodes in self.events.items():
+            found = self._find_tween_callbacks(event_nodes)
+            self._tween_callbacks.extend(found)
+
+    def generate_tween_callbacks(self) -> str:
+        """Generate all tween callback functions for this trait."""
+        self._collect_tween_callbacks()
+
+        if not self._tween_callbacks:
+            return ""
+
+        lines = []
+        seen_callbacks = set()
+
+        for cb in self._tween_callbacks:
+            cb_name = cb.get("callback_name", "")
+            if cb_name and cb_name not in seen_callbacks:
+                seen_callbacks.add(cb_name)
+                cb_code = self._generate_tween_callback(cb)
+                if cb_code:
+                    lines.append(cb_code)
+                    lines.append("")
 
         return "\n".join(lines)
 
@@ -1502,6 +1624,7 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
     trait_declarations = []
     event_handler_declarations = []
     trait_implementations = []
+    tween_callbacks = []  # Tween callback functions (must come before implementations)
     global_signals = set()  # Collect unique global signals
 
     # Track features across all traits
@@ -1543,6 +1666,12 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
                 all_features['has_tween'] = True
                 break
 
+        # Generate tween callbacks (must come before implementations that reference them)
+        tween_cb_code = gen.generate_tween_callbacks()
+        if tween_cb_code:
+            tween_callbacks.append(f"// Tween callbacks for {trait_name}")
+            tween_callbacks.append(tween_cb_code)
+
         # Implementation data
         trait_implementations.append(gen.generate_all_event_implementations())
 
@@ -1576,11 +1705,17 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
     for autoload_cname in sorted(autoloads_used):
         autoload_includes.append(f'#include "../autoloads/{autoload_cname}.h"')
 
+    # Combine tween callbacks with implementations (callbacks must come first)
+    all_implementations = []
+    if tween_callbacks:
+        all_implementations.append("\n".join(tween_callbacks))
+    all_implementations.append("\n".join(trait_implementations))
+
     template_data = {
         "trait_data_structs": "\n\n".join(trait_data_structs),
         "trait_declarations": "\n".join(trait_declarations),
         "event_handler_declarations": "\n".join(event_handler_declarations),
-        "trait_implementations": "\n".join(trait_implementations),
+        "trait_implementations": "\n".join(all_implementations),
         "global_signals": "\n".join(global_signal_decls),
         "global_signal_externs": "\n".join(global_signal_externs),
         "autoload_includes": "\n".join(autoload_includes),

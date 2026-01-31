@@ -40,9 +40,10 @@ ArmTween* tween_alloc(void) {
     ensure_pool_init();
 
     for (int i = 0; i < MAX_TWEENS; i++) {
-        if (!tween_pool[i].active && !tween_pool[i].pending_free) {
+        if (tween_pool[i].type == TWEEN_NONE && !tween_pool[i].active && !tween_pool[i].pending_free) {
             ArmTween* t = &tween_pool[i];
             memset(t, 0, sizeof(ArmTween));
+            t->type = TWEEN_ALLOCATED;  // Mark as allocated to prevent double-allocation
             return t;
         }
     }
@@ -217,12 +218,8 @@ void tween_update_all(float dt) {
     for (int i = 0; i < MAX_TWEENS; i++) {
         ArmTween* t = &tween_pool[i];
 
-        // Skip inactive or pending-free tweens
-        if (!t->active || t->pending_free) {
-            // Clean up pending-free tweens
-            if (t->pending_free) {
-                tween_free(t);
-            }
+        // Skip inactive tweens
+        if (!t->active) {
             continue;
         }
 
@@ -235,15 +232,10 @@ void tween_update_all(float dt) {
                 t->on_done(t->object, t->data);
             }
 
-            // Mark for cleanup (don't free immediately in case callback starts new tween)
-            t->pending_free = true;
-        }
-    }
-
-    // Second pass: clean up completed tweens
-    for (int i = 0; i < MAX_TWEENS; i++) {
-        if (tween_pool[i].pending_free) {
-            tween_free(&tween_pool[i]);
+            // Mark as inactive but DON'T free - the owner still holds a pointer to this slot
+            // and may want to reuse it (e.g., autoload tweens). The slot stays reserved
+            // (type != TWEEN_NONE) until the owner explicitly calls tween_free().
+            t->active = false;
         }
     }
 }
