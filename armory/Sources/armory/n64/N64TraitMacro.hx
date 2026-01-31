@@ -172,6 +172,17 @@ class TraitExtractor implements IExtractorContext {
     // Call converters for modular method call handling
     var converters:Array<ICallConverter>;
 
+    /**
+     * Input handling mode:
+     * - true (default, Armory style): Keep input checks inline in update() as regular if-statements.
+     *   The InputCallConverter converts `gamepad.started("a")` to `input_started(N64_BTN_A)`.
+     *   This means guards like `if (!active) return;` naturally block all subsequent code including input checks.
+     *
+     * - false (event extraction): Extract `if (gamepad.started("a"))` as separate btn_a_started event handlers.
+     *   This matches libdragon's event-driven style but means guards in update() won't block button events.
+     */
+    static var useInlineInputMode:Bool = true;
+
     public function new(className:String, modulePath:String, fields:Array<Field>) {
         this.className = className;
         this.modulePath = modulePath;
@@ -407,7 +418,8 @@ class TraitExtractor implements IExtractorContext {
             // Detect: if (gamepad.started("a")) { ... }
             case EIf(econd, eif, eelse):
                 var inputEvent = detectInputEvent(econd);
-                if (inputEvent != null && eelse == null) {
+                // Only extract as separate event if NOT in inline input mode
+                if (inputEvent != null && eelse == null && !useInlineInputMode) {
                     // Extract body as separate event
                     var eventName = inputEvent.eventName;
                     if (!events.exists(eventName)) events.set(eventName, []);
@@ -427,7 +439,9 @@ class TraitExtractor implements IExtractorContext {
                     meta.uses_input = true;
                     return; // Don't add to statements
                 }
-                // Regular if - add to statements
+                // Regular if (or inline input mode) - add to statements as normal if
+                // When useInlineInputMode=true, InputCallConverter handles the conversion
+                // of gamepad.started("a") -> input_started(N64_BTN_A) as the condition
                 statements.push(convertIfToIR(econd, eif, eelse));
 
             default:

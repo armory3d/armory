@@ -10,6 +10,17 @@ import armory.n64.converters.ICallConverter;
  * Converts input API calls to C N64 input functions.
  * Handles: gamepad.started("a"), keyboard.down("w"), mouse.released("left"), etc.
  * Maps buttons to N64_BTN_* constants and tracks buttons for polling.
+ *
+ * This converter supports two input handling modes:
+ *
+ * 1. Event extraction mode: Input checks like `if (gamepad.started("a"))`
+ *    are extracted as separate button event handlers in processStatement().
+ *    This converter is not called for those top-level conditions.
+ *
+ * 2. Inline mode (Armory style - default): When useInlineInputMode=true, input checks
+ *    remain in update() as regular if-statements. This converter handles converting
+ *    `gamepad.started("a")` to `input_started(N64_BTN_A)` as the if condition.
+ *    This allows guards like `if (!active) return;` to naturally block input checks.
  */
 class InputCallConverter implements ICallConverter {
     public function new() {}
