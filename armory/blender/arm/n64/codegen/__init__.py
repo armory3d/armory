@@ -37,8 +37,8 @@ from arm.n64.codegen.scene_generator import (
     generate_scene_traits_block,
 )
 
-from arm.n64.codegen.ir_emitter import IREmitter
-from arm.n64.codegen.autoload_emitter import AutoloadIREmitter
+from arm.n64.codegen.trait_emitter import TraitEmitter
+from arm.n64.codegen.autoload_emitter import AutoloadEmitter
 
 __all__ = [
     # Trait functions
@@ -60,6 +60,6 @@ __all__ = [
     'generate_contact_subscriptions_block',
     'generate_scene_traits_block',
     # Classes
-    'IREmitter',
-    'AutoloadIREmitter',
+    'TraitEmitter',
+    'AutoloadEmitter',
 ]

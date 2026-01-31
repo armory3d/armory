@@ -1,15 +1,15 @@
 """
-Autoload IR Emitter - Extends IREmitter for autoload classes.
+Autoload Emitter - Extends TraitEmitter for autoload classes.
 
 Autoloads use global variables prefixed with c_name instead of a data pointer.
 """
 
 from typing import Dict, List
 
-from arm.n64.codegen.ir_emitter import IREmitter
+from arm.n64.codegen.trait_emitter import TraitEmitter
 
 
-class AutoloadIREmitter(IREmitter):
+class AutoloadEmitter(TraitEmitter):
     """Emits C code from IR nodes for autoload classes.
 
     Unlike traits which use a data pointer (data->member), autoloads use

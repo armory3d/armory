@@ -1,14 +1,14 @@
 """
-IR Emitter - Core IR→C translation engine.
+Trait Emitter - Core IR→C translation engine for traits.
 
-This module provides the IREmitter class which performs pure 1:1 translation
+This module provides the TraitEmitter class which performs pure 1:1 translation
 from IR nodes to C code. No semantic analysis - just translation.
 """
 
 from typing import Dict, List, Optional
 
 
-class IREmitter:
+class TraitEmitter:
     """Emits C code from IR nodes. No semantic analysis, just translation."""
 
     def __init__(self, trait_name: str, c_name: str, member_names: List[str], is_trait: bool = True):

@@ -10,7 +10,7 @@ import os
 from typing import Dict, List
 
 from arm import log
-from arm.n64.codegen.autoload_emitter import AutoloadIREmitter
+from arm.n64.codegen.autoload_emitter import AutoloadEmitter
 
 
 def load_autoloads_json(build_dir: str = None) -> dict:
@@ -64,7 +64,7 @@ def _prepare_autoload_template_data(name: str, autoload_ir: dict) -> dict:
     member_names = [m["name"] for m in members]
     member_types = {m["name"]: m.get("ctype", "int32_t") for m in members}
     function_names = [f["name"] for f in functions]
-    emitter = AutoloadIREmitter(name, c_name, member_names, function_names, member_types)
+    emitter = AutoloadEmitter(name, c_name, member_names, function_names, member_types)
 
     # Helper to emit default value
     def emit_default_value(default: dict, ctype: str) -> str:

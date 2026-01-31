@@ -10,7 +10,7 @@ import os
 from typing import Dict, List
 
 from arm import log
-from arm.n64.codegen.ir_emitter import IREmitter
+from arm.n64.codegen.trait_emitter import TraitEmitter
 
 
 # =============================================================================
@@ -94,7 +94,7 @@ class TraitCodeGenerator:
         self.type_overrides = type_overrides or {}
 
         member_names = [m.get("name") for m in self.members]
-        self.emitter = IREmitter(name, self.c_name, member_names)
+        self.emitter = TraitEmitter(name, self.c_name, member_names)
         self._tween_callbacks = []  # Collected tween callbacks from all events
 
     def _get_member_ctype(self, member: Dict) -> str:
