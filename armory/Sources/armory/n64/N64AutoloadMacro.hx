@@ -713,6 +713,10 @@ class AutoloadExtractor implements IExtractorContext {
         return memberTypes.get(name);
     }
 
+    public function getLocalVarType(name:String):String {
+        return localVarTypes.exists(name) ? localVarTypes.get(name) : null;
+    }
+
     public function extractStringArg(e:Expr):String {
         return switch (e.expr) {
             case EConst(CString(s)): s;

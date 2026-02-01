@@ -139,9 +139,9 @@ def generate_tween_callback(
 
     lines = []
 
-    # Build param captures map for autoloads
+    # Build param captures map for both autoloads and traits
     param_captures = {}
-    if not is_trait and captures:
+    if captures:
         param_captures = {
             c["name"]: f"{c_name}_capture_{c['name']}"
             for c in captures if c.get("is_param", False)
@@ -169,8 +169,8 @@ def generate_tween_callback(
     else:
         return ""
 
-    # For autoloads with param captures, create a wrapper emitter
-    if not is_trait and param_captures:
+    # For both autoloads and traits with param captures, create a wrapper emitter
+    if param_captures:
         emitter = _CaptureEmitter(emitter, param_captures)
 
     # Emit body
@@ -189,7 +189,12 @@ def generate_tween_callback(
 
 
 class _CaptureEmitter:
-    """Wrapper emitter that substitutes captured params with their globals."""
+    """Wrapper emitter that substitutes captured params with their globals.
+
+    This emitter intercepts all node emissions and replaces captured parameter
+    names with their corresponding capture global names throughout the entire
+    expression tree.
+    """
 
     def __init__(self, base_emitter, param_captures: dict):
         self.base = base_emitter
@@ -198,48 +203,54 @@ class _CaptureEmitter:
     def emit(self, node):
         if node is None:
             return ""
-        # Intercept ident nodes that are captured params
-        if node.get("type") == "ident":
-            name = node.get("value", "")
-            if name in self.param_captures:
-                return self.param_captures[name]
-        # For other nodes, use emit_with_capture_substitution
-        return self._emit_with_capture_substitution(node)
 
-    def _emit_with_capture_substitution(self, node):
+        # First, recursively substitute captures in any nested nodes
+        substituted_node = self._substitute_captures_in_node(node)
+
+        # Then emit using the base emitter
+        return self.base.emit(substituted_node)
+
+    def _substitute_captures_in_node(self, node):
+        """Recursively substitute captured params throughout the node tree."""
         if node is None:
-            return ""
+            return None
+        if not isinstance(node, dict):
+            return node
+
         node_type = node.get("type", "")
 
-        # For ident nodes, substitute captured params
+        # For ident nodes, substitute if it's a captured param
         if node_type == "ident":
             name = node.get("value", "")
             if name in self.param_captures:
-                return self.param_captures[name]
-            return self.base.emit(node)
+                return {"type": "ident", "value": self.param_captures[name]}
+            return node
 
-        # For method_call, handle the object specially
-        if node_type == "method_call":
-            obj = node.get("object")
-            method = node.get("method", "")
-            args = node.get("args", [])
+        # For all other nodes, recursively substitute in children, args, object, etc.
+        result = dict(node)  # Shallow copy
 
-            # Check if object is a captured param
-            if obj and obj.get("type") == "ident":
-                obj_name = obj.get("value", "")
-                if obj_name in self.param_captures:
-                    captured_obj = self.param_captures[obj_name]
-                    arg_strs = [self.emit(a) for a in args]
-                    # Handle audio methods
-                    if method == "stop":
-                        return f"arm_audio_stop(&{captured_obj})"
-                    elif method == "play":
-                        return f"arm_audio_start(&{captured_obj})"
-                    # Fallback
-                    return f"{captured_obj}.{method}({', '.join(arg_strs)})"
+        # Handle children array
+        if "children" in result and result["children"]:
+            result["children"] = [self._substitute_captures_in_node(c) for c in result["children"]]
 
-        # Default: use base emitter
-        return self.base.emit(node)
+        # Handle args array
+        if "args" in result and result["args"]:
+            result["args"] = [self._substitute_captures_in_node(a) for a in result["args"]]
+
+        # Handle object
+        if "object" in result and result["object"]:
+            result["object"] = self._substitute_captures_in_node(result["object"])
+
+        # Handle props dict (for if/else, etc.)
+        if "props" in result and result["props"]:
+            props = dict(result["props"])
+            if "then" in props and props["then"]:
+                props["then"] = [self._substitute_captures_in_node(n) for n in props["then"]]
+            if "else_" in props and props["else_"]:
+                props["else_"] = [self._substitute_captures_in_node(n) for n in props["else_"]]
+            result["props"] = props
+
+        return result
 
 
 def collect_callback_captures(

@@ -68,7 +68,10 @@ typedef IRNode = {
     ?object: IRNode,
     ?props: Dynamic,
     ?c_code: String,
-    ?c_func: String  // Direct C function name for 1:1 translation
+    ?c_func: String,   // Direct C function name for 1:1 translation
+    ?cName: String,    // C function name for trait_method_call
+    ?trait: String,    // Trait name for trait_method_call
+    ?parent: String    // Parent trait name for inherited_method_call
 }
 
 typedef MemberIR = {
@@ -104,6 +107,28 @@ typedef SignalHandlerMeta = {
     ?preamble: String        // C code for payload unpacking, generated after arg_types known
 }
 
+/**
+ * Method parameter definition for callable methods.
+ */
+typedef MethodParamIR = {
+    name: String,            // Parameter name
+    haxeType: String,        // Haxe type (Int, Float, SceneId, etc.)
+    ctype: String            // C type (int32_t, float, SceneId, etc.)
+}
+
+/**
+ * Method definition for callable trait methods.
+ * All non-lifecycle methods are generated as callable C functions.
+ */
+typedef MethodIR = {
+    name: String,            // Method name, e.g., "init", "loadScene"
+    cName: String,           // Full C function name, e.g., "arm_gamescene_init"
+    params: Array<MethodParamIR>,  // Parameters (not including obj/data which are implicit)
+    returnType: String,      // C return type ("void", "int32_t", etc.)
+    body: Array<IRNode>,     // Method body as IR nodes
+    ?isVirtual: Bool         // True if method is public (can be overridden by children)
+}
+
 typedef TraitMeta = {
     uses_input: Bool,
     uses_transform: Bool,
@@ -123,13 +148,24 @@ typedef TraitMeta = {
     has_remove_render2d: Bool      // True if trait calls removeRender2D() - adds _render2d_enabled guard
 }
 
+/**
+ * Super call metadata - tracks super() and super.method() calls for inheritance.
+ */
+typedef SuperCallMeta = {
+    type: String,            // "super_new" for super() or "super_method" for super.method()
+    method: String,          // Method name (empty for super_new)
+    args: Array<IRNode>      // Arguments to pass
+}
+
 typedef TraitIR = {
     name: String,
     module: String,
     cName: String,
     needsData: Bool,
+    ?parent: String,         // Parent trait name (null if none or base Trait class)
     members: Map<String, MemberIR>,
-    events: Map<String, Array<IRNode>>,
+    methods: Map<String, MethodIR>,  // All callable methods (non-lifecycle)
+    events: Map<String, Array<IRNode>>,  // Lifecycle events (on_ready, on_update, etc.)
     meta: TraitMeta
 }
 

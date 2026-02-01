@@ -84,19 +84,105 @@ class TraitCodeGenerator:
     """Generates C code for a single trait from IR.
 
     Pure 1:1 emitter - all data comes from macro-generated IR.
+
+    Inheritance Support (Option B - Composition):
+    - Child data structs embed parent struct at offset 0
+    - Each trait generates standalone C code (no IR merging)
+    - Python routes member access through inheritance chain
+    - super() calls emit as parent lifecycle function calls
+
+    Method Support (Option A - Callable Functions):
+    - All non-lifecycle methods are generated as callable C functions
+    - Method calls emit as trait_method_call IR nodes
+    - Child can call parent methods via super_call IR nodes
     """
 
-    def __init__(self, name: str, ir: Dict, type_overrides: Dict = None):
+    def __init__(self, name: str, ir: Dict, type_overrides: Dict = None, all_traits: Dict = None):
         self.name = name
         self.c_name = ir.get("c_name", "")  # Must be provided by macro
         self.members = ir.get("members", [])
+        self.methods = ir.get("methods", {})  # Callable methods (non-lifecycle)
         self.events = ir.get("events", {})
         self.meta = ir.get("meta", {})
         self.type_overrides = type_overrides or {}
 
+        # Inheritance support
+        self.parent_name = ir.get("parent")  # Parent trait name (None if no parent)
+        self.all_traits = all_traits or {}   # All traits for looking up parent info
+
+        # Build member names list (this trait's own members only)
         member_names = [m.get("name") for m in self.members]
-        self.emitter = TraitEmitter(name, self.c_name, member_names)
+
+        # Build complete member map including inherited members for routing
+        self.member_map = self._build_member_map()
+
+        # Pre-compute the set of virtual method names for this trait
+        # (methods that are overridden by child classes)
+        self.virtual_method_names = self._compute_virtual_methods()
+
+        # Create emitter with inheritance info
+        self.emitter = TraitEmitter(
+            name,
+            self.c_name,
+            member_names,
+            is_trait=True,
+            parent_name=self.parent_name,
+            all_traits=self.all_traits,
+            methods=self.methods,
+            virtual_methods=self.virtual_method_names
+        )
         self._tween_callbacks = []  # Collected tween callbacks from all events
+
+    def _compute_virtual_methods(self) -> set:
+        """Compute the set of method names that need vtable dispatch.
+
+        A method is virtual if it's overridden by any child class.
+        """
+        virtual = set()
+        for method_name in self.methods.keys():
+            if self._is_method_virtual(method_name):
+                virtual.add(method_name)
+        return virtual
+
+    def _build_member_map(self) -> Dict[str, Dict]:
+        """Build a map of all members including inherited ones.
+
+        Returns dict of member_name -> {ctype, owner, depth} where:
+        - ctype: C type of the member
+        - owner: trait name that owns this member
+        - depth: inheritance depth (0 = this class, 1 = parent, 2 = grandparent, etc.)
+        """
+        member_map = {}
+
+        # Add this trait's own members at depth 0
+        for m in self.members:
+            mname = m.get("name", "")
+            member_map[mname] = {
+                "ctype": m.get("ctype", "float"),
+                "owner": self.name,
+                "depth": 0
+            }
+
+        # Walk up inheritance chain
+        depth = 1
+        current_parent = self.parent_name
+        while current_parent and current_parent in self.all_traits:
+            parent_ir = self.all_traits[current_parent]
+            parent_members = parent_ir.get("members", [])
+            for m in parent_members:
+                mname = m.get("name", "")
+                # Don't override if child has same member (child shadows parent)
+                if mname not in member_map:
+                    member_map[mname] = {
+                        "ctype": m.get("ctype", "float"),
+                        "owner": current_parent,
+                        "depth": depth
+                    }
+            # Move up to grandparent
+            current_parent = parent_ir.get("parent")
+            depth += 1
+
+        return member_map
 
     def _get_member_ctype(self, member: Dict) -> str:
         """Get the C type for a member, applying overrides if present."""
@@ -108,16 +194,134 @@ class TraitCodeGenerator:
                 ctype = self.type_overrides[self.name][name]
         return ctype
 
+    def _find_vtable_owner(self, method_name: str) -> str:
+        """Find the trait that originally declares a virtual method.
+
+        The vtable function pointer is stored in the struct of the trait
+        that first declares the method. Child overrides set that same pointer.
+
+        Returns the trait name that owns the vtable pointer for this method.
+        """
+        # Walk up the inheritance chain to find the topmost definition
+        # (the trait that first declares this method)
+        owner = self.name
+        current_parent = self.parent_name
+
+        while current_parent and current_parent in self.all_traits:
+            parent_ir = self.all_traits[current_parent]
+            parent_methods = parent_ir.get("methods", {})
+
+            if method_name in parent_methods:
+                # Parent has this method - it might be the original definer
+                # or also an override. Keep walking up.
+                owner = current_parent
+
+            current_parent = parent_ir.get("parent")
+
+        return owner
+
+    def _is_method_virtual(self, method_name: str) -> bool:
+        """Check if a method should be treated as virtual (needs vtable dispatch).
+
+        A method is virtual if:
+        1. It's explicitly marked as isVirtual: true in the IR, OR
+        2. It's overridden by any child class (detected by scanning all traits), OR
+        3. It overrides a parent's method (this trait is a child overriding parent)
+
+        This fallback logic handles cases where the isVirtual flag isn't in the IR yet.
+        """
+        method_ir = self.methods.get(method_name, {})
+
+        # Check explicit flag first
+        if method_ir.get("isVirtual", False):
+            return True
+
+        # Check if this method overrides a parent's method
+        # Walk up the inheritance chain to see if any ancestor has this method
+        current_parent = self.parent_name
+        while current_parent and current_parent in self.all_traits:
+            parent_ir = self.all_traits[current_parent]
+            parent_methods = parent_ir.get("methods", {})
+            if method_name in parent_methods:
+                # This method overrides a parent's method - it's virtual
+                return True
+            current_parent = parent_ir.get("parent")
+
+        # Fallback: check if any child class overrides this method
+        # A method is virtual if it can be overridden
+        for trait_name, trait_ir in self.all_traits.items():
+            # Check if this trait is a child of the current trait (directly or indirectly)
+            if self._is_descendant_of(trait_name, self.name):
+                # Check if child has a method with the same name (override)
+                child_methods = trait_ir.get("methods", {})
+                if method_name in child_methods:
+                    return True
+
+        return False
+
+    def _is_descendant_of(self, trait_name: str, ancestor_name: str) -> bool:
+        """Check if trait_name is a descendant of ancestor_name."""
+        if trait_name == ancestor_name:
+            return False
+
+        current = trait_name
+        while current and current in self.all_traits:
+            current_ir = self.all_traits[current]
+            parent = current_ir.get("parent")
+            if parent == ancestor_name:
+                return True
+            current = parent
+
+        return False
+
     def generate_data_struct(self) -> str:
-        """Generate the data struct for trait members and signals."""
+        """Generate the data struct for trait members and signals.
+
+        For inheritance (Option B - Composition):
+        - If trait has a parent, embed parent struct at offset 0
+        - This allows safe casting and proper memory layout
+
+        Example:
+            typedef struct {
+                GameSceneData _parent;  // Embedded parent (if any)
+                int32_t score;          // This trait's members
+            } LevelData;
+        """
         signals = self.meta.get("signals", [])
 
-        if not self.members and not signals:
+        # Find virtual methods that are FIRST DECLARED in this trait (not overrides)
+        # Overrides use the parent's vtable pointer, so don't add duplicates
+        virtual_methods = []
+        for method_name, method_ir in self.methods.items():
+            if self._is_method_virtual(method_name):
+                # Check if this is the original declaration (not inherited from parent)
+                if self._find_vtable_owner(method_name) == self.name:
+                    virtual_methods.append(method_ir)
+
+        # Check if we need a struct at all
+        # Need struct if: has members, has signals, has parent, or has virtual methods
+        if not self.members and not signals and not self.parent_name and not virtual_methods:
             return ""
 
         lines = [f"typedef struct {{"]
 
-        # Regular members
+        # Embed parent struct at offset 0 (if any)
+        if self.parent_name:
+            lines.append(f"    {self.parent_name}Data _parent;")
+
+        # Virtual method function pointers (for polymorphism)
+        for vm in virtual_methods:
+            vm_name = vm.get("name", "")
+            vm_params = vm.get("params", [])
+            vm_ret = vm.get("returnType", "void")
+            # Build function pointer signature: returnType (*_vfn_methodname)(void* obj, void* data, params...)
+            param_types = ["void*", "void*"]  # obj and data
+            for p in vm_params:
+                param_types.append(p.get("ctype", "void*"))
+            params_str = ", ".join(param_types)
+            lines.append(f"    {vm_ret} (*_vfn_{vm_name})({params_str});")
+
+        # This trait's own members
         for m in self.members:
             ctype = self._get_member_ctype(m)
             name = m.get("name", "unknown")
@@ -144,31 +348,60 @@ class TraitCodeGenerator:
         For traits, callbacks can access the trait data via the 'data' pointer
         which is passed through the tween's obj/data parameters.
         """
-        # Delegate to shared helper with is_trait=True
+        # Delegate to shared helper with is_trait=True, pass c_name for captures
         return tween_helper.generate_tween_callback(
             callback_info,
             self.emitter,
-            c_name="",
+            c_name=self.c_name,
             is_trait=True
         )
 
     def _collect_tween_callbacks(self):
-        """Scan all events for tween callbacks and store them."""
+        """Scan all events AND methods for tween callbacks and store them."""
         if self._tween_callbacks:
             return  # Already collected
 
+        # Scan event bodies
         for event_name, event_nodes in self.events.items():
             found = self._find_tween_callbacks(event_nodes)
             self._tween_callbacks.extend(found)
 
+        # Scan method bodies too
+        for method_name, method_ir in self.methods.items():
+            method_body = method_ir.get("body", [])
+            found = self._find_tween_callbacks(method_body)
+            self._tween_callbacks.extend(found)
+
     def generate_tween_callbacks(self) -> str:
-        """Generate all tween callback functions for this trait."""
+        """Generate all tween callback functions for this trait.
+
+        Includes capture globals for any captured function parameters.
+        """
         self._collect_tween_callbacks()
 
         if not self._tween_callbacks:
             return ""
 
         lines = []
+
+        # First, generate capture globals for any captured params
+        callback_param_captures = {}
+        for cb in self._tween_callbacks:
+            cb_name = cb.get("callback_name", "")
+            captures = cb.get("captures", [])
+            param_caps = [(c["name"], c.get("ctype", c.get("type", "int32_t")))
+                          for c in captures if c.get("is_param", False)]
+            if param_caps:
+                callback_param_captures[cb_name] = param_caps
+
+        if callback_param_captures:
+            capture_globals = tween_helper.generate_capture_globals(
+                callback_param_captures, self.c_name
+            )
+            lines.extend(capture_globals)
+            lines.append("")
+
+        # Then generate callback functions
         seen_callbacks = set()
 
         for cb in self._tween_callbacks:
@@ -244,6 +477,100 @@ class TraitCodeGenerator:
                 decls.append(f"void {self.c_name}_{handler_name}(void* ctx, void* payload);")
         return decls
 
+    def generate_method_declarations(self) -> List[str]:
+        """Generate declarations for all callable methods (non-lifecycle).
+
+        Methods are generated as C functions with signature:
+        return_type cName(void* obj, void* data[, params...]);
+        """
+        decls = []
+        for method_name, method_ir in self.methods.items():
+            c_name = method_ir.get("cName", f"{self.c_name}_{method_name.lower()}")
+            return_type = method_ir.get("returnType", "void")
+            params = method_ir.get("params", [])
+
+            # Build parameter string
+            param_strs = ["void* obj", "void* data"]
+            for p in params:
+                pname = p.get("name", "")
+                ctype = p.get("ctype", "int32_t")
+                param_strs.append(f"{ctype} {pname}")
+
+            decls.append(f"{return_type} {c_name}({', '.join(param_strs)});")
+
+        return decls
+
+    def generate_method_implementations(self) -> str:
+        """Generate C implementations for all callable methods (non-lifecycle).
+
+        Methods are standalone C functions that can be called from any event handler.
+        """
+        if not self.methods:
+            return ""
+
+        impl_lines = []
+
+        for method_name, method_ir in self.methods.items():
+            c_name = method_ir.get("cName", f"{self.c_name}_{method_name.lower()}")
+            return_type = method_ir.get("returnType", "void")
+            params = method_ir.get("params", [])
+            body = method_ir.get("body", [])
+
+            # Build parameter string
+            param_strs = ["void* obj", "void* data"]
+            for p in params:
+                pname = p.get("name", "")
+                ctype = p.get("ctype", "int32_t")
+                param_strs.append(f"{ctype} {pname}")
+
+            impl_lines.append(f"{return_type} {c_name}({', '.join(param_strs)}) {{")
+
+            # Check if method uses render2D features (needs _g2_color local var)
+            uses_render2d = self._method_uses_render2d(body)
+            if uses_render2d:
+                impl_lines.append("    color_t _g2_color = RGBA32(255, 255, 255, 255);")
+
+            # Emit body statements
+            if body:
+                body_code = self.emitter.emit_statements(body, "    ")
+                impl_lines.append(body_code)
+            else:
+                impl_lines.append("    // Empty method")
+
+            impl_lines.append("}")
+            impl_lines.append("")
+
+        return "\n".join(impl_lines)
+
+    def _method_uses_render2d(self, nodes: list) -> bool:
+        """Check if method body uses render2D features (graphics2d calls, set_color, etc.)."""
+        def scan(node):
+            if not node or not isinstance(node, dict):
+                return False
+            node_type = node.get("type", "")
+            # Check for graphics2d-related node types
+            if node_type in ("graphics2d_call", "set_color", "g2_set_color",
+                             "render2d_set_color", "render2d_fill_rect"):
+                return True
+            # Recursively scan children and args
+            for child in node.get("children", []):
+                if scan(child):
+                    return True
+            for arg in node.get("args", []):
+                if scan(arg):
+                    return True
+            if node.get("object") and scan(node["object"]):
+                return True
+            return False
+
+        if isinstance(nodes, list):
+            for n in nodes:
+                if scan(n):
+                    return True
+        elif isinstance(nodes, dict):
+            return scan(nodes)
+        return False
+
     def generate_all_event_implementations(self) -> str:
         """Generate C implementations for all event handlers."""
         impl_lines = [f"// ========== {self.name} =========="]
@@ -251,6 +578,25 @@ class TraitCodeGenerator:
         # on_ready - no dt parameter
         event_nodes = self.events.get("on_ready", [])
         impl_lines.append(f"void {self.c_name}_on_ready(void* obj, void* data) {{")
+
+        # Call parent's on_ready FIRST (if we have a parent)
+        # Pass full data pointer (not &_parent) so virtual method calls work correctly
+        # Since _parent is at offset 0, casting to parent type works
+        if self.parent_name and self.parent_name in self.all_traits:
+            parent_ir = self.all_traits[self.parent_name]
+            parent_c_name = parent_ir.get("c_name", self.parent_name.lower())
+            impl_lines.append(f"    {parent_c_name}_on_ready(obj, data);")
+
+        # Initialize virtual function pointers for this trait's virtual methods
+        # This happens AFTER parent's on_ready so child overrides replace parent's pointers
+        for method_name, method_ir in self.methods.items():
+            if self._is_method_virtual(method_name):
+                method_c_name = method_ir.get("cName", f"{self.c_name}_{method_name}")
+                # Find which ancestor defines this method (has the vtable pointer)
+                # If this trait defines it, use this trait's Data type
+                # If it's an override, find the ancestor that originally defines it
+                vtable_owner = self._find_vtable_owner(method_name)
+                impl_lines.append(f"    (({vtable_owner}Data*)data)->_vfn_{method_name} = {method_c_name};")
 
         # Allocate tweens at the start of on_ready (before user code)
         tween_alloc_lines = []
@@ -303,6 +649,12 @@ class TraitCodeGenerator:
         body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
         impl_lines.append(f"void {self.c_name}_on_remove(void* obj, void* data) {{")
         impl_lines.append(body)
+        # Call parent's on_remove LAST (cleanup in reverse order)
+        # Pass full data pointer so virtual method calls work correctly
+        if self.parent_name and self.parent_name in self.all_traits:
+            parent_ir = self.all_traits[self.parent_name]
+            parent_c_name = parent_ir.get("c_name", self.parent_name.lower())
+            impl_lines.append(f"    {parent_c_name}_on_remove(obj, data);")
         impl_lines.append("}")
         impl_lines.append("")
 
@@ -314,6 +666,12 @@ class TraitCodeGenerator:
         # Add early return guard if trait uses removeRender2D()
         if self.meta.get("has_remove_render2d", False):
             impl_lines.append(f"    if (!(({self.name}Data*)data)->_render2d_enabled) return;")
+        # Call parent's on_render2d FIRST (parent renders background)
+        # Pass full data pointer so virtual method calls work correctly
+        if self.parent_name and self.parent_name in self.all_traits:
+            parent_ir = self.all_traits[self.parent_name]
+            parent_c_name = parent_ir.get("c_name", self.parent_name.lower())
+            impl_lines.append(f"    {parent_c_name}_on_render2d(obj, data);")
         # Only add render2d infrastructure if there's actual content
         if has_render2d_content:
             impl_lines.append("    color_t _g2_color = RGBA32(255, 255, 255, 255);")
@@ -435,10 +793,65 @@ def _detect_features_in_nodes(nodes) -> dict:
     return features
 
 
+def _topological_sort_traits(traits: dict) -> List[str]:
+    """Sort traits in topological order (parents before children).
+
+    For inheritance to work correctly, parent data structs must be defined
+    before child data structs that embed them.
+
+    Args:
+        traits: Dict of trait_name -> trait_ir
+
+    Returns:
+        List of trait names in topological order
+    """
+    # Build dependency graph
+    # A trait depends on its parent (parent must come first)
+    in_degree = {name: 0 for name in traits}
+    children = {name: [] for name in traits}
+
+    for name, ir in traits.items():
+        parent = ir.get("parent")
+        if parent and parent in traits:
+            in_degree[name] += 1
+            children[parent].append(name)
+
+    # Kahn's algorithm for topological sort
+    # Start with traits that have no parents (in_degree = 0)
+    queue = [name for name, degree in in_degree.items() if degree == 0]
+    result = []
+
+    while queue:
+        # Pop from queue (stable sort: use the one added first)
+        current = queue.pop(0)
+        result.append(current)
+
+        # Reduce in_degree for children
+        for child in children[current]:
+            in_degree[child] -= 1
+            if in_degree[child] == 0:
+                queue.append(child)
+
+    # If we didn't process all traits, there's a cycle (shouldn't happen in valid code)
+    if len(result) != len(traits):
+        log.warn("Circular inheritance detected in traits - this shouldn't happen!")
+        # Add remaining traits anyway
+        for name in traits:
+            if name not in result:
+                result.append(name)
+
+    return result
+
+
 def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> tuple:
     """Prepare data for traits.h.j2 and traits.c.j2 templates.
 
     Uses TraitCodeGenerator for each trait to avoid code duplication.
+
+    Inheritance Processing (Option B - Composition):
+    - Traits are sorted in topological order (parents before children)
+    - Data structs are emitted with embedded parent structs
+    - Emitter routes member access through inheritance chain
 
     Args:
         traits: Dict of trait_name -> trait_ir from JSON
@@ -450,6 +863,9 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
     import arm.utils
     from arm.n64.codegen.autoload_generator import load_autoloads_json
 
+    # Sort traits in topological order (parents before children)
+    sorted_traits = _topological_sort_traits(traits)
+
     trait_data_structs = []
     trait_declarations = []
     event_handler_declarations = []
@@ -460,8 +876,10 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
     # Track features across all traits
     all_features = {'has_physics': False, 'has_ui': False, 'has_tween': False}
 
-    for trait_name, trait_ir in traits.items():
-        gen = TraitCodeGenerator(trait_name, trait_ir, type_overrides)
+    # Process traits in topological order (parents first)
+    for trait_name in sorted_traits:
+        trait_ir = traits[trait_name]
+        gen = TraitCodeGenerator(trait_name, trait_ir, type_overrides, all_traits=traits)
 
         # Header data: signal payload structs + data struct + declarations
         payload_structs = gen.generate_signal_payload_structs()
@@ -473,6 +891,7 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
             trait_data_structs.append(struct)
 
         trait_declarations.extend(gen.generate_lifecycle_declarations())
+        trait_declarations.extend(gen.generate_method_declarations())  # Callable methods
         event_handler_declarations.extend(gen.generate_button_event_declarations())
         event_handler_declarations.extend(gen.generate_contact_event_declarations())
         event_handler_declarations.extend(gen.generate_signal_handler_declarations())
@@ -502,7 +921,11 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
             tween_callbacks.append(f"// Tween callbacks for {trait_name}")
             tween_callbacks.append(tween_cb_code)
 
-        # Implementation data
+        # Implementation data: methods first (they may be called by events), then events
+        method_impls = gen.generate_method_implementations()
+        if method_impls:
+            trait_implementations.append(f"// Methods for {trait_name}")
+            trait_implementations.append(method_impls)
         trait_implementations.append(gen.generate_all_event_implementations())
 
         # Detect features in events

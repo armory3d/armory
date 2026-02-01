@@ -144,26 +144,102 @@ def get_trait(trait_info: dict, trait_class: str) -> dict:
     return traits.get(simple_name, {})
 
 def trait_needs_data(trait_info: dict, trait_class: str) -> bool:
-    """Check if a trait needs a data struct (has members or signals)."""
+    """Check if a trait needs a data struct (has members, signals, or parent).
+
+    With inheritance (Option B), traits with parents need a data struct
+    to hold the embedded parent struct.
+    """
     trait = get_trait(trait_info, trait_class)
     has_members = len(trait.get("members", [])) > 0
     has_signals = len(trait.get("meta", {}).get("signals", [])) > 0
-    return has_members or has_signals
+    has_parent = trait.get("parent") is not None
+    return has_members or has_signals or has_parent
+
+
+def _build_parent_initializer(trait_info: dict, parent_class: str, current_scene: str,
+                              instance_props: dict = None, type_overrides: dict = None) -> str:
+    """Recursively build initializer for parent struct in inheritance chain.
+
+    For Option B (Composition), the parent is embedded at offset 0.
+    This function builds: ._parent = (ParentData){...}
+    """
+    if not parent_class:
+        return ""
+
+    trait = get_trait(trait_info, parent_class)
+    if not trait:
+        return ""
+
+    members = trait.get("members", [])
+    signals = trait.get("meta", {}).get("signals", [])
+    grandparent = trait.get("parent")
+
+    init_fields = []
+    instance_props = instance_props or {}
+    type_overrides = type_overrides or {}
+
+    # First, recursively add grandparent initialization
+    if grandparent:
+        grandparent_init = _build_parent_initializer(
+            trait_info, grandparent, current_scene, instance_props, type_overrides
+        )
+        if grandparent_init:
+            init_fields.append(grandparent_init)
+
+    # Add parent's own members
+    for member in members:
+        member_name = member.get("name", "")
+        if not member_name:
+            continue
+        member_ctype = type_overrides.get(member_name, member.get("ctype", "float"))
+        if member_name in instance_props:
+            c_value = to_c_literal(instance_props[member_name], member_ctype)
+        else:
+            c_value = extract_default_value(member.get("default_value"), member_ctype)
+        init_fields.append(f'.{member_name} = {c_value}')
+
+    # Add parent's signals
+    for sig in signals:
+        sig_name = sig.get("name", "")
+        if sig_name:
+            init_fields.append(f'.{sig_name} = {{0}}')
+
+    if not init_fields:
+        return f"._parent = ({parent_class}Data){{0}}"
+
+    return f"._parent = ({parent_class}Data){{{', '.join(init_fields)}}}"
+
 
 def build_trait_initializer(trait_info: dict, trait_class: str, current_scene: str,
                             instance_props: dict = None, type_overrides: dict = None) -> str:
+    """Build C initializer for a trait's data struct.
+
+    For inheritance (Option B - Composition), this includes:
+    - ._parent = (ParentData){...} (recursively for multi-level)
+    - This trait's own members and signals
+    """
     trait = get_trait(trait_info, trait_class)
     members = trait.get("members", [])
     signals = trait.get("meta", {}).get("signals", [])
+    parent_class = trait.get("parent")
 
-    if not members and not signals:
+    # Check if we need any initialization
+    if not members and not signals and not parent_class:
         return ""
 
     init_fields = []
     instance_props = instance_props or {}
     type_overrides = type_overrides or {}
 
-    # Initialize regular members
+    # First, add parent initialization if this trait has a parent
+    if parent_class:
+        parent_init = _build_parent_initializer(
+            trait_info, parent_class, current_scene, instance_props, type_overrides
+        )
+        if parent_init:
+            init_fields.append(parent_init)
+
+    # Initialize this trait's own members
     for member in members:
         member_name = member.get("name", "")
         if not member_name:

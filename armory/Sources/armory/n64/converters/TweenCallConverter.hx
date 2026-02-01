@@ -6,6 +6,7 @@ import haxe.macro.Context;
 import armory.n64.IRTypes;
 import armory.n64.converters.ICallConverter;
 import armory.n64.util.ExprUtils;
+import armory.n64.mapping.TypeMap;
 
 using StringTools;
 
@@ -298,18 +299,32 @@ class TweenCallConverter implements ICallConverter {
                     // Check if it's a member or needs to be captured
                     var memberType = ctx.getMemberType(name);
                     if (memberType != null) {
-                        // It's a class member - these are globals in autoloads, don't need capture
-                        // but we track them for reference
+                        // It's a class member - accessible via data pointer
                         if (!captures.exists(name)) {
                             captures.set(name, {
                                 name: name,
                                 type: memberType,
+                                ctype: TypeMap.getCType(memberType),
                                 is_member: true,
                                 is_param: false
                             });
                         }
+                    } else {
+                        // Check if it's a local variable / parameter
+                        var localType = ctx.getLocalVarType(name);
+                        if (localType != null) {
+                            // It's a local/param - needs to be captured
+                            if (!captures.exists(name)) {
+                                captures.set(name, {
+                                    name: name,
+                                    type: localType,
+                                    ctype: TypeMap.getCType(localType),
+                                    is_member: false,
+                                    is_param: true
+                                });
+                            }
+                        }
                     }
-                    // Function parameters would need to be captured - detected at codegen
                 }
 
             case "field_access":

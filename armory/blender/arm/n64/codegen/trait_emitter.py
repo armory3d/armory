@@ -3,20 +3,100 @@ Trait Emitter - Core IR→C translation engine for traits.
 
 This module provides the TraitEmitter class which performs pure 1:1 translation
 from IR nodes to C code. No semantic analysis - just translation.
+
+Inheritance Support (Option B - Composition):
+- Child data structs embed parent at offset 0 as _parent field
+- Member access routes through inheritance chain: data->member or data->_parent.member
+- super() calls emit as parent lifecycle function calls
+
+Virtual Method Support:
+- Public methods can be overridden in child classes
+- Virtual methods are called through function pointers (_vfn_methodname)
+- Child classes set their own function pointers in on_ready
 """
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 
 class TraitEmitter:
-    """Emits C code from IR nodes. No semantic analysis, just translation."""
+    """Emits C code from IR nodes. No semantic analysis, just translation.
 
-    def __init__(self, trait_name: str, c_name: str, member_names: List[str], is_trait: bool = True):
+    Inheritance Support:
+    - Tracks parent_name and all_traits for member routing
+    - emit_member() routes to correct depth in inheritance chain
+    - emit_super_call() emits parent function calls
+
+    Virtual Method Support:
+    - Tracks methods dict to identify virtual methods
+    - emit_trait_method_call() calls through vtable for virtual methods
+    """
+
+    def __init__(self, trait_name: str, c_name: str, member_names: List[str],
+                 is_trait: bool = True, parent_name: str = None, all_traits: Dict = None,
+                 methods: Dict = None, virtual_methods: Set[str] = None):
         self.trait_name = trait_name
         self.c_name = c_name
-        self.member_names = member_names
+        self.member_names = member_names  # This trait's own members only
         self.data_type = f"{trait_name}Data"
         self.is_trait = is_trait  # True for traits (use obj/data), False for autoloads (use NULL)
+
+        # Inheritance support
+        self.parent_name = parent_name
+        self.all_traits = all_traits or {}
+
+        # Virtual method support
+        self.methods = methods or {}
+        self.virtual_methods = virtual_methods or set()  # Pre-computed set of virtual method names
+
+        # Build member lookup map for routing member access
+        self._member_depth_map = self._build_member_depth_map()
+
+    def _build_member_depth_map(self) -> Dict[str, int]:
+        """Build map of member_name -> depth for routing member access.
+
+        depth 0 = this trait's member (data->member)
+        depth 1 = parent's member (data->_parent.member)
+        depth 2 = grandparent's member (data->_parent._parent.member)
+        etc.
+        """
+        depth_map = {}
+
+        # This trait's members at depth 0
+        for name in self.member_names:
+            depth_map[name] = 0
+
+        # Walk up inheritance chain
+        depth = 1
+        current_parent = self.parent_name
+        while current_parent and current_parent in self.all_traits:
+            parent_ir = self.all_traits[current_parent]
+            parent_members = parent_ir.get("members", [])
+            for m in parent_members:
+                mname = m.get("name", "")
+                # Don't override - child shadows parent
+                if mname not in depth_map:
+                    depth_map[mname] = depth
+            current_parent = parent_ir.get("parent")
+            depth += 1
+
+        return depth_map
+
+    def _get_member_access(self, member_name: str) -> str:
+        """Get the C expression to access a member, routing through inheritance chain.
+
+        Returns expression like:
+        - "(Data*)data)->member" for this trait's members (depth 0)
+        - "(Data*)data)->_parent.member" for parent's members (depth 1)
+        - "(Data*)data)->_parent._parent.member" for grandparent's (depth 2), etc.
+        """
+        depth = self._member_depth_map.get(member_name, 0)
+        if depth == 0:
+            # Direct member of this trait
+            return f"(({self.data_type}*)data)->{member_name}"
+        else:
+            # Inherited member - route through _parent chain
+            parent_chain = "_parent." * depth
+            return f"(({self.data_type}*)data)->{parent_chain}{member_name}"
 
     def emit(self, node: Optional[Dict]) -> str:
         """Emit C code for an IR node."""
@@ -211,9 +291,15 @@ class TraitEmitter:
     # =========================================================================
 
     def emit_member(self, node: Dict) -> str:
-        """Trait member access: data->member_name"""
+        """Trait member access with inheritance routing.
+
+        Routes to correct depth in inheritance chain:
+        - This trait's members: data->member
+        - Parent's members: data->_parent.member
+        - Grandparent's: data->_parent._parent.member
+        """
         name = node.get("value", "")
-        return f"(({self.data_type}*)data)->{name}"
+        return self._get_member_access(name)
 
     def emit_ident(self, node: Dict) -> str:
         """Identifier: local var, dt, object, etc."""
@@ -240,16 +326,17 @@ class TraitEmitter:
                     # Convert to ROM path: "rom:/sound_name.wav64"
                     return f'"rom:/{field}.wav64"'
 
-            # this.field -> member access (for traits: data->field)
+            # this.field -> member access with inheritance routing
             if obj_type == "ident" and obj_value == "this":
-                if field in self.member_names:
-                    return f"(({self.data_type}*)data)->{field}"
+                # Check if it's a member (own or inherited)
+                if field in self._member_depth_map:
+                    return self._get_member_access(field)
                 return field
 
             # inst.field -> also a member access for singleton patterns
             if obj_type == "ident" and obj_value == "inst":
-                if field in self.member_names:
-                    return f"(({self.data_type}*)data)->{field}"
+                if field in self._member_depth_map:
+                    return self._get_member_access(field)
                 return field
 
             # Emit object and access field
@@ -405,6 +492,179 @@ class TraitEmitter:
             arg_strs = [self.emit(a) for a in args if self.emit(a)]
             return f"{func_name}({', '.join(arg_strs)})"
         return ""
+
+    def emit_super_call(self, node: Dict) -> str:
+        """Emit super() or super.method() calls for inheritance.
+
+        IR format:
+            type: "super_call"
+            value: "ParentTraitName"
+            method: "new" (for super()) or method name (for super.method())
+            args: [...]
+
+        Maps to parent lifecycle functions.
+
+        We pass the FULL data pointer (not &_parent) so that virtual method calls
+        within the parent method dispatch correctly to the child's override.
+        Since _parent is at offset 0, casting LevelData* to GameSceneData* works.
+        """
+        parent_name = node.get("value", "")
+        method = node.get("method", "")
+        args = node.get("args", [])
+
+        if not parent_name or parent_name not in self.all_traits:
+            return "// super call - no parent found"
+
+        parent_ir = self.all_traits[parent_name]
+        parent_c_name = parent_ir.get("c_name", parent_name.lower())
+
+        # Map method to lifecycle function - pass full data for virtual dispatch
+        if method == "new":
+            # super() -> parent's on_ready
+            return f"{parent_c_name}_on_ready(obj, data)"
+        elif method == "onReady" or method == "init":
+            return f"{parent_c_name}_on_ready(obj, data)"
+        elif method == "onUpdate" or method == "update":
+            return f"{parent_c_name}_on_update(obj, dt, data)"
+        elif method == "onFixedUpdate" or method == "fixedUpdate":
+            return f"{parent_c_name}_on_fixed_update(obj, dt, data)"
+        elif method == "onLateUpdate" or method == "lateUpdate":
+            return f"{parent_c_name}_on_late_update(obj, dt, data)"
+        elif method == "onRemove" or method == "remove":
+            return f"{parent_c_name}_on_remove(obj, data)"
+        elif method == "onRender2D" or method == "render2D":
+            return f"{parent_c_name}_on_render2d(obj, data)"
+        else:
+            # Generic parent method call
+            arg_strs = [self.emit(a) for a in args if self.emit(a)]
+            args_part = ", ".join(arg_strs) if arg_strs else ""
+            if args_part:
+                return f"{parent_c_name}_{method}(obj, data, {args_part})"
+            else:
+                return f"{parent_c_name}_{method}(obj, data)"
+
+    def emit_trait_method_call(self, node: Dict) -> str:
+        """Emit call to this trait's own method (generated as C function).
+
+        IR format:
+            type: "trait_method_call"
+            cName: "arm_gamescene_init"
+            method: "init"
+            trait: "GameScene"
+            args: [...]
+
+        For virtual methods (public, can be overridden), call through vtable:
+            (({TraitName}Data*)data)->_vfn_methodname(obj, data, args...)
+
+        For non-virtual methods, call directly:
+            cName(obj, data, args...)
+        """
+        c_name = node.get("cName", "")
+        method_name = node.get("method", "")
+        args = node.get("args", [])
+
+        if not c_name:
+            return "// trait_method_call - missing cName"
+
+        # Emit argument values
+        arg_strs = [self.emit(a) for a in args if self.emit(a)]
+        args_part = ", ".join(arg_strs) if arg_strs else ""
+
+        # Check if this method is virtual (uses pre-computed set from generator)
+        is_virtual = method_name in self.virtual_methods
+
+        if is_virtual:
+            # Call through vtable for polymorphic dispatch
+            # The vtable pointer is in the data struct as _vfn_methodname
+            vtable_call = f"(({self.data_type}*)data)->_vfn_{method_name}"
+            if args_part:
+                return f"{vtable_call}(obj, data, {args_part})"
+            else:
+                return f"{vtable_call}(obj, data)"
+        else:
+            # Non-virtual: direct call
+            if args_part:
+                return f"{c_name}(obj, data, {args_part})"
+            else:
+                return f"{c_name}(obj, data)"
+
+    def emit_inherited_method_call(self, node: Dict) -> str:
+        """Emit call to an inherited method from a parent class.
+
+        IR format:
+            type: "inherited_method_call"
+            parent: "GameScene"  (direct parent hint)
+            method: "init"
+            args: [...]
+
+        Walks up the inheritance chain to find which ancestor has the method,
+        then emits a call to that ancestor's method.
+
+        We pass the FULL data pointer (not &_parent) so that virtual method calls
+        within the parent method dispatch correctly to the child's override.
+        Since _parent is at offset 0, casting LevelData* to GameSceneData* works.
+        """
+        method = node.get("method", "")
+        args = node.get("args", [])
+        parent_hint = node.get("parent", "")
+
+        # Find which parent has this method
+        owner_name, depth = self._find_method_owner(method, parent_hint)
+
+        if not owner_name:
+            # No parent found with this method - emit as a regular call fallback
+            arg_strs = [self.emit(a) for a in args if self.emit(a)]
+            args_part = ", ".join(arg_strs) if arg_strs else ""
+            if args_part:
+                return f"{method}({args_part})"
+            else:
+                return f"{method}()"
+
+        owner_ir = self.all_traits.get(owner_name, {})
+        owner_c_name = owner_ir.get("c_name", owner_name.lower())
+
+        # Pass full data pointer for virtual method dispatch
+        # Parent methods cast to their own type, but since _parent is at offset 0,
+        # this works correctly
+        data_ptr = "data"
+
+        # Emit argument values
+        arg_strs = [self.emit(a) for a in args if self.emit(a)]
+        args_part = ", ".join(arg_strs) if arg_strs else ""
+
+        # Build function call
+        method_c_name = f"{owner_c_name}_{method.lower()}"
+        if args_part:
+            return f"{method_c_name}(obj, {data_ptr}, {args_part})"
+        else:
+            return f"{method_c_name}(obj, {data_ptr})"
+
+    def _find_method_owner(self, method: str, parent_hint: str) -> tuple:
+        """Find which ancestor trait owns a method.
+
+        Returns (owner_name, depth) where depth is:
+        - 1 for direct parent
+        - 2 for grandparent
+        - etc.
+
+        Returns (None, 0) if method not found in any ancestor.
+        """
+        depth = 1
+        current_parent = parent_hint or self.parent_name
+
+        while current_parent and current_parent in self.all_traits:
+            parent_ir = self.all_traits[current_parent]
+            parent_methods = parent_ir.get("methods", {})
+
+            # Check if this parent has the method
+            if method in parent_methods:
+                return (current_parent, depth)
+
+            # Move up to grandparent
+            current_parent = parent_ir.get("parent")
+            depth += 1
+
+        return (None, 0)
 
     def emit_method_call(self, node: Dict) -> str:
         """Method call on object: object.method(args).
@@ -831,6 +1091,9 @@ class TraitEmitter:
 
         The actual callback functions are generated separately at the autoload level.
         Here we just emit the setup and start calls.
+
+        If callbacks have captured parameters, we emit assignments to the
+        capture globals before the tween call.
         """
         obj = node.get("object")
         args = node.get("args", [])
@@ -852,13 +1115,33 @@ class TraitEmitter:
         update_str = f"{update_cb}_float" if update_cb else "NULL"
         done_str = f"{done_cb}_done" if done_cb else "NULL"
 
+        # Generate capture assignments for param captures
+        capture_lines = []
+        for callback_info in [on_update, on_done]:
+            if callback_info:
+                captures = callback_info.get("captures", [])
+                for cap in captures:
+                    if cap.get("is_param", False):
+                        cap_name = cap.get("name", "")
+                        # Assign param to capture global
+                        capture_lines.append(f"{self.c_name}_capture_{cap_name} = {cap_name}")
+
         # Tween returns itself for chaining, so emit setup
         # tween_float(tween, from, to, duration, on_update, on_done, ease, obj, data)
         # For traits, pass obj/data so callbacks can access trait members
         # For autoloads, pass NULL (callbacks access globals directly)
         obj_param = "obj" if self.is_trait else "NULL"
         data_param = "data" if self.is_trait else "NULL"
-        return f"tween_float({tween_var}, {from_val}, {to_val}, {duration}, {update_str}, {done_str}, {ease}, {obj_param}, {data_param})"
+
+        tween_call = f"tween_float({tween_var}, {from_val}, {to_val}, {duration}, {update_str}, {done_str}, {ease}, {obj_param}, {data_param})"
+
+        # If we have capture assignments, combine them with semicolons
+        if capture_lines:
+            # Return multiple statements - need to handle this carefully
+            # We'll join with "; " so the emit_statements can handle it
+            return "; ".join(capture_lines) + "; " + tween_call
+
+        return tween_call
 
     def emit_tween_vec4(self, node: Dict) -> str:
         """Emit tween_vec4() call."""
@@ -881,9 +1164,23 @@ class TraitEmitter:
         update_str = f"{update_cb}_vec4" if update_cb else "NULL"
         done_str = f"{done_cb}_done" if done_cb else "NULL"
 
+        # Generate capture assignments for param captures
+        capture_lines = []
+        for callback_info in [on_update, on_done]:
+            if callback_info:
+                captures = callback_info.get("captures", [])
+                for cap in captures:
+                    if cap.get("is_param", False):
+                        cap_name = cap.get("name", "")
+                        capture_lines.append(f"{self.c_name}_capture_{cap_name} = {cap_name}")
+
         obj_param = "obj" if self.is_trait else "NULL"
         data_param = "data" if self.is_trait else "NULL"
-        return f"tween_vec4({tween_var}, &{from_val}, &{to_val}, {duration}, {update_str}, {done_str}, {ease}, {obj_param}, {data_param})"
+        tween_call = f"tween_vec4({tween_var}, &{from_val}, &{to_val}, {duration}, {update_str}, {done_str}, {ease}, {obj_param}, {data_param})"
+
+        if capture_lines:
+            return "; ".join(capture_lines) + "; " + tween_call
+        return tween_call
 
     def emit_tween_delay(self, node: Dict) -> str:
         """Emit tween_delay() call."""
@@ -898,9 +1195,22 @@ class TraitEmitter:
         done_cb = on_done.get("callback_name") if on_done else None
         done_str = f"{done_cb}_done" if done_cb else "NULL"
 
+        # Generate capture assignments for param captures
+        capture_lines = []
+        if on_done:
+            captures = on_done.get("captures", [])
+            for cap in captures:
+                if cap.get("is_param", False):
+                    cap_name = cap.get("name", "")
+                    capture_lines.append(f"{self.c_name}_capture_{cap_name} = {cap_name}")
+
         obj_param = "obj" if self.is_trait else "NULL"
         data_param = "data" if self.is_trait else "NULL"
-        return f"tween_delay({tween_var}, {duration}, {done_str}, {obj_param}, {data_param})"
+        tween_call = f"tween_delay({tween_var}, {duration}, {done_str}, {obj_param}, {data_param})"
+
+        if capture_lines:
+            return "; ".join(capture_lines) + "; " + tween_call
+        return tween_call
 
     def emit_tween_start(self, node: Dict) -> str:
         """Emit tween_start() call."""

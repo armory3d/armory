@@ -47,6 +47,9 @@ interface IExtractorContext {
     // Get C-safe trait name (for generating handler names)
     function getCName():String;
 
+    // Check if name is a local variable (including method parameters)
+    function getLocalVarType(name:String):String;
+
     // Method lookup (for extracting handler bodies)
     function getMethod(name:String):haxe.macro.Expr.Function;
 

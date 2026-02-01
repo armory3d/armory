@@ -78,10 +78,21 @@ class N64TraitMacro {
             return null;
         }
 
+        // Detect parent class for inheritance support
+        var parentName:String = null;
+        if (cls.superClass != null) {
+            var superClass = cls.superClass.t.get();
+            var superModule = superClass.module;
+            // Only track user traits as parents (not iron.Trait or armory.* classes)
+            if (superModule.indexOf("iron.") != 0 && superModule.indexOf("armory.") != 0) {
+                parentName = superClass.name;
+            }
+        }
+
         var fields = Context.getBuildFields();
 
         // Extract trait IR
-        var extractor = new TraitExtractor(className, modulePath, fields);
+        var extractor = new TraitExtractor(className, modulePath, fields, parentName);
         var traitIR = extractor.extract();
 
         if (traitIR != null) {
@@ -101,10 +112,12 @@ class N64TraitMacro {
 
             // Skip empty traits (no events and doesn't need data struct)
             // But include if trait has contact_events or button_events in meta
+            // Also include if trait has a parent (needed for inheritance chain)
             var hasEvents = Lambda.count(ir.events) > 0;
             var hasContactEvents = ir.meta.contact_events.length > 0;
             var hasButtonEvents = ir.meta.button_events.length > 0;
-            if (!hasEvents && !hasContactEvents && !hasButtonEvents && !ir.needsData) continue;
+            var hasParent = ir.parent != null;
+            if (!hasEvents && !hasContactEvents && !hasButtonEvents && !ir.needsData && !hasParent) continue;
 
             // Convert members
             var membersArr:Array<Dynamic> = [];
@@ -125,6 +138,25 @@ class N64TraitMacro {
                 Reflect.setField(eventsObj, eventName, [for (n in eventNodes) N64MacroBase.serializeIRNode(n)]);
             }
 
+            // Convert methods (non-lifecycle callable functions)
+            var methodsObj:Dynamic = {};
+            for (methodName in ir.methods.keys()) {
+                var method = ir.methods.get(methodName);
+                var paramsArr = [for (p in method.params) {
+                    name: p.name,
+                    haxeType: p.haxeType,
+                    ctype: p.ctype
+                }];
+                var methodObj:Dynamic = {
+                    name: method.name,
+                    cName: method.cName,
+                    params: paramsArr,
+                    returnType: method.returnType,
+                    body: [for (n in method.body) N64MacroBase.serializeIRNode(n)]
+                };
+                Reflect.setField(methodsObj, methodName, methodObj);
+            }
+
             // Generate struct_type and struct_def for signals with 2+ args
             N64MacroBase.generateSignalStructs(ir.meta.signals, ir.cName);
 
@@ -135,13 +167,22 @@ class N64TraitMacro {
                 '${ir.name}Data'
             );
 
-            Reflect.setField(traits, name, {
+            // Build trait JSON object
+            var traitObj:Dynamic = {
                 module: ir.module,
                 c_name: ir.cName,
                 members: membersArr,
+                methods: methodsObj,  // All callable methods (non-lifecycle)
                 events: eventsObj,
                 meta: ir.meta
-            });
+            };
+
+            // Add parent if this trait inherits from another user trait
+            if (ir.parent != null) {
+                Reflect.setField(traitObj, "parent", ir.parent);
+            }
+
+            Reflect.setField(traits, name, traitObj);
         }
 
         var output:Dynamic = {
@@ -164,11 +205,16 @@ class TraitExtractor implements IExtractorContext {
     var members:Map<String, MemberIR>;
     var memberNames:Array<String>;
     var methodMap:Map<String, Function>;
+    var methodIRMap:Map<String, MethodIR>;   // Extracted methods as IR for C generation
+    var publicMethods:Map<String, Bool>;     // Track which methods are public (potentially virtual)
     var events:Map<String, Array<IRNode>>;
     public var meta(default, null):TraitMeta;
     var localVarTypes:Map<String, String>;  // Track local variable types
     var memberTypes:Map<String, String>;    // Track member types for signal detection
     public var cName(default, null):String;  // C-safe name for this trait
+
+    // Lifecycle method names that are handled specially (not as callable methods)
+    static var lifecycleMethodNames:Array<String> = ["new", "__onInit", "__onUpdate", "__onFixedUpdate", "__onLateUpdate", "__onRemove", "__onRender2D"];
 
     // Call converters for modular method call handling
     var converters:Array<ICallConverter>;
@@ -184,13 +230,19 @@ class TraitExtractor implements IExtractorContext {
      */
     static var useInlineInputMode:Bool = true;
 
-    public function new(className:String, modulePath:String, fields:Array<Field>) {
+    // Inheritance support
+    var parentName:String;  // Parent trait name (null if none)
+
+    public function new(className:String, modulePath:String, fields:Array<Field>, parentName:String = null) {
         this.className = className;
         this.modulePath = modulePath;
         this.fields = fields;
+        this.parentName = parentName;
         this.members = new Map();
         this.memberNames = [];
         this.methodMap = new Map();
+        this.methodIRMap = new Map();
+        this.publicMethods = new Map();  // Track which methods are public (potentially virtual)
         this.events = new Map();
         this.localVarTypes = new Map();
         this.memberTypes = new Map();
@@ -279,6 +331,9 @@ class TraitExtractor implements IExtractorContext {
                     }
                 case FFun(func):
                     methodMap.set(field.name, func);
+                    // Check if method is public (has APublic access)
+                    var isPublic = field.access != null && Lambda.has(field.access, APublic);
+                    publicMethods.set(field.name, isPublic);
                 default:
             }
         }
@@ -345,6 +400,9 @@ class TraitExtractor implements IExtractorContext {
             memberNames.push("_render2d_enabled");
         }
 
+        // Pass 4: Extract ALL non-lifecycle methods as callable C functions
+        extractMethods();
+
         // Generate C-safe name is now done in constructor
         // cName is available as this.cName
 
@@ -353,7 +411,9 @@ class TraitExtractor implements IExtractorContext {
             module: modulePath,
             cName: cName,
             needsData: memberNames.length > 0,
+            parent: parentName,  // Parent trait name for inheritance (null if none)
             members: members,
+            methods: methodIRMap,  // All callable methods (non-lifecycle)
             events: events,
             meta: meta
         };
@@ -372,6 +432,84 @@ class TraitExtractor implements IExtractorContext {
             ctype: TypeMap.getCType(haxeType),
             defaultValue: defaultNode
         };
+    }
+
+    /**
+     * Extract ALL non-lifecycle methods as callable C functions.
+     * Each method becomes a MethodIR with its parameters and body converted to IR.
+     */
+    function extractMethods():Void {
+        for (methodName in methodMap.keys()) {
+            // Skip lifecycle methods - they're handled as events
+            if (Lambda.has(lifecycleMethodNames, methodName)) continue;
+
+            // Skip internal/inherited Haxe methods
+            if (methodName.charAt(0) == '_' && methodName != "new") continue;
+
+            var method = methodMap.get(methodName);
+            if (method == null || method.expr == null) continue;
+
+            // Extract parameter info and add to localVarTypes for capture detection
+            var params:Array<MethodParamIR> = [];
+            if (method.args != null) {
+                for (arg in method.args) {
+                    var haxeType = arg.type != null ? N64MacroBase.complexTypeToString(arg.type) : "Dynamic";
+                    params.push({
+                        name: arg.name,
+                        haxeType: haxeType,
+                        ctype: TypeMap.getCType(haxeType)
+                    });
+                    // Track parameter as local variable for capture detection
+                    localVarTypes.set(arg.name, haxeType);
+                }
+            }
+
+            // Determine return type
+            var returnType = "void";
+            if (method.ret != null) {
+                var retHaxeType = N64MacroBase.complexTypeToString(method.ret);
+                returnType = TypeMap.getCType(retHaxeType);
+            }
+
+            // Convert method body to IR
+            var bodyNodes:Array<IRNode> = [];
+            switch (method.expr.expr) {
+                case EBlock(exprs):
+                    for (e in exprs) {
+                        var node = exprToIR(e);
+                        if (node != null && node.type != "skip") {
+                            bodyNodes.push(node);
+                        }
+                    }
+                default:
+                    var node = exprToIR(method.expr);
+                    if (node != null && node.type != "skip") {
+                        bodyNodes.push(node);
+                    }
+            }
+
+            // Generate C function name: arm_<traitname>_<methodname>
+            var methodCName = "arm_" + cName.substring(4) + "_" + methodName.toLowerCase();  // cName already starts with "arm_"
+
+            // Check if method is public - public methods are potentially virtual (can be overridden)
+            var isVirtual = publicMethods.exists(methodName) && publicMethods.get(methodName);
+
+            methodIRMap.set(methodName, {
+                name: methodName,
+                cName: methodCName,
+                params: params,
+                returnType: returnType,
+                body: bodyNodes,
+                isVirtual: isVirtual
+            });
+
+            // Clear method-specific local variables (parameters) after processing
+            if (method.args != null) {
+                for (arg in method.args) {
+                    localVarTypes.remove(arg.name);
+                }
+            }
+        }
     }
 
     function findLifecycles():{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr} {
@@ -618,8 +756,20 @@ class TraitExtractor implements IExtractorContext {
         };
     }
 
+    // Check if expression is 'super' keyword
+    function isSuperExpr(e:Expr):Bool {
+        return switch (e.expr) {
+            case EConst(CIdent("super")): true;
+            default: false;
+        };
+    }
+
     public function getMemberType(name:String):String {
         return memberTypes.exists(name) ? memberTypes.get(name) : null;
+    }
+
+    public function getLocalVarType(name:String):String {
+        return localVarTypes.exists(name) ? localVarTypes.get(name) : null;
     }
 
     public function getMethod(name:String):Function {
@@ -1254,6 +1404,20 @@ class TraitExtractor implements IExtractorContext {
         // Try modular converters first (handles Vec, Physics, Transform, Math, Input, Signal, Std, Object, Scene, Canvas)
         switch (callExpr.expr) {
             case EField(obj, method):
+                // Check for super.method() first
+                if (isSuperExpr(obj)) {
+                    if (parentName == null) {
+                        // No parent - skip (shouldn't happen in valid Haxe code)
+                        return { type: "skip" };
+                    }
+                    return {
+                        type: "super_call",
+                        value: parentName,    // Parent trait name
+                        method: method,       // Method name (e.g., "onReady", "onUpdate")
+                        args: args
+                    };
+                }
+
                 // Check for Time.time() special case
                 switch (obj.expr) {
                     case EConst(CIdent("Time")):
@@ -1272,6 +1436,38 @@ class TraitExtractor implements IExtractorContext {
                                 args: args
                             };
                         }
+                    // Check for this.method() - call to local method on this object
+                    case EConst(CIdent("this")):
+                        // Check if this is a call to a local method
+                        if (methodMap.exists(method)) {
+                            var methodFunc = methodMap.get(method);
+                            if (methodFunc != null && methodFunc.expr != null) {
+                                // Inline the method body
+                                var bodyNodes:Array<IRNode> = [];
+                                switch (methodFunc.expr.expr) {
+                                    case EBlock(exprs):
+                                        for (e in exprs) {
+                                            var node = exprToIR(e);
+                                            if (node != null && node.type != "skip") {
+                                                bodyNodes.push(node);
+                                            }
+                                        }
+                                    default:
+                                        var node = exprToIR(methodFunc.expr);
+                                        if (node != null && node.type != "skip") {
+                                            bodyNodes.push(node);
+                                        }
+                                }
+                                return { type: "block", children: bodyNodes };
+                            }
+                        }
+                        // Not a local method - emit as method_call (might be from parent)
+                        return {
+                            type: "method_call",
+                            method: method,
+                            object: { type: "ident", value: "this" },
+                            args: args
+                        };
                     default:
                 }
 
@@ -1295,10 +1491,24 @@ class TraitExtractor implements IExtractorContext {
                     object: exprToIR(obj),
                     args: args
                 };
+
             default:
         }
 
         switch (callExpr.expr) {
+            // super() - call parent constructor (on_ready)
+            case EConst(CIdent("super")):
+                if (parentName == null) {
+                    // No parent - skip (shouldn't happen in valid Haxe code)
+                    return { type: "skip" };
+                }
+                return {
+                    type: "super_call",
+                    value: parentName,    // Parent trait name
+                    method: "new",        // Constructor - maps to on_ready
+                    args: args
+                };
+
             case EConst(CIdent(funcName)):
                 // Skip lifecycle registration calls - they're handled by scanForLifecycles
                 // Note: notifyOnRender2D is now handled separately, not skipped
@@ -1371,28 +1581,31 @@ class TraitExtractor implements IExtractorContext {
                     return { type: "debug_call", args: args };
                 }
 
-                // Check if this is a call to a local method - inline its body
+                // Check if this is a call to a local method - emit as C function call
                 if (methodMap.exists(funcName)) {
                     var method = methodMap.get(funcName);
                     if (method != null && method.expr != null) {
-                        // Convert the method body to IR and wrap in a block
-                        var bodyNodes:Array<IRNode> = [];
-                        switch (method.expr.expr) {
-                            case EBlock(exprs):
-                                for (e in exprs) {
-                                    var node = exprToIR(e);
-                                    if (node != null && node.type != "skip") {
-                                        bodyNodes.push(node);
-                                    }
-                                }
-                            default:
-                                var node = exprToIR(method.expr);
-                                if (node != null && node.type != "skip") {
-                                    bodyNodes.push(node);
-                                }
-                        }
-                        return { type: "block", children: bodyNodes };
+                        // Generate C function name: arm_<traitname>_<methodname>
+                        var methodCName = "arm_" + cName.substring(4) + "_" + funcName.toLowerCase();
+                        return {
+                            type: "trait_method_call",
+                            cName: methodCName,
+                            method: funcName,
+                            trait: className,
+                            args: args
+                        };
                     }
+                }
+
+                // If method not found locally but we have a parent, assume it's inherited
+                // The Python emitter will check if the method exists in parent chain
+                if (parentName != null) {
+                    return {
+                        type: "inherited_method_call",
+                        parent: parentName,
+                        method: funcName,
+                        args: args
+                    };
                 }
 
                 return { type: "call", method: funcName, args: args };
