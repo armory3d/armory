@@ -49,19 +49,33 @@ def find_tween_callbacks(nodes: List[dict]) -> List[dict]:
         args = node.get("args", [])
         if args:
             callbacks.extend(find_tween_callbacks(args))
-        # Recurse into props.then / props.else_ (if statements)
+        # Recurse into ALL props values (handles then, else_, and any future props)
         props = node.get("props", {})
         if props:
-            then_nodes = props.get("then", [])
-            if then_nodes:
-                callbacks.extend(find_tween_callbacks(then_nodes))
-            else_nodes = props.get("else_", [])
-            if else_nodes:
-                callbacks.extend(find_tween_callbacks(else_nodes))
+            callbacks.extend(_find_callbacks_in_value(props))
         # Recurse into object
         obj = node.get("object")
         if obj and isinstance(obj, dict):
             callbacks.extend(find_tween_callbacks([obj]))
+    return callbacks
+
+
+def _find_callbacks_in_value(value) -> List[dict]:
+    """Recursively find tween callbacks in any value (list, dict, or node)."""
+    callbacks = []
+    if value is None:
+        return callbacks
+    if isinstance(value, list):
+        for v in value:
+            callbacks.extend(_find_callbacks_in_value(v))
+    elif isinstance(value, dict):
+        if "type" in value:
+            # It's a node
+            callbacks.extend(find_tween_callbacks([value]))
+        else:
+            # Plain dict - recurse into values
+            for v in value.values():
+                callbacks.extend(_find_callbacks_in_value(v))
     return callbacks
 
 
@@ -91,17 +105,32 @@ def find_all_idents(nodes: List[dict]) -> Set[str]:
         args = node.get("args", [])
         if args:
             idents.update(find_all_idents(args))
+        # Recurse into ALL props values (handles then, else_, and any future props)
         props = node.get("props", {})
         if props:
-            then_nodes = props.get("then", [])
-            if then_nodes:
-                idents.update(find_all_idents(then_nodes))
-            else_nodes = props.get("else_", [])
-            if else_nodes:
-                idents.update(find_all_idents(else_nodes))
+            idents.update(_find_idents_in_value(props))
         obj = node.get("object")
         if obj and isinstance(obj, dict):
             idents.update(find_all_idents([obj]))
+    return idents
+
+
+def _find_idents_in_value(value) -> Set[str]:
+    """Recursively find identifiers in any value (list, dict, or node)."""
+    idents = set()
+    if value is None:
+        return idents
+    if isinstance(value, list):
+        for v in value:
+            idents.update(_find_idents_in_value(v))
+    elif isinstance(value, dict):
+        if "type" in value:
+            # It's a node
+            idents.update(find_all_idents([value]))
+        else:
+            # Plain dict - recurse into values
+            for v in value.values():
+                idents.update(_find_idents_in_value(v))
     return idents
 
 
@@ -241,16 +270,31 @@ class _CaptureEmitter:
         if "object" in result and result["object"]:
             result["object"] = self._substitute_captures_in_node(result["object"])
 
-        # Handle props dict (for if/else, etc.)
+        # Handle props dict - recursively process ALL props, not just then/else_
         if "props" in result and result["props"]:
             props = dict(result["props"])
-            if "then" in props and props["then"]:
-                props["then"] = [self._substitute_captures_in_node(n) for n in props["then"]]
-            if "else_" in props and props["else_"]:
-                props["else_"] = [self._substitute_captures_in_node(n) for n in props["else_"]]
+            for key, value in props.items():
+                props[key] = self._substitute_captures_in_value(value)
             result["props"] = props
 
         return result
+
+    def _substitute_captures_in_value(self, value):
+        """Recursively substitute captures in any value (list, dict, or node)."""
+        if value is None:
+            return None
+        if isinstance(value, list):
+            return [self._substitute_captures_in_value(v) for v in value]
+        if isinstance(value, dict):
+            # Could be a node or just a dict of values
+            if "type" in value:
+                # It's a node
+                return self._substitute_captures_in_node(value)
+            else:
+                # It's a plain dict - recurse into values
+                return {k: self._substitute_captures_in_value(v) for k, v in value.items()}
+        # Primitive value (string, int, etc.) - return as-is
+        return value
 
 
 def collect_callback_captures(

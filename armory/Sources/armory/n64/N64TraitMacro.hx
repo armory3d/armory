@@ -491,7 +491,15 @@ class TraitExtractor implements IExtractorContext {
             // Generate C function name: arm_<traitname>_<methodname>
             var methodCName = "arm_" + cName.substring(4) + "_" + methodName.toLowerCase();  // cName already starts with "arm_"
 
-            // Check if method is public - public methods are potentially virtual (can be overridden)
+            // Virtual Method Detection (Haxe side):
+            // Public methods are marked as potentially virtual because they can be overridden
+            // by child traits. The Python generator will use this flag to:
+            // 1. Generate vtable function pointers in the data struct
+            // 2. Initialize vtable pointers in on_ready
+            // 3. Emit vtable dispatch calls instead of direct calls
+            //
+            // If this flag is missing (older IR), Python has fallback detection that
+            // scans the inheritance hierarchy to identify virtual methods.
             var isVirtual = publicMethods.exists(methodName) && publicMethods.get(methodName);
 
             methodIRMap.set(methodName, {

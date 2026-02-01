@@ -223,16 +223,42 @@ class TraitCodeGenerator:
     def _is_method_virtual(self, method_name: str) -> bool:
         """Check if a method should be treated as virtual (needs vtable dispatch).
 
-        A method is virtual if:
-        1. It's explicitly marked as isVirtual: true in the IR, OR
-        2. It's overridden by any child class (detected by scanning all traits), OR
-        3. It overrides a parent's method (this trait is a child overriding parent)
+        Virtual Method Detection System
+        ================================
 
-        This fallback logic handles cases where the isVirtual flag isn't in the IR yet.
+        A method needs vtable dispatch when it can be overridden by child classes
+        AND called polymorphically (e.g., through a parent class reference or callback).
+
+        Detection uses a dual approach:
+
+        1. **Haxe Macro Detection (preferred)**
+           The N64TraitMacro.hx sets `isVirtual: true` in the MethodIR for public methods.
+           This is the authoritative source when available.
+
+        2. **Python Fallback Detection**
+           When `isVirtual` isn't in the IR (older IR or clean rebuild needed), we detect
+           virtual methods by scanning the inheritance hierarchy:
+
+           a) **Overrides parent**: If this trait's method has the same name as a parent's
+              method, it's an override and needs virtual dispatch.
+
+           b) **Overridden by child**: If any child trait has a method with the same name,
+              the parent's method might be called polymorphically and needs vtable.
+
+        Vtable Implementation
+        ---------------------
+        - Each data struct has `_vfn_<methodname>` function pointers for virtual methods
+        - Parent classes set vtable pointers to their own implementations
+        - Child classes override these pointers in on_ready (after calling parent's on_ready)
+        - Virtual calls: `((DataType*)data)->_vfn_method(obj, data, args...)`
+        - Direct calls: `trait_methodname(obj, data, args...)`
+
+        Returns:
+            True if the method needs vtable dispatch, False otherwise.
         """
         method_ir = self.methods.get(method_name, {})
 
-        # Check explicit flag first
+        # Check explicit flag first (from Haxe macro)
         if method_ir.get("isVirtual", False):
             return True
 
@@ -793,6 +819,36 @@ def _detect_features_in_nodes(nodes) -> dict:
     return features
 
 
+def _validate_ancestor_chain(traits: dict) -> None:
+    """Validate that all ancestors in inheritance chains are present in traits.
+
+    Walks up the inheritance chain for each trait and ensures all ancestors
+    are included in the traits dict. Raises RuntimeError if any ancestor is
+    missing, which would cause C compilation errors.
+
+    Args:
+        traits: Dict of trait_name -> trait_ir
+
+    Raises:
+        RuntimeError: If an ancestor trait is referenced but not in traits dict
+    """
+    for trait_name, trait_ir in traits.items():
+        # Walk up the entire inheritance chain
+        current = trait_ir.get("parent")
+        chain = [trait_name]
+
+        while current:
+            if current not in traits:
+                chain_str = " -> ".join(chain)
+                raise RuntimeError(
+                    f"N64 Trait Error: '{trait_name}' has ancestor '{current}' that is not "
+                    f"included in the N64 build. Inheritance chain: {chain_str} -> {current}. "
+                    f"Ensure '{current}' has at least one lifecycle event or member."
+                )
+            chain.append(current)
+            current = traits[current].get("parent")
+
+
 def _topological_sort_traits(traits: dict) -> List[str]:
     """Sort traits in topological order (parents before children).
 
@@ -862,6 +918,9 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
     """
     import arm.utils
     from arm.n64.codegen.autoload_generator import load_autoloads_json
+
+    # Validate all ancestors are present before proceeding
+    _validate_ancestor_chain(traits)
 
     # Sort traits in topological order (parents before children)
     sorted_traits = _topological_sort_traits(traits)

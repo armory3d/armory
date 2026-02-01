@@ -15,7 +15,34 @@ Virtual Method Support:
 - Child classes set their own function pointers in on_ready
 """
 
+import logging
 from typing import Dict, List, Optional, Set
+
+log = logging.getLogger(__name__)
+
+# Lifecycle method name mappings: Haxe method name -> (C function suffix, has_dt_param)
+# Used by emit_super_call and generate_all_event_implementations to avoid hardcoded strings
+LIFECYCLE_MAP = {
+    # Constructor/init variants
+    "new": ("on_ready", False),
+    "onReady": ("on_ready", False),
+    "init": ("on_ready", False),
+    # Update variants
+    "onUpdate": ("on_update", True),
+    "update": ("on_update", True),
+    # Fixed update variants
+    "onFixedUpdate": ("on_fixed_update", True),
+    "fixedUpdate": ("on_fixed_update", True),
+    # Late update variants
+    "onLateUpdate": ("on_late_update", True),
+    "lateUpdate": ("on_late_update", True),
+    # Remove variants
+    "onRemove": ("on_remove", False),
+    "remove": ("on_remove", False),
+    # Render2D variants
+    "onRender2D": ("on_render2d", False),
+    "render2D": ("on_render2d", False),
+}
 
 
 class TraitEmitter:
@@ -518,22 +545,13 @@ class TraitEmitter:
         parent_ir = self.all_traits[parent_name]
         parent_c_name = parent_ir.get("c_name", parent_name.lower())
 
-        # Map method to lifecycle function - pass full data for virtual dispatch
-        if method == "new":
-            # super() -> parent's on_ready
-            return f"{parent_c_name}_on_ready(obj, data)"
-        elif method == "onReady" or method == "init":
-            return f"{parent_c_name}_on_ready(obj, data)"
-        elif method == "onUpdate" or method == "update":
-            return f"{parent_c_name}_on_update(obj, dt, data)"
-        elif method == "onFixedUpdate" or method == "fixedUpdate":
-            return f"{parent_c_name}_on_fixed_update(obj, dt, data)"
-        elif method == "onLateUpdate" or method == "lateUpdate":
-            return f"{parent_c_name}_on_late_update(obj, dt, data)"
-        elif method == "onRemove" or method == "remove":
-            return f"{parent_c_name}_on_remove(obj, data)"
-        elif method == "onRender2D" or method == "render2D":
-            return f"{parent_c_name}_on_render2d(obj, data)"
+        # Map method to lifecycle function using LIFECYCLE_MAP
+        if method in LIFECYCLE_MAP:
+            c_suffix, has_dt = LIFECYCLE_MAP[method]
+            if has_dt:
+                return f"{parent_c_name}_{c_suffix}(obj, dt, data)"
+            else:
+                return f"{parent_c_name}_{c_suffix}(obj, data)"
         else:
             # Generic parent method call
             arg_strs = [self.emit(a) for a in args if self.emit(a)]
@@ -612,13 +630,12 @@ class TraitEmitter:
         owner_name, depth = self._find_method_owner(method, parent_hint)
 
         if not owner_name:
-            # No parent found with this method - emit as a regular call fallback
-            arg_strs = [self.emit(a) for a in args if self.emit(a)]
-            args_part = ", ".join(arg_strs) if arg_strs else ""
-            if args_part:
-                return f"{method}({args_part})"
-            else:
-                return f"{method}()"
+            # No parent found with this method - fail fast with clear error
+            raise RuntimeError(
+                f"N64 Trait Error: [{self.trait_name}] calls inherited method '{method}' "
+                f"but it was not found in any parent class in the inheritance chain. "
+                f"Ensure the method exists in a parent trait."
+            )
 
         owner_ir = self.all_traits.get(owner_name, {})
         owner_c_name = owner_ir.get("c_name", owner_name.lower())
