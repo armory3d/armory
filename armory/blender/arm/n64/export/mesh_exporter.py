@@ -16,7 +16,7 @@ from arm.n64.export import linked_export
 
 def _collect_all_objects(scene):
     """Collect all objects including those inside instance collections.
-    
+
     Returns:
         List of (object, instance_matrix) tuples. instance_matrix is None
         for direct scene objects, or the parent empty's world matrix for
@@ -40,7 +40,7 @@ def _collect_all_objects(scene):
 
 def _export_mesh_to_gltf(obj, output_path):
     """Export a single mesh object to GLTF format.
-    
+
     Temporarily resets object transforms to origin for export,
     then restores them.
     """
@@ -80,7 +80,7 @@ def export_meshes(exporter):
 
     Exports linked objects from temp scene first (with F3D materials),
     then local objects from user scenes.
-    
+
     Updates exporter.exported_meshes with {mesh: mesh_name} mapping.
     """
     assets_dir = os.path.join(arm.utils.build_dir(), 'n64', 'assets')
@@ -165,7 +165,7 @@ def _export_scene_meshes(exporter, assets_dir):
             bpy.context.window.view_layer = scene.view_layers[0]
 
             _export_mesh_to_gltf(obj, output_path)
-            
+
             exporter.exported_meshes[mesh] = mesh_name
             log.info(f'Exported mesh: {mesh_name}')
 

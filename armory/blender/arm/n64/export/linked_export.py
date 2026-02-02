@@ -16,12 +16,12 @@ TEMP_COLLECTION_NAME = "_armory_n64_linked"
 
 class _LinkedExportState:
     """Encapsulates state for linked object export.
-    
+
     Using a class avoids scattered module-level globals and makes state clearer.
     """
     def __init__(self):
         self.reset()
-    
+
     def reset(self):
         """Reset all state to initial values."""
         self.temp_scene_name = None
@@ -62,7 +62,7 @@ def prepare_linked_for_export():
     # Create temporary scene
     temp_scene = bpy.data.scenes.new(TEMP_SCENE_NAME)
     _state.temp_scene_name = temp_scene.name
-    
+
     temp_collection = bpy.data.collections.new(TEMP_COLLECTION_NAME)
     temp_scene.collection.children.link(temp_collection)
 
