@@ -64,7 +64,7 @@ class TraitEmitter:
         self.trait_name = trait_name
         self.c_name = c_name
         self.member_names = member_names  # This trait's own members only
-        self.data_type = f"{trait_name}Data"
+        self.data_type = f"{c_name}Data"
         self.is_trait = is_trait  # True for traits (use obj/data), False for autoloads (use NULL)
 
         # Inheritance support

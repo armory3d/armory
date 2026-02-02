@@ -112,7 +112,7 @@ def generate_trait_block(prefix: str, traits: List[Dict],
 
             # Trait data
             if n64_utils.trait_needs_data(trait_info, trait_class):
-                struct_name = f'{trait_class}Data'
+                struct_name = f'{c_name}Data'
                 instance_props = trait.get("props", {})
                 type_overrides = trait.get("type_overrides", {})
                 initializer = n64_utils.build_trait_initializer(
@@ -396,7 +396,7 @@ def generate_scene_traits_block(traits: List[Dict], trait_info: dict, scene_name
         lines.append(f'    scene_traits[{i}].on_render2d = {c_name}_on_render2d;')
 
         if n64_utils.trait_needs_data(trait_info, trait_class):
-            struct_name = f'{trait_class}Data'
+            struct_name = f'{c_name}Data'
             instance_props = trait.get("props", {})
             type_overrides = trait.get("type_overrides", {})
             initializer = n64_utils.build_trait_initializer(

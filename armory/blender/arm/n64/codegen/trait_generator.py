@@ -333,7 +333,9 @@ class TraitCodeGenerator:
 
         # Embed parent struct at offset 0 (if any)
         if self.parent_name:
-            lines.append(f"    {self.parent_name}Data _parent;")
+            # Get parent's c_name for proper C identifier
+            parent_c_name = self.all_traits.get(self.parent_name, {}).get("c_name", self.parent_name.replace(".", "_"))
+            lines.append(f"    {parent_c_name}Data _parent;")
 
         # Virtual method function pointers (for polymorphism)
         for vm in virtual_methods:
@@ -359,7 +361,7 @@ class TraitCodeGenerator:
             if sig_name:
                 lines.append(f"    ArmSignal {sig_name};")
 
-        lines.append(f"}} {self.name}Data;")
+        lines.append(f"}} {self.c_name}Data;")
 
         return "\n".join(lines)
 
@@ -622,7 +624,8 @@ class TraitCodeGenerator:
                 # If this trait defines it, use this trait's Data type
                 # If it's an override, find the ancestor that originally defines it
                 vtable_owner = self._find_vtable_owner(method_name)
-                impl_lines.append(f"    (({vtable_owner}Data*)data)->_vfn_{method_name} = {method_c_name};")
+                vtable_owner_c_name = self.all_traits.get(vtable_owner, {}).get("c_name", vtable_owner.replace(".", "_"))
+                impl_lines.append(f"    (({vtable_owner_c_name}Data*)data)->_vfn_{method_name} = {method_c_name};")
 
         # Allocate tweens at the start of on_ready (before user code)
         tween_alloc_lines = []
@@ -630,7 +633,7 @@ class TraitCodeGenerator:
             mtype = member.get("ctype", "")
             mname = member.get("name", "")
             if mtype == "ArmTween*":
-                tween_alloc_lines.append(f"    (({self.name}Data*)data)->{mname} = tween_alloc();")
+                tween_alloc_lines.append(f"    (({self.c_name}Data*)data)->{mname} = tween_alloc();")
 
         if tween_alloc_lines:
             impl_lines.extend(tween_alloc_lines)
@@ -654,7 +657,7 @@ class TraitCodeGenerator:
         impl_lines.append(f"void {self.c_name}_on_update(void* obj, float dt, void* data) {{")
         # Add early return guard if trait uses removeUpdate()
         if self.meta.get("has_remove_update", False):
-            impl_lines.append(f"    if (!(({self.name}Data*)data)->_update_enabled) return;")
+            impl_lines.append(f"    if (!(({self.c_name}Data*)data)->_update_enabled) return;")
         impl_lines.append(body)
         impl_lines.append("}")
         impl_lines.append("")
@@ -665,7 +668,7 @@ class TraitCodeGenerator:
         impl_lines.append(f"void {self.c_name}_on_late_update(void* obj, float dt, void* data) {{")
         # Add early return guard if trait uses removeLateUpdate()
         if self.meta.get("has_remove_late_update", False):
-            impl_lines.append(f"    if (!(({self.name}Data*)data)->_late_update_enabled) return;")
+            impl_lines.append(f"    if (!(({self.c_name}Data*)data)->_late_update_enabled) return;")
         impl_lines.append(body)
         impl_lines.append("}")
         impl_lines.append("")
@@ -691,7 +694,7 @@ class TraitCodeGenerator:
         impl_lines.append(f"void {self.c_name}_on_render2d(void* obj, void* data) {{")
         # Add early return guard if trait uses removeRender2D()
         if self.meta.get("has_remove_render2d", False):
-            impl_lines.append(f"    if (!(({self.name}Data*)data)->_render2d_enabled) return;")
+            impl_lines.append(f"    if (!(({self.c_name}Data*)data)->_render2d_enabled) return;")
         # Call parent's on_render2d FIRST (parent renders background)
         # Pass full data pointer so virtual method calls work correctly
         if self.parent_name and self.parent_name in self.all_traits:
@@ -741,7 +744,7 @@ class TraitCodeGenerator:
 
                 # Find preamble from signal_handlers meta
                 # Default includes data cast so handler body can use 'data'
-                default_preamble = f"{self.name}Data* data = ({self.name}Data*)ctx; (void)payload;"
+                default_preamble = f"{self.c_name}Data* data = ({self.c_name}Data*)ctx; (void)payload;"
                 preamble = default_preamble
                 for sh in signal_handlers:
                     if sh.get("handler_name") == handler_name:

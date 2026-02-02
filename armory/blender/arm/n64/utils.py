@@ -170,6 +170,9 @@ def _build_parent_initializer(trait_info: dict, parent_class: str, current_scene
     if not trait:
         return ""
 
+    # Get parent's c_name for proper C identifier
+    parent_c_name = trait.get("c_name", parent_class.replace(".", "_"))
+
     members = trait.get("members", [])
     signals = trait.get("meta", {}).get("signals", [])
     grandparent = trait.get("parent")
@@ -205,9 +208,9 @@ def _build_parent_initializer(trait_info: dict, parent_class: str, current_scene
             init_fields.append(f'.{sig_name} = {{0}}')
 
     if not init_fields:
-        return f"._parent = ({parent_class}Data){{0}}"
+        return f"._parent = ({parent_c_name}Data){{0}}"
 
-    return f"._parent = ({parent_class}Data){{{', '.join(init_fields)}}}"
+    return f"._parent = ({parent_c_name}Data){{{', '.join(init_fields)}}}"
 
 
 def build_trait_initializer(trait_info: dict, trait_class: str, current_scene: str,
