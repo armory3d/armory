@@ -746,7 +746,11 @@ class Gamepad extends VirtualInput {
 		}
 		else if (axis == 1 || axis == 3) { // Y
 			stick.lastY = stick.y;
+			#if (kha_html5 || kha_debug_html5)
+			stick.y = -value;
+			#else
 			stick.y = value;
+			#end
 			stick.movementY = stick.y - stick.lastY;
 		}
 		stick.moved = true;
