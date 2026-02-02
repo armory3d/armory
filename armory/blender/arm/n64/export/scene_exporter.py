@@ -12,8 +12,29 @@ import bpy
 
 import arm.utils
 import arm.log as log
+import arm.linked_utils as linked_utils
 import arm.n64.codegen as codegen
 import arm.n64.utils as n64_utils
+from arm.n64.export import linked_export
+
+
+def _collect_all_objects(scene):
+    """Collect all objects including those inside instance collections."""
+    objects = []
+    processed_collections = set()
+
+    for obj in scene.collection.all_objects:
+        if obj.instance_type == 'COLLECTION' and obj.instance_collection is not None:
+            # This is an instanced collection - process objects inside it
+            coll = obj.instance_collection
+            if coll not in processed_collections:
+                processed_collections.add(coll)
+                for cobj in coll.all_objects:
+                    objects.append((cobj, obj.matrix_world))
+        else:
+            objects.append((obj, None))
+
+    return objects
 
 
 def build_scene_data(exporter, scene):
@@ -63,29 +84,33 @@ def build_scene_data(exporter, scene):
         "traits": scene_traits
     }
 
-    for obj in scene.objects:
+    for obj, instance_matrix in _collect_all_objects(scene):
         if obj.type == 'CAMERA':
-            _process_camera(exporter, scene_name, obj)
+            _process_camera(exporter, scene_name, obj, instance_matrix)
         elif obj.type == 'LIGHT':
-            _process_light(exporter, scene_name, obj)
+            _process_light(exporter, scene_name, obj, instance_matrix)
         elif obj.type == 'MESH':
-            _process_mesh_object(exporter, scene_name, obj)
+            _process_mesh_object(exporter, scene_name, obj, instance_matrix)
 
 
-def _process_camera(exporter, scene_name, obj):
+def _process_camera(exporter, scene_name, obj, instance_matrix=None):
     """Process a camera object and add to scene data."""
-    cam_dir = obj.rotation_euler.to_matrix().col[2]
+    # Compute world matrix considering instance transform
+    world_matrix = instance_matrix @ obj.matrix_local if instance_matrix else obj.matrix_world
+    world_pos = list(world_matrix.to_translation())
+
+    cam_dir = world_matrix.to_3x3().col[2]
     cam_target = [
-        obj.location[0] - cam_dir[0],
-        obj.location[1] - cam_dir[1],
-        obj.location[2] - cam_dir[2]
+        world_pos[0] - cam_dir[0],
+        world_pos[1] - cam_dir[1],
+        world_pos[2] - cam_dir[2]
     ]
     sensor = max(obj.data.sensor_width, obj.data.sensor_height)
     cam_fov = math.degrees(2 * math.atan((sensor * 0.5) / obj.data.lens))
 
     exporter.scene_data[scene_name]["cameras"].append({
-        "name": arm.utils.safesrc(obj.name),
-        "pos": list(obj.matrix_world.to_translation()),
+        "name": arm.utils.safesrc(linked_utils.asset_name(obj)),
+        "pos": world_pos,
         "target": cam_target,
         "fov": cam_fov,
         "near": obj.data.clip_start,
@@ -94,20 +119,22 @@ def _process_camera(exporter, scene_name, obj):
     })
 
 
-def _process_light(exporter, scene_name, obj):
+def _process_light(exporter, scene_name, obj, instance_matrix=None):
     """Process a light object and add to scene data."""
-    light_dir = obj.rotation_euler.to_matrix().col[2]
+    # Compute world matrix considering instance transform
+    world_matrix = instance_matrix @ obj.matrix_local if instance_matrix else obj.matrix_world
+    light_dir = world_matrix.to_3x3().col[2]
 
     exporter.scene_data[scene_name]["lights"].append({
-        "name": arm.utils.safesrc(obj.name),
-        "pos": list(obj.matrix_world.to_translation()),
+        "name": arm.utils.safesrc(linked_utils.asset_name(obj)),
+        "pos": list(world_matrix.to_translation()),
         "color": list(obj.data.color),
         "dir": list(light_dir),
         "traits": _extract_traits(obj)
     })
 
 
-def _process_mesh_object(exporter, scene_name, obj):
+def _process_mesh_object(exporter, scene_name, obj, instance_matrix=None):
     """Process a mesh object and add to scene data."""
     mesh = obj.data
     if mesh not in exporter.exported_meshes:
@@ -115,8 +142,12 @@ def _process_mesh_object(exporter, scene_name, obj):
         return
     mesh_name = exporter.exported_meshes[mesh]
 
+    # Compute world matrix considering instance transform
+    world_matrix = instance_matrix @ obj.matrix_local if instance_matrix else obj.matrix_world
+
     # Export rotation as quaternion (XYZW order for T3D)
-    quat = obj.matrix_world.to_quaternion()
+    quat = world_matrix.to_quaternion()
+    scale = world_matrix.to_scale()
 
     # Compute bounding sphere from mesh's bounding box (local space)
     bb = obj.bound_box
@@ -140,11 +171,11 @@ def _process_mesh_object(exporter, scene_name, obj):
     rigid_body_data = _extract_rigid_body(exporter, obj, half_extents)
 
     obj_data = {
-        "name": arm.utils.safesrc(obj.name),
+        "name": arm.utils.safesrc(linked_utils.asset_name(obj)),
         "mesh": f'MODEL_{mesh_name.upper()}',
-        "pos": list(obj.matrix_world.to_translation()),
+        "pos": list(world_matrix.to_translation()),
         "rot": [quat.x, quat.y, quat.z, quat.w],
-        "scale": list(obj.scale),
+        "scale": list(scale),
         "visible": not obj.hide_render,
         "bounds_center": bounds_center,
         "bounds_radius": bounds_radius,
@@ -327,6 +358,8 @@ def write_scenes(exporter):
     for scene in bpy.data.scenes:
         if scene.library:
             continue
+        if linked_export.is_temp_scene(scene):
+            continue
         write_scene_c(exporter, scene)
 
 
@@ -394,6 +427,8 @@ def write_scenes_c(exporter):
     for scene in bpy.data.scenes:
         if scene.library:
             continue
+        if linked_export.is_temp_scene(scene):
+            continue
         scene_name = arm.utils.safesrc(scene.name).lower()
         original_name = scene.name
         init_lines.append(f'    scene_{scene_name}_init(&g_scenes[SCENE_{scene_name.upper()}]);')
@@ -435,6 +470,8 @@ def write_scenes_h(exporter):
     scene_count = 0
     for scene in bpy.data.scenes:
         if scene.library:
+            continue
+        if linked_export.is_temp_scene(scene):
             continue
         scene_name = arm.utils.safesrc(scene.name).lower()
         enum_lines.append(f'    SCENE_{scene_name.upper()} = {scene_count},')

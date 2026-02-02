@@ -34,6 +34,7 @@ from arm.n64.export import ui_exporter
 from arm.n64.export import physics_exporter
 from arm.n64.export import audio_exporter
 from arm.n64.export import build_runner
+from arm.n64.export import linked_export
 
 if arm.is_reload(__name__):
     arm.utils = arm.reload_module(arm.utils)
@@ -59,6 +60,7 @@ class N64Exporter:
         self.trait_info = {}
         self.exported_audio = {}
         self.autoload_info = {}
+        self.linked_objects = []  # (local_obj_name, original_mesh_name) tuples
 
         # Feature flags (set during export)
         self.has_physics = False
@@ -106,69 +108,84 @@ class N64Exporter:
         if not self.trait_info.get('traits'):
             log.warn("No traits found in n64_traits.json. Make sure arm_target_n64 is defined during build.")
 
-        # Phase 1: Prepare materials and directories
-        self._convert_materials_to_f3d()
-        self._make_directories()
+        # Phase 0: Prepare linked objects (create temp local copies for Fast64)
+        self.linked_objects = linked_export.prepare_linked_for_export()
+        if self.linked_objects:
+            log.info(f'Prepared {len(self.linked_objects)} linked object(s) for export')
 
-        # Phase 2: Export meshes to GLTF/T3D
-        mesh_exporter.export_meshes(self)
+        try:
+            # Phase 1: Prepare materials and directories
+            self._convert_materials_to_f3d()
+            self._make_directories()
 
-        # Phase 3: Build scene data (sets has_physics flag)
-        for scene in bpy.data.scenes:
-            if scene.library:
-                continue
-            scene_exporter.build_scene_data(self, scene)
+            # Phase 2: Export meshes to GLTF/T3D
+            mesh_exporter.export_meshes(self)
 
-        # Compute static flags after trait_info is loaded
-        n64_utils.compute_static_flags(self.scene_data, self.trait_info)
+            # Phase 3: Build scene data (sets has_physics flag)
+            for scene in bpy.data.scenes:
+                if scene.library:
+                    continue
+                # Skip temp scene used for linked object export
+                if linked_export.is_temp_scene(scene):
+                    continue
+                scene_exporter.build_scene_data(self, scene)
 
-        # Phase 4: Detect UI canvas (sets has_ui flag)
-        ui_exporter.detect_ui_canvas(self)
+            # Compute static flags after trait_info is loaded
+            n64_utils.compute_static_flags(self.scene_data, self.trait_info)
 
-        # Phase 5: Generate trait code (may set has_ui/has_physics from traits)
-        features = traits_exporter.write_traits(self)
-        if features.get('has_ui'):
-            self.has_ui = True
-        if features.get('has_physics'):
-            self.has_physics = True
+            # Phase 4: Detect UI canvas (sets has_ui flag)
+            ui_exporter.detect_ui_canvas(self)
 
-        # Phase 6: Generate autoload code (may set has_audio)
-        autoload_features = traits_exporter.write_autoloads(self)
-        if autoload_features.get('has_audio'):
-            self.has_audio = True
+            # Phase 5: Generate trait code (may set has_ui/has_physics from traits)
+            features = traits_exporter.write_traits(self)
+            if features.get('has_ui'):
+                self.has_ui = True
+            if features.get('has_physics'):
+                self.has_physics = True
 
-        # Phase 7: Generate engine and system files
-        traits_exporter.write_types(self)
-        traits_exporter.write_engine(self)
-        physics_exporter.write_physics(self)
+            # Phase 6: Generate autoload code (may set has_audio)
+            autoload_features = traits_exporter.write_autoloads(self)
+            if autoload_features.get('has_audio'):
+                self.has_audio = True
 
-        # Phase 8: Generate audio files (must be before makefile)
-        audio_exporter.scan_and_copy_audio(self)
-        audio_exporter.write_audio_config(self)
+            # Phase 7: Generate engine and system files
+            traits_exporter.write_types(self)
+            traits_exporter.write_engine(self)
+            physics_exporter.write_physics(self)
 
-        # Phase 9: Generate UI files (must be before makefile)
-        ui_exporter.write_fonts(self)
+            # Phase 8: Generate audio files (must be before makefile)
+            audio_exporter.scan_and_copy_audio(self)
+            audio_exporter.write_audio_config(self)
 
-        # Phase 10: Generate Makefile (uses exported_fonts, exported_audio)
-        build_runner.write_makefile(self)
+            # Phase 9: Generate UI files (must be before makefile)
+            ui_exporter.write_fonts(self)
 
-        # Phase 11: Generate canvas after fonts
-        ui_exporter.write_canvas(self)
+            # Phase 10: Generate Makefile (uses exported_fonts, exported_audio)
+            build_runner.write_makefile(self)
 
-        # Phase 12: Generate scene files
-        scene_exporter.write_main(self)
-        scene_exporter.write_models(self)
-        self._write_renderer()
-        scene_exporter.write_scenes(self)
+            # Phase 11: Generate canvas after fonts
+            ui_exporter.write_canvas(self)
 
-        # Phase 13: Generate Iron runtime files
-        self._write_iron()
-        self._write_signal()
-        self._write_time()
-        self._write_tween()
+            # Phase 12: Generate scene files
+            scene_exporter.write_main(self)
+            scene_exporter.write_models(self)
+            self._write_renderer()
+            scene_exporter.write_scenes(self)
 
-        # Phase 14: Cleanup
-        self._reset_materials_to_bsdf()
+            # Phase 13: Generate Iron runtime files
+            self._write_iron()
+            self._write_signal()
+            self._write_time()
+            self._write_tween()
+
+            # Phase 14: Cleanup materials
+            self._reset_materials_to_bsdf()
+
+        finally:
+            # Phase 15: Cleanup linked object temp data (always runs)
+            if self.linked_objects:
+                linked_export.cleanup_linked_export()
+                log.info('Cleaned up linked object temp data')
 
         log.info('N64 export completed.')
 

@@ -13,6 +13,7 @@ import bpy
 import arm.utils
 import arm.log as log
 import arm.n64.utils as n64_utils
+from arm.n64.export import linked_export
 
 
 def write_makefile(exporter):
@@ -34,6 +35,8 @@ def write_makefile(exporter):
     scene_lines = []
     for scene in bpy.data.scenes:
         if scene.library:
+            continue
+        if linked_export.is_temp_scene(scene):
             continue
         scene_name = arm.utils.safesrc(scene.name).lower()
         scene_lines.append(f'    src/scenes/{scene_name}.c')
