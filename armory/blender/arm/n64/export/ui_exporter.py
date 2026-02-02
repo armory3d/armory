@@ -19,7 +19,7 @@ def detect_ui_canvas(exporter):
     """Detect and parse Koui canvas JSON files referenced by scenes.
 
     Only parses canvases that are actually attached to scenes via UI Canvas trait.
-    Sets exporter.has_ui = True if any canvas with labels is found.
+    Sets exporter.has_ui = True if any canvas with labels or images is found.
     Stores parsed data in exporter.ui_canvas_data for code generation.
     Also parses Koui theme files to extract font size and text color per label.
 
@@ -58,9 +58,12 @@ def detect_ui_canvas(exporter):
             canvas_height = canvas_info.get('height')
 
             labels = []
+            images = []
             for scene in canvas_data.get('scenes', []):
                 for elem in scene.get('elements', []):
-                    if elem.get('type') == 'Label':
+                    elem_type = elem.get('type')
+
+                    if elem_type == 'Label':
                         props = elem.get('properties', {})
                         tid = elem.get('tID', '_label')
 
@@ -97,14 +100,38 @@ def detect_ui_canvas(exporter):
                         }
                         labels.append(label_data)
 
-            if labels:
+                    elif elem_type == 'ImagePanel':
+                        props = elem.get('properties', {})
+                        image_name = props.get('imageName', '')
+
+                        if image_name:
+                            # Track image for copying
+                            if not hasattr(exporter, 'ui_images'):
+                                exporter.ui_images = set()
+                            exporter.ui_images.add(image_name)
+
+                            image_data = {
+                                'key': elem['key'],
+                                'image_name': image_name,
+                                'pos_x': elem['posX'],
+                                'pos_y': elem['posY'],
+                                'width': elem['width'],
+                                'height': elem['height'],
+                                'anchor': elem['anchor'],
+                                'visible': elem['visible'],
+                                'scale': props.get('scale', False),
+                            }
+                            images.append(image_data)
+
+            if labels or images:
                 exporter.ui_canvas_data[canvas_name] = {
                     'width': canvas_width,
                     'height': canvas_height,
-                    'labels': labels
+                    'labels': labels,
+                    'images': images
                 }
                 exporter.has_ui = True
-                log.info(f'Found UI canvas: {canvas_name} with {len(labels)} label(s)')
+                log.info(f'Found UI canvas: {canvas_name} with {len(labels)} label(s), {len(images)} image(s)')
 
         except Exception as e:
             log.warn(f'Failed to parse Koui canvas {json_path}: {e}')
@@ -147,6 +174,54 @@ def write_canvas(exporter):
 
     write_canvas_h(exporter)
     write_canvas_c(exporter)
+    copy_ui_images(exporter)
+
+
+def copy_ui_images(exporter):
+    """Copy PNG images referenced by ImagePanel elements to build/n64/assets.
+
+    Images are looked for in project Assets/images/ folder.
+    The Makefile will convert them to .sprite files via mksprite.
+    """
+    if not hasattr(exporter, 'ui_images') or not exporter.ui_images:
+        return
+
+    n64_assets = os.path.join(arm.utils.build_dir(), 'n64', 'assets')
+    os.makedirs(n64_assets, exist_ok=True)
+
+    # Search locations for images
+    image_search_paths = [
+        os.path.join(arm.utils.get_fp(), 'Assets', 'images'),
+        os.path.join(arm.utils.get_fp(), 'Assets'),
+    ]
+
+    copied_count = 0
+    for image_name in exporter.ui_images:
+        found = False
+        for search_path in image_search_paths:
+            if not os.path.exists(search_path):
+                continue
+
+            # Try with .png extension
+            png_path = os.path.join(search_path, f'{image_name}.png')
+            if os.path.exists(png_path):
+                # Create safe filename (lowercase, no spaces)
+                safe_name = image_name.lower().replace(' ', '_')
+                dst_path = os.path.join(n64_assets, f'{safe_name}.png')
+
+                if not os.path.exists(dst_path):
+                    shutil.copy(png_path, dst_path)
+                    log.info(f'Copied UI image: {safe_name}.png')
+                    copied_count += 1
+
+                found = True
+                break
+
+        if not found:
+            log.warn(f'UI image not found: {image_name}.png')
+
+    if copied_count > 0:
+        log.info(f'Copied {copied_count} UI image(s) to build/n64/assets/')
 
 
 def write_canvas_h(exporter):
@@ -170,7 +245,7 @@ def write_canvas_h(exporter):
     for canvas_name, canvas in exporter.ui_canvas_data.items():
         label_defines_lines.append(f'// Canvas: {canvas_name} ({canvas["width"]}x{canvas["height"]})')
         label_idx = 0
-        for label in canvas['labels']:
+        for label in canvas.get('labels', []):
             safe_key = arm.utils.safesrc(label['key']).upper()
             define_name = f'UI_LABEL_{safe_key}'
 
@@ -187,11 +262,40 @@ def write_canvas_h(exporter):
         total_label_count = max(total_label_count, label_idx)
         label_defines_lines.append('')
 
+    # Build key-only image defines
+    image_defines_lines = []
+    total_image_count = 0
+    seen_image_keys = {}
+
+    for canvas_name, canvas in exporter.ui_canvas_data.items():
+        images = canvas.get('images', [])
+        if images:
+            image_defines_lines.append(f'// Canvas: {canvas_name} images')
+            image_idx = 0
+            for image in images:
+                safe_key = arm.utils.safesrc(image['key']).upper()
+                define_name = f'UI_IMAGE_{safe_key}'
+
+                if safe_key in seen_image_keys:
+                    if seen_image_keys[safe_key] != image_idx:
+                        log.warn(f'Image key "{image["key"]}" has different indices across canvases '
+                                 f'(index {seen_image_keys[safe_key]} vs {image_idx}). '
+                                 f'Traits using this image may not work correctly across scenes.')
+                else:
+                    image_defines_lines.append(f'#define {define_name} {image_idx}')
+                    seen_image_keys[safe_key] = image_idx
+
+                image_idx += 1
+            total_image_count = max(total_image_count, image_idx)
+            image_defines_lines.append('')
+
     output = tmpl_content.format(
         canvas_width=canvas_width,
         canvas_height=canvas_height,
         label_defines='\n'.join(label_defines_lines),
-        label_count=total_label_count
+        label_count=total_label_count,
+        image_defines='\n'.join(image_defines_lines),
+        image_count=total_image_count
     )
 
     with open(out_path, 'w', encoding='utf-8') as f:
@@ -210,7 +314,7 @@ def write_canvas_c(exporter):
     canvas_label_defs = {}
     for canvas_name, canvas in exporter.ui_canvas_data.items():
         lines = []
-        for label in canvas['labels']:
+        for label in canvas.get('labels', []):
             text_escaped = label['text'].replace('\\', '\\\\').replace('"', '\\"')
             visible = 'true' if label['visible'] else 'false'
             style_id = label.get('style_id', 0)
@@ -219,10 +323,24 @@ def write_canvas_c(exporter):
             lines.append(f'    {{ "{text_escaped}", {label["pos_x"]}, {label["pos_y"]}, {label["width"]}, {label["height"]}, {baseline_offset}, {label["anchor"]}, {style_id}, {font_id}, {visible} }},')
         canvas_label_defs[canvas_name] = {
             'defs': '\n'.join(lines),
-            'count': len(canvas['labels'])
+            'count': len(canvas.get('labels', []))
         }
 
-    # Build per-canvas static arrays
+    # Build per-canvas image definitions
+    canvas_image_defs = {}
+    for canvas_name, canvas in exporter.ui_canvas_data.items():
+        lines = []
+        for image in canvas.get('images', []):
+            safe_name = image['image_name'].lower().replace(' ', '_')
+            visible = 'true' if image['visible'] else 'false'
+            scale = 'true' if image.get('scale', False) else 'false'
+            lines.append(f'    {{ "{safe_name}", {image["pos_x"]}, {image["pos_y"]}, {image["width"]}, {image["height"]}, {image["anchor"]}, {scale}, {visible}, NULL }},')
+        canvas_image_defs[canvas_name] = {
+            'defs': '\n'.join(lines),
+            'count': len(canvas.get('images', []))
+        }
+
+    # Build per-canvas static arrays (labels)
     canvas_arrays = []
     for canvas_name, data in canvas_label_defs.items():
         safe_canvas = arm.utils.safesrc(canvas_name).lower()
@@ -235,6 +353,19 @@ def write_canvas_c(exporter):
             canvas_arrays.append('};')
             canvas_arrays.append('')
 
+    # Build per-canvas static arrays (images)
+    canvas_image_arrays = []
+    for canvas_name, data in canvas_image_defs.items():
+        safe_canvas = arm.utils.safesrc(canvas_name).lower()
+        count = data['count']
+        if count > 0:
+            canvas_image_arrays.append(f'// Canvas: {canvas_name} images')
+            canvas_image_arrays.append(f'#define {safe_canvas.upper()}_IMAGE_COUNT {count}')
+            canvas_image_arrays.append(f'static UIImageDef g_{safe_canvas}_image_defs[{safe_canvas.upper()}_IMAGE_COUNT] = {{')
+            canvas_image_arrays.append(data['defs'])
+            canvas_image_arrays.append('};')
+            canvas_image_arrays.append('')
+
     # Build switch cases for scene_id -> canvas loading
     scene_switch_cases = []
     for scene_name, data in exporter.scene_data.items():
@@ -242,8 +373,15 @@ def write_canvas_c(exporter):
         if canvas_name and canvas_name in exporter.ui_canvas_data:
             safe_scene = arm.utils.safesrc(scene_name).upper()
             safe_canvas = arm.utils.safesrc(canvas_name).lower()
+            canvas = exporter.ui_canvas_data[canvas_name]
+            label_count = len(canvas.get('labels', []))
+            image_count = len(canvas.get('images', []))
+
             scene_switch_cases.append(f'        case SCENE_{safe_scene}:')
-            scene_switch_cases.append(f'            load_labels(g_{safe_canvas}_label_defs, {safe_canvas.upper()}_LABEL_COUNT);')
+            if label_count > 0:
+                scene_switch_cases.append(f'            load_labels(g_{safe_canvas}_label_defs, {safe_canvas.upper()}_LABEL_COUNT);')
+            if image_count > 0:
+                scene_switch_cases.append(f'            load_images(g_{safe_canvas}_image_defs, {safe_canvas.upper()}_IMAGE_COUNT);')
             scene_switch_cases.append('            break;')
 
     # Generate font style registration code
@@ -278,11 +416,14 @@ def write_canvas_c(exporter):
         style_registration_lines.append('    // No additional fonts or styles defined')
 
     total_labels = sum(d['count'] for d in canvas_label_defs.values())
+    total_images = sum(d['count'] for d in canvas_image_defs.values())
 
     output = tmpl_content.format(
         canvas_label_arrays='\n'.join(canvas_arrays),
+        canvas_image_arrays='\n'.join(canvas_image_arrays),
         scene_init_switch_cases='\n'.join(scene_switch_cases),
         total_label_count=total_labels,
+        total_image_count=total_images,
         font_style_registration='\n'.join(style_registration_lines) if style_registration_lines else '        // No custom styles defined'
     )
 

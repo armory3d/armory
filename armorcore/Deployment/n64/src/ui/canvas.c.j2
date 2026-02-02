@@ -1,34 +1,60 @@
 #include "canvas.h"
+#if UI_LABEL_COUNT > 0
 #include "fonts.h"
+#endif
 #include <libdragon.h>
 #include <string.h>
 
-#if UI_LABEL_COUNT > 0
+#if UI_LABEL_COUNT > 0 || UI_IMAGE_COUNT > 0
 
 // ============================================================================
 // Label pool and render list
 // ============================================================================
 
+#if UI_LABEL_COUNT > 0
 // Static label pool - avoids malloc() in hot paths
 static UILabel g_label_pool[UI_MAX_LABELS];
 static uint8_t g_label_pool_used = 0;
 
-// Render list - pointers to labels that should be rendered
-static UILabel* g_render_list[UI_MAX_LABELS];
-static uint8_t g_render_count = 0;
-
-// Default font ID for rendering
-static uint8_t g_default_font_rdpq_id = 0;
-static bool g_initialized = false;
+// Label render list - pointers to labels that should be rendered
+static UILabel* g_label_render_list[UI_MAX_LABELS];
+static uint8_t g_label_render_count = 0;
 
 // Canvas label tracking (for get_label by index)
 static UILabel* g_canvas_labels[UI_LABEL_COUNT];
 static int g_canvas_label_count = 0;
+#endif
+
+// ============================================================================
+// Image pool and render list
+// ============================================================================
+
+#if UI_IMAGE_COUNT > 0
+// Static image pool - avoids malloc() in hot paths
+static UIImage g_image_pool[UI_MAX_IMAGES];
+static uint8_t g_image_pool_used = 0;
+
+// Image render list - pointers to images that should be rendered
+static UIImage* g_image_render_list[UI_MAX_IMAGES];
+static uint8_t g_image_render_count = 0;
+
+// Canvas image tracking (for get_image by index)
+static UIImage* g_canvas_images[UI_IMAGE_COUNT];
+static int g_canvas_image_count = 0;
+#endif
+
+#if UI_LABEL_COUNT > 0
+// Default font ID for rendering
+static uint8_t g_default_font_rdpq_id = 0;
+#endif
+
+static bool g_initialized = false;
 
 // ============================================================================
 // Label definition struct and anchor calculations
 // ============================================================================
 
+#if UI_LABEL_COUNT > 0
 typedef struct {{
     const char *text;
     int16_t pos_x;
@@ -41,58 +67,77 @@ typedef struct {{
     uint8_t font_id;    // Font ID for font size variant (from Koui theme)
     bool visible;
 }} UILabelDef;
+#endif
 
-// Calculate final X position based on anchor
-static int16_t calc_anchor_x(const UILabelDef *def) {{
-    switch (def->anchor) {{
+#if UI_IMAGE_COUNT > 0
+typedef struct {{
+    const char *sprite_name;  // Sprite filename (without extension)
+    int16_t pos_x;
+    int16_t pos_y;
+    int16_t width;
+    int16_t height;
+    uint8_t anchor;
+    bool scale;               // Whether to scale sprite to width/height
+    bool visible;
+    sprite_t *sprite;         // Loaded sprite (set at init time)
+}} UIImageDef;
+#endif
+
+// Calculate final X position based on anchor (for labels)
+static int16_t calc_anchor_x_label(int16_t pos_x, int16_t width, uint8_t anchor) {{
+    switch (anchor) {{
         case UI_ANCHOR_TOP_LEFT:
         case UI_ANCHOR_MIDDLE_LEFT:
         case UI_ANCHOR_BOTTOM_LEFT:
-            return def->pos_x;
+            return pos_x;
         case UI_ANCHOR_TOP_CENTER:
         case UI_ANCHOR_MIDDLE_CENTER:
         case UI_ANCHOR_BOTTOM_CENTER:
-            return (CANVAS_WIDTH / 2) - (def->width / 2) + def->pos_x;
+            return (CANVAS_WIDTH / 2) - (width / 2) + pos_x;
         case UI_ANCHOR_TOP_RIGHT:
         case UI_ANCHOR_MIDDLE_RIGHT:
         case UI_ANCHOR_BOTTOM_RIGHT:
-            return CANVAS_WIDTH - def->width + def->pos_x;
+            return CANVAS_WIDTH - width + pos_x;
         default:
-            return def->pos_x;
+            return pos_x;
     }}
 }}
 
-// Calculate final Y position based on anchor
-static int16_t calc_anchor_y(const UILabelDef *def) {{
-    switch (def->anchor) {{
+// Calculate final Y position based on anchor (for labels)
+static int16_t calc_anchor_y_label(int16_t pos_y, int16_t height, uint8_t anchor) {{
+    switch (anchor) {{
         case UI_ANCHOR_TOP_LEFT:
         case UI_ANCHOR_TOP_CENTER:
         case UI_ANCHOR_TOP_RIGHT:
-            return def->pos_y;
+            return pos_y;
         case UI_ANCHOR_MIDDLE_LEFT:
         case UI_ANCHOR_MIDDLE_CENTER:
         case UI_ANCHOR_MIDDLE_RIGHT:
-            return (CANVAS_HEIGHT / 2) - (def->height / 2) + def->pos_y;
+            return (CANVAS_HEIGHT / 2) - (height / 2) + pos_y;
         case UI_ANCHOR_BOTTOM_LEFT:
         case UI_ANCHOR_BOTTOM_CENTER:
         case UI_ANCHOR_BOTTOM_RIGHT:
-            return CANVAS_HEIGHT - def->height + def->pos_y;
+            return CANVAS_HEIGHT - height + pos_y;
         default:
-            return def->pos_y;
+            return pos_y;
     }}
 }}
 
 // Per-canvas label data arrays (generated from Koui Editor JSON)
 {canvas_label_arrays}
 
+// Per-canvas image data arrays (generated from Koui Editor JSON)
+{canvas_image_arrays}
+
+#if UI_LABEL_COUNT > 0
 // Helper to load labels from a definition array
 static void load_labels(const UILabelDef *defs, int count) {{
     for (int i = 0; i < count; i++) {{
         const UILabelDef *def = &defs[i];
         UILabel *label = ui_label_create(def->text);
         if (label) {{
-            int16_t final_x = calc_anchor_x(def);
-            int16_t final_y = calc_anchor_y(def);
+            int16_t final_x = calc_anchor_x_label(def->pos_x, def->width, def->anchor);
+            int16_t final_y = calc_anchor_y_label(def->pos_y, def->height, def->anchor);
             ui_label_set_position(label, final_x, final_y);
             label->baseline_offset = def->baseline_offset;
             label->style_id = def->style_id;
@@ -100,10 +145,43 @@ static void load_labels(const UILabelDef *defs, int count) {{
             label->font_id = fonts_get_rdpq_id(def->font_id);
             label->visible = def->visible;
             ui_label_add(label);
-            g_canvas_labels[g_canvas_label_count++] = label;
+            if (g_canvas_label_count < UI_LABEL_COUNT) {{
+                g_canvas_labels[g_canvas_label_count++] = label;
+            }}
         }}
     }}
 }}
+#endif
+
+#if UI_IMAGE_COUNT > 0
+// Helper to load images from a definition array
+static void load_images(UIImageDef *defs, int count) {{
+    for (int i = 0; i < count; i++) {{
+        UIImageDef *def = &defs[i];
+
+        // Load sprite if not already loaded
+        if (def->sprite == NULL) {{
+            char path[64];
+            snprintf(path, sizeof(path), "rom:/%s.sprite", def->sprite_name);
+            def->sprite = sprite_load(path);
+        }}
+
+        UIImage *image = ui_image_create(def->sprite);
+        if (image) {{
+            int16_t final_x = calc_anchor_x_label(def->pos_x, def->width, def->anchor);
+            int16_t final_y = calc_anchor_y_label(def->pos_y, def->height, def->anchor);
+            ui_image_set_position(image, final_x, final_y);
+            ui_image_set_size(image, def->width, def->height);
+            image->scale = def->scale;
+            image->visible = def->visible;
+            ui_image_add(image);
+            if (g_canvas_image_count < UI_IMAGE_COUNT) {{
+                g_canvas_images[g_canvas_image_count++] = image;
+            }}
+        }}
+    }}
+}}
+#endif
 
 // ============================================================================
 // Public API
@@ -114,11 +192,12 @@ void canvas_init(void)
     if (g_initialized) return;
     g_initialized = true;
 
+#if UI_LABEL_COUNT > 0
     g_label_pool_used = 0;
-    g_render_count = 0;
+    g_label_render_count = 0;
     g_canvas_label_count = 0;
     memset(g_label_pool, 0, sizeof(g_label_pool));
-    memset(g_render_list, 0, sizeof(g_render_list));
+    memset(g_label_render_list, 0, sizeof(g_label_render_list));
     memset(g_canvas_labels, 0, sizeof(g_canvas_labels));
 
     // Load all fonts (each size variant) and get the default rdpq ID
@@ -131,10 +210,20 @@ void canvas_init(void)
     // Load additional font size variants and register font styles
     // (generated from Koui theme - styles must be registered on ALL font variants)
 {font_style_registration}
+#endif
+
+#if UI_IMAGE_COUNT > 0
+    g_image_pool_used = 0;
+    g_image_render_count = 0;
+    g_canvas_image_count = 0;
+    memset(g_image_pool, 0, sizeof(g_image_pool));
+    memset(g_image_render_list, 0, sizeof(g_image_render_list));
+    memset(g_canvas_images, 0, sizeof(g_canvas_images));
+#endif
 }}
 
 void canvas_scene_init(SceneId scene_id) {{
-    // Clear previous scene's labels first
+    // Clear previous scene's labels/images first
     canvas_clear();
 
     // Load canvas for the specified scene
@@ -147,15 +236,33 @@ void canvas_scene_init(SceneId scene_id) {{
 
 void canvas_clear(void)
 {{
+#if UI_LABEL_COUNT > 0
     // Reset label pool and render list (call on scene change)
     g_label_pool_used = 0;
-    g_render_count = 0;
+    g_label_render_count = 0;
     g_canvas_label_count = 0;
     memset(g_label_pool, 0, sizeof(g_label_pool));
-    memset(g_render_list, 0, sizeof(g_render_list));
+    memset(g_label_render_list, 0, sizeof(g_label_render_list));
     memset(g_canvas_labels, 0, sizeof(g_canvas_labels));
+#endif
+
+#if UI_IMAGE_COUNT > 0
+    // Reset image pool and render list
+    // Note: We don't free sprites here - they stay loaded for reuse
+    g_image_pool_used = 0;
+    g_image_render_count = 0;
+    g_canvas_image_count = 0;
+    memset(g_image_pool, 0, sizeof(g_image_pool));
+    memset(g_image_render_list, 0, sizeof(g_image_render_list));
+    memset(g_canvas_images, 0, sizeof(g_canvas_images));
+#endif
 }}
 
+// ============================================================================
+// Label management
+// ============================================================================
+
+#if UI_LABEL_COUNT > 0
 UILabel* ui_label_create(const char *text)
 {{
     // Allocate from static pool - no malloc!
@@ -181,14 +288,14 @@ UILabel* ui_label_create(const char *text)
 
 void ui_label_add(UILabel *label)
 {{
-    if (!label || g_render_count >= UI_MAX_LABELS) return;
+    if (!label || g_label_render_count >= UI_MAX_LABELS) return;
 
     // Check if already in render list
-    for (uint8_t i = 0; i < g_render_count; i++) {{
-        if (g_render_list[i] == label) return;
+    for (uint8_t i = 0; i < g_label_render_count; i++) {{
+        if (g_label_render_list[i] == label) return;
     }}
 
-    g_render_list[g_render_count++] = label;
+    g_label_render_list[g_label_render_count++] = label;
 }}
 
 void ui_label_remove(UILabel *label)
@@ -196,11 +303,11 @@ void ui_label_remove(UILabel *label)
     if (!label) return;
 
     // Find in render list and swap-and-pop (O(1) removal)
-    for (uint8_t i = 0; i < g_render_count; i++) {{
-        if (g_render_list[i] == label) {{
+    for (uint8_t i = 0; i < g_label_render_count; i++) {{
+        if (g_label_render_list[i] == label) {{
             // Swap with last element and decrement count
-            g_render_list[i] = g_render_list[g_render_count - 1];
-            g_render_count--;
+            g_label_render_list[i] = g_label_render_list[g_label_render_count - 1];
+            g_label_render_count--;
             break;
         }}
     }}
@@ -230,29 +337,141 @@ UILabel* canvas_get_label(int index) {{
     }}
     return NULL;
 }}
+#endif // UI_LABEL_COUNT > 0
+
+// ============================================================================
+// Image management
+// ============================================================================
+
+#if UI_IMAGE_COUNT > 0
+UIImage* ui_image_create(sprite_t *sprite)
+{{
+    // Allocate from static pool - no malloc!
+    if (g_image_pool_used >= UI_MAX_IMAGES) return NULL;
+    UIImage *image = &g_image_pool[g_image_pool_used++];
+
+    image->sprite = sprite;
+    image->pos_x = 0;
+    image->pos_y = 0;
+    image->width = sprite ? sprite->width : 32;
+    image->height = sprite ? sprite->height : 32;
+    image->scale = false;
+    image->visible = true;
+
+    return image;
+}}
+
+void ui_image_add(UIImage *image)
+{{
+    if (!image || g_image_render_count >= UI_MAX_IMAGES) return;
+
+    // Check if already in render list
+    for (uint8_t i = 0; i < g_image_render_count; i++) {{
+        if (g_image_render_list[i] == image) return;
+    }}
+
+    g_image_render_list[g_image_render_count++] = image;
+}}
+
+void ui_image_remove(UIImage *image)
+{{
+    if (!image) return;
+
+    // Find in render list and swap-and-pop (O(1) removal)
+    for (uint8_t i = 0; i < g_image_render_count; i++) {{
+        if (g_image_render_list[i] == image) {{
+            // Swap with last element and decrement count
+            g_image_render_list[i] = g_image_render_list[g_image_render_count - 1];
+            g_image_render_count--;
+            break;
+        }}
+    }}
+
+    // Note: Image stays in pool until scene reset (no free needed)
+}}
+
+void ui_image_set_position(UIImage *image, int16_t x, int16_t y)
+{{
+    if (image) {{
+        image->pos_x = x;
+        image->pos_y = y;
+    }}
+}}
+
+void ui_image_set_size(UIImage *image, int16_t width, int16_t height)
+{{
+    if (image) {{
+        image->width = width;
+        image->height = height;
+    }}
+}}
+
+UIImage* canvas_get_image(int index) {{
+    if (index >= 0 && index < g_canvas_image_count) {{
+        return g_canvas_images[index];
+    }}
+    return NULL;
+}}
+#endif // UI_IMAGE_COUNT > 0
+
+// ============================================================================
+// Rendering
+// ============================================================================
 
 void canvas_render(void)
 {{
+#if UI_LABEL_COUNT > 0 || UI_IMAGE_COUNT > 0
     // Early exit if nothing to render
-    if (g_render_count == 0 || g_default_font_rdpq_id == 0) return;
+    bool has_labels = false;
+    bool has_images = false;
+
+#if UI_LABEL_COUNT > 0
+    has_labels = (g_label_render_count > 0 && g_default_font_rdpq_id != 0);
+#endif
+#if UI_IMAGE_COUNT > 0
+    has_images = (g_image_render_count > 0);
+#endif
+
+    if (!has_labels && !has_images) return;
 
     // Sync pipeline before switching from 3D to 2D mode
     rdpq_sync_pipe();
 
-    // Begin 2D text rendering mode
+    // Begin 2D rendering mode
     rdpq_set_mode_standard();
     rdpq_mode_combiner(RDPQ_COMBINER_TEX_FLAT);
     rdpq_mode_blender(RDPQ_BLENDER_MULTIPLY);
 
-    // Render all visible labels in render list
-    for (uint8_t i = 0; i < g_render_count; i++) {{
-        UILabel *label = g_render_list[i];
+#if UI_IMAGE_COUNT > 0
+    // Render all visible images first (behind text)
+    for (uint8_t i = 0; i < g_image_render_count; i++) {{
+        UIImage *image = g_image_render_list[i];
+        if (!image || !image->visible || !image->sprite) continue;
+
+        if (image->scale) {{
+            // Calculate scale factors
+            float scale_x = (float)image->width / (float)image->sprite->width;
+            float scale_y = (float)image->height / (float)image->sprite->height;
+            rdpq_sprite_blit(image->sprite, image->pos_x, image->pos_y,
+                &(rdpq_blitparms_t){{ .scale_x = scale_x, .scale_y = scale_y }});
+        }} else {{
+            rdpq_sprite_blit(image->sprite, image->pos_x, image->pos_y, NULL);
+        }}
+    }}
+#endif
+
+#if UI_LABEL_COUNT > 0
+    // Render all visible labels (on top of images)
+    for (uint8_t i = 0; i < g_label_render_count; i++) {{
+        UILabel *label = g_label_render_list[i];
         if (!label || !label->visible) continue;
 
         // Use style_id from Koui theme for text color
         rdpq_textparms_t parms = {{ .style_id = label->style_id }};
         rdpq_text_print(&parms, label->font_id, label->pos_x, label->pos_y + label->baseline_offset, label->text);
     }}
+#endif
+#endif // UI_LABEL_COUNT > 0 || UI_IMAGE_COUNT > 0
 }}
 
-#endif // UI_LABEL_COUNT > 0
+#endif // UI_LABEL_COUNT > 0 || UI_IMAGE_COUNT > 0

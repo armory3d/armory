@@ -13,11 +13,20 @@ extern "C" {{
 
 #define UI_LABEL_COUNT {label_count}
 
-#if UI_LABEL_COUNT > 0
+// Image key defines (generated from Koui Editor canvas JSON)
+{image_defines}
+
+#define UI_IMAGE_COUNT {image_count}
+
+#if UI_LABEL_COUNT > 0 || UI_IMAGE_COUNT > 0
 
 // Max UI elements
 #ifndef UI_MAX_LABELS
 #define UI_MAX_LABELS 32
+#endif
+
+#ifndef UI_MAX_IMAGES
+#define UI_MAX_IMAGES 16
 #endif
 
 // Max text length for labels
@@ -52,13 +61,26 @@ typedef struct {{
     bool visible;
 }} UILabel;
 
+// Forward declaration for sprite_t
+struct sprite_s;
+typedef struct sprite_s sprite_t;
+
+// Image element
+typedef struct {{
+    int16_t pos_x, pos_y;
+    int16_t width, height;                  // Display dimensions (may differ from sprite if scaled)
+    sprite_t *sprite;                       // Loaded sprite (NULL until canvas_init)
+    bool scale;                             // Whether to scale sprite to width/height
+    bool visible;
+}} UIImage;
+
 // Initialize canvas system (call once at startup)
 void canvas_init(void);
 
-// Initialize canvas for a specific scene (clears and reloads labels)
+// Initialize canvas for a specific scene (clears and reloads labels/images)
 void canvas_scene_init(SceneId scene_id);
 
-// Clear all labels and reset pool (call on scene change)
+// Clear all labels/images and reset pool (call on scene change)
 void canvas_clear(void);
 
 // Label management
@@ -68,14 +90,24 @@ void ui_label_remove(UILabel *label);                 // Remove label from rende
 void ui_label_set_position(UILabel *label, int16_t x, int16_t y);
 void ui_label_set_text(UILabel *label, const char *text);  // Set label text (copies string)
 
+// Image management
+UIImage* ui_image_create(sprite_t *sprite);           // Create image (not added to scene)
+void ui_image_add(UIImage *image);                    // Add image to render list
+void ui_image_remove(UIImage *image);                 // Remove image from render list
+void ui_image_set_position(UIImage *image, int16_t x, int16_t y);
+void ui_image_set_size(UIImage *image, int16_t width, int16_t height);
+
 // Get label by index (for canvas-defined labels)
 UILabel* canvas_get_label(int index);
+
+// Get image by index (for canvas-defined images)
+UIImage* canvas_get_image(int index);
 
 // Render all UI elements (call after 3D rendering, before display_show)
 void canvas_render(void);
 
 #else
-// Stubs when no UI labels exist
+// Stubs when no UI labels or images exist
 static inline void canvas_init(void) {{}}
 static inline void canvas_scene_init(SceneId scene_id) {{ (void)scene_id; }}
 static inline void canvas_clear(void) {{}}
