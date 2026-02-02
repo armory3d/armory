@@ -15,6 +15,18 @@ import arm.log as log
 from arm.n64.export.koui_theme_parser import KouiThemeParser
 
 
+# Anchor enum values (matches Koui)
+ANCHOR_TOP_LEFT = 0
+ANCHOR_TOP_CENTER = 1
+ANCHOR_TOP_RIGHT = 2
+ANCHOR_MIDDLE_LEFT = 3
+ANCHOR_MIDDLE_CENTER = 4
+ANCHOR_MIDDLE_RIGHT = 5
+ANCHOR_BOTTOM_LEFT = 6
+ANCHOR_BOTTOM_CENTER = 7
+ANCHOR_BOTTOM_RIGHT = 8
+
+
 def detect_ui_canvas(exporter):
     """Detect and parse Koui canvas JSON files referenced by scenes.
 
@@ -22,6 +34,9 @@ def detect_ui_canvas(exporter):
     Sets exporter.has_ui = True if any canvas with labels or images is found.
     Stores parsed data in exporter.ui_canvas_data for code generation.
     Also parses Koui theme files to extract font size and text color per label.
+
+    Layouts (RowLayout, ColLayout) are flattened at export time - their children
+    are extracted with pre-computed absolute positions for N64's fixed resolution.
 
     Args:
         exporter: N64Exporter instance to update with UI state
@@ -54,74 +69,37 @@ def detect_ui_canvas(exporter):
                 canvas_data = json.load(f)
 
             canvas_info = canvas_data.get('canvas', {})
-            canvas_width = canvas_info.get('width')
-            canvas_height = canvas_info.get('height')
+            canvas_width = canvas_info.get('width', 320)
+            canvas_height = canvas_info.get('height', 240)
 
             labels = []
             images = []
+
             for scene in canvas_data.get('scenes', []):
-                for elem in scene.get('elements', []):
-                    elem_type = elem.get('type')
+                elements = scene.get('elements', [])
 
-                    if elem_type == 'Label':
-                        props = elem.get('properties', {})
-                        tid = elem.get('tID', '_label')
+                # Build element lookup by key and parent-child relationships
+                elem_by_key = {e['key']: e for e in elements}
+                children_by_parent = {}
+                root_elements = []
 
-                        # Get font size and text color from theme
-                        font_size = 15
-                        text_color = (221, 221, 221, 255)  # Default #dddddd
+                for elem in elements:
+                    parent_key = elem.get('parentKey')
+                    if parent_key:
+                        if parent_key not in children_by_parent:
+                            children_by_parent[parent_key] = []
+                        children_by_parent[parent_key].append(elem)
+                    else:
+                        root_elements.append(elem)
 
-                        if exporter.theme_parser:
-                            font_size = exporter.theme_parser.get_font_size(tid, 15)
-                            color_hex = exporter.theme_parser.get_text_color(tid, '#dddddd')
-                            text_color = KouiThemeParser.parse_hex_color(color_hex)
-
-                        # Track unique font sizes needed
-                        exporter.font_sizes.add(font_size)
-
-                        # Get or create style_id for this color
-                        style_id = _get_or_create_color_style(exporter, text_color)
-
-                        label_data = {
-                            'key': elem['key'],
-                            'text': props.get('text', ''),
-                            'pos_x': elem['posX'],
-                            'pos_y': elem['posY'],
-                            'width': elem['width'],
-                            'height': elem['height'],
-                            'anchor': elem['anchor'],
-                            'visible': elem['visible'],
-                            'align_h': props.get('alignmentHor', 0),
-                            'align_v': props.get('alignmentVert', 0),
-                            'tID': tid,
-                            'font_size': font_size,
-                            'text_color': text_color,
-                            'style_id': style_id,
-                        }
-                        labels.append(label_data)
-
-                    elif elem_type == 'ImagePanel':
-                        props = elem.get('properties', {})
-                        image_name = props.get('imageName', '')
-
-                        if image_name:
-                            # Track image for copying
-                            if not hasattr(exporter, 'ui_images'):
-                                exporter.ui_images = set()
-                            exporter.ui_images.add(image_name)
-
-                            image_data = {
-                                'key': elem['key'],
-                                'image_name': image_name,
-                                'pos_x': elem['posX'],
-                                'pos_y': elem['posY'],
-                                'width': elem['width'],
-                                'height': elem['height'],
-                                'anchor': elem['anchor'],
-                                'visible': elem['visible'],
-                                'scale': props.get('scale', False),
-                            }
-                            images.append(image_data)
+                # Process root elements recursively, flattening layouts
+                for elem in root_elements:
+                    _flatten_element(
+                        exporter, elem, elem_by_key, children_by_parent,
+                        canvas_width, canvas_height,
+                        0, 0,  # parent_abs_x, parent_abs_y
+                        labels, images
+                    )
 
             if labels or images:
                 exporter.ui_canvas_data[canvas_name] = {
@@ -135,6 +113,238 @@ def detect_ui_canvas(exporter):
 
         except Exception as e:
             log.warn(f'Failed to parse Koui canvas {json_path}: {e}')
+
+
+def _calc_anchor_position(pos_x, pos_y, width, height, anchor, container_width, container_height):
+    """Calculate absolute position based on anchor within a container.
+
+    Args:
+        pos_x, pos_y: Element's relative position
+        width, height: Element's dimensions
+        anchor: Anchor enum value (0-8)
+        container_width, container_height: Parent container dimensions
+
+    Returns:
+        (abs_x, abs_y): Absolute position within container
+    """
+    # Calculate X based on anchor
+    if anchor in (ANCHOR_TOP_LEFT, ANCHOR_MIDDLE_LEFT, ANCHOR_BOTTOM_LEFT):
+        abs_x = pos_x
+    elif anchor in (ANCHOR_TOP_CENTER, ANCHOR_MIDDLE_CENTER, ANCHOR_BOTTOM_CENTER):
+        abs_x = (container_width // 2) - (width // 2) + pos_x
+    elif anchor in (ANCHOR_TOP_RIGHT, ANCHOR_MIDDLE_RIGHT, ANCHOR_BOTTOM_RIGHT):
+        abs_x = container_width - width + pos_x
+    else:
+        abs_x = pos_x
+
+    # Calculate Y based on anchor
+    if anchor in (ANCHOR_TOP_LEFT, ANCHOR_TOP_CENTER, ANCHOR_TOP_RIGHT):
+        abs_y = pos_y
+    elif anchor in (ANCHOR_MIDDLE_LEFT, ANCHOR_MIDDLE_CENTER, ANCHOR_MIDDLE_RIGHT):
+        abs_y = (container_height // 2) - (height // 2) + pos_y
+    elif anchor in (ANCHOR_BOTTOM_LEFT, ANCHOR_BOTTOM_CENTER, ANCHOR_BOTTOM_RIGHT):
+        abs_y = container_height - height + pos_y
+    else:
+        abs_y = pos_y
+
+    return abs_x, abs_y
+
+
+def _flatten_element(exporter, elem, elem_by_key, children_by_parent,
+                     container_width, container_height,
+                     parent_abs_x, parent_abs_y,
+                     labels, images):
+    """Recursively flatten an element, computing absolute positions.
+
+    Layout elements (RowLayout, ColLayout) are not exported themselves,
+    but their children are processed with adjusted positions.
+
+    Args:
+        exporter: N64Exporter instance
+        elem: Element dict from JSON
+        elem_by_key: Lookup dict of all elements by key
+        children_by_parent: Dict mapping parent keys to child element lists
+        container_width, container_height: Current container dimensions
+        parent_abs_x, parent_abs_y: Absolute position of parent's top-left corner
+        labels: Output list for label elements
+        images: Output list for image elements
+    """
+    elem_type = elem.get('type')
+    elem_key = elem.get('key')
+    anchor = elem.get('anchor', ANCHOR_TOP_LEFT)
+
+    # Calculate this element's absolute position within its container
+    elem_abs_x, elem_abs_y = _calc_anchor_position(
+        elem['posX'], elem['posY'],
+        elem['width'], elem['height'],
+        anchor,
+        container_width, container_height
+    )
+
+    # Add parent offset to get final absolute position
+    final_x = parent_abs_x + elem_abs_x
+    final_y = parent_abs_y + elem_abs_y
+
+    # Handle layout types - process children but don't export the layout itself
+    if elem_type in ('RowLayout', 'ColLayout'):
+        children = children_by_parent.get(elem_key, [])
+        if not children:
+            return
+
+        layout_width = elem['width']
+        layout_height = elem['height']
+
+        # RowLayout = 1 column, N rows (vertical stack)
+        # ColLayout = N columns, 1 row (horizontal stack)
+        num_children = len(children)
+        if num_children == 0:
+            return
+
+        if elem_type == 'RowLayout':
+            cell_width = layout_width
+            cell_height = layout_height // num_children
+        else:  # ColLayout
+            cell_width = layout_width // num_children
+            cell_height = layout_height
+
+        # Process each child in its cell
+        for idx, child in enumerate(children):
+            if elem_type == 'RowLayout':
+                cell_x = 0
+                cell_y = cell_height * idx
+            else:  # ColLayout
+                cell_x = cell_width * idx
+                cell_y = 0
+
+            # Child's container is its cell within the layout
+            _flatten_element(
+                exporter, child, elem_by_key, children_by_parent,
+                cell_width, cell_height,
+                final_x + cell_x, final_y + cell_y,
+                labels, images
+            )
+        return
+
+    # Handle AnchorPane - children use anchors relative to the pane
+    if elem_type == 'AnchorPane':
+        children = children_by_parent.get(elem_key, [])
+        layout_width = elem['width']
+        layout_height = elem['height']
+
+        for child in children:
+            # Children position themselves within the AnchorPane using their own anchors
+            _flatten_element(
+                exporter, child, elem_by_key, children_by_parent,
+                layout_width, layout_height,
+                final_x, final_y,
+                labels, images
+            )
+        return
+
+    # Handle GridLayout - children are placed in grid cells
+    if elem_type == 'GridLayout':
+        children = children_by_parent.get(elem_key, [])
+        if not children:
+            return
+
+        layout_width = elem['width']
+        layout_height = elem['height']
+        props = elem.get('properties', {})
+
+        # GridLayout needs rows and cols from properties
+        num_rows = props.get('rows', 1)
+        num_cols = props.get('cols', 1)
+
+        cell_width = layout_width // num_cols if num_cols > 0 else layout_width
+        cell_height = layout_height // num_rows if num_rows > 0 else layout_height
+
+        # Process each child - they should be ordered row by row
+        for idx, child in enumerate(children):
+            row = idx // num_cols
+            col = idx % num_cols
+
+            cell_x = cell_width * col
+            cell_y = cell_height * row
+
+            _flatten_element(
+                exporter, child, elem_by_key, children_by_parent,
+                cell_width, cell_height,
+                final_x + cell_x, final_y + cell_y,
+                labels, images
+            )
+        return
+
+    # Handle renderable element types
+    if elem_type == 'Label':
+        props = elem.get('properties', {})
+        tid = elem.get('tID', '_label')
+
+        # Get font size and text color from theme
+        font_size = 15
+        text_color = (221, 221, 221, 255)  # Default #dddddd
+
+        if exporter.theme_parser:
+            font_size = exporter.theme_parser.get_font_size(tid, 15)
+            color_hex = exporter.theme_parser.get_text_color(tid, '#dddddd')
+            text_color = KouiThemeParser.parse_hex_color(color_hex)
+
+        # Track unique font sizes needed
+        exporter.font_sizes.add(font_size)
+
+        # Get or create style_id for this color
+        style_id = _get_or_create_color_style(exporter, text_color)
+
+        label_data = {
+            'key': elem['key'],
+            'text': props.get('text', ''),
+            'pos_x': final_x,
+            'pos_y': final_y,
+            'width': elem['width'],
+            'height': elem['height'],
+            'anchor': ANCHOR_TOP_LEFT,  # Already resolved to absolute
+            'visible': elem.get('visible', True),
+            'align_h': props.get('alignmentHor', 0),
+            'align_v': props.get('alignmentVert', 0),
+            'tID': tid,
+            'font_size': font_size,
+            'text_color': text_color,
+            'style_id': style_id,
+        }
+        labels.append(label_data)
+
+    elif elem_type == 'ImagePanel':
+        props = elem.get('properties', {})
+        image_name = props.get('imageName', '')
+
+        if image_name:
+            # Track image for copying
+            if not hasattr(exporter, 'ui_images'):
+                exporter.ui_images = set()
+            exporter.ui_images.add(image_name)
+
+            image_data = {
+                'key': elem['key'],
+                'image_name': image_name,
+                'pos_x': final_x,
+                'pos_y': final_y,
+                'width': elem['width'],
+                'height': elem['height'],
+                'anchor': ANCHOR_TOP_LEFT,  # Already resolved to absolute
+                'visible': elem.get('visible', True),
+                'scale': props.get('scale', False),
+            }
+            images.append(image_data)
+
+    # For any other element types that might have children (future expansion)
+    # Process children recursively - they position themselves within this element
+    children = children_by_parent.get(elem_key, [])
+    for child in children:
+        _flatten_element(
+            exporter, child, elem_by_key, children_by_parent,
+            elem['width'], elem['height'],
+            final_x, final_y,
+            labels, images
+        )
 
 
 def _parse_koui_themes(exporter):
