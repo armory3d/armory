@@ -635,10 +635,13 @@ void canvas_render(void)
 
     // Begin 2D rendering mode
     rdpq_set_mode_standard();
-    rdpq_mode_combiner(RDPQ_COMBINER_TEX_FLAT);
     rdpq_mode_blender(RDPQ_BLENDER_MULTIPLY);
 
 #if UI_IMAGE_COUNT > 0
+    // Use RDPQ_COMBINER_TEX for images - passes texture alpha through correctly
+    // (RDPQ_COMBINER_TEX_FLAT multiplies alpha by PRIM, breaking transparency)
+    rdpq_mode_combiner(RDPQ_COMBINER_TEX);
+
     // Render all visible images first (behind text)
     for (uint8_t i = 0; i < g_image_render_count; i++) {{
         UIImage *image = g_image_render_list[i];
@@ -657,6 +660,9 @@ void canvas_render(void)
 #endif
 
 #if UI_LABEL_COUNT > 0
+    // Use RDPQ_COMBINER_TEX_FLAT for labels - allows color modulation via style
+    rdpq_mode_combiner(RDPQ_COMBINER_TEX_FLAT);
+
     // Render all visible labels (on top of images)
     for (uint8_t i = 0; i < g_label_render_count; i++) {{
         UILabel *label = g_label_render_list[i];
