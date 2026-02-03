@@ -713,6 +713,11 @@ class AutoloadExtractor implements IExtractorContext {
         return memberTypes.get(name);
     }
 
+    public function getInheritedMemberType(name:String):String {
+        // Autoloads don't have inheritance - always return null
+        return null;
+    }
+
     public function getLocalVarType(name:String):String {
         return localVarTypes.exists(name) ? localVarTypes.get(name) : null;
     }
@@ -795,6 +800,11 @@ class AutoloadExtractor implements IExtractorContext {
 
     public function getCName():String {
         return cName;
+    }
+
+    public function getParentName():String {
+        // Autoloads don't have parent traits
+        return null;
     }
 
     public function getMethod(name:String):Function {

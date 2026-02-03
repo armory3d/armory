@@ -132,6 +132,7 @@ class TraitCodeGenerator:
             virtual_methods=self.virtual_method_names
         )
         self._tween_callbacks = []  # Collected tween callbacks from all events
+        self._inherited_callbacks = []  # Collected callback wrappers for inherited method calls
 
     def _compute_virtual_methods(self) -> set:
         """Compute the set of method names that need vtable dispatch.
@@ -370,6 +371,54 @@ class TraitCodeGenerator:
         # Delegate to shared helper
         return tween_helper.find_tween_callbacks(nodes)
 
+    def _find_nodes_by_type(self, nodes: list, target_type: str) -> list:
+        """Recursively find all nodes of a specific type in IR tree.
+
+        Generic helper for finding callback wrappers, tween nodes, etc.
+        """
+        found = []
+        for node in nodes:
+            if node is None:
+                continue
+            node_type = node.get("type", "")
+            if node_type == target_type:
+                found.append(node)
+            # Recurse into children
+            if "children" in node and node["children"]:
+                found.extend(self._find_nodes_by_type(node["children"], target_type))
+            if "args" in node and node["args"]:
+                found.extend(self._find_nodes_by_type(node["args"], target_type))
+            if "body" in node and isinstance(node.get("body"), list):
+                found.extend(self._find_nodes_by_type(node["body"], target_type))
+            # Also search inside props (contains then/else_ branches, on_done callbacks, etc.)
+            if "props" in node and node["props"]:
+                props = node["props"]
+                for key, val in props.items():
+                    if isinstance(val, list):
+                        found.extend(self._find_nodes_by_type(val, target_type))
+                    elif isinstance(val, dict):
+                        found.extend(self._find_nodes_by_type([val], target_type))
+        return found
+
+    def _collect_callbacks_from_all_bodies(self, cache_list: list, finder_fn) -> None:
+        """Scan all events AND methods for callbacks using the given finder function.
+
+        Args:
+            cache_list: List to store found callbacks (modified in place)
+            finder_fn: Function(nodes) -> list of callbacks
+        """
+        if cache_list:
+            return  # Already collected
+
+        # Scan event bodies
+        for event_nodes in self.events.values():
+            cache_list.extend(finder_fn(event_nodes))
+
+        # Scan method bodies too
+        for method_ir in self.methods.values():
+            method_body = method_ir.get("body", [])
+            cache_list.extend(finder_fn(method_body))
+
     def _generate_tween_callback(self, callback_info: dict) -> str:
         """Generate a static C callback function for a tween.
 
@@ -386,19 +435,10 @@ class TraitCodeGenerator:
 
     def _collect_tween_callbacks(self):
         """Scan all events AND methods for tween callbacks and store them."""
-        if self._tween_callbacks:
-            return  # Already collected
-
-        # Scan event bodies
-        for event_name, event_nodes in self.events.items():
-            found = self._find_tween_callbacks(event_nodes)
-            self._tween_callbacks.extend(found)
-
-        # Scan method bodies too
-        for method_name, method_ir in self.methods.items():
-            method_body = method_ir.get("body", [])
-            found = self._find_tween_callbacks(method_body)
-            self._tween_callbacks.extend(found)
+        self._collect_callbacks_from_all_bodies(
+            self._tween_callbacks,
+            self._find_tween_callbacks
+        )
 
     def generate_tween_callbacks(self) -> str:
         """Generate all tween callback functions for this trait.
@@ -417,7 +457,7 @@ class TraitCodeGenerator:
         for cb in self._tween_callbacks:
             cb_name = cb.get("callback_name", "")
             captures = cb.get("captures", [])
-            param_caps = [(c["name"], c.get("ctype", c.get("type", "int32_t")))
+            param_caps = [(c["name"], c.get("ctype", c.get("type", "void*")))
                           for c in captures if c.get("is_param", False)]
             if param_caps:
                 callback_param_captures[cb_name] = param_caps
@@ -437,6 +477,147 @@ class TraitCodeGenerator:
             if cb_name and cb_name not in seen_callbacks:
                 seen_callbacks.add(cb_name)
                 cb_code = self._generate_tween_callback(cb)
+                if cb_code:
+                    lines.append(cb_code)
+                    lines.append("")
+
+        return "\n".join(lines)
+
+    def _find_inherited_callbacks(self, nodes: list) -> list:
+        """Recursively find all callback_wrapper nodes in IR nodes."""
+        return self._find_nodes_by_type(nodes, "callback_wrapper")
+
+    def _collect_inherited_callbacks(self):
+        """Scan all events AND methods for inherited method callback wrappers."""
+        self._collect_callbacks_from_all_bodies(
+            self._inherited_callbacks,
+            self._find_inherited_callbacks
+        )
+
+    def _generate_inherited_callback(self, callback_info: dict) -> str:
+        """Generate a C callback function for an inherited method call.
+
+        These callbacks are passed to parent methods which typically pass them
+        to tweens. They need obj/data parameters to access trait members.
+        The signature matches tween done callbacks: void cb(void* obj, void* data)
+        """
+        cb_name = callback_info.get("callback_name", "")
+        param_name = callback_info.get("param_name")
+        param_ctype = callback_info.get("param_ctype", "void")
+        body_nodes = callback_info.get("body", [])
+        captures = callback_info.get("captures", [])
+
+        if not cb_name:
+            return ""
+
+        lines = []
+
+        # All inherited method callbacks need obj/data for member access
+        # If the callback also has a value parameter (like Float->Void), include it
+        if param_name and param_ctype != "void":
+            lines.append(f"static void {cb_name}({param_ctype} {param_name}, void* obj, void* data) {{")
+        else:
+            lines.append(f"static void {cb_name}(void* obj, void* data) {{")
+
+        # Build param captures map for substitution
+        param_captures = {}
+        for cap in captures:
+            if cap.get("is_param", False):
+                cap_name = cap.get("name", "")
+                if cap_name:
+                    param_captures[cap_name] = f"{self.c_name}_capture_{cap_name}"
+
+        # Use capture-aware emitter if we have param captures
+        emitter = self.emitter
+        if param_captures:
+            emitter = tween_helper._CaptureEmitter(self.emitter, param_captures)
+
+        # Track if obj is used - if body has no ident("object") references, silence warning
+        body_code_lines = []
+        for node in body_nodes:
+            code = emitter.emit(node)
+            if code:
+                # Handle multi-line statements
+                for line in code.split('\n'):
+                    if line.strip():
+                        if not line.rstrip().endswith((';', '{', '}')):
+                            body_code_lines.append(f"    {line};")
+                        else:
+                            body_code_lines.append(f"    {line}")
+
+        # Check if obj is used in the body
+        body_str = "\n".join(body_code_lines)
+        obj_used = "obj" in body_str and "ArmObject*)obj" in body_str
+
+        if not obj_used:
+            lines.append("    (void)obj;  // Suppress unused parameter warning")
+
+        lines.extend(body_code_lines)
+        lines.append("}")
+        return "\n".join(lines)
+
+    def generate_inherited_callbacks(self) -> str:
+        """Generate all inherited method callback functions for this trait.
+
+        Generates forward declarations first to handle mutual references between
+        callbacks (e.g., fadeIn_cb calls fadeOut which uses fadeOut_cb).
+        Also generates capture globals for any captured parameters.
+        """
+        self._collect_inherited_callbacks()
+
+        if not self._inherited_callbacks:
+            return ""
+
+        lines = []
+        seen_callbacks = set()
+
+        # First, generate capture globals for any captured params
+        callback_param_captures = {}
+        for cb in self._inherited_callbacks:
+            cb_name = cb.get("callback_name", "")
+            captures = cb.get("captures", [])
+            param_caps = [(c["name"], c.get("ctype", c.get("type", "void*")))
+                          for c in captures if c.get("is_param", False)]
+            if param_caps:
+                callback_param_captures[cb_name] = param_caps
+
+        if callback_param_captures:
+            capture_globals = tween_helper.generate_capture_globals(
+                callback_param_captures, self.c_name
+            )
+            lines.extend(capture_globals)
+            lines.append("")
+
+        # Second pass: collect unique callbacks with their signatures for forward declarations
+        unique_callbacks = []
+        for cb in self._inherited_callbacks:
+            cb_name = cb.get("callback_name", "")
+            if cb_name and cb_name not in seen_callbacks:
+                seen_callbacks.add(cb_name)
+                unique_callbacks.append(cb)
+
+        # Generate forward declarations with matching signatures
+        if len(unique_callbacks) > 1:
+            lines.append("// Forward declarations for inherited callbacks")
+            for cb in unique_callbacks:
+                cb_name = cb.get("callback_name", "")
+                param_name = cb.get("param_name")
+                param_ctype = cb.get("param_ctype", "void")
+                if param_name and param_ctype != "void":
+                    lines.append(f"static void {cb_name}({param_ctype} {param_name}, void* obj, void* data);")
+                else:
+                    lines.append(f"static void {cb_name}(void* obj, void* data);")
+            lines.append("")
+
+        # Reset seen for third pass
+        seen_callbacks = set()
+
+        # Third pass: generate full definitions
+        for cb in self._inherited_callbacks:
+            cb_name = cb.get("callback_name", "")
+            if cb_name and cb_name not in seen_callbacks:
+                seen_callbacks.add(cb_name)
+                cb_code = self._generate_inherited_callback(cb)
                 if cb_code:
                     lines.append(cb_code)
                     lines.append("")
@@ -982,6 +1163,12 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
         if tween_cb_code:
             tween_callbacks.append(f"// Tween callbacks for {trait_name}")
             tween_callbacks.append(tween_cb_code)
+
+        # Generate inherited method callbacks (must come before implementations)
+        inherited_cb_code = gen.generate_inherited_callbacks()
+        if inherited_cb_code:
+            tween_callbacks.append(f"// Inherited method callbacks for {trait_name}")
+            tween_callbacks.append(inherited_cb_code)
 
         # Implementation data: methods first (they may be called by events), then events
         method_impls = gen.generate_method_implementations()

@@ -33,7 +33,31 @@ class TweenCallConverter implements ICallConverter {
     public function tryConvert(obj:Expr, method:String, args:Array<IRNode>, rawParams:Array<Expr>, ctx:IExtractorContext):IRNode {
         // Check if the object is a Tween type
         var objType = getExprTypeSafe(obj, ctx);
-        if (objType == null || objType.indexOf("Tween") < 0) {
+        var isPotentiallyInherited = false;
+
+        // If objType is null or Dynamic (unresolved), check if it's a member or inherited member
+        if (objType == null || objType == "Dynamic") {
+            switch (obj.expr) {
+                case EConst(CIdent(name)):
+                    // Check local member types first
+                    objType = ctx.getMemberType(name);
+                    // Then check inherited (may return null if not loaded)
+                    if (objType == null) {
+                        objType = ctx.getInheritedMemberType(name);
+                    }
+                    // If still null and we have a parent, the identifier would become
+                    // potentially_inherited - optimistically assume it could be a Tween
+                    // and let Python resolve it correctly
+                    if (objType == null && ctx.getParentName() != null) {
+                        isPotentiallyInherited = true;
+                    }
+                default:
+            }
+        }
+
+        // Proceed if we know it's a Tween OR if it's potentially inherited
+        // (for inherited members we can't resolve type at macro time)
+        if (!isPotentiallyInherited && (objType == null || objType == "Dynamic" || objType.indexOf("Tween") < 0)) {
             return null;
         }
 
@@ -352,6 +376,25 @@ class TweenCallConverter implements ICallConverter {
                     }
                 }
 
+            case "callback_param_call":
+                // Calling a callback parameter like finishedCallback()
+                // The callback parameter name needs to be captured
+                var name = Std.string(node.name);
+                if (name != null && name != "" && !captures.exists(name)) {
+                    var localType = ctx.getLocalVarType(name);
+                    if (localType != null) {
+                        // Convert Haxe function type to C function pointer type
+                        var ctype = functionTypeToCType(localType);
+                        captures.set(name, {
+                            name: name,
+                            type: localType,
+                            ctype: ctype,
+                            is_member: false,
+                            is_param: true
+                        });
+                    }
+                }
+
             case "if":
                 if (node.children != null) {
                     for (child in node.children) {
@@ -392,6 +435,33 @@ class TweenCallConverter implements ICallConverter {
             case "SineOut": return "EASE_SINE_OUT";
             case "SineInOut": return "EASE_SINE_IN_OUT";
             default: return "EASE_LINEAR";
+        }
+    }
+
+    /**
+     * Convert a Haxe function type like "Void->Void" or "Float->Void"
+     * to a C function pointer typedef name.
+     *
+     * In the N64 C code, we use typedefs for callback types that include obj/data:
+     * - Void->Void becomes ArmCallback (typedef void (*ArmCallback)(void*, void*))
+     * - Float->Void becomes ArmFloatObjCallback (typedef void (*ArmFloatObjCallback)(float, void*, void*))
+     *
+     * The obj/data parameters allow callbacks to access trait members through the data pointer.
+     */
+    function functionTypeToCType(haxeType:String):String {
+        // Parse the function type: ParamType->ReturnType
+        var parts = haxeType.split("->");
+        if (parts.length < 2) {
+            return "ArmCallback";  // Default fallback
+        }
+
+        var paramType = parts[0].trim();
+
+        // Map to our callback typedefs (all include obj/data for trait access)
+        switch (paramType) {
+            case "Void", "": return "ArmCallback";
+            case "Float": return "ArmFloatObjCallback";
+            default: return "ArmCallback";
         }
     }
 

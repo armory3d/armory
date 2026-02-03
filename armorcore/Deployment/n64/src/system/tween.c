@@ -227,15 +227,21 @@ void tween_update_all(float dt) {
         bool completed = update_tween(t, dt);
 
         if (completed) {
-            // Call done callback
-            if (t->on_done) {
-                t->on_done(t->object, t->data);
-            }
+            // Save callback info before marking inactive
+            // (callback may restart this same tween)
+            TweenDoneCallback done_cb = t->on_done;
+            void* cb_obj = t->object;
+            void* cb_data = t->data;
 
-            // Mark as inactive but DON'T free - the owner still holds a pointer to this slot
-            // and may want to reuse it (e.g., autoload tweens). The slot stays reserved
-            // (type != TWEEN_NONE) until the owner explicitly calls tween_free().
+            // Mark as inactive BEFORE calling callback
+            // This allows the callback to restart the tween
             t->active = false;
+            t->on_done = NULL;  // Prevent double-fire
+
+            // Call done callback (may restart this tween)
+            if (done_cb) {
+                done_cb(cb_obj, cb_data);
+            }
         }
     }
 }

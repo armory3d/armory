@@ -41,6 +41,24 @@ class N64MacroBase {
         if (node.props != null) obj.props = node.props;
         if (node.c_code != null) obj.c_code = node.c_code;
         if (node.c_func != null) obj.c_func = node.c_func;
+        if (node.cName != null) obj.cName = node.cName;
+        if (node.trait != null) obj.trait = node.trait;
+        if (node.parent != null) obj.parent = node.parent;
+        // Inherited member fields
+        if (node.memberType != null) obj.memberType = node.memberType;
+        if (node.owner != null) obj.owner = node.owner;
+        // Callback parameter call fields
+        if (node.name != null) obj.name = node.name;
+        if (node.paramType != null) obj.paramType = node.paramType;
+        // Callback wrapper fields (for inherited method callbacks)
+        if (node.callback_name != null) obj.callback_name = node.callback_name;
+        if (node.body != null && node.body.length > 0) {
+            obj.body = [for (b in node.body) serializeIRNode(b)];
+        }
+        if (node.captures != null) obj.captures = node.captures;
+        if (node.param_name != null) obj.param_name = node.param_name;
+        if (node.param_type != null) obj.param_type = node.param_type;
+        if (node.param_ctype != null) obj.param_ctype = node.param_ctype;
 
         return obj;
     }
@@ -95,6 +113,15 @@ class N64MacroBase {
     public static function complexTypeToString(ct:ComplexType):String {
         return switch (ct) {
             case TPath(p): p.name;
+            case TFunction(args, ret):
+                // Handle function types like Void->Void, Float->Void
+                var argTypes = [for (arg in args) complexTypeToString(arg)];
+                var retType = complexTypeToString(ret);
+                if (argTypes.length == 0) {
+                    "Void->" + retType;
+                } else {
+                    argTypes.join("->") + "->" + retType;
+                }
             default: "Dynamic";
         };
     }

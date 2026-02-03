@@ -18,7 +18,16 @@ extern "C" {{
 
 #define UI_IMAGE_COUNT {image_count}
 
-#if UI_LABEL_COUNT > 0 || UI_IMAGE_COUNT > 0
+// Group key defines (for Koui containers - enables parent-child visibility)
+{group_defines}
+
+#define UI_GROUP_COUNT {group_count}
+
+// Total "element" count for Haxe elements[] array compatibility
+// This includes top-level images and groups (not nested images/labels)
+#define UI_ELEMENT_COUNT {element_count}
+
+#if UI_LABEL_COUNT > 0 || UI_IMAGE_COUNT > 0 || UI_GROUP_COUNT > 0
 
 // Max UI elements
 #ifndef UI_MAX_LABELS
@@ -27,6 +36,14 @@ extern "C" {{
 
 #ifndef UI_MAX_IMAGES
 #define UI_MAX_IMAGES 16
+#endif
+
+#ifndef UI_MAX_GROUPS
+#define UI_MAX_GROUPS 8
+#endif
+
+#ifndef UI_MAX_GROUP_CHILDREN
+#define UI_MAX_GROUP_CHILDREN 8
 #endif
 
 // Max text length for labels
@@ -74,6 +91,28 @@ typedef struct {{
     bool visible;
 }} UIImage;
 
+// Group element (container for multiple images/labels with shared visibility)
+// This maps to Koui containers - setting group.visible affects all children
+typedef struct {{
+    uint8_t child_image_indices[UI_MAX_GROUP_CHILDREN];   // Indices into image array
+    uint8_t child_label_indices[UI_MAX_GROUP_CHILDREN];   // Indices into label array
+    uint8_t num_child_images;
+    uint8_t num_child_labels;
+    bool visible;
+}} UIGroup;
+
+// Element type enum for the unified elements[] array
+typedef enum {{
+    UI_ELEM_IMAGE = 0,      // Direct image (no parent group)
+    UI_ELEM_GROUP = 1,      // Group/container
+}} UIElementType;
+
+// Unified element reference (for Haxe elements[] array compatibility)
+typedef struct {{
+    UIElementType type;
+    uint8_t index;          // Index into images[] or groups[] depending on type
+}} UIElement;
+
 // Initialize canvas system (call once at startup)
 void canvas_init(void);
 
@@ -103,6 +142,16 @@ UILabel* canvas_get_label(int index);
 // Get image by index (for canvas-defined images)
 UIImage* canvas_get_image(int index);
 
+// Get group by index (for container elements)
+UIGroup* canvas_get_group(int index);
+
+// Get element by index (unified access for Haxe elements[] array)
+// Returns pointer to UIElement which describes the element type and index
+UIElement* canvas_get_element(int index);
+
+// Set element visibility (handles both direct images and groups with children)
+void canvas_element_set_visible(int index, bool visible);
+
 // Render all UI elements (call after 3D rendering, before display_show)
 void canvas_render(void);
 
@@ -112,7 +161,9 @@ static inline void canvas_init(void) {{}}
 static inline void canvas_scene_init(SceneId scene_id) {{ (void)scene_id; }}
 static inline void canvas_clear(void) {{}}
 static inline void canvas_render(void) {{}}
-#endif
+static inline void canvas_element_set_visible(int index, bool visible) {{ (void)index; (void)visible; }}
+
+#endif // UI_LABEL_COUNT > 0 || UI_IMAGE_COUNT > 0 || UI_GROUP_COUNT > 0
 
 #ifdef __cplusplus
 }}

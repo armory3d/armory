@@ -71,7 +71,20 @@ typedef IRNode = {
     ?c_func: String,   // Direct C function name for 1:1 translation
     ?cName: String,    // C function name for trait_method_call
     ?trait: String,    // Trait name for trait_method_call
-    ?parent: String    // Parent trait name for inherited_method_call
+    ?parent: String,   // Parent trait name for inherited_method_call
+    // Inherited member fields
+    ?memberType: String,  // Haxe type of inherited member
+    ?owner: String,       // Parent trait that owns this member
+    // Callback parameter call fields
+    ?name: String,        // Name of callback parameter
+    ?paramType: String,   // Type of callback parameter (e.g., "Void->Void")
+    // Callback wrapper fields (for inherited method callbacks)
+    ?callback_name: String,  // Generated C function name for callback
+    ?body: Array<IRNode>,    // Callback body IR nodes
+    ?captures: Array<Dynamic>,  // Captured variables
+    ?param_name: String,     // Parameter name in callback
+    ?param_type: String,     // Haxe type of callback parameter
+    ?param_ctype: String     // C type of callback parameter
 }
 
 typedef MemberIR = {

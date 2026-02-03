@@ -15,6 +15,10 @@ import arm.log as log
 from arm.n64.export.koui_theme_parser import KouiThemeParser
 
 
+# =============================================================================
+# Constants
+# =============================================================================
+
 # Anchor enum values (matches Koui)
 ANCHOR_TOP_LEFT = 0
 ANCHOR_TOP_CENTER = 1
@@ -25,6 +29,10 @@ ANCHOR_MIDDLE_RIGHT = 5
 ANCHOR_BOTTOM_LEFT = 6
 ANCHOR_BOTTOM_CENTER = 7
 ANCHOR_BOTTOM_RIGHT = 8
+
+# Default UI values
+DEFAULT_FONT_SIZE = 15
+DEFAULT_TEXT_COLOR = (221, 221, 221, 255)  # #dddddd
 
 
 def detect_ui_canvas(exporter):
@@ -74,16 +82,18 @@ def detect_ui_canvas(exporter):
 
             labels = []
             images = []
+            groups = []       # Groups with their child indices
+            elements = []     # Unified elements array (maps Haxe index to image/group)
 
             for scene in canvas_data.get('scenes', []):
-                elements = scene.get('elements', [])
+                scene_elements = scene.get('elements', [])
 
                 # Build element lookup by key and parent-child relationships
-                elem_by_key = {e['key']: e for e in elements}
+                elem_by_key = {e['key']: e for e in scene_elements}
                 children_by_parent = {}
                 root_elements = []
 
-                for elem in elements:
+                for elem in scene_elements:
                     parent_key = elem.get('parentKey')
                     if parent_key:
                         if parent_key not in children_by_parent:
@@ -93,23 +103,26 @@ def detect_ui_canvas(exporter):
                         root_elements.append(elem)
 
                 # Process root elements recursively, flattening layouts
+                # but tracking groups and unified elements array
                 for elem in root_elements:
                     _flatten_element(
                         exporter, elem, elem_by_key, children_by_parent,
                         canvas_width, canvas_height,
                         0, 0,  # parent_abs_x, parent_abs_y
-                        labels, images
+                        labels, images, groups, elements
                     )
 
-            if labels or images:
+            if labels or images or groups:
                 exporter.ui_canvas_data[canvas_name] = {
                     'width': canvas_width,
                     'height': canvas_height,
                     'labels': labels,
-                    'images': images
+                    'images': images,
+                    'groups': groups,
+                    'elements': elements
                 }
                 exporter.has_ui = True
-                log.info(f'Found UI canvas: {canvas_name} with {len(labels)} label(s), {len(images)} image(s)')
+                log.info(f'Found UI canvas: {canvas_name} with {len(labels)} label(s), {len(images)} image(s), {len(groups)} group(s), {len(elements)} element(s)')
 
         except Exception as e:
             log.warn(f'Failed to parse Koui canvas {json_path}: {e}')
@@ -150,201 +163,276 @@ def _calc_anchor_position(pos_x, pos_y, width, height, anchor, container_width, 
     return abs_x, abs_y
 
 
+# =============================================================================
+# Element Flatten Helpers
+# =============================================================================
+
+def _create_group_with_children(exporter, elem, children, final_x, final_y,
+                                 elem_by_key, children_by_parent,
+                                 labels, images, groups, elements):
+    """Create a group element and process its children, tracking indices.
+
+    Args:
+        exporter: N64Exporter instance
+        elem: Parent element dict
+        children: List of child elements
+        final_x, final_y: Absolute position
+        elem_by_key, children_by_parent: Lookup dicts
+        labels, images, groups, elements: Output lists (modified in place)
+    """
+    group_index = len(groups)
+    group_data = {
+        'key': elem.get('key'),
+        'visible': elem.get('visible', True),
+        'child_image_indices': [],
+        'child_label_indices': [],
+    }
+
+    # Add to elements array as a group
+    elements.append({'type': 'group', 'index': group_index})
+
+    container_width = elem['width']
+    container_height = elem['height']
+
+    # Process children - track their indices for the group
+    for child in children:
+        img_start = len(images)
+        lbl_start = len(labels)
+        _flatten_element(
+            exporter, child, elem_by_key, children_by_parent,
+            container_width, container_height,
+            final_x, final_y,
+            labels, images, groups, elements,
+            is_root=False
+        )
+        # Track which images/labels were added
+        for i in range(img_start, len(images)):
+            group_data['child_image_indices'].append(i)
+        for i in range(lbl_start, len(labels)):
+            group_data['child_label_indices'].append(i)
+
+    groups.append(group_data)
+
+
+def _handle_row_col_layout(exporter, elem, elem_type, children, final_x, final_y,
+                            elem_by_key, children_by_parent,
+                            labels, images, groups, elements, is_root):
+    """Handle RowLayout and ColLayout - process children in cells."""
+    if not children:
+        return
+
+    layout_width = elem['width']
+    layout_height = elem['height']
+    num_children = len(children)
+
+    if elem_type == 'RowLayout':
+        cell_width = layout_width
+        cell_height = layout_height // num_children
+    else:  # ColLayout
+        cell_width = layout_width // num_children
+        cell_height = layout_height
+
+    for idx, child in enumerate(children):
+        if elem_type == 'RowLayout':
+            cell_x, cell_y = 0, cell_height * idx
+        else:
+            cell_x, cell_y = cell_width * idx, 0
+
+        _flatten_element(
+            exporter, child, elem_by_key, children_by_parent,
+            cell_width, cell_height,
+            final_x + cell_x, final_y + cell_y,
+            labels, images, groups, elements,
+            is_root=is_root
+        )
+
+
+def _handle_grid_layout(exporter, elem, children, final_x, final_y,
+                         elem_by_key, children_by_parent,
+                         labels, images, groups, elements, is_root):
+    """Handle GridLayout - place children in grid cells."""
+    if not children:
+        return
+
+    layout_width = elem['width']
+    layout_height = elem['height']
+    props = elem.get('properties', {})
+
+    num_rows = props.get('rows', 1)
+    num_cols = props.get('cols', 1)
+
+    cell_width = layout_width // num_cols if num_cols > 0 else layout_width
+    cell_height = layout_height // num_rows if num_rows > 0 else layout_height
+
+    for idx, child in enumerate(children):
+        row = idx // num_cols
+        col = idx % num_cols
+        cell_x = cell_width * col
+        cell_y = cell_height * row
+
+        _flatten_element(
+            exporter, child, elem_by_key, children_by_parent,
+            cell_width, cell_height,
+            final_x + cell_x, final_y + cell_y,
+            labels, images, groups, elements,
+            is_root=is_root
+        )
+
+
+def _handle_label(exporter, elem, final_x, final_y, labels):
+    """Handle Label element - extract text, font, and color info."""
+    props = elem.get('properties', {})
+    tid = elem.get('tID', '_label')
+
+    font_size = DEFAULT_FONT_SIZE
+    text_color = DEFAULT_TEXT_COLOR
+
+    if exporter.theme_parser:
+        font_size = exporter.theme_parser.get_font_size(tid, DEFAULT_FONT_SIZE)
+        color_hex = exporter.theme_parser.get_text_color(tid, '#dddddd')
+        text_color = KouiThemeParser.parse_hex_color(color_hex)
+
+    exporter.font_sizes.add(font_size)
+    style_id = _get_or_create_color_style(exporter, text_color)
+
+    label_data = {
+        'key': elem['key'],
+        'text': props.get('text', ''),
+        'pos_x': final_x,
+        'pos_y': final_y,
+        'width': elem['width'],
+        'height': elem['height'],
+        'anchor': ANCHOR_TOP_LEFT,
+        'visible': elem.get('visible', True),
+        'align_h': props.get('alignmentHor', 0),
+        'align_v': props.get('alignmentVert', 0),
+        'tID': tid,
+        'font_size': font_size,
+        'text_color': text_color,
+        'style_id': style_id,
+    }
+    labels.append(label_data)
+
+
+def _handle_image(exporter, elem, final_x, final_y, images, elements, is_root):
+    """Handle ImagePanel element - track image for copying."""
+    props = elem.get('properties', {})
+    image_name = props.get('imageName', '')
+
+    if not image_name:
+        return
+
+    if not hasattr(exporter, 'ui_images'):
+        exporter.ui_images = set()
+    exporter.ui_images.add(image_name)
+
+    image_index = len(images)
+    image_data = {
+        'key': elem['key'],
+        'image_name': image_name,
+        'pos_x': final_x,
+        'pos_y': final_y,
+        'width': elem['width'],
+        'height': elem['height'],
+        'anchor': ANCHOR_TOP_LEFT,
+        'visible': elem.get('visible', True),
+        'scale': props.get('scale', False),
+    }
+    images.append(image_data)
+
+    if is_root:
+        elements.append({'type': 'image', 'index': image_index})
+
+
+# =============================================================================
+# Main Flatten Function
+# =============================================================================
+
 def _flatten_element(exporter, elem, elem_by_key, children_by_parent,
                      container_width, container_height,
                      parent_abs_x, parent_abs_y,
-                     labels, images):
+                     labels, images, groups, elements,
+                     is_root=True):
     """Recursively flatten an element, computing absolute positions.
 
     Layout elements (RowLayout, ColLayout) are not exported themselves,
     but their children are processed with adjusted positions.
 
-    Args:
-        exporter: N64Exporter instance
-        elem: Element dict from JSON
-        elem_by_key: Lookup dict of all elements by key
-        children_by_parent: Dict mapping parent keys to child element lists
-        container_width, container_height: Current container dimensions
-        parent_abs_x, parent_abs_y: Absolute position of parent's top-left corner
-        labels: Output list for label elements
-        images: Output list for image elements
+    Groups (containers with children) are tracked for parent-child visibility.
+    The elements array provides unified Haxe-compatible indexing.
     """
     elem_type = elem.get('type')
     elem_key = elem.get('key')
     anchor = elem.get('anchor', ANCHOR_TOP_LEFT)
 
-    # Calculate this element's absolute position within its container
+    # Calculate final absolute position
     elem_abs_x, elem_abs_y = _calc_anchor_position(
         elem['posX'], elem['posY'],
         elem['width'], elem['height'],
         anchor,
         container_width, container_height
     )
-
-    # Add parent offset to get final absolute position
     final_x = parent_abs_x + elem_abs_x
     final_y = parent_abs_y + elem_abs_y
 
-    # Handle layout types - process children but don't export the layout itself
-    if elem_type in ('RowLayout', 'ColLayout'):
-        children = children_by_parent.get(elem_key, [])
-        if not children:
-            return
-
-        layout_width = elem['width']
-        layout_height = elem['height']
-
-        # RowLayout = 1 column, N rows (vertical stack)
-        # ColLayout = N columns, 1 row (horizontal stack)
-        num_children = len(children)
-        if num_children == 0:
-            return
-
-        if elem_type == 'RowLayout':
-            cell_width = layout_width
-            cell_height = layout_height // num_children
-        else:  # ColLayout
-            cell_width = layout_width // num_children
-            cell_height = layout_height
-
-        # Process each child in its cell
-        for idx, child in enumerate(children):
-            if elem_type == 'RowLayout':
-                cell_x = 0
-                cell_y = cell_height * idx
-            else:  # ColLayout
-                cell_x = cell_width * idx
-                cell_y = 0
-
-            # Child's container is its cell within the layout
-            _flatten_element(
-                exporter, child, elem_by_key, children_by_parent,
-                cell_width, cell_height,
-                final_x + cell_x, final_y + cell_y,
-                labels, images
-            )
-        return
-
-    # Handle AnchorPane - children use anchors relative to the pane
-    if elem_type == 'AnchorPane':
-        children = children_by_parent.get(elem_key, [])
-        layout_width = elem['width']
-        layout_height = elem['height']
-
-        for child in children:
-            # Children position themselves within the AnchorPane using their own anchors
-            _flatten_element(
-                exporter, child, elem_by_key, children_by_parent,
-                layout_width, layout_height,
-                final_x, final_y,
-                labels, images
-            )
-        return
-
-    # Handle GridLayout - children are placed in grid cells
-    if elem_type == 'GridLayout':
-        children = children_by_parent.get(elem_key, [])
-        if not children:
-            return
-
-        layout_width = elem['width']
-        layout_height = elem['height']
-        props = elem.get('properties', {})
-
-        # GridLayout needs rows and cols from properties
-        num_rows = props.get('rows', 1)
-        num_cols = props.get('cols', 1)
-
-        cell_width = layout_width // num_cols if num_cols > 0 else layout_width
-        cell_height = layout_height // num_rows if num_rows > 0 else layout_height
-
-        # Process each child - they should be ordered row by row
-        for idx, child in enumerate(children):
-            row = idx // num_cols
-            col = idx % num_cols
-
-            cell_x = cell_width * col
-            cell_y = cell_height * row
-
-            _flatten_element(
-                exporter, child, elem_by_key, children_by_parent,
-                cell_width, cell_height,
-                final_x + cell_x, final_y + cell_y,
-                labels, images
-            )
-        return
-
-    # Handle renderable element types
-    if elem_type == 'Label':
-        props = elem.get('properties', {})
-        tid = elem.get('tID', '_label')
-
-        # Get font size and text color from theme
-        font_size = 15
-        text_color = (221, 221, 221, 255)  # Default #dddddd
-
-        if exporter.theme_parser:
-            font_size = exporter.theme_parser.get_font_size(tid, 15)
-            color_hex = exporter.theme_parser.get_text_color(tid, '#dddddd')
-            text_color = KouiThemeParser.parse_hex_color(color_hex)
-
-        # Track unique font sizes needed
-        exporter.font_sizes.add(font_size)
-
-        # Get or create style_id for this color
-        style_id = _get_or_create_color_style(exporter, text_color)
-
-        label_data = {
-            'key': elem['key'],
-            'text': props.get('text', ''),
-            'pos_x': final_x,
-            'pos_y': final_y,
-            'width': elem['width'],
-            'height': elem['height'],
-            'anchor': ANCHOR_TOP_LEFT,  # Already resolved to absolute
-            'visible': elem.get('visible', True),
-            'align_h': props.get('alignmentHor', 0),
-            'align_v': props.get('alignmentVert', 0),
-            'tID': tid,
-            'font_size': font_size,
-            'text_color': text_color,
-            'style_id': style_id,
-        }
-        labels.append(label_data)
-
-    elif elem_type == 'ImagePanel':
-        props = elem.get('properties', {})
-        image_name = props.get('imageName', '')
-
-        if image_name:
-            # Track image for copying
-            if not hasattr(exporter, 'ui_images'):
-                exporter.ui_images = set()
-            exporter.ui_images.add(image_name)
-
-            image_data = {
-                'key': elem['key'],
-                'image_name': image_name,
-                'pos_x': final_x,
-                'pos_y': final_y,
-                'width': elem['width'],
-                'height': elem['height'],
-                'anchor': ANCHOR_TOP_LEFT,  # Already resolved to absolute
-                'visible': elem.get('visible', True),
-                'scale': props.get('scale', False),
-            }
-            images.append(image_data)
-
-    # For any other element types that might have children (future expansion)
-    # Process children recursively - they position themselves within this element
     children = children_by_parent.get(elem_key, [])
-    for child in children:
-        _flatten_element(
-            exporter, child, elem_by_key, children_by_parent,
-            elem['width'], elem['height'],
-            final_x, final_y,
-            labels, images
-        )
+    has_children = len(children) > 0
+
+    # Dispatch to type-specific handlers
+    if elem_type in ('RowLayout', 'ColLayout'):
+        _handle_row_col_layout(exporter, elem, elem_type, children, final_x, final_y,
+                                elem_by_key, children_by_parent,
+                                labels, images, groups, elements, is_root)
+        return
+
+    if elem_type == 'GridLayout':
+        _handle_grid_layout(exporter, elem, children, final_x, final_y,
+                             elem_by_key, children_by_parent,
+                             labels, images, groups, elements, is_root)
+        return
+
+    if elem_type == 'AnchorPane':
+        if is_root and has_children:
+            _create_group_with_children(exporter, elem, children, final_x, final_y,
+                                         elem_by_key, children_by_parent,
+                                         labels, images, groups, elements)
+        elif has_children:
+            # Non-root AnchorPane - process children without creating group
+            for child in children:
+                _flatten_element(
+                    exporter, child, elem_by_key, children_by_parent,
+                    elem['width'], elem['height'],
+                    final_x, final_y,
+                    labels, images, groups, elements,
+                    is_root=False
+                )
+        return
+
+    if elem_type == 'Label':
+        _handle_label(exporter, elem, final_x, final_y, labels)
+        return
+
+    if elem_type == 'ImagePanel':
+        _handle_image(exporter, elem, final_x, final_y, images, elements, is_root)
+        return
+
+    # Generic container with children - create a group
+    if has_children and is_root:
+        _create_group_with_children(exporter, elem, children, final_x, final_y,
+                                     elem_by_key, children_by_parent,
+                                     labels, images, groups, elements)
+        return
+
+    # Non-root elements with children - just process children
+    if has_children:
+        for child in children:
+            _flatten_element(
+                exporter, child, elem_by_key, children_by_parent,
+                elem['width'], elem['height'],
+                final_x, final_y,
+                labels, images, groups, elements,
+                is_root=False
+            )
 
 
 def _parse_koui_themes(exporter):
@@ -384,14 +472,14 @@ def write_canvas(exporter):
 
     write_canvas_h(exporter)
     write_canvas_c(exporter)
-    copy_ui_images(exporter)
+    copy_canvas_images(exporter)
 
 
-def copy_ui_images(exporter):
-    """Copy PNG images referenced by ImagePanel elements to build/n64/assets.
+def copy_canvas_images(exporter):
+    """Copy PNG images referenced by canvas ImagePanel elements to build/n64/assets.
 
-    Images are looked for in project Assets/images/ folder.
-    The Makefile will convert them to .sprite files via mksprite.
+    Images are searched recursively in the project Assets/ folder.
+    The Makefile converts them to .sprite files.
     """
     if not hasattr(exporter, 'ui_images') or not exporter.ui_images:
         return
@@ -399,39 +487,38 @@ def copy_ui_images(exporter):
     n64_assets = os.path.join(arm.utils.build_dir(), 'n64', 'assets')
     os.makedirs(n64_assets, exist_ok=True)
 
-    # Search locations for images
-    image_search_paths = [
-        os.path.join(arm.utils.get_fp(), 'Assets', 'images'),
-        os.path.join(arm.utils.get_fp(), 'Assets'),
-    ]
+    # Build index of all PNG files in Assets folder (recursive)
+    assets_dir = os.path.join(arm.utils.get_fp(), 'Assets')
+    image_index = {}  # basename (without ext) -> full path
+
+    if os.path.exists(assets_dir):
+        for root, dirs, files in os.walk(assets_dir):
+            for f in files:
+                if f.lower().endswith('.png'):
+                    basename = os.path.splitext(f)[0]
+                    image_index[basename] = os.path.join(root, f)
+                    # Also index lowercase version for case-insensitive matching
+                    image_index[basename.lower()] = os.path.join(root, f)
 
     copied_count = 0
     for image_name in exporter.ui_images:
-        found = False
-        for search_path in image_search_paths:
-            if not os.path.exists(search_path):
-                continue
+        # Try exact match first, then lowercase
+        png_path = image_index.get(image_name) or image_index.get(image_name.lower())
 
-            # Try with .png extension
-            png_path = os.path.join(search_path, f'{image_name}.png')
-            if os.path.exists(png_path):
-                # Create safe filename (lowercase, no spaces)
-                safe_name = image_name.lower().replace(' ', '_')
-                dst_path = os.path.join(n64_assets, f'{safe_name}.png')
+        if png_path and os.path.exists(png_path):
+            # Create safe filename (lowercase, no spaces)
+            safe_name = image_name.lower().replace(' ', '_')
+            dst_path = os.path.join(n64_assets, f'{safe_name}.png')
 
-                if not os.path.exists(dst_path):
-                    shutil.copy(png_path, dst_path)
-                    log.info(f'Copied UI image: {safe_name}.png')
-                    copied_count += 1
-
-                found = True
-                break
-
-        if not found:
-            log.warn(f'UI image not found: {image_name}.png')
+            if not os.path.exists(dst_path):
+                shutil.copy(png_path, dst_path)
+                log.info(f'Copied canvas image: {safe_name}.png')
+                copied_count += 1
+        else:
+            log.warn(f'Canvas image not found: {image_name}.png')
 
     if copied_count > 0:
-        log.info(f'Copied {copied_count} UI image(s) to build/n64/assets/')
+        log.info(f'Copied {copied_count} canvas image(s) to build/n64/assets/')
 
 
 def write_canvas_h(exporter):
@@ -499,13 +586,44 @@ def write_canvas_h(exporter):
             total_image_count = max(total_image_count, image_idx)
             image_defines_lines.append('')
 
+    # Build group defines (for containers with children)
+    group_defines_lines = []
+    total_group_count = 0
+    seen_group_keys = {}
+
+    for canvas_name, canvas in exporter.ui_canvas_data.items():
+        groups = canvas.get('groups', [])
+        if groups:
+            group_defines_lines.append(f'// Canvas: {canvas_name} groups')
+            group_idx = 0
+            for group in groups:
+                safe_key = arm.utils.safesrc(group['key']).upper()
+                define_name = f'UI_GROUP_{safe_key}'
+
+                if safe_key not in seen_group_keys:
+                    group_defines_lines.append(f'#define {define_name} {group_idx}')
+                    seen_group_keys[safe_key] = group_idx
+
+                group_idx += 1
+            total_group_count = max(total_group_count, group_idx)
+            group_defines_lines.append('')
+
+    # Count total elements (unified Haxe array)
+    total_element_count = 0
+    for canvas_name, canvas in exporter.ui_canvas_data.items():
+        elements = canvas.get('elements', [])
+        total_element_count = max(total_element_count, len(elements))
+
     output = tmpl_content.format(
         canvas_width=canvas_width,
         canvas_height=canvas_height,
         label_defines='\n'.join(label_defines_lines),
         label_count=total_label_count,
         image_defines='\n'.join(image_defines_lines),
-        image_count=total_image_count
+        image_count=total_image_count,
+        group_defines='\n'.join(group_defines_lines) if group_defines_lines else '// No groups',
+        group_count=total_group_count,
+        element_count=total_element_count
     )
 
     with open(out_path, 'w', encoding='utf-8') as f:
@@ -576,6 +694,48 @@ def write_canvas_c(exporter):
             canvas_image_arrays.append('};')
             canvas_image_arrays.append('')
 
+    # Build per-canvas static arrays (groups)
+    canvas_group_arrays = []
+    for canvas_name, canvas in exporter.ui_canvas_data.items():
+        groups = canvas.get('groups', [])
+        if groups:
+            safe_canvas = arm.utils.safesrc(canvas_name).lower()
+            canvas_group_arrays.append(f'// Canvas: {canvas_name} groups')
+            canvas_group_arrays.append(f'#define {safe_canvas.upper()}_GROUP_COUNT {len(groups)}')
+            canvas_group_arrays.append(f'static const UIGroupDef g_{safe_canvas}_group_defs[{safe_canvas.upper()}_GROUP_COUNT] = {{')
+            for group in groups:
+                # Format child indices arrays (pad to 8 elements each)
+                img_indices = group.get('child_image_indices', [])
+                lbl_indices = group.get('child_label_indices', [])
+                # Build properly padded arrays
+                img_padded = list(img_indices[:8]) + [0] * (8 - min(len(img_indices), 8))
+                lbl_padded = list(lbl_indices[:8]) + [0] * (8 - min(len(lbl_indices), 8))
+                img_str = ', '.join(str(i) for i in img_padded)
+                lbl_str = ', '.join(str(i) for i in lbl_padded)
+                visible = 'true' if group.get('visible', True) else 'false'
+                canvas_group_arrays.append(f'    {{ {{ {img_str} }}, {{ {lbl_str} }}, {len(img_indices)}, {len(lbl_indices)}, {visible} }},')
+            canvas_group_arrays.append('};')
+            canvas_group_arrays.append('')
+
+    # Build per-canvas static arrays (elements - Haxe elements[] mapping)
+    canvas_element_arrays = []
+    for canvas_name, canvas in exporter.ui_canvas_data.items():
+        elements = canvas.get('elements', [])
+        if elements:
+            safe_canvas = arm.utils.safesrc(canvas_name).lower()
+            canvas_element_arrays.append(f'// Canvas: {canvas_name} elements (Haxe elements[] mapping)')
+            canvas_element_arrays.append(f'#define {safe_canvas.upper()}_ELEMENT_COUNT {len(elements)}')
+            canvas_element_arrays.append(f'static const UIElementDef g_{safe_canvas}_element_defs[{safe_canvas.upper()}_ELEMENT_COUNT] = {{')
+            for elem in elements:
+                elem_type = elem.get('type', 'image')
+                elem_index = elem.get('index', 0)
+                if elem_type == 'group':
+                    canvas_element_arrays.append(f'    {{ UI_ELEM_GROUP, {elem_index} }},')
+                else:  # image
+                    canvas_element_arrays.append(f'    {{ UI_ELEM_IMAGE, {elem_index} }},')
+            canvas_element_arrays.append('};')
+            canvas_element_arrays.append('')
+
     # Build switch cases for scene_id -> canvas loading
     scene_switch_cases = []
     for scene_name, data in exporter.scene_data.items():
@@ -586,12 +746,21 @@ def write_canvas_c(exporter):
             canvas = exporter.ui_canvas_data[canvas_name]
             label_count = len(canvas.get('labels', []))
             image_count = len(canvas.get('images', []))
+            group_count = len(canvas.get('groups', []))
+            element_count = len(canvas.get('elements', []))
 
             scene_switch_cases.append(f'        case SCENE_{safe_scene}:')
             if label_count > 0:
                 scene_switch_cases.append(f'            load_labels(g_{safe_canvas}_label_defs, {safe_canvas.upper()}_LABEL_COUNT);')
             if image_count > 0:
                 scene_switch_cases.append(f'            load_images(g_{safe_canvas}_image_defs, {safe_canvas.upper()}_IMAGE_COUNT);')
+            if group_count > 0:
+                scene_switch_cases.append(f'            load_groups(g_{safe_canvas}_group_defs, {safe_canvas.upper()}_GROUP_COUNT);')
+            if element_count > 0:
+                scene_switch_cases.append(f'            load_elements(g_{safe_canvas}_element_defs, {safe_canvas.upper()}_ELEMENT_COUNT);')
+            # Apply initial group visibility to children (must be after all loading)
+            if group_count > 0:
+                scene_switch_cases.append(f'            apply_initial_group_visibility();')
             scene_switch_cases.append('            break;')
 
     # Generate font style registration code
@@ -631,6 +800,8 @@ def write_canvas_c(exporter):
     output = tmpl_content.format(
         canvas_label_arrays='\n'.join(canvas_arrays),
         canvas_image_arrays='\n'.join(canvas_image_arrays),
+        canvas_group_arrays='\n'.join(canvas_group_arrays) if canvas_group_arrays else '// No groups defined',
+        canvas_element_arrays='\n'.join(canvas_element_arrays) if canvas_element_arrays else '// No elements defined',
         scene_init_switch_cases='\n'.join(scene_switch_cases),
         total_label_count=total_labels,
         total_image_count=total_images,

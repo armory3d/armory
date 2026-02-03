@@ -291,6 +291,10 @@ class TraitExtractor implements IExtractorContext {
             new TweenCallConverter(),
             new Graphics2CallConverter(),
         ];
+
+        // NOTE: We do NOT load inherited member types here to avoid triggering
+        // early type resolution. Instead, inherited member checks happen lazily
+        // when the parent trait's IR is available (during Python code generation).
     }
 
     public function extract():TraitIR {
@@ -776,6 +780,12 @@ class TraitExtractor implements IExtractorContext {
         return memberTypes.exists(name) ? memberTypes.get(name) : null;
     }
 
+    public function getInheritedMemberType(name:String):String {
+        // Inherited member types are resolved at Python code generation time
+        // to avoid triggering early type resolution during macro expansion
+        return null;
+    }
+
     public function getLocalVarType(name:String):String {
         return localVarTypes.exists(name) ? localVarTypes.get(name) : null;
     }
@@ -791,6 +801,10 @@ class TraitExtractor implements IExtractorContext {
 
     public function getCName():String {
         return cName;
+    }
+
+    public function getParentName():String {
+        return parentName;
     }
 
     public function getEvents():Map<String, Array<IRNode>> {
@@ -1063,8 +1077,33 @@ class TraitExtractor implements IExtractorContext {
         if (memberNames.indexOf(name) >= 0) {
             return { type: "member", value: name };
         }
+        // Check for local variables (including method parameters)
+        if (localVarTypes.exists(name)) {
+            return { type: "ident", value: name };
+        }
+        // Check if this is a method reference (function pointer)
+        // e.g., fadeOut(initTransitionDone) -> fadeOut(arm_gamescene_inittransitiondone)
+        if (methodMap.exists(name)) {
+            // Generate C function name for this method
+            var methodCName = "arm_" + cName.substring(4) + "_" + name.toLowerCase();
+            return {
+                type: "method_ref",
+                method: name,
+                cName: methodCName,
+                trait: className
+            };
+        }
         if (SkipList.shouldSkipMember(name) || SkipList.shouldSkipClass(name)) {
             return { type: "skip" };
+        }
+        // If we have a parent and this isn't a known local/member, it might be inherited
+        // Emit as potentially_inherited - Python will resolve using parent IR
+        if (parentName != null) {
+            return {
+                type: "potentially_inherited",
+                value: name,
+                parent: parentName
+            };
         }
         return { type: "ident", value: name };
     }
@@ -1595,24 +1634,41 @@ class TraitExtractor implements IExtractorContext {
                     if (method != null && method.expr != null) {
                         // Generate C function name: arm_<traitname>_<methodname>
                         var methodCName = "arm_" + cName.substring(4) + "_" + funcName.toLowerCase();
+                        // Use extractCallbackArgs to properly handle lambda parameters
+                        var processedArgs = extractCallbackArgs(params, funcName);
                         return {
                             type: "trait_method_call",
                             cName: methodCName,
                             method: funcName,
                             trait: className,
-                            args: args
+                            args: processedArgs
                         };
                     }
+                }
+
+                // Check if this is a call to a function-type parameter (callback invocation)
+                // e.g., finishedCallback() where finishedCallback: Void->Void
+                var localType = localVarTypes.get(funcName);
+                if (localType != null && (localType.indexOf("->") >= 0 || localType == "Void->Void")) {
+                    // This is a callback parameter being invoked
+                    return {
+                        type: "callback_param_call",
+                        name: funcName,
+                        paramType: localType,
+                        args: args
+                    };
                 }
 
                 // If method not found locally but we have a parent, assume it's inherited
                 // The Python emitter will check if the method exists in parent chain
                 if (parentName != null) {
+                    // Extract callbacks from raw params - function args become callback wrappers
+                    var processedArgs = extractCallbackArgs(params, funcName);
                     return {
                         type: "inherited_method_call",
                         parent: parentName,
                         method: funcName,
-                        args: args
+                        args: processedArgs
                     };
                 }
 
@@ -1626,6 +1682,177 @@ class TraitExtractor implements IExtractorContext {
     // =========================================================================
     // New expression conversion - handles constructor calls
     // =========================================================================
+
+    /**
+     * Counter for generating unique callback names for inherited method callbacks
+     */
+    static var inheritedCallbackCounter:Int = 0;
+
+    /**
+     * Extract callback arguments from raw params for inherited method calls.
+     * Function arguments are converted to callback wrapper structures.
+     * Non-function arguments are converted via exprToIR as usual.
+     */
+    function extractCallbackArgs(params:Array<Expr>, methodName:String):Array<IRNode> {
+        var result:Array<IRNode> = [];
+
+        for (i in 0...params.length) {
+            var param = params[i];
+            switch (param.expr) {
+                case EFunction(_, func):
+                    // Anonymous function - extract as callback wrapper
+                    var callback = extractInheritedCallback(func, methodName, i);
+                    if (callback != null) {
+                        result.push(callback);
+                    } else {
+                        result.push({ type: "skip" });
+                    }
+                default:
+                    // Non-function arg - convert normally
+                    result.push(exprToIR(param));
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Extract an anonymous function as a callback for an inherited method.
+     * Returns a callback_wrapper IR node that will be emitted as a C function.
+     */
+    function extractInheritedCallback(func:Function, methodName:String, argIndex:Int):IRNode {
+        if (func == null || func.expr == null) return null;
+
+        // Generate unique callback name
+        var callbackName = '${cName}_${methodName}_cb_${inheritedCallbackCounter++}';
+
+        // Get parameter name if any (for callbacks like Float->Void)
+        var paramName:String = null;
+        var paramType:String = "Void";
+        if (func.args != null && func.args.length > 0) {
+            paramName = func.args[0].name;
+            paramType = func.args[0].type != null ? N64MacroBase.complexTypeToString(func.args[0].type) : "Dynamic";
+            // Track the callback parameter as a local variable during body extraction
+            localVarTypes.set(paramName, paramType);
+        }
+
+        // Convert function body to IR
+        var bodyNodes:Array<IRNode> = [];
+        switch (func.expr.expr) {
+            case EBlock(exprs):
+                for (e in exprs) {
+                    var node = exprToIR(e);
+                    if (node != null && node.type != "skip") {
+                        bodyNodes.push(node);
+                    }
+                }
+            default:
+                var node = exprToIR(func.expr);
+                if (node != null && node.type != "skip") {
+                    bodyNodes.push(node);
+                }
+        }
+
+        // Clean up local variable tracking
+        if (paramName != null) {
+            localVarTypes.remove(paramName);
+        }
+
+        // Analyze captures - variables from outer scope that need to be passed via data
+        var captures = analyzeCallbackCaptures(bodyNodes, paramName);
+
+        // Return callback wrapper with all required fields
+        // Type as IRNode so serializeIRNode can access all fields
+        var cbWrapper:IRNode = {
+            type: "callback_wrapper",
+            callback_name: callbackName,
+            param_name: paramName,
+            param_type: paramType,
+            param_ctype: TypeMap.getCType(paramType),
+            body: bodyNodes,
+            captures: captures
+        };
+        return cbWrapper;
+    }
+
+    /**
+     * Analyze IR nodes to find captured variables (members and params from outer scope).
+     */
+    function analyzeCallbackCaptures(nodes:Array<IRNode>, excludeParam:String):Array<Dynamic> {
+        var captures:Map<String, Dynamic> = new Map();
+        for (node in nodes) {
+            findCallbackCaptures(node, excludeParam, captures);
+        }
+        return Lambda.array(captures);
+    }
+
+    function findCallbackCaptures(node:IRNode, excludeParam:String, captures:Map<String, Dynamic>):Void {
+        if (node == null) return;
+
+        switch (node.type) {
+            case "ident":
+                var name = Std.string(node.value);
+                if (name != excludeParam && name != "null" && name != "true" && name != "false" && name != "object" && name != "dt") {
+                    // First check if it's a class member
+                    var memberType = memberTypes.get(name);
+                    if (memberType != null && !captures.exists(name)) {
+                        captures.set(name, {
+                            name: name,
+                            type: memberType,
+                            ctype: TypeMap.getCType(memberType),
+                            is_member: true
+                        });
+                    } else if (!captures.exists(name)) {
+                        // Check if it's a local variable (including method parameters)
+                        var localType = localVarTypes.get(name);
+                        if (localType != null) {
+                            captures.set(name, {
+                                name: name,
+                                type: localType,
+                                ctype: TypeMap.getCType(localType),
+                                is_member: false,
+                                is_param: true
+                            });
+                        }
+                    }
+                }
+            case "member":
+                var name = Std.string(node.value);
+                if (!captures.exists(name)) {
+                    var memberType = memberTypes.get(name);
+                    captures.set(name, {
+                        name: name,
+                        type: memberType != null ? memberType : "Dynamic",
+                        ctype: TypeMap.getCType(memberType != null ? memberType : "Dynamic"),
+                        is_member: true
+                    });
+                }
+            case "inherited_member":
+                var name = Std.string(node.value);
+                if (!captures.exists(name)) {
+                    var memberType = Std.string(node.memberType);
+                    captures.set(name, {
+                        name: name,
+                        type: memberType,
+                        ctype: TypeMap.getCType(memberType),
+                        is_inherited: true,
+                        owner: node.owner
+                    });
+                }
+            default:
+                // Recurse into children and args
+                if (node.children != null) {
+                    for (child in node.children) {
+                        findCallbackCaptures(child, excludeParam, captures);
+                    }
+                }
+                if (node.args != null) {
+                    for (arg in node.args) {
+                        findCallbackCaptures(arg, excludeParam, captures);
+                    }
+                }
+        }
+    }
 
     function convertNew(tp:TypePath, params:Array<Expr>):IRNode {
         var typeName = tp.name;

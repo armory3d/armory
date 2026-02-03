@@ -5,7 +5,7 @@
 #include <libdragon.h>
 #include <string.h>
 
-#if UI_LABEL_COUNT > 0 || UI_IMAGE_COUNT > 0
+#if UI_LABEL_COUNT > 0 || UI_IMAGE_COUNT > 0 || UI_GROUP_COUNT > 0
 
 // ============================================================================
 // Label pool and render list
@@ -41,6 +41,30 @@ static uint8_t g_image_render_count = 0;
 // Canvas image tracking (for get_image by index)
 static UIImage* g_canvas_images[UI_IMAGE_COUNT];
 static int g_canvas_image_count = 0;
+#endif
+
+// ============================================================================
+// Group pool (containers with children)
+// ============================================================================
+
+#if UI_GROUP_COUNT > 0
+// Static group pool
+static UIGroup g_group_pool[UI_MAX_GROUPS];
+static uint8_t g_group_pool_used = 0;
+
+// Canvas group tracking (for get_group by index)
+static UIGroup* g_canvas_groups[UI_GROUP_COUNT];
+static int g_canvas_group_count = 0;
+#endif
+
+// ============================================================================
+// Unified elements array (for Haxe elements[] compatibility)
+// ============================================================================
+
+#if UI_ELEMENT_COUNT > 0
+// Elements array maps Haxe indices to images or groups
+static UIElement g_canvas_elements[UI_ELEMENT_COUNT];
+static int g_canvas_element_count = 0;
 #endif
 
 #if UI_LABEL_COUNT > 0
@@ -81,6 +105,25 @@ typedef struct {{
     bool visible;
     sprite_t *sprite;         // Loaded sprite (set at init time)
 }} UIImageDef;
+#endif
+
+#if UI_GROUP_COUNT > 0
+// Group definition struct (static data from Koui)
+typedef struct {{
+    uint8_t child_image_indices[UI_MAX_GROUP_CHILDREN];
+    uint8_t child_label_indices[UI_MAX_GROUP_CHILDREN];
+    uint8_t num_child_images;
+    uint8_t num_child_labels;
+    bool visible;
+}} UIGroupDef;
+#endif
+
+#if UI_ELEMENT_COUNT > 0
+// Element definition struct (maps Haxe indices to images or groups)
+typedef struct {{
+    UIElementType type;
+    uint8_t index;  // Index into images or groups array
+}} UIElementDef;
 #endif
 
 // Calculate final X position based on anchor (for labels)
@@ -128,6 +171,12 @@ static int16_t calc_anchor_y_label(int16_t pos_y, int16_t height, uint8_t anchor
 
 // Per-canvas image data arrays (generated from Koui Editor JSON)
 {canvas_image_arrays}
+
+// Per-canvas group data arrays (generated from Koui Editor JSON)
+{canvas_group_arrays}
+
+// Per-canvas element data arrays (generated from Koui Editor JSON)
+{canvas_element_arrays}
 
 #if UI_LABEL_COUNT > 0
 // Helper to load labels from a definition array
@@ -183,6 +232,48 @@ static void load_images(UIImageDef *defs, int count) {{
 }}
 #endif
 
+#if UI_GROUP_COUNT > 0
+// Helper to load groups from a definition array
+static void load_groups(const UIGroupDef *defs, int count) {{
+    for (int i = 0; i < count && i < UI_GROUP_COUNT; i++) {{
+        const UIGroupDef *def = &defs[i];
+
+        if (g_group_pool_used >= UI_MAX_GROUPS) break;
+        UIGroup *group = &g_group_pool[g_group_pool_used++];
+
+        // Copy child indices
+        for (uint8_t j = 0; j < def->num_child_images && j < UI_MAX_GROUP_CHILDREN; j++) {{
+            group->child_image_indices[j] = def->child_image_indices[j];
+        }}
+        for (uint8_t j = 0; j < def->num_child_labels && j < UI_MAX_GROUP_CHILDREN; j++) {{
+            group->child_label_indices[j] = def->child_label_indices[j];
+        }}
+        group->num_child_images = def->num_child_images;
+        group->num_child_labels = def->num_child_labels;
+        group->visible = def->visible;
+
+        if (g_canvas_group_count < UI_GROUP_COUNT) {{
+            g_canvas_groups[g_canvas_group_count++] = group;
+        }}
+    }}
+}}
+
+// Forward declaration for applying initial group visibility
+static void apply_initial_group_visibility(void);
+#endif
+
+#if UI_ELEMENT_COUNT > 0
+// Helper to load elements from a definition array
+static void load_elements(const UIElementDef *defs, int count) {{
+    for (int i = 0; i < count && i < UI_ELEMENT_COUNT; i++) {{
+        const UIElementDef *def = &defs[i];
+        g_canvas_elements[i].type = def->type;
+        g_canvas_elements[i].index = def->index;
+        g_canvas_element_count++;
+    }}
+}}
+#endif
+
 // ============================================================================
 // Public API
 // ============================================================================
@@ -220,6 +311,18 @@ void canvas_init(void)
     memset(g_image_render_list, 0, sizeof(g_image_render_list));
     memset(g_canvas_images, 0, sizeof(g_canvas_images));
 #endif
+
+#if UI_GROUP_COUNT > 0
+    g_group_pool_used = 0;
+    g_canvas_group_count = 0;
+    memset(g_group_pool, 0, sizeof(g_group_pool));
+    memset(g_canvas_groups, 0, sizeof(g_canvas_groups));
+#endif
+
+#if UI_ELEMENT_COUNT > 0
+    g_canvas_element_count = 0;
+    memset(g_canvas_elements, 0, sizeof(g_canvas_elements));
+#endif
 }}
 
 void canvas_scene_init(SceneId scene_id) {{
@@ -255,6 +358,18 @@ void canvas_clear(void)
     memset(g_image_pool, 0, sizeof(g_image_pool));
     memset(g_image_render_list, 0, sizeof(g_image_render_list));
     memset(g_canvas_images, 0, sizeof(g_canvas_images));
+#endif
+
+#if UI_GROUP_COUNT > 0
+    g_group_pool_used = 0;
+    g_canvas_group_count = 0;
+    memset(g_group_pool, 0, sizeof(g_group_pool));
+    memset(g_canvas_groups, 0, sizeof(g_canvas_groups));
+#endif
+
+#if UI_ELEMENT_COUNT > 0
+    g_canvas_element_count = 0;
+    memset(g_canvas_elements, 0, sizeof(g_canvas_elements));
 #endif
 }}
 
@@ -415,6 +530,87 @@ UIImage* canvas_get_image(int index) {{
 #endif // UI_IMAGE_COUNT > 0
 
 // ============================================================================
+// Group management
+// ============================================================================
+
+#if UI_GROUP_COUNT > 0
+UIGroup* canvas_get_group(int index) {{
+    if (index >= 0 && index < g_canvas_group_count) {{
+        return g_canvas_groups[index];
+    }}
+    return NULL;
+}}
+
+// Set visibility on a group and propagate to all children
+static void group_set_visible(UIGroup *group, bool visible) {{
+    if (!group) return;
+    group->visible = visible;
+
+    // Propagate to child images
+    for (uint8_t i = 0; i < group->num_child_images; i++) {{
+        int img_idx = group->child_image_indices[i];
+        if (img_idx >= 0 && img_idx < g_canvas_image_count) {{
+            g_canvas_images[img_idx]->visible = visible;
+        }}
+    }}
+
+    // Propagate to child labels
+    for (uint8_t i = 0; i < group->num_child_labels; i++) {{
+        int lbl_idx = group->child_label_indices[i];
+#if UI_LABEL_COUNT > 0
+        if (lbl_idx >= 0 && lbl_idx < g_canvas_label_count) {{
+            g_canvas_labels[lbl_idx]->visible = visible;
+        }}
+#endif
+    }}
+}}
+
+// Apply initial visibility from groups to their children
+// Must be called AFTER load_labels, load_images, load_groups, load_elements
+static void apply_initial_group_visibility(void) {{
+    for (int i = 0; i < g_canvas_group_count; i++) {{
+        UIGroup *group = g_canvas_groups[i];
+        if (group) {{
+            // Propagate group's visibility to all its children
+            group_set_visible(group, group->visible);
+        }}
+    }}
+}}
+#endif // UI_GROUP_COUNT > 0
+
+// ============================================================================
+// Unified element access (for Haxe elements[] array)
+// ============================================================================
+
+#if UI_ELEMENT_COUNT > 0
+UIElement* canvas_get_element(int index) {{
+    if (index >= 0 && index < g_canvas_element_count) {{
+        return &g_canvas_elements[index];
+    }}
+    return NULL;
+}}
+
+void canvas_element_set_visible(int index, bool visible) {{
+    UIElement *elem = canvas_get_element(index);
+    if (!elem) return;
+
+    if (elem->type == UI_ELEM_IMAGE) {{
+#if UI_IMAGE_COUNT > 0
+        if (elem->index >= 0 && elem->index < g_canvas_image_count) {{
+            g_canvas_images[elem->index]->visible = visible;
+        }}
+#endif
+    }} else if (elem->type == UI_ELEM_GROUP) {{
+#if UI_GROUP_COUNT > 0
+        if (elem->index >= 0 && elem->index < g_canvas_group_count) {{
+            group_set_visible(g_canvas_groups[elem->index], visible);
+        }}
+#endif
+    }}
+}}
+#endif // UI_ELEMENT_COUNT > 0
+
+// ============================================================================
 // Rendering
 // ============================================================================
 
@@ -471,7 +667,7 @@ void canvas_render(void)
         rdpq_text_print(&parms, label->font_id, label->pos_x, label->pos_y + label->baseline_offset, label->text);
     }}
 #endif
-#endif // UI_LABEL_COUNT > 0 || UI_IMAGE_COUNT > 0
+#endif // UI_LABEL_COUNT > 0 || UI_IMAGE_COUNT > 0 || UI_GROUP_COUNT > 0
 }}
 
-#endif // UI_LABEL_COUNT > 0 || UI_IMAGE_COUNT > 0
+#endif // UI_LABEL_COUNT > 0 || UI_IMAGE_COUNT > 0 || UI_GROUP_COUNT > 0

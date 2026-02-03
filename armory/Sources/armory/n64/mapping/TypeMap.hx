@@ -41,6 +41,10 @@ class TypeMap {
 
         // Tween types
         "Tween" => "ArmTween*",  // Tween instance (pointer to pool entry)
+
+        // Function/callback types - all callbacks receive (void* obj, void* data) for trait access
+        "Void->Void" => "ArmCallback",  // Typedef for void (*)(void*, void*)
+        "Float->Void" => "ArmFloatObjCallback",  // Typedef for void (*)(float, void*, void*)
     ];
 
     public static function getCType(haxeType:String):String {

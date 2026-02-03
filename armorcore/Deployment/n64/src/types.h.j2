@@ -86,6 +86,15 @@ typedef void (*ArmTraitLateUpdateFn)(void *entity, float dt, void *data);
 typedef void (*ArmTraitRemoveFn)(void *entity, void *data);
 typedef void (*ArmTraitRender2DFn)(void *entity, void *data);
 
+// Generic callback typedefs - no closure capture, raw Haxe semantics
+typedef void (*ArmVoidCallback)(void);
+typedef void (*ArmFloatCallback)(float);
+
+// Callback typedefs with obj/data parameters for trait method callbacks
+// These are used when passing trait methods as callbacks (e.g., fadeOut(initTransitionDone))
+typedef void (*ArmCallback)(void *obj, void *data);
+typedef void (*ArmFloatObjCallback)(float value, void *obj, void *data);
+
 typedef struct {{
     ArmTraitReadyFn on_ready;
     ArmTraitFixedUpdateFn on_fixed_update;

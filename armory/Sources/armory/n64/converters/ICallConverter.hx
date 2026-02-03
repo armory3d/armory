@@ -44,8 +44,14 @@ interface IExtractorContext {
     // Access to member types (for type checking)
     function getMemberType(name:String):String;
 
+    // Access to inherited member types (from parent classes)
+    function getInheritedMemberType(name:String):String;
+
     // Get C-safe trait name (for generating handler names)
     function getCName():String;
+
+    // Get parent trait name (for inheritance checks)
+    function getParentName():String;
 
     // Check if name is a local variable (including method parameters)
     function getLocalVarType(name:String):String;

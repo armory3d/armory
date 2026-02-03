@@ -49,6 +49,10 @@ def find_tween_callbacks(nodes: List[dict]) -> List[dict]:
         args = node.get("args", [])
         if args:
             callbacks.extend(find_tween_callbacks(args))
+        # Recurse into body (for callback_wrapper nodes and similar)
+        body = node.get("body", [])
+        if body and isinstance(body, list):
+            callbacks.extend(find_tween_callbacks(body))
         # Recurse into ALL props values (handles then, else_, and any future props)
         props = node.get("props", {})
         if props:
@@ -253,6 +257,15 @@ class _CaptureEmitter:
             name = node.get("value", "")
             if name in self.param_captures:
                 return {"type": "ident", "value": self.param_captures[name]}
+            return node
+
+        # For callback_param_call nodes, substitute the callback name if captured
+        if node_type == "callback_param_call":
+            name = node.get("name", "")
+            if name in self.param_captures:
+                result = dict(node)
+                result["name"] = self.param_captures[name]
+                return result
             return node
 
         # For all other nodes, recursively substitute in children, args, object, etc.
