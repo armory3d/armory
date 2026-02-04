@@ -16,6 +16,14 @@ static ArmScene g_scenes[SCENE_COUNT];
 static SceneId g_current_scene = SCENE_COUNT;
 static SceneId g_pending_scene = SCENE_COUNT;
 
+// Group data: name -> object count lookup per scene
+typedef struct {{
+    const char *name;
+    uint16_t count;
+}} SceneGroupEntry;
+
+{scene_group_data}
+
 void scene_init(SceneId id)
 {{
     if (id >= SCENE_COUNT) return;
@@ -441,4 +449,12 @@ uint16_t scene_get_active_count(SceneId id)
 {{
     if (id >= SCENE_COUNT) return 0;
     return g_scenes[id].active_count;
+}}
+
+uint16_t scene_get_group_count(const char *group_name)
+{{
+    if (g_current_scene >= SCENE_COUNT || group_name == NULL) return 0;
+
+{scene_group_lookup}
+    return 0;
 }}

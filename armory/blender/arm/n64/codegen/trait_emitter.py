@@ -310,6 +310,14 @@ class TraitEmitter:
         """notifyOnRender2D() at runtime -> re-enable on_render2d callback."""
         return f"(({self.data_type}*)data)->_render2d_enabled = true;"
 
+    def emit_scene_get_group_count(self, node: Dict) -> str:
+        """Scene.active.getGroup(groupName).length -> scene_get_group_count(groupName)."""
+        args = node.get("args", [])
+        if args:
+            group_arg = self.emit(args[0])
+            return f"scene_get_group_count({group_arg})"
+        return "0"
+
     def emit_render2d_set_color(self, node: Dict) -> str:
         """g2.color = value -> assign color (already in RGBA32 format)."""
         args = node.get("args", [])

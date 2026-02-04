@@ -43,6 +43,10 @@ ArmObject *scene_alloc_object(SceneId id);
 // Get count of active (non-removed) objects
 uint16_t scene_get_active_count(SceneId id);
 
+// Get count of objects in a named group for the current scene
+// Returns 0 if group not found
+uint16_t scene_get_group_count(const char *group_name);
+
 #ifdef __cplusplus
 }}
 #endif

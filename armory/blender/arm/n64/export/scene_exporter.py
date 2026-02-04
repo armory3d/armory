@@ -72,6 +72,31 @@ def build_scene_data(exporter, scene):
     except (AttributeError, KeyError):
         ambient_color = [0.2, 0.2, 0.2]  # Default ambient
 
+    # Collect groups from Blender collections
+    # Each collection used in this scene becomes a group with object count
+    groups = {}
+    for collection in bpy.data.collections:
+        if collection.name.startswith(('RigidBodyWorld', 'Trait|')):
+            continue
+        # Check if collection is used in this scene
+        collection_used = (
+            scene.user_of_id(collection) or
+            collection in scene.collection.children_recursive or
+            any(obj.name in scene.objects for obj in collection.objects)
+        )
+        if collection_used:
+            # Count mesh objects, including those inside linked/instanced collections
+            mesh_count = 0
+            for obj in collection.all_objects:
+                if obj.type == 'MESH':
+                    mesh_count += 1
+                elif obj.instance_type == 'COLLECTION' and obj.instance_collection is not None:
+                    mesh_count += sum(1 for cobj in obj.instance_collection.all_objects if cobj.type == 'MESH')
+            groups[collection.name] = {
+                'original_name': collection.name,
+                'count': mesh_count
+            }
+
     exporter.scene_data[scene_name] = {
         "canvas": canvas_name,  # UI canvas for this scene (or None)
         "world": {
@@ -83,7 +108,8 @@ def build_scene_data(exporter, scene):
         "cameras": [],
         "lights": [],
         "objects": [],
-        "traits": scene_traits
+        "traits": scene_traits,
+        "groups": groups
     }
 
     for obj, instance_matrix in _collect_all_objects(scene):
@@ -424,6 +450,8 @@ def write_scenes_c(exporter):
     init_lines = []
     init_switch_cases_lines = []
     name_entry_lines = []
+    group_data_lines = []
+    group_lookup_lines = []
     scene_count = 0
 
     for scene in bpy.data.scenes:
@@ -438,17 +466,44 @@ def write_scenes_c(exporter):
                                        f'            scene_{scene_name}_init(&g_scenes[SCENE_{scene_name.upper()}]);\n'
                                        f'            break;')
         name_entry_lines.append(f'    {{"{original_name}", SCENE_{scene_name.upper()}}},')
+
+        # Generate group data for this scene
+        scene_data = exporter.scene_data.get(scene_name, {})
+        groups = scene_data.get('groups', {})
+        if groups:
+            entries = []
+            for norm_name, group_info in groups.items():
+                orig_name = group_info['original_name']
+                count = group_info['count']
+                entries.append(f'    {{"{orig_name}", {count}}}')
+            group_data_lines.append(f'static const SceneGroupEntry g_scene_{scene_name}_groups[] = {{\n' +
+                                    ',\n'.join(entries) + '\n};')
+            group_data_lines.append(f'static const uint16_t g_scene_{scene_name}_group_count = {len(groups)};')
+
+            # Add lookup case
+            group_lookup_lines.append(f'    if (g_current_scene == SCENE_{scene_name.upper()}) {{')
+            group_lookup_lines.append(f'        for (uint16_t i = 0; i < g_scene_{scene_name}_group_count; i++) {{')
+            group_lookup_lines.append(f'            if (strcmp(group_name, g_scene_{scene_name}_groups[i].name) == 0) {{')
+            group_lookup_lines.append(f'                return g_scene_{scene_name}_groups[i].count;')
+            group_lookup_lines.append(f'            }}')
+            group_lookup_lines.append(f'        }}')
+            group_lookup_lines.append(f'    }}')
+
         scene_count += 1
 
     scene_inits = '\n'.join(init_lines)
     scene_init_switch_cases = '\n'.join(init_switch_cases_lines)
     scene_name_entries = '\n'.join(name_entry_lines)
+    scene_group_data = '\n'.join(group_data_lines) if group_data_lines else '// No groups defined'
+    scene_group_lookup = '\n'.join(group_lookup_lines) if group_lookup_lines else '    // No groups defined'
 
     output = tmpl_content.format(
         scene_inits=scene_inits,
         scene_init_switch_cases=scene_init_switch_cases,
         scene_name_entries=scene_name_entries,
-        scene_count=scene_count
+        scene_count=scene_count,
+        scene_group_data=scene_group_data,
+        scene_group_lookup=scene_group_lookup
     )
 
     with open(out_path, 'w', encoding='utf-8') as f:

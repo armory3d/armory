@@ -1327,6 +1327,33 @@ class TraitExtractor implements IExtractorContext {
             }
         }
 
+        // Handle Scene.active.getGroup(groupName).length -> scene_get_group_count(groupName)
+        if (field == "length") {
+            switch (obj.expr) {
+                case ECall(callExpr, params):
+                    // Check for getGroup call
+                    switch (callExpr.expr) {
+                        case EField(sceneActiveExpr, "getGroup"):
+                            // Check for Scene.active
+                            switch (sceneActiveExpr.expr) {
+                                case EField(sceneExpr, "active"):
+                                    switch (sceneExpr.expr) {
+                                        case EConst(CIdent("Scene")):
+                                            // Found Scene.active.getGroup(x).length
+                                            if (params.length > 0) {
+                                                var groupArg = exprToIR(params[0]);
+                                                return { type: "scene_get_group_count", args: [groupArg] };
+                                            }
+                                        default:
+                                    }
+                                default:
+                            }
+                        default:
+                    }
+                default:
+            }
+        }
+
         // Handle Color.Black, Color.White, etc. -> RGBA32 for N64
         switch (obj.expr) {
             case EConst(CIdent("Color")):
