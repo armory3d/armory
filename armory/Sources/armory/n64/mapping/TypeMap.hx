@@ -34,6 +34,10 @@ class TypeMap {
         // UI types
         "Label" => "UILabel*",
         "KouiCanvas" => "void*",  // Canvas is metadata-only, not stored at runtime
+        "AnchorPane" => "UIGroup*",
+        "RowLayout" => "UIGroup*",
+        "ColLayout" => "UIGroup*",
+        "GridLayout" => "UIGroup*",
 
         // Audio types
         "Sound" => "const char*",  // Sound asset reference (ROM path)

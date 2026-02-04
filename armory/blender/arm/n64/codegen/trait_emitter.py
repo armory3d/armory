@@ -60,7 +60,8 @@ class TraitEmitter:
 
     def __init__(self, trait_name: str, c_name: str, member_names: List[str],
                  is_trait: bool = True, parent_name: str = None, all_traits: Dict = None,
-                 methods: Dict = None, virtual_methods: Set[str] = None):
+                 methods: Dict = None, virtual_methods: Set[str] = None,
+                 member_map: Dict = None):
         self.trait_name = trait_name
         self.c_name = c_name
         self.member_names = member_names  # This trait's own members only
@@ -74,6 +75,9 @@ class TraitEmitter:
         # Virtual method support
         self.methods = methods or {}
         self.virtual_methods = virtual_methods or set()  # Pre-computed set of virtual method names
+
+        # Member map with ctype info for pointer detection
+        self.member_map = member_map or {}
 
         # Build member lookup map for routing member access
         self._member_depth_map = self._build_member_depth_map()
@@ -148,6 +152,14 @@ class TraitEmitter:
             # Inherited member - route through _parent chain
             parent_chain = "_parent." * depth
             return f"(({self.data_type}*)data)->{parent_chain}{member_name}"
+
+    def _get_member_ctype(self, member_name: str) -> str:
+        """Get the C type of a member from member_map.
+
+        Used to determine if field access needs -> (pointer) or . (struct).
+        """
+        member_info = self.member_map.get(member_name, {})
+        return member_info.get("ctype", "")
 
     def emit(self, node: Optional[Dict]) -> str:
         """Emit C code for an IR node."""
@@ -267,8 +279,14 @@ class TraitEmitter:
     # =========================================================================
 
     def emit_remove_update(self, node: Dict) -> str:
-        """removeUpdate() -> disable on_update callback via _update_enabled flag."""
-        return f"(({self.data_type}*)data)->_update_enabled = false;"
+        """removeUpdate(callback) -> disable specific on_update callback via _update_<name>_enabled flag."""
+        callback_name = node.get("value")
+        if callback_name:
+            # Multiple update functions - use specific flag
+            return f"(({self.data_type}*)data)->_update_{callback_name}_enabled = false;"
+        else:
+            # Single/anonymous update - use generic flag
+            return f"(({self.data_type}*)data)->_update_enabled = false;"
 
     def emit_remove_late_update(self, node: Dict) -> str:
         """removeLateUpdate() -> disable on_late_update callback via _late_update_enabled flag."""
@@ -279,8 +297,14 @@ class TraitEmitter:
         return f"(({self.data_type}*)data)->_render2d_enabled = false;"
 
     def emit_notify_update(self, node: Dict) -> str:
-        """notifyOnUpdate() at runtime -> re-enable on_update callback."""
-        return f"(({self.data_type}*)data)->_update_enabled = true;"
+        """notifyOnUpdate(callback) at runtime -> re-enable specific on_update callback."""
+        callback_name = node.get("value")
+        if callback_name:
+            # Multiple update functions - use specific flag
+            return f"(({self.data_type}*)data)->_update_{callback_name}_enabled = true;"
+        else:
+            # Single/anonymous update - use generic flag
+            return f"(({self.data_type}*)data)->_update_enabled = true;"
 
     def emit_notify_render2d(self, node: Dict) -> str:
         """notifyOnRender2D() at runtime -> re-enable on_render2d callback."""
@@ -518,6 +542,14 @@ class TraitEmitter:
                 if obj_type == "array_access":
                     return f"{obj}->{field}"
 
+                # Handle member/inherited_member types that are pointers (UIGroup*, UILabel*, etc.)
+                # These need -> access since they're pointer types stored in data struct
+                if obj_type in ("member", "inherited_member"):
+                    member_name = obj_value
+                    member_ctype = self._get_member_ctype(member_name)
+                    if member_ctype and member_ctype.endswith("*"):
+                        return f"{obj}->{field}"
+
                 return f"({obj}).{field}"
 
         return field
@@ -603,6 +635,19 @@ class TraitEmitter:
                         if index_expr and value_expr:
                             return f"canvas_element_set_visible({index_expr}, {value_expr});"
                         return ""
+
+            # Check for UIGroup member visible assignment: groupMember.visible = value
+            # This needs ui_group_set_visible() to propagate visibility to children
+            if obj_node.get("type") == "member":
+                member_name = obj_node.get("value")
+                member_info = self.member_map.get(member_name, {})
+                member_ctype = member_info.get("ctype", "")
+                if member_ctype == "UIGroup*":
+                    group_expr = self.emit(obj_node)
+                    value_expr = self.emit(children[1])
+                    if group_expr and value_expr:
+                        return f"ui_group_set_visible({group_expr}, {value_expr});"
+                    return ""
 
         target = self.emit(children[0])
         value = self.emit(children[1])
@@ -1087,6 +1132,20 @@ class TraitEmitter:
 
         safe_key = arm.utils.safesrc(label_key).upper()
         return f"canvas_get_label(UI_LABEL_{safe_key})"
+
+    def emit_canvas_get_group(self, node: Dict) -> str:
+        """canvas.getElementAs(AnchorPane/RowLayout/ColLayout, "key") -> canvas_get_group(UI_GROUP_{KEY})
+
+        Used for layout containers that can have visibility toggled.
+        """
+        import arm.utils
+        props = node.get("props", {})
+        group_key = props.get("key", "")
+        if not group_key:
+            return "NULL"
+
+        safe_key = arm.utils.safesrc(group_key).upper()
+        return f"canvas_get_group(UI_GROUP_{safe_key})"
 
     def emit_label_set_text(self, node: Dict) -> str:
         """label.text = value -> ui_label_set_text(label, value)"""

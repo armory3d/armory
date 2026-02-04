@@ -129,7 +129,8 @@ class TraitCodeGenerator:
             parent_name=self.parent_name,
             all_traits=self.all_traits,
             methods=self.methods,
-            virtual_methods=self.virtual_method_names
+            virtual_methods=self.virtual_method_names,
+            member_map=self.member_map
         )
         self._tween_callbacks = []  # Collected tween callbacks from all events
         self._inherited_callbacks = []  # Collected callback wrappers for inherited method calls
@@ -653,6 +654,13 @@ class TraitCodeGenerator:
         decls.append(f"void {self.c_name}_on_ready(void* obj, void* data);")
         decls.append(f"void {self.c_name}_on_fixed_update(void* obj, float dt, void* data);")
         decls.append(f"void {self.c_name}_on_update(void* obj, float dt, void* data);")
+
+        # Add declarations for individual update functions if trait has multiple dynamic updates
+        dynamic_updates = self.meta.get("dynamic_updates", [])
+        for callback_name in dynamic_updates:
+            func_name = f"on_update_{callback_name}"
+            decls.append(f"void {self.c_name}_{func_name}(void* obj, float dt, void* data);")
+
         decls.append(f"void {self.c_name}_on_late_update(void* obj, float dt, void* data);")
         decls.append(f"void {self.c_name}_on_remove(void* obj, void* data);")
         decls.append(f"void {self.c_name}_on_render2d(void* obj, void* data);")
@@ -833,15 +841,40 @@ class TraitCodeGenerator:
         impl_lines.append("")
 
         # on_update - dt before data (ArmTraitUpdateFn)
-        event_nodes = self.events.get("on_update", [])
-        body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
-        impl_lines.append(f"void {self.c_name}_on_update(void* obj, float dt, void* data) {{")
-        # Add early return guard if trait uses removeUpdate()
-        if self.meta.get("has_remove_update", False):
-            impl_lines.append(f"    if (!(({self.c_name}Data*)data)->_update_enabled) return;")
-        impl_lines.append(body)
-        impl_lines.append("}")
-        impl_lines.append("")
+        # Check if we have multiple dynamic update functions
+        dynamic_updates = self.meta.get("dynamic_updates", [])
+
+        if dynamic_updates and len(dynamic_updates) > 0:
+            # Multiple update functions - generate dispatcher that calls each enabled sub-update
+            impl_lines.append(f"void {self.c_name}_on_update(void* obj, float dt, void* data) {{")
+            impl_lines.append(f"    {self.c_name}Data* d = ({self.c_name}Data*)data;")
+            for callback_name in dynamic_updates:
+                flag_name = f"_update_{callback_name}_enabled"
+                func_name = f"on_update_{callback_name}"
+                impl_lines.append(f"    if (d->{flag_name}) {self.c_name}_{func_name}(obj, dt, data);")
+            impl_lines.append("}")
+            impl_lines.append("")
+
+            # Generate each individual update function
+            for callback_name in dynamic_updates:
+                func_name = f"on_update_{callback_name}"
+                event_nodes = self.events.get(func_name, [])
+                body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
+                impl_lines.append(f"void {self.c_name}_{func_name}(void* obj, float dt, void* data) {{")
+                impl_lines.append(body)
+                impl_lines.append("}")
+                impl_lines.append("")
+        else:
+            # Single/no update - original behavior
+            event_nodes = self.events.get("on_update", [])
+            body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
+            impl_lines.append(f"void {self.c_name}_on_update(void* obj, float dt, void* data) {{")
+            # Add early return guard if trait uses removeUpdate()
+            if self.meta.get("has_remove_update", False):
+                impl_lines.append(f"    if (!(({self.c_name}Data*)data)->_update_enabled) return;")
+            impl_lines.append(body)
+            impl_lines.append("}")
+            impl_lines.append("")
 
         # on_late_update - dt before data (ArmTraitLateUpdateFn)
         event_nodes = self.events.get("on_late_update", [])

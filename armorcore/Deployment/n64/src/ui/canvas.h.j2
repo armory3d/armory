@@ -145,6 +145,9 @@ UIImage* canvas_get_image(int index);
 // Get group by index (for container elements)
 UIGroup* canvas_get_group(int index);
 
+// Set group visibility and propagate to children (for trait code)
+void ui_group_set_visible(UIGroup *group, bool visible);
+
 // Get element by index (unified access for Haxe elements[] array)
 // Returns pointer to UIElement which describes the element type and index
 UIElement* canvas_get_element(int index);

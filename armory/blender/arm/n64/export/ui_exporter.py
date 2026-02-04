@@ -167,9 +167,17 @@ def _calc_anchor_position(pos_x, pos_y, width, height, anchor, container_width, 
 # Element Flatten Helpers
 # =============================================================================
 
+def _build_full_path(parent_path: str, key: str) -> str:
+    """Build full element path like 'parent/child' for Koui-style access."""
+    if parent_path:
+        return f"{parent_path}/{key}"
+    return key
+
+
 def _create_group_with_children(exporter, elem, children, final_x, final_y,
                                  elem_by_key, children_by_parent,
-                                 labels, images, groups, elements):
+                                 labels, images, groups, elements,
+                                 parent_path: str = ""):
     """Create a group element and process its children, tracking indices.
 
     Args:
@@ -179,10 +187,14 @@ def _create_group_with_children(exporter, elem, children, final_x, final_y,
         final_x, final_y: Absolute position
         elem_by_key, children_by_parent: Lookup dicts
         labels, images, groups, elements: Output lists (modified in place)
+        parent_path: Path to parent for building full key paths
     """
     group_index = len(groups)
+    elem_key = elem.get('key')
+    full_path = _build_full_path(parent_path, elem_key)
+
     group_data = {
-        'key': elem.get('key'),
+        'key': full_path,  # Use full path as key
         'visible': elem.get('visible', True),
         'child_image_indices': [],
         'child_label_indices': [],
@@ -203,7 +215,8 @@ def _create_group_with_children(exporter, elem, children, final_x, final_y,
             container_width, container_height,
             final_x, final_y,
             labels, images, groups, elements,
-            is_root=False
+            is_root=False,
+            parent_path=full_path  # Pass current path for children
         )
         # Track which images/labels were added
         for i in range(img_start, len(images)):
@@ -216,10 +229,29 @@ def _create_group_with_children(exporter, elem, children, final_x, final_y,
 
 def _handle_row_col_layout(exporter, elem, elem_type, children, final_x, final_y,
                             elem_by_key, children_by_parent,
-                            labels, images, groups, elements, is_root):
-    """Handle RowLayout and ColLayout - process children in cells."""
+                            labels, images, groups, elements, is_root,
+                            parent_path: str = ""):
+    """Handle RowLayout and ColLayout - process children in cells.
+
+    These layouts are treated as groups so their visibility can be toggled.
+    """
     if not children:
         return
+
+    elem_key = elem.get('key')
+    full_path = _build_full_path(parent_path, elem_key)
+
+    # Create a group for this layout so visibility can be controlled
+    group_index = len(groups)
+    group_data = {
+        'key': full_path,
+        'visible': elem.get('visible', True),
+        'child_image_indices': [],
+        'child_label_indices': [],
+    }
+
+    if is_root:
+        elements.append({'type': 'group', 'index': group_index})
 
     layout_width = elem['width']
     layout_height = elem['height']
@@ -238,21 +270,50 @@ def _handle_row_col_layout(exporter, elem, elem_type, children, final_x, final_y
         else:
             cell_x, cell_y = cell_width * idx, 0
 
+        img_start = len(images)
+        lbl_start = len(labels)
         _flatten_element(
             exporter, child, elem_by_key, children_by_parent,
             cell_width, cell_height,
             final_x + cell_x, final_y + cell_y,
             labels, images, groups, elements,
-            is_root=is_root
+            is_root=False,
+            parent_path=full_path
         )
+        # Track child indices for group
+        for i in range(img_start, len(images)):
+            group_data['child_image_indices'].append(i)
+        for i in range(lbl_start, len(labels)):
+            group_data['child_label_indices'].append(i)
+
+    groups.append(group_data)
 
 
 def _handle_grid_layout(exporter, elem, children, final_x, final_y,
                          elem_by_key, children_by_parent,
-                         labels, images, groups, elements, is_root):
-    """Handle GridLayout - place children in grid cells."""
+                         labels, images, groups, elements, is_root,
+                         parent_path: str = ""):
+    """Handle GridLayout - place children in grid cells.
+
+    GridLayout is treated as a group so its visibility can be toggled.
+    """
     if not children:
         return
+
+    elem_key = elem.get('key')
+    full_path = _build_full_path(parent_path, elem_key)
+
+    # Create a group for this layout
+    group_index = len(groups)
+    group_data = {
+        'key': full_path,
+        'visible': elem.get('visible', True),
+        'child_image_indices': [],
+        'child_label_indices': [],
+    }
+
+    if is_root:
+        elements.append({'type': 'group', 'index': group_index})
 
     layout_width = elem['width']
     layout_height = elem['height']
@@ -270,16 +331,26 @@ def _handle_grid_layout(exporter, elem, children, final_x, final_y,
         cell_x = cell_width * col
         cell_y = cell_height * row
 
+        img_start = len(images)
+        lbl_start = len(labels)
         _flatten_element(
             exporter, child, elem_by_key, children_by_parent,
             cell_width, cell_height,
             final_x + cell_x, final_y + cell_y,
             labels, images, groups, elements,
-            is_root=is_root
+            is_root=False,
+            parent_path=full_path
         )
+        # Track child indices for group
+        for i in range(img_start, len(images)):
+            group_data['child_image_indices'].append(i)
+        for i in range(lbl_start, len(labels)):
+            group_data['child_label_indices'].append(i)
+
+    groups.append(group_data)
 
 
-def _handle_label(exporter, elem, final_x, final_y, labels):
+def _handle_label(exporter, elem, final_x, final_y, labels, parent_path: str = ""):
     """Handle Label element - extract text, font, and color info."""
     props = elem.get('properties', {})
     tid = elem.get('tID', '_label')
@@ -295,8 +366,11 @@ def _handle_label(exporter, elem, final_x, final_y, labels):
     exporter.font_sizes.add(font_size)
     style_id = _get_or_create_color_style(exporter, text_color)
 
+    # Build full path for key
+    full_path = _build_full_path(parent_path, elem['key'])
+
     label_data = {
-        'key': elem['key'],
+        'key': full_path,  # Use full path as key
         'text': props.get('text', ''),
         'pos_x': final_x,
         'pos_y': final_y,
@@ -314,7 +388,7 @@ def _handle_label(exporter, elem, final_x, final_y, labels):
     labels.append(label_data)
 
 
-def _handle_image(exporter, elem, final_x, final_y, images, elements, is_root):
+def _handle_image(exporter, elem, final_x, final_y, images, elements, is_root, parent_path: str = ""):
     """Handle ImagePanel element - track image for copying."""
     props = elem.get('properties', {})
     image_name = props.get('imageName', '')
@@ -326,9 +400,12 @@ def _handle_image(exporter, elem, final_x, final_y, images, elements, is_root):
         exporter.ui_images = set()
     exporter.ui_images.add(image_name)
 
+    # Build full path for key
+    full_path = _build_full_path(parent_path, elem['key'])
+
     image_index = len(images)
     image_data = {
-        'key': elem['key'],
+        'key': full_path,  # Use full path as key
         'image_name': image_name,
         'pos_x': final_x,
         'pos_y': final_y,
@@ -352,14 +429,17 @@ def _flatten_element(exporter, elem, elem_by_key, children_by_parent,
                      container_width, container_height,
                      parent_abs_x, parent_abs_y,
                      labels, images, groups, elements,
-                     is_root=True):
+                     is_root=True,
+                     parent_path: str = ""):
     """Recursively flatten an element, computing absolute positions.
 
-    Layout elements (RowLayout, ColLayout) are not exported themselves,
-    but their children are processed with adjusted positions.
+    Layout elements (RowLayout, ColLayout) are exported as groups so their
+    visibility can be toggled. Their children are processed with adjusted positions.
 
     Groups (containers with children) are tracked for parent-child visibility.
     The elements array provides unified Haxe-compatible indexing.
+
+    parent_path is used to build full keys like "parent/child" for Koui-style access.
     """
     elem_type = elem.get('type')
     elem_key = elem.get('key')
@@ -382,56 +462,54 @@ def _flatten_element(exporter, elem, elem_by_key, children_by_parent,
     if elem_type in ('RowLayout', 'ColLayout'):
         _handle_row_col_layout(exporter, elem, elem_type, children, final_x, final_y,
                                 elem_by_key, children_by_parent,
-                                labels, images, groups, elements, is_root)
+                                labels, images, groups, elements, is_root,
+                                parent_path=parent_path)
         return
 
     if elem_type == 'GridLayout':
         _handle_grid_layout(exporter, elem, children, final_x, final_y,
                              elem_by_key, children_by_parent,
-                             labels, images, groups, elements, is_root)
+                             labels, images, groups, elements, is_root,
+                             parent_path=parent_path)
         return
 
     if elem_type == 'AnchorPane':
-        if is_root and has_children:
+        if has_children:
+            # AnchorPane with children - create group for visibility control
             _create_group_with_children(exporter, elem, children, final_x, final_y,
                                          elem_by_key, children_by_parent,
-                                         labels, images, groups, elements)
-        elif has_children:
-            # Non-root AnchorPane - process children without creating group
-            for child in children:
-                _flatten_element(
-                    exporter, child, elem_by_key, children_by_parent,
-                    elem['width'], elem['height'],
-                    final_x, final_y,
-                    labels, images, groups, elements,
-                    is_root=False
-                )
+                                         labels, images, groups, elements,
+                                         parent_path=parent_path)
         return
 
     if elem_type == 'Label':
-        _handle_label(exporter, elem, final_x, final_y, labels)
+        _handle_label(exporter, elem, final_x, final_y, labels, parent_path=parent_path)
         return
 
     if elem_type == 'ImagePanel':
-        _handle_image(exporter, elem, final_x, final_y, images, elements, is_root)
+        _handle_image(exporter, elem, final_x, final_y, images, elements, is_root, parent_path=parent_path)
         return
 
     # Generic container with children - create a group
     if has_children and is_root:
         _create_group_with_children(exporter, elem, children, final_x, final_y,
                                      elem_by_key, children_by_parent,
-                                     labels, images, groups, elements)
+                                     labels, images, groups, elements,
+                                     parent_path=parent_path)
         return
 
     # Non-root elements with children - just process children
     if has_children:
+        # Build path for children
+        current_path = _build_full_path(parent_path, elem_key)
         for child in children:
             _flatten_element(
                 exporter, child, elem_by_key, children_by_parent,
                 elem['width'], elem['height'],
                 final_x, final_y,
                 labels, images, groups, elements,
-                is_root=False
+                is_root=False,
+                parent_path=current_path
             )
 
 

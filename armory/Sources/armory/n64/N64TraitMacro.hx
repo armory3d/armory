@@ -262,7 +262,8 @@ class TraitExtractor implements IExtractorContext {
             global_signals: [],
             has_remove_update: false,
             has_remove_late_update: false,
-            has_remove_render2d: false
+            has_remove_render2d: false,
+            dynamic_updates: []
         };
 
         // Generate C-safe name early so it's available during extraction
@@ -352,9 +353,25 @@ class TraitExtractor implements IExtractorContext {
         if (lifecycles.init != null) {
             extractEvents("on_ready", lifecycles.init);
         }
-        if (lifecycles.update != null) {
+
+        // Handle multiple update functions - each gets its own event
+        // Collect keys first to avoid iterator issues
+        var updateCallbackNames = [for (k in lifecycles.updates.keys()) k];
+        if (updateCallbackNames.length > 0) {
+            // We have named update functions - generate separate events for each
+            for (callbackName in updateCallbackNames) {
+                var body = lifecycles.updates.get(callbackName);
+                if (body != null) {
+                    // Use format: on_update_functionName (e.g., on_update_update, on_update_winUpdate)
+                    extractEvents("on_update_" + callbackName, body);
+                    meta.dynamic_updates.push(callbackName);
+                }
+            }
+        } else if (lifecycles.update != null) {
+            // Fallback for inline/anonymous update functions
             extractEvents("on_update", lifecycles.update);
         }
+
         if (lifecycles.fixed_update != null) {
             extractEvents("on_fixed_update", lifecycles.fixed_update);
         }
@@ -368,9 +385,21 @@ class TraitExtractor implements IExtractorContext {
             extractEvents("on_render2d", lifecycles.render2d);
         }
 
-        // Auto-add _update_enabled member if trait uses removeUpdate() or notifyOnUpdate() at runtime
-        // Initial value: true if trait has STATIC update function, false if only dynamic registration
-        if (meta.has_remove_update) {
+        // Auto-add per-callback _update_<name>_enabled members if trait has multiple update functions
+        // Each update function gets its own enabled flag for independent enable/disable
+        if (meta.dynamic_updates.length > 0) {
+            for (callbackName in meta.dynamic_updates) {
+                var flagName = "_update_" + callbackName + "_enabled";
+                var isStaticallyRegistered = staticLifecycles.static_updates.exists(callbackName);
+                members.set(flagName, {
+                    haxeType: "Bool",
+                    ctype: "bool",
+                    defaultValue: { type: "bool", value: isStaticallyRegistered }
+                });
+                memberNames.push(flagName);
+            }
+        } else if (meta.has_remove_update) {
+            // Fallback: single _update_enabled for anonymous/inline update functions
             var hasStaticUpdate = staticLifecycles.update != null;
             members.set("_update_enabled", {
                 haxeType: "Bool",
@@ -524,8 +553,8 @@ class TraitExtractor implements IExtractorContext {
         }
     }
 
-    function findLifecycles():{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr} {
-        var result = {init: null, update: null, fixed_update: null, late_update: null, remove: null, render2d: null};
+    function findLifecycles():{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, updates:Map<String, Expr>} {
+        var result = {init: null, update: null, fixed_update: null, late_update: null, remove: null, render2d: null, updates: new Map<String, Expr>()};
 
         // Scan ALL methods for lifecycle registrations (for code extraction)
         for (methodName in methodMap.keys()) {
@@ -540,8 +569,8 @@ class TraitExtractor implements IExtractorContext {
 
     // Find only STATICALLY registered lifecycles (called from constructor/init path)
     // Used to determine initial enabled state for dynamic toggle flags
-    function findStaticLifecycles():{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr} {
-        var result = {init: null, update: null, fixed_update: null, late_update: null, remove: null, render2d: null};
+    function findStaticLifecycles():{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, static_updates:Map<String, Bool>} {
+        var result = {init: null, update: null, fixed_update: null, late_update: null, remove: null, render2d: null, static_updates: new Map<String, Bool>()};
 
         // Only scan constructor - lifecycle registrations elsewhere are "dynamic"
         var ctor = methodMap.get("new");
@@ -553,7 +582,7 @@ class TraitExtractor implements IExtractorContext {
     }
 
     // Scan for lifecycle registrations (finds all, for code extraction)
-    function scanForLifecycles(e:Expr, result:{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr}, inInitPath:Bool):Void {
+    function scanForLifecycles(e:Expr, result:{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, updates:Map<String, Expr>}, inInitPath:Bool):Void {
         if (e == null) return;
 
         switch (e.expr) {
@@ -563,7 +592,14 @@ class TraitExtractor implements IExtractorContext {
                     var body = resolveCallback(params[0]);
                     switch (funcName) {
                         case "notifyOnInit": result.init = body;
-                        case "notifyOnUpdate": result.update = body;
+                        case "notifyOnUpdate":
+                            // Track update callbacks by their function name
+                            var callbackName = getCallbackName(params[0]);
+                            if (callbackName != null && body != null) {
+                                result.updates.set(callbackName, body);
+                            }
+                            // Also keep backward compatibility with single update field
+                            result.update = body;
                         case "notifyOnFixedUpdate": result.fixed_update = body;
                         case "notifyOnLateUpdate": result.late_update = body;
                         case "notifyOnRemove": result.remove = body;
@@ -587,7 +623,7 @@ class TraitExtractor implements IExtractorContext {
     }
 
     // Scan for STATIC lifecycle registrations only (for initial enabled state)
-    function scanForStaticLifecycles(e:Expr, result:{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr}, inInitPath:Bool):Void {
+    function scanForStaticLifecycles(e:Expr, result:{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, static_updates:Map<String, Bool>}, inInitPath:Bool):Void {
         if (e == null) return;
 
         switch (e.expr) {
@@ -599,7 +635,13 @@ class TraitExtractor implements IExtractorContext {
                     if (inInitPath) {
                         switch (funcName) {
                             case "notifyOnInit": result.init = body;
-                            case "notifyOnUpdate": result.update = body;
+                            case "notifyOnUpdate":
+                                // Track static update callbacks by name
+                                var callbackName = getCallbackName(params[0]);
+                                if (callbackName != null) {
+                                    result.static_updates.set(callbackName, true);
+                                }
+                                result.update = body;
                             case "notifyOnFixedUpdate": result.fixed_update = body;
                             case "notifyOnLateUpdate": result.late_update = body;
                             case "notifyOnRemove": result.remove = body;
@@ -640,6 +682,16 @@ class TraitExtractor implements IExtractorContext {
             case EConst(CIdent(methodName)):
                 var method = methodMap.get(methodName);
                 method != null ? method.expr : null;
+            default: null;
+        };
+    }
+
+    // Get the name of the callback function (for dynamic update tracking)
+    function getCallbackName(e:Expr):String {
+        return switch (e.expr) {
+            case EFunction(_, _): null; // Inline function - no name
+            case EField(_, methodName): methodName;
+            case EConst(CIdent(methodName)): methodName;
             default: null;
         };
     }

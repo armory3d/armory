@@ -30,14 +30,24 @@ class CanvasCallConverter implements ICallConverter {
     function convertCanvasCall(method:String, args:Array<IRNode>, rawParams:Array<Expr>, ctx:IExtractorContext):IRNode {
         if (method == "getElementAs" && rawParams.length >= 2) {
             // canvas.getElementAs(Label, "score_label")
+            // canvas.getElementAs(AnchorPane, "level_container")
             var elementType = ExprUtils.extractIdentName(rawParams[0]);
-            var labelKey = ExprUtils.extractString(rawParams[1]);
+            var elemKey = ExprUtils.extractString(rawParams[1]);
 
-            if (elementType == "Label" && labelKey != null) {
+            if (elementType == "Label" && elemKey != null) {
                 ctx.getMeta().uses_ui = true;
                 return {
                     type: "canvas_get_label",
-                    props: { key: labelKey }
+                    props: { key: elemKey }
+                };
+            }
+            // Layout containers: AnchorPane, RowLayout, ColLayout, GridLayout
+            if ((elementType == "AnchorPane" || elementType == "RowLayout" ||
+                 elementType == "ColLayout" || elementType == "GridLayout") && elemKey != null) {
+                ctx.getMeta().uses_ui = true;
+                return {
+                    type: "canvas_get_group",
+                    props: { key: elemKey }
                 };
             }
         }

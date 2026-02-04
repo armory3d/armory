@@ -565,6 +565,11 @@ static void group_set_visible(UIGroup *group, bool visible) {{
     }}
 }}
 
+// Public wrapper to set group visibility from trait code
+void ui_group_set_visible(UIGroup *group, bool visible) {{
+    group_set_visible(group, visible);
+}}
+
 // Apply initial visibility from groups to their children
 // Must be called AFTER load_labels, load_images, load_groups, load_elements
 static void apply_initial_group_visibility(void) {{
