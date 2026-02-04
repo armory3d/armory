@@ -155,7 +155,8 @@ class N64Exporter:
 
             # Phase 8: Generate audio files (must be before makefile)
             audio_exporter.scan_and_copy_audio(self)
-            audio_exporter.write_audio_config(self)
+            if self.has_audio:
+                audio_exporter.write_audio_config(self)
 
             # Phase 9: Generate UI files (must be before makefile)
             ui_exporter.write_fonts(self)

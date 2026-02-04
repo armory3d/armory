@@ -449,7 +449,8 @@ class TraitEmitter:
         if name == "object":
             return "((ArmObject*)obj)"
         if name == "dt":
-            return "dt"
+            # Time.delta in Haxe -> time_delta global variable in C
+            return "time_delta"
         return name
 
     def emit_method_ref(self, node: Dict) -> str:
