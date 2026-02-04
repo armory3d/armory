@@ -17,21 +17,21 @@ from arm.n64.export import linked_export
 def _collect_all_objects(scene):
     """Collect all objects including those inside instance collections.
 
+    Each instance collection empty is processed separately to capture
+    all instances. For mesh export, duplicates are filtered later by mesh data.
+
     Returns:
         List of (object, instance_matrix) tuples. instance_matrix is None
         for direct scene objects, or the parent empty's world matrix for
         objects inside instanced collections.
     """
     objects = []
-    processed_collections = set()
 
     for obj in scene.collection.all_objects:
         if obj.instance_type == 'COLLECTION' and obj.instance_collection:
             coll = obj.instance_collection
-            if coll not in processed_collections:
-                processed_collections.add(coll)
-                for cobj in coll.all_objects:
-                    objects.append((cobj, obj.matrix_world))
+            for cobj in coll.all_objects:
+                objects.append((cobj, obj.matrix_world))
         else:
             objects.append((obj, None))
 

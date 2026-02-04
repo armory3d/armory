@@ -19,18 +19,20 @@ from arm.n64.export import linked_export
 
 
 def _collect_all_objects(scene):
-    """Collect all objects including those inside instance collections."""
+    """Collect all objects including those inside instance collections.
+
+    Each instance collection empty is processed separately to capture
+    all instances at their respective transforms.
+    """
     objects = []
-    processed_collections = set()
 
     for obj in scene.collection.all_objects:
         if obj.instance_type == 'COLLECTION' and obj.instance_collection is not None:
             # This is an instanced collection - process objects inside it
+            # Each instance empty gets its own copy of the collection objects
             coll = obj.instance_collection
-            if coll not in processed_collections:
-                processed_collections.add(coll)
-                for cobj in coll.all_objects:
-                    objects.append((cobj, obj.matrix_world))
+            for cobj in coll.all_objects:
+                objects.append((cobj, obj.matrix_world))
         else:
             objects.append((obj, None))
 
