@@ -80,8 +80,9 @@ class StringConcatBuilder {
                             case EConst(CIdent("Std")):
                                 if (method == "string" && callArgs.length > 0) {
                                     var valueExpr = callArgs[0];
-                                    var valueType = getExprTypeFunc(valueExpr);
-                                    addTyped(valueExpr, valueType, formatParts, args);
+                                    // Std.string() just ensures string conversion - recurse into the expression
+                                    // This handles Std.string("/" + totalScore) by flattening it
+                                    collectParts(valueExpr, formatParts, args);
                                     return;
                                 }
                             default:
