@@ -32,7 +32,7 @@ class TweenCallConverter implements ICallConverter {
 
     public function tryConvert(obj:Expr, method:String, args:Array<IRNode>, rawParams:Array<Expr>, ctx:IExtractorContext):IRNode {
         // Check if the object is a Tween type
-        var objType = getExprTypeSafe(obj, ctx);
+        var objType = ExprUtils.getExprTypeSafe(obj, ctx);
         var isPotentiallyInherited = false;
 
         // If objType is null or Dynamic (unresolved), check if it's a member or inherited member
@@ -465,12 +465,6 @@ class TweenCallConverter implements ICallConverter {
         }
     }
 
-    function getExprTypeSafe(e:Expr, ctx:IExtractorContext):String {
-        try {
-            return ctx.getExprType(e);
-        } catch (err:Dynamic) {
-            return null;
-        }
-    }
+    // Helper method now available in ExprUtils.getExprTypeSafe
 }
 #end

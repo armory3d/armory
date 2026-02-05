@@ -69,7 +69,8 @@ class CanvasCallConverter implements ICallConverter {
                 default:
             }
         }
-        return { type: "skip" };
+        // Unsupported canvas method
+        return { type: "skip", warn: "KouiCanvas." + method + "() not yet supported on N64" };
     }
 }
 #end

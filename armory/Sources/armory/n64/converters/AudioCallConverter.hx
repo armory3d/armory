@@ -5,6 +5,7 @@ import haxe.macro.Expr;
 import haxe.macro.Context;
 import armory.n64.IRTypes;
 import armory.n64.converters.ICallConverter;
+import armory.n64.util.ExprUtils;
 
 using StringTools;
 
@@ -50,7 +51,7 @@ class AudioCallConverter implements ICallConverter {
 
         // Handle sound handle method calls (handle.play(), handle.stop(), handle.setVolume())
         // These are on variables typed as BaseChannelHandle or similar
-        var objType = getExprTypeSafe(obj, ctx);
+        var objType = ExprUtils.getExprTypeSafe(obj, ctx);
         if (objType != null && (objType.indexOf("ChannelHandle") >= 0 || objType.indexOf("Handle") >= 0)) {
             return convertHandleCall(obj, method, args, ctx);
         }
@@ -87,11 +88,11 @@ class AudioCallConverter implements ICallConverter {
                         }
                     };
                 }
-                // Fallback with fewer args
-                return { type: "skip" };
+                // Fallback with fewer args - likely missing parameters
+                return { type: "skip", warn: "Aura.createCompBufferChannel() requires 3 arguments" };
 
             case "init":
-                // Aura.init() is handled by engine init, skip
+                // Aura.init() is handled by engine init, skip silently (intentional)
                 return { type: "skip" };
 
             default:
@@ -102,7 +103,7 @@ class AudioCallConverter implements ICallConverter {
 
     function convertMixChannelCall(indexExpr:Expr, method:String, args:Array<IRNode>, ctx:IExtractorContext):IRNode {
         // Extract the channel name from the index expression (e.g., "music")
-        var channelName = extractStringFromExpr(indexExpr);
+        var channelName = ExprUtils.extractString(indexExpr);
         var cChannel = getMixChannelConstant(channelName);
 
         switch (method) {
@@ -183,7 +184,7 @@ class AudioCallConverter implements ICallConverter {
             case EArray(arrayObj, indexExpr):
                 switch (arrayObj.expr) {
                     case EField(_, "mixChannels"):
-                        var channelName = extractStringFromExpr(indexExpr);
+                        var channelName = ExprUtils.extractString(indexExpr);
                         return getMixChannelConstant(channelName);
                     default:
                 }
@@ -202,43 +203,10 @@ class AudioCallConverter implements ICallConverter {
         return 'AUDIO_MIX_' + name.toUpperCase();
     }
 
-    function extractStringFromExpr(expr:Expr):String {
-        switch (expr.expr) {
-            case EConst(CString(s, _)):
-                return s;
-            default:
-                return null;
-        }
-    }
-
-    static function extractVarName(expr:Expr):String {
-        switch (expr.expr) {
-            case EConst(CIdent(name)):
-                return name;
-            case EField(_, name):
-                return name;
-            default:
-                return null;
-        }
-    }
-
-    function getExprTypeSafe(expr:Expr, ctx:IExtractorContext):String {
-        try {
-            return ctx.getExprType(expr);
-        } catch (e:Dynamic) {
-            return null;
-        }
-    }
-
-    static function getExprTypeSafeStatic(expr:Expr):String {
-        try {
-            var typed = Context.typeExpr(expr);
-            if (typed != null && typed.t != null) {
-                return haxe.macro.TypeTools.toString(typed.t);
-            }
-        } catch (e:Dynamic) {}
-        return null;
-    }
+    // Helper methods now available in ExprUtils:
+    // - extractString -> ExprUtils.extractString
+    // - getExprTypeSafe -> ExprUtils.getExprTypeSafe
+    // - extractVarName -> ExprUtils.extractIdentName
 }
 
 #end

@@ -42,6 +42,8 @@ class Constants {
 
     // ==========================================================================
     // N64 Config Limits
+    // IMPORTANT: These values must match arm.n64.utils.N64_CONFIG in Python.
+    // If you change these, update utils.py to maintain parity.
     // ==========================================================================
 
     /** Maximum physics bodies in a scene */

@@ -173,7 +173,9 @@ class TraitEmitter:
         if method:
             return method(node)
 
-        # Unknown node type - skip silently (may be intentional no-op)
+        # Unknown node type - warn and skip
+        if node_type and node_type != "skip":
+            log.warn(f"N64 Trait Emitter: Unknown IR node type '{node_type}' - skipping")
         return ""
 
     def emit_list(self, nodes: List[Dict]) -> List[str]:
@@ -271,7 +273,14 @@ class TraitEmitter:
         return "NULL"
 
     def emit_skip(self, node: Dict) -> str:
-        """Skip node - represents code that should not be emitted for N64."""
+        """Skip node - represents code that should not be emitted for N64.
+
+        If the node has a 'warn' field, emit it as a C comment so users
+        can see what was skipped.
+        """
+        warn = node.get("warn")
+        if warn:
+            return f"/* WARNING: {warn} */"
         return ""
 
     # =========================================================================

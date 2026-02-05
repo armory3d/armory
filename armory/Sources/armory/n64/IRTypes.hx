@@ -73,6 +73,7 @@ typedef IRNode = {
     ?cName: String,    // C function name for trait_method_call
     ?trait: String,    // Trait name for trait_method_call
     ?parent: String,   // Parent trait name for inherited_method_call
+    ?warn: String,     // Warning message to emit as C comment (for skip nodes)
     // Inherited member fields
     ?memberType: String,  // Haxe type of inherited member
     ?owner: String,       // Parent trait that owns this member

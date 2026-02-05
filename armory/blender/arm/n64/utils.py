@@ -37,11 +37,14 @@ def c_float(value) -> str:
 # Build Helpers
 # =============================================================================
 
+# N64 Configuration Limits
+# IMPORTANT: These values must match armory.n64.mapping.Constants in Haxe.
+# If you change these, update Constants.hx to maintain parity.
 N64_CONFIG = {
-    'max_physics_bodies': 32,
-    'max_button_subscribers': 16,
-    'max_contact_subscribers': 4,   # Max handlers per rigid body
-    'max_contact_bodies': 16,       # Max rigid bodies with contact subscriptions
+    'max_physics_bodies': 32,        # Constants.MAX_PHYSICS_BODIES
+    'max_button_subscribers': 16,    # Constants.MAX_BUTTON_SUBSCRIBERS
+    'max_contact_subscribers': 4,    # Constants.MAX_CONTACT_SUBSCRIBERS (per body)
+    'max_contact_bodies': 16,        # Constants.MAX_CONTACT_BODIES
 }
 
 def get_physics_debug_mode() -> int:
@@ -387,7 +390,15 @@ def compute_static_flags(scene_data: dict, trait_info: dict) -> None:
 # =============================================================================
 
 def extract_collision_mesh(obj: bpy.types.Object, max_triangles: int = 256) -> Optional[dict]:
-    """Extract triangulated mesh data for physics collision."""
+    """Extract triangulated mesh data for physics collision.
+
+    Args:
+        obj: Blender mesh object to extract collision data from.
+        max_triangles: Maximum triangle count for collision mesh (default 256).
+                       This limit exists because N64 collision detection is
+                       CPU-intensive; complex meshes should use simplified
+                       collision geometry or primitive shapes instead.
+    """
     if obj.type != 'MESH':
         return None
 

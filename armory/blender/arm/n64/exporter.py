@@ -48,7 +48,10 @@ else:
 class N64Exporter:
     """N64 Exporter - Orchestrates export of Armory scenes to N64 C code."""
 
-    # Font size conversion factor: Kha pixel height -> mkfont point size
+    # Font size conversion factor: Kha pixel height -> mkfont point size.
+    # libdragon's mkfont uses point sizes while Kha uses pixel heights.
+    # This factor accounts for the difference (empirically determined to
+    # produce visually equivalent text sizes on N64).
     FONT_SIZE_SCALE = 0.82
 
     def __init__(self):

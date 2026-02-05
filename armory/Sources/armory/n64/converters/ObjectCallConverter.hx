@@ -27,14 +27,14 @@ class ObjectCallConverter implements ICallConverter {
                 // object.remove() -> object_remove((ArmObject*)obj)
                 { type: "object_call", c_code: "object_remove((ArmObject*)obj)" };
             case "getTrait", "addTrait", "removeTrait":
-                // Trait system not supported on N64 - skip silently
-                { type: "skip" };
+                // Trait system not supported on N64
+                { type: "skip", warn: method + "() not supported on N64" };
             case "getChildren", "getChild":
-                // Children access not yet supported - skip
-                { type: "skip" };
+                // Children access not yet supported
+                { type: "skip", warn: method + "() not yet supported on N64" };
             default:
-                // Unknown object method - skip to avoid codegen fallback
-                { type: "skip" };
+                // Unknown object method
+                { type: "skip", warn: "object." + method + "() not supported on N64" };
         };
     }
 }
