@@ -20,7 +20,8 @@ static struct {
     float channel_volumes[AUDIO_MIXER_CHANNELS];
     int8_t channel_mix_mapping[AUDIO_MIXER_CHANNELS];
     int8_t channel_sound_slot[AUDIO_MIXER_CHANNELS];
-    uint8_t channel_in_use;  // Bitfield for up to 8 channels
+    uint8_t channel_in_use;       // Bitfield for up to 8 channels
+    uint8_t channel_stereo_main;  // Bitfield: 1 = this channel is stereo primary (uses ch+1)
 } state;
 
 static SoundSlot sound_slots[MAX_LOADED_SOUNDS];
@@ -73,10 +74,28 @@ void arm_audio_update(void)
 {
     uint8_t mask = state.channel_in_use;
     for (int ch = 0; mask; ch++, mask >>= 1) {
-        if ((mask & 1) && !mixer_ch_playing(ch)) {
+        if (!(mask & 1)) continue;
+
+        // Skip stereo sub-channels (ch+1 of a stereo pair) - they're managed by primary
+        if (ch > 0 && (state.channel_stereo_main & (1 << (ch - 1)))) {
+            continue;
+        }
+
+        if (!mixer_ch_playing(ch)) {
+            // Release this channel
             state.channel_in_use &= ~(1 << ch);
             state.channel_mix_mapping[ch] = -1;
             state.channel_sound_slot[ch] = -1;
+
+            // If this was stereo primary, also release the sub-channel
+            if (state.channel_stereo_main & (1 << ch)) {
+                state.channel_stereo_main &= ~(1 << ch);
+                if (ch + 1 < AUDIO_MIXER_CHANNELS) {
+                    state.channel_in_use &= ~(1 << (ch + 1));
+                    state.channel_mix_mapping[ch + 1] = -1;
+                    state.channel_sound_slot[ch + 1] = -1;
+                }
+            }
         }
     }
 }
@@ -118,7 +137,9 @@ void arm_audio_start(ArmSoundHandle *handle)
     SoundSlot *slot = &sound_slots[handle->sound_slot];
     if (!slot->wav) return;
 
-    // Check if already playing
+    bool is_stereo = (slot->wav->wave.channels == 2);
+
+    // Check if already playing on some channel
     for (int ch = 0; ch < AUDIO_MIXER_CHANNELS; ch++) {
         if ((state.channel_in_use & (1 << ch)) &&
             state.channel_sound_slot[ch] == handle->sound_slot) {
@@ -130,12 +151,24 @@ void arm_audio_start(ArmSoundHandle *handle)
         }
     }
 
-    // Find free channel
+    // Find free channel(s)
     int ch = -1;
-    for (int i = 0; i < AUDIO_MIXER_CHANNELS; i++) {
-        if (!(state.channel_in_use & (1 << i))) {
-            ch = i;
-            break;
+    if (is_stereo) {
+        // Stereo needs TWO consecutive free channels
+        for (int i = 0; i < AUDIO_MIXER_CHANNELS - 1; i++) {
+            uint8_t pair_mask = (1 << i) | (1 << (i + 1));
+            if ((state.channel_in_use & pair_mask) == 0) {
+                ch = i;
+                break;
+            }
+        }
+    } else {
+        // Mono needs one free channel
+        for (int i = 0; i < AUDIO_MIXER_CHANNELS; i++) {
+            if (!(state.channel_in_use & (1 << i))) {
+                ch = i;
+                break;
+            }
         }
     }
     if (ch < 0) return;
@@ -143,11 +176,20 @@ void arm_audio_start(ArmSoundHandle *handle)
     wav64_set_loop(slot->wav, slot->loop);
     wav64_play(slot->wav, ch);
 
+    // Mark channel(s) as in use
     state.channel_in_use |= (1 << ch);
     state.channel_mix_mapping[ch] = handle->mix_channel;
     state.channel_sound_slot[ch] = handle->sound_slot;
     state.channel_volumes[ch] = handle->volume;
     apply_channel_volume(ch);
+
+    if (is_stereo) {
+        // Mark stereo primary and reserve the sub-channel
+        state.channel_stereo_main |= (1 << ch);
+        state.channel_in_use |= (1 << (ch + 1));
+        state.channel_mix_mapping[ch + 1] = handle->mix_channel;
+        state.channel_sound_slot[ch + 1] = handle->sound_slot;
+    }
 
     handle->channel = ch;
     handle->finished = false;
@@ -160,18 +202,37 @@ void arm_audio_replay(ArmSoundHandle *handle)
     SoundSlot *slot = &sound_slots[handle->sound_slot];
     if (!slot->wav) return;
 
+    bool is_stereo = (slot->wav->wave.channels == 2);
+
     // Stop current playback
     if (handle->channel >= 0 && (state.channel_in_use & (1 << handle->channel))) {
         mixer_ch_stop(handle->channel);
         state.channel_in_use &= ~(1 << handle->channel);
+        // If stereo, also release sub-channel
+        if (state.channel_stereo_main & (1 << handle->channel)) {
+            state.channel_stereo_main &= ~(1 << handle->channel);
+            if (handle->channel + 1 < AUDIO_MIXER_CHANNELS) {
+                state.channel_in_use &= ~(1 << (handle->channel + 1));
+            }
+        }
     }
 
-    // Find free channel
+    // Find free channel(s)
     int ch = -1;
-    for (int i = 0; i < AUDIO_MIXER_CHANNELS; i++) {
-        if (!(state.channel_in_use & (1 << i))) {
-            ch = i;
-            break;
+    if (is_stereo) {
+        for (int i = 0; i < AUDIO_MIXER_CHANNELS - 1; i++) {
+            uint8_t pair_mask = (1 << i) | (1 << (i + 1));
+            if ((state.channel_in_use & pair_mask) == 0) {
+                ch = i;
+                break;
+            }
+        }
+    } else {
+        for (int i = 0; i < AUDIO_MIXER_CHANNELS; i++) {
+            if (!(state.channel_in_use & (1 << i))) {
+                ch = i;
+                break;
+            }
         }
     }
     if (ch < 0) return;
@@ -183,6 +244,13 @@ void arm_audio_replay(ArmSoundHandle *handle)
     state.channel_sound_slot[ch] = handle->sound_slot;
     state.channel_volumes[ch] = handle->volume;
     apply_channel_volume(ch);
+
+    if (is_stereo) {
+        state.channel_stereo_main |= (1 << ch);
+        state.channel_in_use |= (1 << (ch + 1));
+        state.channel_mix_mapping[ch + 1] = handle->mix_channel;
+        state.channel_sound_slot[ch + 1] = handle->sound_slot;
+    }
 
     handle->channel = ch;
     handle->finished = false;
@@ -216,6 +284,16 @@ void arm_audio_stop(ArmSoundHandle *handle)
         state.channel_in_use &= ~(1 << ch);
         state.channel_mix_mapping[ch] = -1;
         state.channel_sound_slot[ch] = -1;
+
+        // If stereo primary, also release sub-channel
+        if (state.channel_stereo_main & (1 << ch)) {
+            state.channel_stereo_main &= ~(1 << ch);
+            if (ch + 1 < AUDIO_MIXER_CHANNELS) {
+                state.channel_in_use &= ~(1 << (ch + 1));
+                state.channel_mix_mapping[ch + 1] = -1;
+                state.channel_sound_slot[ch + 1] = -1;
+            }
+        }
     }
 
     handle->finished = true;
@@ -287,6 +365,7 @@ void arm_audio_stop_all(void)
         }
     }
     state.channel_in_use = 0;
+    state.channel_stereo_main = 0;
     memset(state.channel_mix_mapping, -1, sizeof(state.channel_mix_mapping));
     memset(state.channel_sound_slot, -1, sizeof(state.channel_sound_slot));
 }
