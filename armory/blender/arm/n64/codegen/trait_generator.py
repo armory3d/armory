@@ -776,6 +776,13 @@ class TraitCodeGenerator:
         decls.append(f"void {self.c_name}_on_add(void* obj, void* data);")
         decls.append(f"void {self.c_name}_on_ready(void* obj, void* data);")
         decls.append(f"void {self.c_name}_on_fixed_update(void* obj, float dt, void* data);")
+
+        # Add declarations for individual fixed update functions if trait has multiple dynamic fixed updates
+        dynamic_fixed_updates = self.meta.get("dynamic_fixed_updates", [])
+        for callback_name in dynamic_fixed_updates:
+            func_name = f"on_fixed_update_{callback_name}"
+            decls.append(f"void {self.c_name}_{func_name}(void* obj, float dt, void* data);")
+
         decls.append(f"void {self.c_name}_on_update(void* obj, float dt, void* data);")
 
         # Add declarations for individual update functions if trait has multiple dynamic updates
@@ -968,12 +975,40 @@ class TraitCodeGenerator:
         impl_lines.append("")
 
         # on_fixed_update - dt before data (ArmTraitFixedUpdateFn)
-        event_nodes = self.events.get("on_fixed_update", [])
-        body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
-        impl_lines.append(f"void {self.c_name}_on_fixed_update(void* obj, float dt, void* data) {{")
-        impl_lines.append(body)
-        impl_lines.append("}")
-        impl_lines.append("")
+        # Check if we have multiple dynamic fixed update functions
+        dynamic_fixed_updates = self.meta.get("dynamic_fixed_updates", [])
+
+        if dynamic_fixed_updates and len(dynamic_fixed_updates) > 0:
+            # Multiple fixed update functions - generate dispatcher that calls each enabled sub-update
+            impl_lines.append(f"void {self.c_name}_on_fixed_update(void* obj, float dt, void* data) {{")
+            impl_lines.append(f"    {self.c_name}Data* d = ({self.c_name}Data*)data;")
+            for callback_name in dynamic_fixed_updates:
+                flag_name = f"_fixed_update_{callback_name}_enabled"
+                func_name = f"on_fixed_update_{callback_name}"
+                impl_lines.append(f"    if (d->{flag_name}) {self.c_name}_{func_name}(obj, dt, data);")
+            impl_lines.append("}")
+            impl_lines.append("")
+
+            # Generate each individual fixed update function
+            for callback_name in dynamic_fixed_updates:
+                func_name = f"on_fixed_update_{callback_name}"
+                event_nodes = self.events.get(func_name, [])
+                body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
+                impl_lines.append(f"void {self.c_name}_{func_name}(void* obj, float dt, void* data) {{")
+                impl_lines.append(body)
+                impl_lines.append("}")
+                impl_lines.append("")
+        else:
+            # Single/no fixed update - original behavior
+            event_nodes = self.events.get("on_fixed_update", [])
+            body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
+            impl_lines.append(f"void {self.c_name}_on_fixed_update(void* obj, float dt, void* data) {{")
+            # Add early return guard if trait uses removeFixedUpdate()
+            if self.meta.get("has_remove_fixed_update", False):
+                impl_lines.append(f"    if (!(({self.c_name}Data*)data)->_fixed_update_enabled) return;")
+            impl_lines.append(body)
+            impl_lines.append("}")
+            impl_lines.append("")
 
         # on_update - dt before data (ArmTraitUpdateFn)
         # Check if we have multiple dynamic update functions

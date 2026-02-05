@@ -160,9 +160,11 @@ typedef TraitMeta = {
     signal_handlers: Array<SignalHandlerMeta>, // functions used as signal callbacks
     global_signals: Array<String>, // global signals used (e.g., "g_gameevents_gemCollected")
     has_remove_update: Bool,       // True if trait calls removeUpdate() - adds _update_enabled guard
+    has_remove_fixed_update: Bool, // True if trait calls removeFixedUpdate() - adds _fixed_update_enabled guard
     has_remove_late_update: Bool,  // True if trait calls removeLateUpdate()
     has_remove_render2d: Bool,     // True if trait calls removeRender2D() - adds _render2d_enabled guard
-    ?dynamic_updates: Array<String> // Names of dynamically registered update functions (e.g., ["update", "winUpdate"])
+    ?dynamic_updates: Array<String>, // Names of dynamically registered update functions (e.g., ["update", "winUpdate"])
+    ?dynamic_fixed_updates: Array<String> // Names of dynamically registered fixed update functions
 }
 
 /**

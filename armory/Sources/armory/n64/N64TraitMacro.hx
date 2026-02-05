@@ -264,9 +264,11 @@ class TraitExtractor implements IExtractorContext {
             signal_handlers: [],
             global_signals: [],
             has_remove_update: false,
+            has_remove_fixed_update: false,
             has_remove_late_update: false,
             has_remove_render2d: false,
-            dynamic_updates: []
+            dynamic_updates: [],
+            dynamic_fixed_updates: []
         };
 
         // Generate C-safe name early so it's available during extraction
@@ -381,7 +383,20 @@ class TraitExtractor implements IExtractorContext {
             extractEvents("on_update", lifecycles.update);
         }
 
-        if (lifecycles.fixed_update != null) {
+        // Handle multiple fixed update functions - each gets its own event
+        var fixedUpdateCallbackNames = [for (k in lifecycles.fixed_updates.keys()) k];
+        if (fixedUpdateCallbackNames.length > 0) {
+            // We have named fixed update functions - generate separate events for each
+            for (callbackName in fixedUpdateCallbackNames) {
+                var body = lifecycles.fixed_updates.get(callbackName);
+                if (body != null) {
+                    // Use format: on_fixed_update_functionName
+                    extractEvents("on_fixed_update_" + callbackName, body);
+                    meta.dynamic_fixed_updates.push(callbackName);
+                }
+            }
+        } else if (lifecycles.fixed_update != null) {
+            // Fallback for inline/anonymous fixed update functions
             extractEvents("on_fixed_update", lifecycles.fixed_update);
         }
         if (lifecycles.late_update != null) {
@@ -428,6 +443,30 @@ class TraitExtractor implements IExtractorContext {
                 defaultValue: { type: "bool", value: hasStaticLateUpdate }
             });
             memberNames.push("_late_update_enabled");
+        }
+
+        // Auto-add per-callback _fixed_update_<name>_enabled members if trait has multiple fixed update functions
+        // Each fixed update function gets its own enabled flag for independent enable/disable
+        if (meta.dynamic_fixed_updates.length > 0) {
+            for (callbackName in meta.dynamic_fixed_updates) {
+                var flagName = "_fixed_update_" + callbackName + "_enabled";
+                var isStaticallyRegistered = staticLifecycles.static_fixed_updates.exists(callbackName);
+                members.set(flagName, {
+                    haxeType: "Bool",
+                    ctype: "bool",
+                    defaultValue: { type: "bool", value: isStaticallyRegistered }
+                });
+                memberNames.push(flagName);
+            }
+        } else if (meta.has_remove_fixed_update) {
+            // Fallback: single _fixed_update_enabled for anonymous/inline fixed update functions
+            var hasStaticFixedUpdate = staticLifecycles.fixed_update != null;
+            members.set("_fixed_update_enabled", {
+                haxeType: "Bool",
+                ctype: "bool",
+                defaultValue: { type: "bool", value: hasStaticFixedUpdate }
+            });
+            memberNames.push("_fixed_update_enabled");
         }
 
         // Auto-add _render2d_enabled member if trait uses removeRender2D() or notifyOnRender2D() at runtime
@@ -562,8 +601,8 @@ class TraitExtractor implements IExtractorContext {
         }
     }
 
-    function findLifecycles():{init:Expr, add:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, updates:Map<String, Expr>} {
-        var result = {init: null, add: null, update: null, fixed_update: null, late_update: null, remove: null, render2d: null, updates: new Map<String, Expr>()};
+    function findLifecycles():{init:Expr, add:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, updates:Map<String, Expr>, fixed_updates:Map<String, Expr>} {
+        var result = {init: null, add: null, update: null, fixed_update: null, late_update: null, remove: null, render2d: null, updates: new Map<String, Expr>(), fixed_updates: new Map<String, Expr>()};
 
         // Scan ALL methods for lifecycle registrations (for code extraction)
         for (methodName in methodMap.keys()) {
@@ -578,8 +617,8 @@ class TraitExtractor implements IExtractorContext {
 
     // Find only STATICALLY registered lifecycles (called from constructor/init path)
     // Used to determine initial enabled state for dynamic toggle flags
-    function findStaticLifecycles():{init:Expr, add:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, static_updates:Map<String, Bool>} {
-        var result = {init: null, add: null, update: null, fixed_update: null, late_update: null, remove: null, render2d: null, static_updates: new Map<String, Bool>()};
+    function findStaticLifecycles():{init:Expr, add:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, static_updates:Map<String, Bool>, static_fixed_updates:Map<String, Bool>} {
+        var result = {init: null, add: null, update: null, fixed_update: null, late_update: null, remove: null, render2d: null, static_updates: new Map<String, Bool>(), static_fixed_updates: new Map<String, Bool>()};
 
         // Only scan constructor - lifecycle registrations elsewhere are "dynamic"
         var ctor = methodMap.get("new");
@@ -591,7 +630,7 @@ class TraitExtractor implements IExtractorContext {
     }
 
     // Scan for lifecycle registrations (finds all, for code extraction)
-    function scanForLifecycles(e:Expr, result:{init:Expr, add:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, updates:Map<String, Expr>}, inInitPath:Bool):Void {
+    function scanForLifecycles(e:Expr, result:{init:Expr, add:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, updates:Map<String, Expr>, fixed_updates:Map<String, Expr>}, inInitPath:Bool):Void {
         if (e == null) return;
 
         switch (e.expr) {
@@ -610,7 +649,14 @@ class TraitExtractor implements IExtractorContext {
                             }
                             // Also keep backward compatibility with single update field
                             result.update = body;
-                        case "notifyOnFixedUpdate": result.fixed_update = body;
+                        case "notifyOnFixedUpdate":
+                            // Track fixed update callbacks by their function name
+                            var callbackName = getCallbackName(params[0]);
+                            if (callbackName != null && body != null) {
+                                result.fixed_updates.set(callbackName, body);
+                            }
+                            // Also keep backward compatibility with single fixed_update field
+                            result.fixed_update = body;
                         case "notifyOnLateUpdate": result.late_update = body;
                         case "notifyOnRemove": result.remove = body;
                         case "notifyOnRender2D": result.render2d = body;
@@ -633,7 +679,7 @@ class TraitExtractor implements IExtractorContext {
     }
 
     // Scan for STATIC lifecycle registrations only (for initial enabled state)
-    function scanForStaticLifecycles(e:Expr, result:{init:Expr, add:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, static_updates:Map<String, Bool>}, inInitPath:Bool):Void {
+    function scanForStaticLifecycles(e:Expr, result:{init:Expr, add:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, static_updates:Map<String, Bool>, static_fixed_updates:Map<String, Bool>}, inInitPath:Bool):Void {
         if (e == null) return;
 
         switch (e.expr) {
@@ -653,7 +699,13 @@ class TraitExtractor implements IExtractorContext {
                                     result.static_updates.set(callbackName, true);
                                 }
                                 result.update = body;
-                            case "notifyOnFixedUpdate": result.fixed_update = body;
+                            case "notifyOnFixedUpdate":
+                                // Track static fixed update callbacks by name
+                                var callbackName = getCallbackName(params[0]);
+                                if (callbackName != null) {
+                                    result.static_fixed_updates.set(callbackName, true);
+                                }
+                                result.fixed_update = body;
                             case "notifyOnLateUpdate": result.late_update = body;
                             case "notifyOnRemove": result.remove = body;
                             case "notifyOnRender2D": result.render2d = body;
@@ -1769,9 +1821,18 @@ class TraitExtractor implements IExtractorContext {
                 if (funcName == "notifyOnInit" ||
                     funcName == "notifyOnFixedUpdate" || funcName == "notifyOnLateUpdate" ||
                     funcName == "notifyOnRemove" || funcName == "notifyOnAdd" ||
-                    funcName == "notifyOnRender" ||
-                    funcName == "removeFixedUpdate") {
+                    funcName == "notifyOnRender") {
                     return { type: "skip" };
+                }
+
+                // removeFixedUpdate(callback) -> set _fixed_update_enabled = false
+                if (funcName == "removeFixedUpdate") {
+                    meta.has_remove_fixed_update = true;
+                    var callbackName:String = null;
+                    if (params.length > 0) {
+                        callbackName = extractStringArg(params[0]);
+                    }
+                    return { type: "remove_fixed_update", value: callbackName };
                 }
 
                 // removeUpdate(callback) -> set _update_enabled = false

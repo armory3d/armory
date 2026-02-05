@@ -304,6 +304,16 @@ class TraitEmitter:
             # Single/anonymous update - use generic flag
             return f"(({self.data_type}*)data)->_update_enabled = false;"
 
+    def emit_remove_fixed_update(self, node: Dict) -> str:
+        """removeFixedUpdate(callback) -> disable specific on_fixed_update callback via _fixed_update_<name>_enabled flag."""
+        callback_name = node.get("value")
+        if callback_name:
+            # Multiple fixed update functions - use specific flag
+            return f"(({self.data_type}*)data)->_fixed_update_{callback_name}_enabled = false;"
+        else:
+            # Single/anonymous fixed update - use generic flag
+            return f"(({self.data_type}*)data)->_fixed_update_enabled = false;"
+
     def emit_remove_late_update(self, node: Dict) -> str:
         """removeLateUpdate() -> disable on_late_update callback via _late_update_enabled flag."""
         return f"(({self.data_type}*)data)->_late_update_enabled = false;"
@@ -321,6 +331,16 @@ class TraitEmitter:
         else:
             # Single/anonymous update - use generic flag
             return f"(({self.data_type}*)data)->_update_enabled = true;"
+
+    def emit_notify_fixed_update(self, node: Dict) -> str:
+        """notifyOnFixedUpdate(callback) at runtime -> re-enable specific on_fixed_update callback."""
+        callback_name = node.get("value")
+        if callback_name:
+            # Multiple fixed update functions - use specific flag
+            return f"(({self.data_type}*)data)->_fixed_update_{callback_name}_enabled = true;"
+        else:
+            # Single/anonymous fixed update - use generic flag
+            return f"(({self.data_type}*)data)->_fixed_update_enabled = true;"
 
     def emit_notify_render2d(self, node: Dict) -> str:
         """notifyOnRender2D() at runtime -> re-enable on_render2d callback."""
