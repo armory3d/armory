@@ -4,7 +4,7 @@ Autoload Emitter - Extends TraitEmitter for autoload classes.
 Autoloads use global variables prefixed with c_name instead of a data pointer.
 """
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from arm.n64.codegen.trait_emitter import TraitEmitter
 
@@ -16,10 +16,12 @@ class AutoloadEmitter(TraitEmitter):
     global variables prefixed with c_name (music_volume, music_play(), etc.)
     """
 
-    def __init__(self, autoload_name: str, c_name: str, member_names: List[str], function_names: List[str], member_types: Dict[str, str] = None):
+    def __init__(self, autoload_name: str, c_name: str, member_names: List[str], function_names: List[str],
+                 member_types: Dict[str, str] = None, function_info: Dict[str, Dict] = None):
         super().__init__(autoload_name, c_name, member_names, is_trait=False)
         self.function_names = function_names
         self.member_types = member_types or {}
+        self.function_info = function_info or {}  # {func_name: {params: [{name, ctype, optional, default_value}]}}
         self.param_types: Dict[str, str] = {}  # Populated when emitting a function
 
     def emit_member(self, node: Dict) -> str:
@@ -141,23 +143,57 @@ class AutoloadEmitter(TraitEmitter):
                     return f"{self.c_name}_{field}"
                 return field
 
+            # Check for .finished access on ArmSoundHandle member variables
+            # This needs to check actual channel status, not cached flag
+            if field == "finished" and self._is_sound_handle(obj_node):
+                obj = self.emit(obj_node)
+                return f"!arm_audio_is_playing(&{obj})"
+
             # Regular field access
             obj = self.emit(obj_node)
             if obj:
+                # Handle map_get results - they return pointers so use ->
+                if obj_type == "map_get":
+                    return f"({obj})->{field}"
+                # Handle local pointer variables (e.g., sound handle from array_get_ptr)
+                if obj_type == "ident" and obj_value in self.local_pointer_vars:
+                    # Special case: .finished on ArmSoundHandle should check actual channel status
+                    # arm_audio_is_playing() returns true if playing, updates finished flag
+                    if field == "finished":
+                        return f"!arm_audio_is_playing({obj})"
+                    return f"{obj}->{field}"
                 return f"({obj}).{field}"
 
         return field
 
     def emit_call(self, node: Dict) -> str:
-        """Function call - prefix autoload functions with c_name."""
+        """Function call - prefix autoload functions with c_name.
+
+        Also handles default parameters by filling in missing arguments.
+        """
         func_name = node.get("value", "")
         if func_name:
-            # Prefix if it's one of this autoload's functions
-            if func_name in self.function_names:
-                func_name = f"{self.c_name}_{func_name}"
             # IR uses 'args' for call arguments
             args = node.get("args", []) or node.get("children", [])
             arg_strs = [self.emit(a) for a in args if self.emit(a)]
+
+            # Check if this is an autoload function with default parameters
+            if func_name in self.function_info:
+                func_params = self.function_info[func_name].get("params", [])
+                # Fill in default values for missing arguments
+                while len(arg_strs) < len(func_params):
+                    param = func_params[len(arg_strs)]
+                    default_val = param.get("default_value")
+                    if default_val is not None:
+                        # Emit the default value IR node
+                        arg_strs.append(self.emit(default_val))
+                    else:
+                        # No default - stop (will cause compile error if needed)
+                        break
+
+            # Prefix if it's one of this autoload's functions
+            if func_name in self.function_names:
+                func_name = f"{self.c_name}_{func_name}"
             return f"{func_name}({', '.join(arg_strs)})"
         return ""
 

@@ -139,14 +139,14 @@ void arm_audio_start(ArmSoundHandle *handle)
 
     bool is_stereo = (slot->wav->wave.channels == 2);
 
-    // Check if already playing on some channel
-    for (int ch = 0; ch < AUDIO_MIXER_CHANNELS; ch++) {
-        if ((state.channel_in_use & (1 << ch)) &&
-            state.channel_sound_slot[ch] == handle->sound_slot) {
-            handle->channel = ch;
+    // Check if THIS handle's channel is still playing (not any channel with same sound)
+    // This allows multiple handles with the same sound to play simultaneously (channel pooling)
+    if (handle->channel >= 0 && handle->channel < AUDIO_MIXER_CHANNELS) {
+        if ((state.channel_in_use & (1 << handle->channel)) &&
+            state.channel_sound_slot[handle->channel] == handle->sound_slot &&
+            mixer_ch_playing(handle->channel)) {
+            // This specific handle's channel is still playing - don't restart
             handle->finished = false;
-            state.channel_volumes[ch] = handle->volume;
-            apply_channel_volume(ch);
             return;
         }
     }

@@ -202,7 +202,9 @@ typedef AutoloadFunctionIR = {
 typedef AutoloadParamIR = {
     name: String,            // Parameter name
     haxeType: String,        // Haxe type
-    ctype: String            // C type
+    ctype: String,           // C type
+    ?optional: Bool,         // Whether parameter is optional (?param or has default)
+    ?defaultValue: IRNode    // Default value expression if optional
 }
 
 typedef AutoloadMeta = {

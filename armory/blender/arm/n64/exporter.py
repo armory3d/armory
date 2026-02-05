@@ -181,6 +181,7 @@ class N64Exporter:
             self._write_signal()
             self._write_time()
             self._write_tween()
+            self._write_containers()
 
             # Phase 14: Cleanup materials
             self._reset_materials_to_bsdf()
@@ -328,3 +329,8 @@ class N64Exporter:
         """Copy tween system files."""
         n64_utils.copy_src('tween.c', 'src/system')
         n64_utils.copy_src('tween.h', 'src/system')
+
+    def _write_containers(self):
+        """Copy container utility headers (arrays, maps)."""
+        n64_utils.copy_src('arm_array.h', 'src/system')
+        n64_utils.copy_src('arm_map.h', 'src/system')

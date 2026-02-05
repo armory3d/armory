@@ -108,11 +108,20 @@ class N64MacroBase {
     }
 
     /**
-     * Convert a ComplexType to its string name (simplified).
+     * Convert a ComplexType to its string name (including type parameters).
+     * E.g., Array<BaseChannelHandle> -> "Array<BaseChannelHandle>"
+     *       Map<String, Array<Int>> -> "Map<String, Array<Int>>"
      */
     public static function complexTypeToString(ct:ComplexType):String {
         return switch (ct) {
-            case TPath(p): p.name;
+            case TPath(p):
+                if (p.params == null || p.params.length == 0) {
+                    p.name;
+                } else {
+                    // Build parameterized type string: Name<Param1, Param2>
+                    var paramStrings = [for (tp in p.params) typeParamToString(tp)];
+                    p.name + "<" + paramStrings.join(", ") + ">";
+                }
             case TFunction(args, ret):
                 // Handle function types like Void->Void, Float->Void
                 var argTypes = [for (arg in args) complexTypeToString(arg)];
@@ -123,6 +132,16 @@ class N64MacroBase {
                     argTypes.join("->") + "->" + retType;
                 }
             default: "Dynamic";
+        };
+    }
+
+    /**
+     * Convert a TypeParam to string.
+     */
+    static function typeParamToString(tp:TypeParam):String {
+        return switch (tp) {
+            case TPType(ct): complexTypeToString(ct);
+            case TPExpr(e): "Dynamic"; // Expression type params not supported
         };
     }
 

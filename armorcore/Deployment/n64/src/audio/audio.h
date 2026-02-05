@@ -35,6 +35,18 @@ void arm_audio_set_mix_volume(int mix_channel, float volume);
 float arm_audio_get_mix_volume(int mix_channel);
 void arm_audio_stop_all(void);
 
+// ============================================================================
+// Sound Handle Array and Map types for channel pooling
+// ============================================================================
+#include "../system/arm_array.h"
+#include "../system/arm_map.h"
+
+// Array of sound handles (for channel pooling, max 8 channels per sound)
+ARM_ARRAY_DECLARE(ArmSoundHandle, ArmSoundHandleArray, 8)
+
+// Map from string key to sound handle array (for named channel groups)
+ARM_MAP_DECLARE(ArmSoundHandleArray, ArmSoundChannelMap, 16)
+
 #ifdef __cplusplus
 }
 #endif

@@ -23,6 +23,8 @@ import armory.n64.converters.StdCallConverter;
 import armory.n64.converters.AutoloadCallConverter;
 import armory.n64.converters.AudioCallConverter;
 import armory.n64.converters.TweenCallConverter;
+import armory.n64.converters.MapCallConverter;
+import armory.n64.converters.ArrayCallConverter;
 
 using haxe.macro.ExprTools;
 using haxe.macro.TypeTools;
@@ -171,7 +173,9 @@ class N64AutoloadMacro {
                     paramsArr.push({
                         name: p.name,
                         type: p.haxeType,
-                        ctype: p.ctype
+                        ctype: p.ctype,
+                        optional: p.optional,
+                        default_value: p.defaultValue != null ? N64MacroBase.serializeIRNode(p.defaultValue) : null
                     });
                 }
                 functionsArr.push({
@@ -268,6 +272,8 @@ class AutoloadExtractor implements IExtractorContext {
             new AutoloadCallConverter(),
             new AudioCallConverter(),
             new TweenCallConverter(),
+            new MapCallConverter(),
+            new ArrayCallConverter(),
         ];
     }
 
@@ -410,7 +416,7 @@ class AutoloadExtractor implements IExtractorContext {
         if (SkipList.shouldSkipMember(name)) return null;
 
         var haxeType = t != null ? N64MacroBase.complexTypeToString(t) : "Dynamic";
-        
+
         // First check standard type map
         if (TypeMap.isSupported(haxeType)) {
             var defaultNode:IRNode = e != null ? exprToIR(e) : null;
@@ -442,15 +448,15 @@ class AutoloadExtractor implements IExtractorContext {
      */
     function resolveTraitCTypeFromComplexType(ct:ComplexType):String {
         if (ct == null) return null;
-        
+
         try {
             // Convert ComplexType to Type using the compiler's type resolution
             var type = Context.resolveType(ct, Context.currentPos());
             if (type == null) return null;
-            
+
             var classType = type.getClass();
             if (classType == null) return null;
-            
+
             if (extendsIronTrait(classType)) {
                 // Found a trait - compute c_name
                 var modulePath = classType.module;
@@ -520,7 +526,7 @@ class AutoloadExtractor implements IExtractorContext {
      */
     function extendsIronTrait(classType:ClassType):Bool {
         if (classType == null) return false;
-        
+
         var superClass = classType.superClass;
         while (superClass != null) {
             var superClassType = superClass.t.get();
@@ -542,10 +548,19 @@ class AutoloadExtractor implements IExtractorContext {
             var haxeType = arg.type != null ? N64MacroBase.complexTypeToString(arg.type) : "Dynamic";
             var ctype = TypeMap.getCType(haxeType);
             if (ctype == null) ctype = "void*"; // Unknown types become void*
+
+            // Handle optional parameters with default values
+            var defaultVal:IRNode = null;
+            if (arg.value != null) {
+                defaultVal = exprToIR(arg.value);
+            }
+
             params.push({
                 name: arg.name,
                 haxeType: haxeType,
-                ctype: ctype
+                ctype: ctype,
+                optional: arg.opt || arg.value != null,
+                defaultValue: defaultVal
             });
             // Track parameter types for local variable resolution
             localVarTypes.set(arg.name, haxeType);
@@ -633,6 +648,20 @@ class AutoloadExtractor implements IExtractorContext {
                         }
                     default:
                 }
+
+                // Check for Array.length on typed array expressions
+                if (field == "length") {
+                    var objType = getExprType(obj);
+                    if (TypeMap.isArrayType(objType)) {
+                        // Convert obj to IR first, then wrap with length access
+                        return {
+                            type: "field_access",
+                            value: "count",  // .length -> .count for C arrays
+                            object: exprToIR(obj)
+                        };
+                    }
+                }
+
                 return {
                     type: "field_access",
                     value: field,
@@ -643,6 +672,38 @@ class AutoloadExtractor implements IExtractorContext {
                 return convertCall(callExpr, params);
 
             case EArray(e1, e2):
+                // Check if this is a Map or Array access on a typed member
+                var objType = getExprType(e1);
+                if (TypeMap.isMapType(objType)) {
+                    var cType = TypeMap.getCType(objType);
+                    var mapExpr = getExprAccessPath(e1);
+                    return {
+                        type: "map_get",
+                        value: cType,
+                        props: { map_expr: mapExpr },
+                        children: [exprToIR(e2)]
+                    };
+                } else if (TypeMap.isArrayType(objType)) {
+                    var cType = TypeMap.getCType(objType);
+                    var arrayExpr = getExprAccessPath(e1);
+                    if (arrayExpr != "") {
+                        // Simple member/local array
+                        return {
+                            type: "array_get",
+                            value: cType,
+                            props: { array_expr: arrayExpr },
+                            children: [exprToIR(e2)]
+                        };
+                    } else {
+                        // Nested expression (e.g., channels[key][i])
+                        // Pass the inner expression as IR node
+                        return {
+                            type: "array_get_nested",
+                            value: cType,
+                            children: [exprToIR(e1), exprToIR(e2)]
+                        };
+                    }
+                }
                 return {
                     type: "array_access",
                     children: [exprToIR(e1), exprToIR(e2)]
@@ -732,6 +793,15 @@ class AutoloadExtractor implements IExtractorContext {
                     children: [exprToIR(econd), exprToIR(eif), exprToIR(eelse)]
                 };
 
+            case EArrayDecl(values):
+                // Empty array declaration: [] -> empty_array
+                // Non-empty array with values not yet supported
+                if (values.length == 0) {
+                    return { type: "empty_array" };
+                }
+                // For now, skip non-empty array literals
+                return { type: "skip" };
+
             case ENew(typePath, params):
                 // Handle constructor calls
                 var typeName = typePath.name;
@@ -817,9 +887,39 @@ class AutoloadExtractor implements IExtractorContext {
 
     public function getExprType(e:Expr):String {
         return switch (e.expr) {
-            case EConst(CIdent(s)): memberTypes.get(s);
+            case EConst(CIdent(s)):
+                // Check local vars first, then members
+                if (localVarTypes.exists(s)) localVarTypes.get(s);
+                else memberTypes.get(s);
             case EField(_, field): memberTypes.get(field);
+            case EArray(obj, _):
+                // For array access, get the element type
+                var objType = getExprType(obj);
+                if (TypeMap.isMapType(objType)) {
+                    var mapTypes = TypeMap.getMapTypes(objType);
+                    if (mapTypes != null) return mapTypes.value;
+                } else if (TypeMap.isArrayType(objType)) {
+                    return TypeMap.getArrayElementType(objType);
+                }
+                null;
             default: null;
+        };
+    }
+
+    /**
+     * Get the C access path for an expression (for member vs local).
+     * For autoloads, members become "c_name_member" (global variable).
+     * Locals remain just "member".
+     */
+    function getExprAccessPath(e:Expr):String {
+        return switch (e.expr) {
+            case EConst(CIdent(name)):
+                if (memberTypes.exists(name)) cName + "_" + name;
+                else name;
+            case EField(_, field):
+                cName + "_" + field;
+            default:
+                "";
         };
     }
 
@@ -929,6 +1029,10 @@ class AutoloadExtractor implements IExtractorContext {
     public function getEvents():Map<String, Array<IRNode>> {
         // Autoloads don't have trait-style events, return empty map
         return new Map();
+    }
+
+    public function isAutoload():Bool {
+        return true;
     }
 }
 

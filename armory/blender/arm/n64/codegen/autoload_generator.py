@@ -174,11 +174,18 @@ def _prepare_autoload_template_data(name: str, autoload_ir: dict) -> dict:
     meta = autoload_ir.get("meta", {})
     signals = meta.get("signals", [])
 
+    # Build function info dict for default parameter handling
+    function_info = {}
+    for f in functions:
+        function_info[f["name"]] = {
+            "params": f.get("params", [])
+        }
+
     # Create emitter for code generation - use AutoloadIREmitter for proper prefixing
     member_names = [m["name"] for m in members]
     member_types = {m["name"]: m.get("ctype", "int32_t") for m in members}
     function_names = [f["name"] for f in functions]
-    emitter = AutoloadEmitter(name, c_name, member_names, function_names, member_types)
+    emitter = AutoloadEmitter(name, c_name, member_names, function_names, member_types, function_info)
 
     # Helper to emit default value
     def emit_default_value(default: dict, ctype: str) -> str:
@@ -195,11 +202,18 @@ def _prepare_autoload_template_data(name: str, autoload_ir: dict) -> dict:
                 return "{-1, 0, -1, 1.0f, true}"  # channel=-1, mix_channel=0, sound_slot=-1, volume=1.0, finished=true
             elif ctype == "ArmTween*":
                 return "NULL"  # Tweens allocated in init, not at global scope
+            elif ctype.startswith("Arm") and (ctype.endswith("Map") or ctype.endswith("Array")):
+                return "{0}"  # Zero-initialize Map and Array types
             else:
                 return "0"
         # For tween_alloc nodes, we return NULL here (allocation happens in init)
         if isinstance(default, dict) and default.get("type") == "tween_alloc":
             return "NULL"
+        # For skip nodes (e.g., Map/Array with new keyword), use zero initialization
+        if isinstance(default, dict) and default.get("type") == "skip":
+            if ctype.startswith("Arm") and (ctype.endswith("Map") or ctype.endswith("Array")):
+                return "{0}"
+            return "0"
         return emitter.emit(default)
 
     # Helper to generate function declaration
@@ -226,6 +240,8 @@ def _prepare_autoload_template_data(name: str, autoload_ir: dict) -> dict:
         # Populate param_types for this function so emit_binop can detect string parameters
         params = func.get("params", [])
         emitter.param_types = {p.get("name", ""): p.get("ctype", "int32_t") for p in params}
+        # Clear local pointer vars from previous function
+        emitter.local_pointer_vars = set()
 
         body = func.get("body", [])
         for node in body:
@@ -233,10 +249,30 @@ def _prepare_autoload_template_data(name: str, autoload_ir: dict) -> dict:
             if code and code != "":
                 for line in code.split('\n'):
                     if line.strip():
-                        if not line.strip().endswith((';', '{', '}')):
-                            lines.append(f"    {line};")
-                        else:
+                        stripped = line.strip()
+                        # Check if this is a block structure (ends with { or starts a block closure })
+                        # vs a struct/array initializer (e.g., "Type var = {0}")
+                        if stripped.endswith(';'):
+                            # Already has semicolon
                             lines.append(f"    {line}")
+                        elif stripped.endswith('{'):
+                            # Opening block - no semicolon
+                            lines.append(f"    {line}")
+                        elif stripped == '}':
+                            # Closing block - no semicolon
+                            lines.append(f"    {line}")
+                        elif '= {' in stripped and stripped.endswith('}'):
+                            # Struct/array initializer - needs semicolon
+                            lines.append(f"    {line};")
+                        elif stripped.endswith('}'):
+                            # Could be initializer or block - if contains '=' assume initializer
+                            if '=' in stripped:
+                                lines.append(f"    {line};")
+                            else:
+                                lines.append(f"    {line}")
+                        else:
+                            # Normal statement - add semicolon
+                            lines.append(f"    {line};")
 
         # Clear param_types after processing
         emitter.param_types = {}

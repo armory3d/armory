@@ -30,6 +30,8 @@ import armory.n64.converters.AutoloadCallConverter;
 import armory.n64.converters.AudioCallConverter;
 import armory.n64.converters.TweenCallConverter;
 import armory.n64.converters.Graphics2CallConverter;
+import armory.n64.converters.MapCallConverter;
+import armory.n64.converters.ArrayCallConverter;
 
 using haxe.macro.ExprTools;
 using haxe.macro.TypeTools;
@@ -292,6 +294,8 @@ class TraitExtractor implements IExtractorContext {
             new AudioCallConverter(),
             new TweenCallConverter(),
             new Graphics2CallConverter(),
+            new MapCallConverter(),
+            new ArrayCallConverter(),
         ];
 
         // NOTE: We do NOT load inherited member types here to avoid triggering
@@ -927,6 +931,10 @@ class TraitExtractor implements IExtractorContext {
                 break;
             }
         }
+    }
+
+    public function isAutoload():Bool {
+        return false;  // Traits are not autoloads
     }
 
     public function inferExprType(e:Expr):String {
