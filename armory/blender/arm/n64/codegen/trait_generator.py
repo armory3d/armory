@@ -134,6 +134,7 @@ class TraitCodeGenerator:
         )
         self._tween_callbacks = []  # Collected tween callbacks from all events
         self._inherited_callbacks = []  # Collected callback wrappers for inherited method calls
+        self._signal_inline_callbacks = []  # Collected inline signal callbacks
 
     def _compute_virtual_methods(self) -> set:
         """Compute the set of method names that need vtable dispatch.
@@ -641,6 +642,123 @@ class TraitCodeGenerator:
             if struct_def:
                 lines.append(struct_def)
                 lines.append("")
+
+        return "\n".join(lines)
+
+    def _find_signal_inline_callbacks(self, nodes: list) -> list:
+        """Recursively find all inline signal callbacks in IR nodes.
+
+        Searches for signal_call and global_signal_call nodes that have
+        props.inline_callback defined (anonymous functions).
+        """
+        callbacks = []
+        for node in nodes:
+            if node is None:
+                continue
+            node_type = node.get("type", "")
+
+            # Check for signal connect nodes with inline callbacks
+            if node_type in ("signal_call", "global_signal_call"):
+                props = node.get("props", {})
+                inline_cb = props.get("inline_callback")
+                if inline_cb and isinstance(inline_cb, dict) and inline_cb.get("callback_name"):
+                    callbacks.append(inline_cb)
+
+            # Recurse into children
+            if "children" in node and node["children"]:
+                callbacks.extend(self._find_signal_inline_callbacks(node["children"]))
+            if "args" in node and node["args"]:
+                callbacks.extend(self._find_signal_inline_callbacks(node["args"]))
+            if "body" in node and isinstance(node.get("body"), list):
+                callbacks.extend(self._find_signal_inline_callbacks(node["body"]))
+            # Recurse into props values
+            if "props" in node and node["props"]:
+                for val in node["props"].values():
+                    if isinstance(val, list):
+                        callbacks.extend(self._find_signal_inline_callbacks(val))
+                    elif isinstance(val, dict) and "type" in val:
+                        callbacks.extend(self._find_signal_inline_callbacks([val]))
+        return callbacks
+
+    def _collect_signal_inline_callbacks(self):
+        """Scan all events AND methods for inline signal callbacks."""
+        self._collect_callbacks_from_all_bodies(
+            self._signal_inline_callbacks,
+            self._find_signal_inline_callbacks
+        )
+
+    def _generate_signal_inline_callback(self, callback_info: dict) -> str:
+        """Generate a static C callback for an inline signal callback.
+
+        The callback has ArmSignalHandler signature: void (*)(void *ctx, void *payload)
+        For traits, data can be cast to the trait data struct.
+        """
+        cb_name = callback_info.get("callback_name", "")
+        body_nodes = callback_info.get("body", [])
+        params = callback_info.get("params", [])
+
+        if not cb_name or not body_nodes:
+            return ""
+
+        lines = []
+        lines.append(f"static void {self.c_name}_{cb_name}(void* ctx, void* payload) {{")
+        lines.append("    (void)ctx;")
+
+        # Generate parameter declarations from payload
+        if not params:
+            lines.append("    (void)payload;")
+        elif len(params) == 1:
+            # Single parameter - cast payload directly
+            p = params[0]
+            pname = p.get("name", "arg")
+            ctype = p.get("ctype", "void*")
+            if ctype == "const char*":
+                lines.append(f"    const char* {pname} = payload ? (const char*)payload : \"\";")
+            elif ctype in ("int32_t", "int"):
+                lines.append(f"    int32_t {pname} = (int32_t)(intptr_t)payload;")
+            elif ctype == "float":
+                lines.append(f"    float {pname} = payload ? *(float*)payload : 0.0f;")
+            elif ctype == "bool":
+                lines.append(f"    bool {pname} = (bool)(intptr_t)payload;")
+            else:
+                lines.append(f"    {ctype} {pname} = ({ctype})payload;")
+        else:
+            # Multiple parameters - assume payload is a struct pointer
+            lines.append("    // TODO: unpack struct from payload")
+            lines.append("    (void)payload;")
+
+        # Emit body
+        for node in body_nodes:
+            code = self.emitter.emit(node)
+            if code:
+                for line in code.split('\n'):
+                    if line.strip():
+                        if not line.rstrip().endswith((';', '{', '}')):
+                            lines.append(f"    {line};")
+                        else:
+                            lines.append(f"    {line}")
+
+        lines.append("}")
+        return "\n".join(lines)
+
+    def generate_signal_inline_callbacks(self) -> str:
+        """Generate all inline signal callback functions for this trait."""
+        self._collect_signal_inline_callbacks()
+
+        if not self._signal_inline_callbacks:
+            return ""
+
+        lines = []
+        seen_callbacks = set()
+
+        for cb in self._signal_inline_callbacks:
+            cb_name = cb.get("callback_name", "")
+            if cb_name and cb_name not in seen_callbacks:
+                seen_callbacks.add(cb_name)
+                cb_code = self._generate_signal_inline_callback(cb)
+                if cb_code:
+                    lines.append(cb_code)
+                    lines.append("")
 
         return "\n".join(lines)
 
@@ -1225,6 +1343,12 @@ def _prepare_traits_template_data(traits: dict, type_overrides: dict = None) -> 
         if inherited_cb_code:
             tween_callbacks.append(f"// Inherited method callbacks for {trait_name}")
             tween_callbacks.append(inherited_cb_code)
+
+        # Generate inline signal callbacks (must come before implementations)
+        signal_inline_cb_code = gen.generate_signal_inline_callbacks()
+        if signal_inline_cb_code:
+            tween_callbacks.append(f"// Inline signal callbacks for {trait_name}")
+            tween_callbacks.append(signal_inline_cb_code)
 
         # Implementation data: methods first (they may be called by events), then events
         method_impls = gen.generate_method_implementations()

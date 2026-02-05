@@ -2,6 +2,7 @@ package armory.n64.converters;
 
 #if macro
 import haxe.macro.Expr;
+import haxe.macro.Context;
 import armory.n64.IRTypes;
 import armory.n64.mapping.TypeMap;
 import armory.n64.converters.ICallConverter;
@@ -10,8 +11,11 @@ import armory.n64.util.ExprUtils;
 /**
  * Converts Signal method calls to C signal_* functions.
  * Handles: connect, disconnect, emit for both instance and global signals.
+ * Supports both named function references and anonymous inline functions.
  */
 class SignalCallConverter implements ICallConverter {
+    static var anonCounter:Int = 0;
+
     public function new() {}
 
     public function tryConvert(obj:Expr, method:String, args:Array<IRNode>, rawParams:Array<Expr>, ctx:IExtractorContext):IRNode {
@@ -59,6 +63,7 @@ class SignalCallConverter implements ICallConverter {
         switch (method) {
             case "connect":
                 if (params.length > 0) {
+                    // Try to extract as named function reference first
                     var callbackName = extractFunctionRef(params[0]);
                     if (callbackName != null) {
                         ctx.addSignalHandler(callbackName, signalName);
@@ -69,6 +74,22 @@ class SignalCallConverter implements ICallConverter {
                             props: {
                                 signal_name: signalName,
                                 callback: callbackName
+                            }
+                        };
+                    }
+
+                    // Check for anonymous function
+                    var anonResult = extractAnonymousCallback(params[0], signalName, ctx);
+                    if (anonResult != null) {
+                        ctx.addSignalHandler(anonResult.callbackName, signalName);
+                        return {
+                            type: "signal_call",
+                            value: "connect",
+                            c_code: 'signal_connect({signal_ptr}, {handler}, data);',
+                            props: {
+                                signal_name: signalName,
+                                callback: anonResult.callbackName,
+                                inline_callback: anonResult.inlineCallback
                             }
                         };
                     }
@@ -135,6 +156,7 @@ class SignalCallConverter implements ICallConverter {
         switch (method) {
             case "connect":
                 if (params.length > 0) {
+                    // Try to extract as named function reference first
                     var callbackName = extractFunctionRef(params[0]);
                     if (callbackName != null) {
                         ctx.addSignalHandler(callbackName, signalName);
@@ -144,6 +166,21 @@ class SignalCallConverter implements ICallConverter {
                             props: {
                                 global_signal: globalSignalName,
                                 callback: callbackName
+                            }
+                        };
+                    }
+
+                    // Check for anonymous function
+                    var anonResult = extractAnonymousCallback(params[0], signalName, ctx);
+                    if (anonResult != null) {
+                        ctx.addSignalHandler(anonResult.callbackName, signalName);
+                        return {
+                            type: "global_signal_call",
+                            c_code: 'signal_connect({signal_ptr}, {handler}, data);',
+                            props: {
+                                global_signal: globalSignalName,
+                                callback: anonResult.callbackName,
+                                inline_callback: anonResult.inlineCallback
                             }
                         };
                     }
@@ -187,6 +224,68 @@ class SignalCallConverter implements ICallConverter {
 
             default:
                 return { type: "skip" };
+        }
+    }
+
+    /**
+     * Extract an anonymous function callback, generating a unique name and IR body.
+     * Returns null if the expression is not an anonymous function.
+     */
+    function extractAnonymousCallback(e:Expr, signalName:String, ctx:IExtractorContext):{ callbackName:String, inlineCallback:Dynamic } {
+        switch (e.expr) {
+            case EFunction(_, func):
+                // It's an anonymous function: function(param: Type) { ... }
+                var cName = ctx.getCName();
+                var callbackName = '${signalName}_cb_${anonCounter++}';
+
+                // Extract function parameters
+                var params:Array<Dynamic> = [];
+                if (func.args != null) {
+                    for (arg in func.args) {
+                        var paramName = arg.name;
+                        var haxeType = "Dynamic";
+                        if (arg.type != null) {
+                            haxeType = haxe.macro.ComplexTypeTools.toString(arg.type);
+                        }
+                        var ctype = TypeMap.getCType(haxeType);
+                        params.push({
+                            name: paramName,
+                            haxe_type: haxeType,
+                            ctype: ctype
+                        });
+                    }
+                }
+
+                // Extract function body as IR nodes
+                var bodyNodes:Array<Dynamic> = [];
+                if (func.expr != null) {
+                    switch (func.expr.expr) {
+                        case EBlock(exprs):
+                            for (expr in exprs) {
+                                var node = ctx.exprToIR(expr);
+                                if (node != null && node.type != "skip") {
+                                    bodyNodes.push(node);
+                                }
+                            }
+                        default:
+                            var node = ctx.exprToIR(func.expr);
+                            if (node != null && node.type != "skip") {
+                                bodyNodes.push(node);
+                            }
+                    }
+                }
+
+                return {
+                    callbackName: callbackName,
+                    inlineCallback: {
+                        callback_name: callbackName,
+                        params: params,
+                        body: bodyNodes
+                    }
+                };
+
+            default:
+                return null;
         }
     }
 
