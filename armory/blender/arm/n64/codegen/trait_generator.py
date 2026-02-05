@@ -338,6 +338,9 @@ class TraitCodeGenerator:
             # Get parent's c_name for proper C identifier
             parent_c_name = self.all_traits.get(self.parent_name, {}).get("c_name", self.parent_name.replace(".", "_"))
             lines.append(f"    {parent_c_name}Data _parent;")
+        else:
+            # Base trait - add object pointer (like iron.Trait.object)
+            lines.append(f"    void* object;")
 
         # Virtual method function pointers (for polymorphism)
         for vm in virtual_methods:
@@ -645,12 +648,14 @@ class TraitCodeGenerator:
         """Generate declarations for lifecycle event handlers."""
         decls = []
         # Match the typedefs in types.h:
+        # ArmTraitAddFn: (void *entity, void *data) - no dt, called when trait is added
         # ArmTraitReadyFn: (void *entity, void *data) - no dt
         # ArmTraitFixedUpdateFn: (void *entity, float dt, void *data)
         # ArmTraitUpdateFn: (void *entity, float dt, void *data)
         # ArmTraitLateUpdateFn: (void *entity, float dt, void *data)
         # ArmTraitRemoveFn: (void *entity, void *data) - no dt
         # ArmTraitRender2DFn: (void *entity, void *data) - no dt, for 2D overlay rendering
+        decls.append(f"void {self.c_name}_on_add(void* obj, void* data);")
         decls.append(f"void {self.c_name}_on_ready(void* obj, void* data);")
         decls.append(f"void {self.c_name}_on_fixed_update(void* obj, float dt, void* data);")
         decls.append(f"void {self.c_name}_on_update(void* obj, float dt, void* data);")
@@ -791,6 +796,18 @@ class TraitCodeGenerator:
     def generate_all_event_implementations(self) -> str:
         """Generate C implementations for all event handlers."""
         impl_lines = [f"// ========== {self.name} =========="]
+
+        # on_add - called when trait is added, BEFORE on_ready
+        # Used for setting up autoload references like MainInstances.player = this
+        event_nodes = self.events.get("on_add", [])
+        impl_lines.append(f"void {self.c_name}_on_add(void* obj, void* data) {{")
+        if self.parent_name and self.parent_name in self.all_traits:
+            parent_ir = self.all_traits[self.parent_name]
+            parent_c_name = parent_ir.get("c_name", self.parent_name.lower())
+            impl_lines.append(f"    {parent_c_name}_on_add(obj, data);")
+        body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
+        impl_lines.append(body)
+        impl_lines.append("}")
 
         # on_ready - no dt parameter
         event_nodes = self.events.get("on_ready", [])
@@ -1016,6 +1033,12 @@ def _detect_features_in_nodes(nodes) -> dict:
             # Extract autoload c_name from the call
             props = node.get("props", {})
             c_name = props.get("c_name", "")
+            if c_name:
+                features['autoloads'].add(c_name)
+        elif node_type in ("autoload_field", "autoload_trait_object", "autoload_trait_assign"):
+            # Extract autoload c_name from field/trait object access/assignment
+            props = node.get("props", {})
+            c_name = props.get("autoload", "")
             if c_name:
                 features['autoloads'].add(c_name)
 

@@ -19,6 +19,7 @@ class SkipList {
         "PhysicsWorld" => true, "RigidBody" => true,
         "Tween" => true, "Audio" => true, "Network" => true,
         "Graphics" => true,  // kha.graphics2.Graphics - not available on N64
+        "Gamepad" => true,   // N64 has fixed controller layout
     ];
 
     public static function shouldSkipMember(name:String):Bool {

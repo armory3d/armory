@@ -79,6 +79,7 @@ typedef struct {{ float x, y; }} ArmVec2;
 typedef struct {{ float x, y, z; }} ArmVec3;
 typedef struct {{ float x, y, z, w; }} ArmVec4;
 
+typedef void (*ArmTraitAddFn)(void *entity, void *data);
 typedef void (*ArmTraitReadyFn)(void *entity, void *data);
 typedef void (*ArmTraitFixedUpdateFn)(void *entity, float dt, void *data);
 typedef void (*ArmTraitUpdateFn)(void *entity, float dt, void *data);
@@ -96,6 +97,7 @@ typedef void (*ArmCallback)(void *obj, void *data);
 typedef void (*ArmFloatObjCallback)(float value, void *obj, void *data);
 
 typedef struct {{
+    ArmTraitAddFn on_add;
     ArmTraitReadyFn on_ready;
     ArmTraitFixedUpdateFn on_fixed_update;
     ArmTraitUpdateFn on_update;

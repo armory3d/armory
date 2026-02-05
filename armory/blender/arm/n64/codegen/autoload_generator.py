@@ -174,6 +174,23 @@ def _prepare_autoload_template_data(name: str, autoload_ir: dict) -> dict:
         if struct_def:
             signal_struct_lines.append(struct_def)
 
+    # Build forward declarations for non-trait pointer types
+    # Trait data types (ending with Data*) are defined in traits.h, so we include that instead
+    forward_decl_lines = []
+    needs_traits_include = False
+    seen_types = set()
+    if members:
+        for m in members:
+            ctype = m.get("ctype", "")
+            # Check if it's a trait data pointer type (ends with Data*)
+            if ctype.endswith("Data*"):
+                # This is a trait type - we need to include traits.h
+                needs_traits_include = True
+                # Don't forward-declare, traits.h has the full definition
+
+    # Generate traits include if needed
+    traits_include = '\n#include "../data/traits.h"' if needs_traits_include else ''
+
     # Build member externs (for header)
     member_extern_lines = []
     if members:
@@ -304,6 +321,8 @@ def _prepare_autoload_template_data(name: str, autoload_ir: dict) -> dict:
         'name': name,
         'c_name': c_name,
         'order': order,
+        'traits_include': traits_include,
+        'forward_declarations': '\n'.join(forward_decl_lines),
         'signal_structs': '\n'.join(signal_struct_lines),
         'member_externs': '\n'.join(member_extern_lines),
         'signal_externs': '\n'.join(signal_extern_lines),

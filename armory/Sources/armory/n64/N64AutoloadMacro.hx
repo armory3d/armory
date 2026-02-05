@@ -410,15 +410,129 @@ class AutoloadExtractor implements IExtractorContext {
         if (SkipList.shouldSkipMember(name)) return null;
 
         var haxeType = t != null ? N64MacroBase.complexTypeToString(t) : "Dynamic";
-        if (!TypeMap.isSupported(haxeType)) return null;
+        
+        // First check standard type map
+        if (TypeMap.isSupported(haxeType)) {
+            var defaultNode:IRNode = e != null ? exprToIR(e) : null;
+            return {
+                haxeType: haxeType,
+                ctype: TypeMap.getCType(haxeType),
+                defaultValue: defaultNode
+            };
+        }
 
-        var defaultNode:IRNode = e != null ? exprToIR(e) : null;
+        // Check if it's a trait type (extends iron.Trait)
+        // Use ComplexType directly for better type resolution
+        var traitCType = resolveTraitCTypeFromComplexType(t);
+        if (traitCType != null) {
+            var defaultNode:IRNode = e != null ? exprToIR(e) : null;
+            return {
+                haxeType: haxeType,
+                ctype: traitCType,
+                defaultValue: defaultNode
+            };
+        }
 
-        return {
-            haxeType: haxeType,
-            ctype: TypeMap.getCType(haxeType),
-            defaultValue: defaultNode
-        };
+        // Unknown type - skip
+        return null;
+    }
+
+    /**
+     * Resolve trait C type from ComplexType - uses proper type resolution
+     */
+    function resolveTraitCTypeFromComplexType(ct:ComplexType):String {
+        if (ct == null) return null;
+        
+        try {
+            // Convert ComplexType to Type using the compiler's type resolution
+            var type = Context.resolveType(ct, Context.currentPos());
+            if (type == null) return null;
+            
+            var classType = type.getClass();
+            if (classType == null) return null;
+            
+            if (extendsIronTrait(classType)) {
+                // Found a trait - compute c_name
+                var modulePath = classType.module;
+                var className = classType.name;
+                var moduleParts = modulePath.split(".");
+                var lastModulePart = moduleParts[moduleParts.length - 1];
+
+                var c_name:String;
+                if (lastModulePart.toLowerCase() == className.toLowerCase()) {
+                    c_name = modulePath.replace(".", "_").toLowerCase();
+                } else {
+                    c_name = (modulePath.replace(".", "_") + "_" + className).toLowerCase();
+                }
+                return c_name + "Data*";
+            }
+        } catch (e:Dynamic) {
+            // Type resolution failed
+        }
+        return null;
+    }
+
+    /**
+     * Check if a type name is a trait (extends iron.Trait) and return its C type.
+     * Returns null if not a trait.
+     *
+     * Example: "Player" or "arm.player.Player" -> "arm_player_playerData*"
+     */
+    function resolveTraitCType(typeName:String):String {
+        try {
+            var type = Context.getType(typeName);
+            if (type == null) {
+                // Try with common package prefixes
+                for (prefix in ["arm.", "arm.node.", "arm.player.", "arm.level.", "arm.autoload.", ""]) {
+                    try {
+                        type = Context.getType(prefix + typeName);
+                        if (type != null) break;
+                    } catch (e:Dynamic) {}
+                }
+            }
+
+            if (type != null) {
+                var classType = type.getClass();
+                if (classType != null && extendsIronTrait(classType)) {
+                    // Found a trait - compute c_name
+                    var modulePath = classType.module;
+                    var className = classType.name;
+                    var moduleParts = modulePath.split(".");
+                    var lastModulePart = moduleParts[moduleParts.length - 1];
+
+                    var c_name:String;
+                    if (lastModulePart.toLowerCase() == className.toLowerCase()) {
+                        c_name = modulePath.replace(".", "_").toLowerCase();
+                    } else {
+                        c_name = (modulePath.replace(".", "_") + "_" + className).toLowerCase();
+                    }
+                    return c_name + "Data*";
+                }
+            }
+        } catch (e:Dynamic) {
+            // Type resolution failed
+        }
+        return null;
+    }
+
+    /**
+     * Check if a class extends iron.Trait (directly or indirectly)
+     */
+    function extendsIronTrait(classType:ClassType):Bool {
+        if (classType == null) return false;
+        
+        var superClass = classType.superClass;
+        while (superClass != null) {
+            var superClassType = superClass.t.get();
+            // For iron.Trait: module="iron.Trait", name="Trait"
+            // Check: module ends with "iron.Trait" OR (module=="iron" and name=="Trait")
+            if ((superClassType.module == "iron.Trait" && superClassType.name == "Trait") ||
+                (superClassType.module == "iron" && superClassType.name == "Trait")) {
+                return true;
+            }
+            superClass = superClassType.superClass;
+        }
+        return false;
     }
 
     function extractFunction(name:String, func:Function, isPublic:Bool):AutoloadFunctionIR {
@@ -786,6 +900,7 @@ class AutoloadExtractor implements IExtractorContext {
             uses_physics: false,
             uses_ui: false,
             uses_tween: false,
+            uses_autoload: false,
             buttons_used: [],
             button_events: [],
             contact_events: [],

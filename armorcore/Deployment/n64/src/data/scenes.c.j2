@@ -24,6 +24,10 @@ typedef struct {{
 
 {scene_group_data}
 
+// Forward declarations
+void scene_on_add(SceneId id);
+void scene_on_ready(SceneId id);
+
 void scene_init(SceneId id)
 {{
     if (id >= SCENE_COUNT) return;
@@ -33,7 +37,40 @@ void scene_init(SceneId id)
 {scene_init_switch_cases}
 		default: break;
     }}
+	scene_on_add(id);
 	scene_on_ready(id);
+}}
+
+void scene_on_add(SceneId id)
+{{
+	ArmScene *s = &g_scenes[id];
+
+	// on_add runs BEFORE on_ready - used for setting up autoload references
+	for (uint8_t i = 0; i < s->trait_count; i++) {{
+		if (s->traits[i].on_add) s->traits[i].on_add(s, s->traits[i].data);
+	}}
+	if (s->cameras) {{
+		for (uint8_t i = 0; i < s->camera_count; i++) {{
+			for (uint8_t t = 0; t < s->cameras[i].trait_count; t++) {{
+				if (s->cameras[i].traits[t].on_add) s->cameras[i].traits[t].on_add(&s->cameras[i], s->cameras[i].traits[t].data);
+			}}
+		}}
+	}}
+	if (s->lights) {{
+		for (uint8_t i = 0; i < s->light_count; i++) {{
+			for (uint8_t t = 0; t < s->lights[i].trait_count; t++) {{
+				if (s->lights[i].traits[t].on_add) s->lights[i].traits[t].on_add(&s->lights[i], s->lights[i].traits[t].data);
+			}}
+		}}
+	}}
+	if (s->objects) {{
+		for (uint16_t i = 0; i < s->object_count; i++) {{
+			if (s->objects[i].is_removed) continue;
+			for (uint8_t t = 0; t < s->objects[i].trait_count; t++) {{
+				if (s->objects[i].traits[t].on_add) s->objects[i].traits[t].on_add(&s->objects[i], s->objects[i].traits[t].data);
+			}}
+		}}
+	}}
 }}
 
 void scene_on_ready(SceneId id)

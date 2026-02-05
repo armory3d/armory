@@ -157,11 +157,13 @@ def trait_needs_data(trait_info: dict, trait_class: str) -> bool:
 
 
 def _build_parent_initializer(trait_info: dict, parent_class: str, current_scene: str,
-                              instance_props: dict = None, type_overrides: dict = None) -> str:
+                              instance_props: dict = None, type_overrides: dict = None,
+                              entity_ptr: str = None) -> str:
     """Recursively build initializer for parent struct in inheritance chain.
 
     For Option B (Composition), the parent is embedded at offset 0.
     This function builds: ._parent = (ParentData){...}
+    The entity_ptr is passed down to initialize the base .object field.
     """
     if not parent_class:
         return ""
@@ -181,13 +183,16 @@ def _build_parent_initializer(trait_info: dict, parent_class: str, current_scene
     instance_props = instance_props or {}
     type_overrides = type_overrides or {}
 
-    # First, recursively add grandparent initialization
+    # First, recursively add grandparent initialization (or object field if base)
     if grandparent:
         grandparent_init = _build_parent_initializer(
-            trait_info, grandparent, current_scene, instance_props, type_overrides
+            trait_info, grandparent, current_scene, instance_props, type_overrides, entity_ptr
         )
         if grandparent_init:
             init_fields.append(grandparent_init)
+    elif entity_ptr:
+        # This is the base trait - initialize the object pointer
+        init_fields.append(f'.object = {entity_ptr}')
 
     # Add parent's own members
     for member in members:
@@ -214,12 +219,14 @@ def _build_parent_initializer(trait_info: dict, parent_class: str, current_scene
 
 
 def build_trait_initializer(trait_info: dict, trait_class: str, current_scene: str,
-                            instance_props: dict = None, type_overrides: dict = None) -> str:
+                            instance_props: dict = None, type_overrides: dict = None,
+                            entity_ptr: str = None) -> str:
     """Build C initializer for a trait's data struct.
 
     For inheritance (Option B - Composition), this includes:
     - ._parent = (ParentData){...} (recursively for multi-level)
     - This trait's own members and signals
+    - .object pointer to the owning entity (at base of hierarchy)
     """
     trait = get_trait(trait_info, trait_class)
     members = trait.get("members", [])
@@ -234,13 +241,16 @@ def build_trait_initializer(trait_info: dict, trait_class: str, current_scene: s
     instance_props = instance_props or {}
     type_overrides = type_overrides or {}
 
-    # First, add parent initialization if this trait has a parent
+    # First, add parent initialization if this trait has a parent (or object if base)
     if parent_class:
         parent_init = _build_parent_initializer(
-            trait_info, parent_class, current_scene, instance_props, type_overrides
+            trait_info, parent_class, current_scene, instance_props, type_overrides, entity_ptr
         )
         if parent_init:
             init_fields.append(parent_init)
+    elif entity_ptr:
+        # No parent - this is a base trait, initialize object pointer directly
+        init_fields.append(f'.object = {entity_ptr}')
 
     # Initialize this trait's own members
     for member in members:

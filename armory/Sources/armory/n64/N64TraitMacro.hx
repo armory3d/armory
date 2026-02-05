@@ -254,6 +254,7 @@ class TraitExtractor implements IExtractorContext {
             uses_physics: false,
             uses_ui: false,
             uses_tween: false,
+            uses_autoload: false,
             buttons_used: [],
             button_events: [],
             contact_events: [],
@@ -350,6 +351,10 @@ class TraitExtractor implements IExtractorContext {
         var staticLifecycles = findStaticLifecycles();
 
         // Pass 3: Convert lifecycle functions to events
+        // on_add runs BEFORE on_ready - used for setting up autoload references
+        if (lifecycles.add != null) {
+            extractEvents("on_add", lifecycles.add);
+        }
         if (lifecycles.init != null) {
             extractEvents("on_ready", lifecycles.init);
         }
@@ -553,8 +558,8 @@ class TraitExtractor implements IExtractorContext {
         }
     }
 
-    function findLifecycles():{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, updates:Map<String, Expr>} {
-        var result = {init: null, update: null, fixed_update: null, late_update: null, remove: null, render2d: null, updates: new Map<String, Expr>()};
+    function findLifecycles():{init:Expr, add:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, updates:Map<String, Expr>} {
+        var result = {init: null, add: null, update: null, fixed_update: null, late_update: null, remove: null, render2d: null, updates: new Map<String, Expr>()};
 
         // Scan ALL methods for lifecycle registrations (for code extraction)
         for (methodName in methodMap.keys()) {
@@ -569,8 +574,8 @@ class TraitExtractor implements IExtractorContext {
 
     // Find only STATICALLY registered lifecycles (called from constructor/init path)
     // Used to determine initial enabled state for dynamic toggle flags
-    function findStaticLifecycles():{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, static_updates:Map<String, Bool>} {
-        var result = {init: null, update: null, fixed_update: null, late_update: null, remove: null, render2d: null, static_updates: new Map<String, Bool>()};
+    function findStaticLifecycles():{init:Expr, add:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, static_updates:Map<String, Bool>} {
+        var result = {init: null, add: null, update: null, fixed_update: null, late_update: null, remove: null, render2d: null, static_updates: new Map<String, Bool>()};
 
         // Only scan constructor - lifecycle registrations elsewhere are "dynamic"
         var ctor = methodMap.get("new");
@@ -582,7 +587,7 @@ class TraitExtractor implements IExtractorContext {
     }
 
     // Scan for lifecycle registrations (finds all, for code extraction)
-    function scanForLifecycles(e:Expr, result:{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, updates:Map<String, Expr>}, inInitPath:Bool):Void {
+    function scanForLifecycles(e:Expr, result:{init:Expr, add:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, updates:Map<String, Expr>}, inInitPath:Bool):Void {
         if (e == null) return;
 
         switch (e.expr) {
@@ -592,6 +597,7 @@ class TraitExtractor implements IExtractorContext {
                     var body = resolveCallback(params[0]);
                     switch (funcName) {
                         case "notifyOnInit": result.init = body;
+                        case "notifyOnAdd": result.add = body;
                         case "notifyOnUpdate":
                             // Track update callbacks by their function name
                             var callbackName = getCallbackName(params[0]);
@@ -623,7 +629,7 @@ class TraitExtractor implements IExtractorContext {
     }
 
     // Scan for STATIC lifecycle registrations only (for initial enabled state)
-    function scanForStaticLifecycles(e:Expr, result:{init:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, static_updates:Map<String, Bool>}, inInitPath:Bool):Void {
+    function scanForStaticLifecycles(e:Expr, result:{init:Expr, add:Expr, update:Expr, fixed_update:Expr, late_update:Expr, remove:Expr, render2d:Expr, static_updates:Map<String, Bool>}, inInitPath:Bool):Void {
         if (e == null) return;
 
         switch (e.expr) {
@@ -635,6 +641,7 @@ class TraitExtractor implements IExtractorContext {
                     if (inInitPath) {
                         switch (funcName) {
                             case "notifyOnInit": result.init = body;
+                            case "notifyOnAdd": result.add = body;
                             case "notifyOnUpdate":
                                 // Track static update callbacks by name
                                 var callbackName = getCallbackName(params[0]);
@@ -1019,6 +1026,19 @@ class TraitExtractor implements IExtractorContext {
                     // Skip other g2 property assignments (imageScaleQuality, etc.)
                     else if (isGraphics2PropertyAssign(e1)) {
                         { type: "skip" };
+                    }
+                    // Special case: AutoloadClass.member = this where member is a trait type
+                    // e.g., MainInstances.player = this -> maininstances_player = data
+                    else if (isAutoloadTraitAssign(e1, e2)) {
+                        var autoloadInfo = getAutoloadFieldInfo(e1);
+                        meta.uses_autoload = true;
+                        {
+                            type: "autoload_trait_assign",
+                            props: {
+                                autoload: autoloadInfo.c_name,
+                                member: autoloadInfo.field
+                            }
+                        };
                     } else {
                         { type: "assign", children: [exprToIR(e1), exprToIR(e2)] };
                     }
@@ -1268,6 +1288,44 @@ class TraitExtractor implements IExtractorContext {
         return false;
     }
 
+    // Check if this is an assignment to an autoload trait member with `this` on the right side
+    // e.g., MainInstances.player = this
+    function isAutoloadTraitAssign(lhs:Expr, rhs:Expr):Bool {
+        // Check if rhs is `this`
+        switch (rhs.expr) {
+            case EConst(CIdent("this")):
+                // Check if lhs is AutoloadClass.field
+                switch (lhs.expr) {
+                    case EField(obj, _):
+                        switch (obj.expr) {
+                            case EConst(CIdent(className)):
+                                return AutoloadCallConverter.getAutoloadCName(className) != null;
+                            default:
+                        }
+                    default:
+                }
+            default:
+        }
+        return false;
+    }
+
+    // Get autoload field info from expression (for autoload trait assignments)
+    function getAutoloadFieldInfo(expr:Expr):{c_name:String, field:String} {
+        switch (expr.expr) {
+            case EField(obj, field):
+                switch (obj.expr) {
+                    case EConst(CIdent(className)):
+                        var cName = AutoloadCallConverter.getAutoloadCName(className);
+                        if (cName != null) {
+                            return { c_name: cName, field: field.toLowerCase() };
+                        }
+                    default:
+                }
+            default:
+        }
+        return { c_name: "", field: "" };
+    }
+
     // Extract the label variable name from label.text assignment
     function extractLabelFromTextAssign(expr:Expr):String {
         switch (expr.expr) {
@@ -1282,6 +1340,59 @@ class TraitExtractor implements IExtractorContext {
     }
 
     function convertFieldAccess(obj:Expr, field:String):IRNode {
+        // Check if accessing a field on a skipped class (like Gamepad.buttons)
+        switch (obj.expr) {
+            case EConst(CIdent(className)):
+                if (SkipList.shouldSkipClass(className)) {
+                    return { type: "skip" };
+                }
+            default:
+        }
+
+        // Handle autoloadVar.object -> get object pointer from trait data
+        // Pattern: EField(EField(AutoloadClass, traitMember), "object")
+        if (field == "object") {
+            switch (obj.expr) {
+                case EField(innerObj, memberName):
+                    switch (innerObj.expr) {
+                        case EConst(CIdent(className)):
+                            var cName = AutoloadCallConverter.getAutoloadCName(className);
+                            if (cName != null) {
+                                // Found AutoloadClass.traitMember.object pattern
+                                meta.uses_autoload = true;
+                                return {
+                                    type: "autoload_trait_object",
+                                    value: field,
+                                    props: {
+                                        autoload: cName,
+                                        member: memberName
+                                    }
+                                };
+                            }
+                        default:
+                    }
+                default:
+            }
+        }
+
+        // Handle AutoloadClass.member field access
+        switch (obj.expr) {
+            case EConst(CIdent(className)):
+                var cName = AutoloadCallConverter.getAutoloadCName(className);
+                if (cName != null) {
+                    meta.uses_autoload = true;
+                    return {
+                        type: "autoload_field",
+                        value: field,
+                        props: {
+                            autoload: cName,
+                            member: field
+                        }
+                    };
+                }
+            default:
+        }
+
         // Handle kha.Window.get(0).width/height -> render2d_get_width()/height()
         if (field == "width" || field == "height") {
             switch (obj.expr) {
@@ -1386,7 +1497,16 @@ class TraitExtractor implements IExtractorContext {
         switch (obj.expr) {
             case EField(innerObj, "transform"):
                 meta.uses_transform = true;
-                return { type: "field_access", object: { type: "ident", value: "object" }, value: "transform." + field };
+                // Check if innerObj is a specific object (not `this` or `object`)
+                var ownerNode:IRNode = switch (innerObj.expr) {
+                    case EConst(CIdent("this")), EConst(CIdent("object")):
+                        // Self-reference - use "object"
+                        { type: "ident", value: "object" };
+                    default:
+                        // External object (e.g., target.transform.loc)
+                        exprToIR(innerObj);
+                };
+                return { type: "field_access", object: ownerNode, value: "transform." + field };
             case EConst(CIdent("transform")):
                 meta.uses_transform = true;
                 return { type: "field_access", object: { type: "ident", value: "object" }, value: "transform." + field };

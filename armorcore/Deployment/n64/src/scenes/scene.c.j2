@@ -42,11 +42,35 @@ void scene_{scene_name}_init(ArmScene *scene)
 
 {cameras_block}
 
+    // Compute lifecycle flags for cameras from traits
+    for (uint8_t i = 0; i < scene->camera_count; i++) {{
+        if (scene->cameras[i].trait_count > 0) {{
+            scene->cameras[i].lifecycle_flags = 0;
+            for (uint8_t t = 0; t < scene->cameras[i].trait_count; t++) {{
+                if (scene->cameras[i].traits[t].on_fixed_update) scene->cameras[i].lifecycle_flags |= ARM_LIFECYCLE_FIXED_UPDATE;
+                if (scene->cameras[i].traits[t].on_update) scene->cameras[i].lifecycle_flags |= ARM_LIFECYCLE_UPDATE;
+                if (scene->cameras[i].traits[t].on_late_update) scene->cameras[i].lifecycle_flags |= ARM_LIFECYCLE_LATE_UPDATE;
+            }}
+        }}
+    }}
+
     static ArmLight lights[{light_count}];
     scene->lights = lights;
     scene->light_count = {light_count};
 
 {lights_block}
+
+    // Compute lifecycle flags for lights from traits
+    for (uint8_t i = 0; i < scene->light_count; i++) {{
+        if (scene->lights[i].trait_count > 0) {{
+            scene->lights[i].lifecycle_flags = 0;
+            for (uint8_t t = 0; t < scene->lights[i].trait_count; t++) {{
+                if (scene->lights[i].traits[t].on_fixed_update) scene->lights[i].lifecycle_flags |= ARM_LIFECYCLE_FIXED_UPDATE;
+                if (scene->lights[i].traits[t].on_update) scene->lights[i].lifecycle_flags |= ARM_LIFECYCLE_UPDATE;
+                if (scene->lights[i].traits[t].on_late_update) scene->lights[i].lifecycle_flags |= ARM_LIFECYCLE_LATE_UPDATE;
+            }}
+        }}
+    }}
 
     static ArmObject objects[{object_count}];
     scene->objects = objects;

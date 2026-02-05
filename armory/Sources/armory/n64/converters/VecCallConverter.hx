@@ -11,12 +11,12 @@ using StringTools;
 
 /**
  * Converts Vec2/Vec3/Vec4 method calls to C struct operations.
- * Handles: mult, add, sub, dot, normalize, length, clone
+ * Handles: mult, add, sub, dot, normalize, length, clone, set
  *
- * Note: cross, set, setFrom are not yet implemented (add when needed).
+ * Note: cross, setFrom are not yet implemented (add when needed).
  */
 class VecCallConverter implements ICallConverter {
-    static var vecMethods = ["mult", "add", "sub", "dot", "normalize", "length", "clone"];
+    static var vecMethods = ["mult", "add", "sub", "dot", "normalize", "length", "clone", "set"];
 
     public function new() {}
 
@@ -76,6 +76,21 @@ class VecCallConverter implements ICallConverter {
                     if (cType == "ArmVec4") "(" + cType + "){{v}.x, {v}.y, {v}.z, 1.0f}";
                     else if (cType == "ArmVec3") "(" + cType + "){{v}.x, {v}.y, {v}.z}";
                     else "(" + cType + "){{v}.x, {v}.y}";
+                }
+            case "set":
+                // set(x, y, z) or set(x, y, z, w) - modifies in-place
+                // Check if this is a transform vector (loc, scale) which uses T3DVec3
+                var isTransformVec = (objIR.type == "field_access" && objIR.value != null &&
+                    (StringTools.endsWith(objIR.value, ".loc") || StringTools.endsWith(objIR.value, ".scale")));
+                if (isTransformVec) {
+                    // Transform vectors are T3DVec3 (3 components, stored in .v array)
+                    "{ {vraw}.v[0] = {0}; {vraw}.v[1] = {1}; {vraw}.v[2] = {2}; }";
+                } else if (cType == "ArmVec4") {
+                    "{ {vraw}.x = {0}; {vraw}.y = {1}; {vraw}.z = {2}; {vraw}.w = {3}; }";
+                } else if (cType == "ArmVec3") {
+                    "{ {vraw}.x = {0}; {vraw}.y = {1}; {vraw}.z = {2}; }";
+                } else {
+                    "{ {vraw}.x = {0}; {vraw}.y = {1}; }";
                 }
             default:
                 null;

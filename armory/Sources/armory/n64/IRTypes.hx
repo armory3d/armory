@@ -20,6 +20,7 @@ package armory.n64;
  *   ident                            - Identifier: local var, dt, object, this
  *   field_access                     - Field access: object.field, vec.x, this.field
  *   autoload_field                   - Access to another autoload's member
+ *   autoload_trait_object            - Get object pointer from autoload trait member
  *
  * OPERATORS:
  *   assign                           - Assignment: target = value
@@ -150,6 +151,7 @@ typedef TraitMeta = {
     uses_physics: Bool,
     uses_ui: Bool,             // True if trait uses UI labels (canvas.getElementAs, label.text)
     uses_tween: Bool,          // True if trait uses Tween (tween.float, tween.delay, etc.)
+    uses_autoload: Bool,       // True if trait accesses autoload fields/methods
     buttons_used: Array<String>,
     button_events: Array<ButtonEventMeta>,  // structured button event info
     contact_events: Array<ContactEventMeta>, // physics contact subscriptions

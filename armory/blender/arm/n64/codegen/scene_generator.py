@@ -103,6 +103,7 @@ def generate_trait_block(prefix: str, traits: List[Dict],
                 log.warn(f"No c_name found for trait '{trait_class}'")
 
             # Lifecycle hooks - use the full c_name
+            lines.append(f'    {prefix}.traits[{t_idx}].on_add = {c_name}_on_add;')
             lines.append(f'    {prefix}.traits[{t_idx}].on_ready = {c_name}_on_ready;')
             lines.append(f'    {prefix}.traits[{t_idx}].on_fixed_update = {c_name}_on_fixed_update;')
             lines.append(f'    {prefix}.traits[{t_idx}].on_update = {c_name}_on_update;')
@@ -115,8 +116,10 @@ def generate_trait_block(prefix: str, traits: List[Dict],
                 struct_name = f'{c_name}Data'
                 instance_props = trait.get("props", {})
                 type_overrides = trait.get("type_overrides", {})
+                # Pass entity pointer for .object field initialization
+                entity_ptr = f'&{prefix}' if not prefix.startswith('&') else prefix
                 initializer = n64_utils.build_trait_initializer(
-                    trait_info, trait_class, scene_name, instance_props, type_overrides
+                    trait_info, trait_class, scene_name, instance_props, type_overrides, entity_ptr
                 )
                 lines.append(f'    {prefix}.traits[{t_idx}].data = malloc(sizeof({struct_name}));')
                 lines.append(f'    *({struct_name}*){prefix}.traits[{t_idx}].data = ({struct_name}){{{initializer}}};')
@@ -388,6 +391,7 @@ def generate_scene_traits_block(traits: List[Dict], trait_info: dict, scene_name
         c_name = trait_ir.get("c_name", "")
         meta = trait_ir.get("meta", {})
 
+        lines.append(f'    scene_traits[{i}].on_add = {c_name}_on_add;')
         lines.append(f'    scene_traits[{i}].on_ready = {c_name}_on_ready;')
         lines.append(f'    scene_traits[{i}].on_fixed_update = {c_name}_on_fixed_update;')
         lines.append(f'    scene_traits[{i}].on_update = {c_name}_on_update;')

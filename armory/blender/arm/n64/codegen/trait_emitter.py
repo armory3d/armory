@@ -1190,6 +1190,11 @@ class TraitEmitter:
                 val = arg_strs[i] if i < len(arg_strs) else "1.0f"
                 c_code = c_code.replace(placeholder, val)
 
+        # Substitute {obj} with the transform owner (or "obj" for self)
+        obj_node = node.get("object")
+        obj_str = self.emit(obj_node) if obj_node else "obj"
+        c_code = c_code.replace("{obj}", obj_str)
+
         return c_code
 
     def emit_math_call(self, node: Dict) -> str:
@@ -1277,13 +1282,41 @@ class TraitEmitter:
     def emit_autoload_field(self, node: Dict) -> str:
         """Autoload field access - ClassName.field -> classname_field."""
         props = node.get("props", {})
-        c_name = props.get("c_name", "")
-        field = props.get("field", "")
+        # Support both old (c_name/field) and new (autoload/member) naming
+        c_name = props.get("c_name") or props.get("autoload", "")
+        field = props.get("field") or props.get("member", "")
 
         if not c_name or not field:
             return ""
 
         return f"{c_name}_{field}"
+
+    def emit_autoload_trait_object(self, node: Dict) -> str:
+        """Get object pointer from autoload trait member - MainInstances.player.object -> maininstances_player->object."""
+        props = node.get("props", {})
+        autoload = props.get("autoload", "")
+        member = props.get("member", "")
+
+        if not autoload or not member:
+            return ""
+
+        # Returns the object pointer from the trait data struct
+        # autoload_member is a TraitData*, so we dereference to get .object
+        return f"{autoload}_{member}->object"
+
+    def emit_autoload_trait_assign(self, node: Dict) -> str:
+        """Assign current trait data to autoload member - MainInstances.player = this -> maininstances_player = data;"""
+        props = node.get("props", {})
+        autoload = props.get("autoload", "")
+        member = props.get("member", "")
+
+        if not autoload or not member:
+            return ""
+
+        # Assign the current trait's data pointer to the autoload member
+        # The cast is to the appropriate trait data type (c_name + "Data")
+        data_struct = f"{self.c_name}Data"
+        return f"{autoload}_{member} = ({data_struct}*)data;"
 
     def emit_remove_object(self, node: Dict) -> str:
         """Remove object call - substitute {obj} placeholder."""
@@ -1320,7 +1353,11 @@ class TraitEmitter:
         return node.get("c_code", "")
 
     def emit_vec_call(self, node: Dict) -> str:
-        """Vec calls - substitute placeholders in macro-provided c_code."""
+        """Vec calls - substitute placeholders in macro-provided c_code.
+
+        Special handling for camera traits: when setting transform.loc on 'object',
+        also update the camera's look-at target to maintain fixed look direction.
+        """
         c_code = node.get("c_code", "")
         if not c_code:
             return ""
@@ -1334,7 +1371,34 @@ class TraitEmitter:
         is_compound = obj.startswith("(Arm")
         vec = f"({obj})" if is_compound else obj
 
-        return self._substitute_placeholders(c_code, node.get("args", []), vec=vec, vec_raw=obj)
+        result = self._substitute_placeholders(c_code, node.get("args", []), vec=vec, vec_raw=obj)
+
+        # Special handling for camera traits: when updating camera transform.loc,
+        # also update the look-at target to follow the player
+        if self._is_camera_transform_loc_set(obj_node):
+            # Check if this trait has a 'target' member (camera follow pattern)
+            if self._trait_has_member("target"):
+                # Get the target member and update camera's look-at point
+                # This keeps the look direction constant as the camera moves
+                result += f" ((ArmCamera*)obj)->target.v[0] = it_world_x(&((ArmObject*)(({self.c_name}Data*)data)->target)->transform); ((ArmCamera*)obj)->target.v[1] = it_world_y(&((ArmObject*)(({self.c_name}Data*)data)->target)->transform); ((ArmCamera*)obj)->target.v[2] = it_world_z(&((ArmObject*)(({self.c_name}Data*)data)->target)->transform);"
+
+        return result
+
+    def _is_camera_transform_loc_set(self, obj_node: Dict) -> bool:
+        """Check if we're setting object.transform.loc (camera position)."""
+        if not obj_node:
+            return False
+        if obj_node.get("type") != "field_access":
+            return False
+        if obj_node.get("value") != "transform.loc":
+            return False
+        inner = obj_node.get("object", {})
+        return inner.get("type") == "ident" and inner.get("value") == "object"
+
+    def _trait_has_member(self, member_name: str) -> bool:
+        """Check if current trait has a member with given name."""
+        # Check trait member names
+        return member_name in self.member_names
 
     # =========================================================================
     # Constructors

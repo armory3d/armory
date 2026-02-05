@@ -26,6 +26,10 @@ class TypeMap {
         "SceneFormat" => "SceneId",
         "TSceneFormat" => "SceneId",
 
+        // Object types
+        "Object" => "ArmObject*",
+        "iron.object.Object" => "ArmObject*",
+
         // Vector types
         "Vec2" => "ArmVec2",
         "Vec3" => "ArmVec3",
