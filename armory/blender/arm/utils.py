@@ -739,13 +739,13 @@ def get_haxe_json_string(d: dict) -> str:
     return s
 
 def asset_name(bdata):
-    if bdata == None:
-        return None
-    s = bdata.name
-    # Append library name if linked
-    if bdata.library is not None:
-        s += '_' + bdata.library.name
-    return s
+    """Get the qualified asset name, with library suffix for linked data.
+    
+    For local assets, returns just the name.
+    For linked assets, returns 'name_libraryname' to ensure uniqueness.
+    """
+    import arm.linked_utils as linked_utils
+    return linked_utils.asset_name(bdata)
 
 def asset_path(s):
     """Remove leading '//'"""

@@ -26,6 +26,7 @@ import bmesh
 
 import arm.utils
 import arm.profiler
+import arm.linked_utils as linked_utils
 from arm import assets, exporter_opt, log, make_renderpath
 from arm.material import cycles, make as make_material, mat_batch
 
@@ -39,6 +40,7 @@ if arm.is_reload(__name__):
     mat_batch = arm.reload_module(mat_batch)
     arm.utils = arm.reload_module(arm.utils)
     arm.profiler = arm.reload_module(arm.profiler)
+    linked_utils = arm.reload_module(linked_utils)
 else:
     arm.enable_reload(__name__)
 
@@ -343,29 +345,9 @@ class ArmoryExporter:
     def export_object_transform(self, bobject: bpy.types.Object, o):
         wrd = bpy.data.worlds['Arm']
 
-        if bpy.app.version >= (4, 2, 0):
-            # HACK: For linked objects, we need to temporarily add them to the scene's collection
-            # to properly evaluate their matrix through the depsgraph
-            is_linked = bobject.name not in self.scene.collection.children
-            temp_collection = None
-
-            if is_linked:
-                temp_collection = bpy.data.collections.new("temp_collection")
-                bpy.context.scene.collection.children.link(temp_collection)
-                temp_collection.objects.link(bobject)
-                temp_depsgraph = bpy.context.evaluated_depsgraph_get()
-                evaluated_obj = bobject.evaluated_get(temp_depsgraph)
-            else:
-                evaluated_obj = bobject.evaluated_get(self.depsgraph)
-
-            matrix_local = evaluated_obj.matrix_local.copy()
-
-            if is_linked and temp_collection:
-                temp_collection.objects.unlink(bobject)
-                bpy.context.scene.collection.children.unlink(temp_collection)
-                bpy.data.collections.remove(temp_collection)
-        else:
-            matrix_local = bobject.matrix_local
+        # Use TransformEvaluator to handle linked object transform evaluation
+        with linked_utils.TransformEvaluator(bobject, self.scene, self.depsgraph) as evaluator:
+            matrix_local = evaluator.matrix_local
 
         # Static transform
         o['transform'] = {'values': ArmoryExporter.write_matrix(matrix_local)}
@@ -471,7 +453,7 @@ class ArmoryExporter:
             if bobject.type == 'CAMERA' and bobject.library:
                 struct_name = bobject.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
             else:
-                struct_name = arm.utils.asset_name(bobject)
+                struct_name = linked_utils.asset_name(bobject)
 
             self.bobject_array[bobject] = {
                 "objectType": btype,
@@ -967,7 +949,7 @@ class ArmoryExporter:
             # Export the object reference and material references
             objref = bobject.data
             if objref is not None:
-                objname = arm.utils.asset_name(objref)
+                objname = linked_utils.asset_name(objref)
 
             # LOD
             if bobject.type == 'MESH' and hasattr(objref, 'arm_lodlist') and len(objref.arm_lodlist) > 0:
@@ -1929,27 +1911,11 @@ Make sure the mesh only has tris/quads.""")
         apply_modifiers = not armature
 
         if apply_modifiers:
-            # HACK: For linked objects with duplicate names, we need to force evaluation
-            # by temporarily adding the object to the current scene's collection
-            is_linked = bobject.name not in self.scene.collection.children
-            temp_collection = None
-
-            if is_linked:
-                temp_collection = bpy.data.collections.new("temp_collection")
-                bpy.context.scene.collection.children.link(temp_collection)
-                temp_collection.objects.link(bobject)
-
-            temp_depsgraph = bpy.context.evaluated_depsgraph_get()
-            bobject_eval = bobject.evaluated_get(temp_depsgraph)
-
-            if is_linked and temp_collection:
-                temp_collection.objects.unlink(bobject)
-                bpy.context.scene.collection.children.unlink(temp_collection)
-                bpy.data.collections.remove(temp_collection)
+            with linked_utils.evaluated_mesh(bobject, self.scene, self.depsgraph, apply_modifiers=True) as (bobject_eval, _):
+                export_mesh = bobject_eval.to_mesh(preserve_all_data_layers=True, depsgraph=self.depsgraph)
         else:
             bobject_eval = bobject
-
-        export_mesh = bobject_eval.to_mesh(preserve_all_data_layers=True, depsgraph=self.depsgraph)
+            export_mesh = bobject_eval.to_mesh(preserve_all_data_layers=True, depsgraph=self.depsgraph)
 
         # Export shape keys here
         if shape_keys:
@@ -1957,25 +1923,11 @@ Make sure the mesh only has tris/quads.""")
             # Update dependancy after new UV layer was added
             self.depsgraph.update()
             if apply_modifiers:
-                # HACK: Force individual evaluation again after shape key changes
-                is_linked = bobject.name not in self.scene.collection.children
-                temp_collection = None
-
-                if is_linked:
-                    temp_collection = bpy.data.collections.new("temp_collection")
-                    bpy.context.scene.collection.children.link(temp_collection)
-                    temp_collection.objects.link(bobject)
-
-                temp_depsgraph = bpy.context.evaluated_depsgraph_get()
-                bobject_eval = bobject.evaluated_get(temp_depsgraph)
-
-                if is_linked and temp_collection:
-                    temp_collection.objects.unlink(bobject)
-                    bpy.context.scene.collection.children.unlink(temp_collection)
-                    bpy.data.collections.remove(temp_collection)
+                with linked_utils.evaluated_mesh(bobject, self.scene, self.depsgraph, apply_modifiers=True) as (bobject_eval, _):
+                    export_mesh = bobject_eval.to_mesh(preserve_all_data_layers=True, depsgraph=self.depsgraph)
             else:
                 bobject_eval = bobject
-            export_mesh = bobject_eval.to_mesh(preserve_all_data_layers=True, depsgraph=self.depsgraph)
+                export_mesh = bobject_eval.to_mesh(preserve_all_data_layers=True, depsgraph=self.depsgraph)
 
         if export_mesh is None:
             log.warn(oid + ' was not exported')
@@ -2331,7 +2283,7 @@ Make sure the mesh only has tris/quads.""")
                 material.signature = signature
 
             o = {}
-            o['name'] = arm.utils.asset_name(material)
+            o['name'] = linked_utils.asset_name(material)
 
             if material.arm_skip_context != '':
                 o['skip_context'] = material.arm_skip_context
