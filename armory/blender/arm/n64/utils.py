@@ -147,16 +147,18 @@ def get_trait(trait_info: dict, trait_class: str) -> dict:
     return traits.get(simple_name, {})
 
 def trait_needs_data(trait_info: dict, trait_class: str) -> bool:
-    """Check if a trait needs a data struct (has members, signals, or parent).
+    """Check if a trait needs a data struct (has members, signals, signal_handlers, or parent).
 
     With inheritance (Option B), traits with parents need a data struct
     to hold the embedded parent struct.
+    Signal handlers need data struct to access 'object' pointer.
     """
     trait = get_trait(trait_info, trait_class)
     has_members = len(trait.get("members", [])) > 0
     has_signals = len(trait.get("meta", {}).get("signals", [])) > 0
+    has_signal_handlers = len(trait.get("meta", {}).get("signal_handlers", [])) > 0
     has_parent = trait.get("parent") is not None
-    return has_members or has_signals or has_parent
+    return has_members or has_signals or has_signal_handlers or has_parent
 
 
 def _build_parent_initializer(trait_info: dict, parent_class: str, current_scene: str,

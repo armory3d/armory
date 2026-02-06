@@ -36,6 +36,10 @@ class TypeMap {
         "Vec3" => "ArmVec3",
         "Vec4" => "ArmVec4",
 
+        // Trait types - stored as pointers to trait data structs
+        "RigidBody" => "void*",
+        "armory.trait.physics.RigidBody" => "void*",
+
         // UI types
         "Label" => "UILabel*",
         "KouiCanvas" => "void*",  // Canvas is metadata-only, not stored at runtime

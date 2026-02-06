@@ -303,6 +303,28 @@ class TraitCodeGenerator:
 
         return False
 
+    def _get_object_access_path(self) -> str:
+        """Get the path to access 'object' member from trait data struct.
+
+        For traits with inheritance, 'object' is in the base struct, so we need
+        to traverse the _parent chain. _parent is embedded by value, not pointer.
+        For example:
+        - No parent: data->object
+        - One parent: data->_parent.object
+        - Two parents: data->_parent._parent.object
+        """
+        path = "data->"
+        current = self.name
+        while current and current in self.all_traits:
+            current_ir = self.all_traits[current]
+            parent = current_ir.get("parent")
+            if parent:
+                path += "_parent."
+                current = parent
+            else:
+                break
+        return f"{path}object"
+
     def generate_data_struct(self) -> str:
         """Generate the data struct for trait members and signals.
 
@@ -317,6 +339,7 @@ class TraitCodeGenerator:
             } LevelData;
         """
         signals = self.meta.get("signals", [])
+        signal_handlers = self.meta.get("signal_handlers", [])
 
         # Find virtual methods that are FIRST DECLARED in this trait (not overrides)
         # Overrides use the parent's vtable pointer, so don't add duplicates
@@ -328,8 +351,9 @@ class TraitCodeGenerator:
                     virtual_methods.append(method_ir)
 
         # Check if we need a struct at all
-        # Need struct if: has members, has signals, has parent, or has virtual methods
-        if not self.members and not signals and not self.parent_name and not virtual_methods:
+        # Need struct if: has members, has signals, has signal_handlers, has parent, or has virtual methods
+        # Signal handlers need access to 'object' via data->object
+        if not self.members and not signals and not signal_handlers and not self.parent_name and not virtual_methods:
             return ""
 
         lines = [f"typedef struct {{"]
@@ -930,6 +954,14 @@ class TraitCodeGenerator:
             parent_ir = self.all_traits[self.parent_name]
             parent_c_name = parent_ir.get("c_name", self.parent_name.lower())
             impl_lines.append(f"    {parent_c_name}_on_add(obj, data);")
+        else:
+            # Base trait - initialize object pointer in data struct
+            # This must happen for all traits that have a data struct (check same conditions as generate_data_struct)
+            signal_handlers = self.meta.get("signal_handlers", [])
+            signals = self.meta.get("signals", [])
+            has_virtual = any(self._is_method_virtual(m) and self._find_vtable_owner(m) == self.name for m in self.methods)
+            if self.members or signals or signal_handlers or has_virtual:
+                impl_lines.append(f"    (({self.c_name}Data*)data)->object = obj;")
         body = self.emitter.emit_statements(event_nodes, "    ") if event_nodes else "    // Empty"
         impl_lines.append(body)
         impl_lines.append("}")
@@ -1127,8 +1159,11 @@ class TraitCodeGenerator:
                 handler_name = event_name[7:]  # Strip "signal_" prefix
 
                 # Find preamble from signal_handlers meta
-                # Default includes data cast so handler body can use 'data'
-                default_preamble = f"{self.c_name}Data* data = ({self.c_name}Data*)ctx; (void)payload;"
+                # Default includes data cast and obj extraction so handler body can use both.
+                # obj is needed for object.remove() and similar calls.
+                # Uses _get_object_access_path() to handle inheritance (data->_parent.object etc)
+                obj_access = self._get_object_access_path()
+                default_preamble = f"{self.c_name}Data* data = ({self.c_name}Data*)ctx; (void)payload; ArmObject* obj = (ArmObject*){obj_access}; (void)obj;"
                 preamble = default_preamble
                 for sh in signal_handlers:
                     if sh.get("handler_name") == handler_name:
