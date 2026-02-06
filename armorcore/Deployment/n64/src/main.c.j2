@@ -91,6 +91,9 @@ int main(void)
         SceneId pending = scene_get_pending();
         if (pending < SCENE_COUNT) {{
             scene_clear_pending();
+            // Cancel all tweens before clearing scene to prevent
+            // on_done callbacks from referencing freed scene objects
+            tween_clear_all();
             // Wait for RSP to finish before freeing display lists
             rspq_wait();
             scene_clear(current_scene);

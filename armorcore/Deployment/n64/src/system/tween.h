@@ -96,4 +96,7 @@ bool tween_is_stopped(ArmTween* tween);
 // System update - call once per frame
 void tween_update_all(float dt);
 
+// Cancel all active tweens without firing callbacks (safe for scene transitions)
+void tween_clear_all(void);
+
 #endif // ARM_TWEEN_H

@@ -247,6 +247,23 @@ void tween_update_all(float dt) {
     }
 }
 
+// Cancel all active tweens without firing callbacks.
+// Must be called during scene transitions to prevent dangling pointer dereferences
+// from on_done callbacks that reference freed scene objects.
+void tween_clear_all(void) {
+    for (int i = 0; i < MAX_TWEENS; i++) {
+        tween_pool[i].active = false;
+        tween_pool[i].paused = false;
+        tween_pool[i].pending_free = false;
+        tween_pool[i].type = TWEEN_NONE;
+        tween_pool[i].on_float = NULL;
+        tween_pool[i].on_vec4 = NULL;
+        tween_pool[i].on_done = NULL;
+        tween_pool[i].object = NULL;
+        tween_pool[i].data = NULL;
+    }
+}
+
 // ============================================================================
 // Easing functions - optimized for N64
 // ============================================================================
