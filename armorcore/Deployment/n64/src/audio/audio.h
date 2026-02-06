@@ -14,8 +14,10 @@ typedef struct {
     bool finished;
 } ArmSoundHandle;
 
+// Compare handles by sound_slot only (identifies the logical sound).
+// The channel field is a runtime assignment that changes, not part of identity.
 static inline bool arm_sound_handle_equals(ArmSoundHandle a, ArmSoundHandle b) {
-    return a.channel == b.channel && a.sound_slot == b.sound_slot;
+    return a.sound_slot == b.sound_slot;
 }
 
 void arm_audio_init(void);
