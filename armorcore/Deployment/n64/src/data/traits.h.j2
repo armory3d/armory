@@ -1,0 +1,39 @@
+/* N64 Exporter - Generated trait declarations
+ * This file is auto-generated from Armory traits. Do not edit.
+ * Template: traits.h.j2
+ */
+#pragma once
+
+#include "scenes.h"
+#include "../types.h"
+#include "../engine.h"
+#include "../system/signal.h"
+#include "../system/arm_array.h"
+#include "../events/trait_events.h"
+#include "../iron/system/input.h"
+
+#if ENGINE_ENABLE_UI
+#include "../ui/canvas.h"
+#endif
+
+{tween_include}
+
+#ifdef __cplusplus
+extern "C" {{
+#endif
+
+// Global signals (shared across traits and autoloads)
+{global_signal_externs}
+
+// Trait data structures (for per-instance data)
+{trait_data_structs}
+
+// Trait function declarations
+{trait_declarations}
+
+// Event handler declarations
+{event_handler_declarations}
+
+#ifdef __cplusplus
+}}
+#endif

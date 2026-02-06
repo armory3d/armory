@@ -1,0 +1,35 @@
+/* N64 Exporter - Generated trait implementations
+ * This file is auto-generated from Armory traits. Do not edit.
+ * Template: traits.c.j2
+ */
+#include "traits.h"
+#include "scenes.h"
+#include "../types.h"
+#include "../engine.h"
+#include "../utils.h"
+#include "../events/trait_events.h"
+#include "../iron/object/transform.h"
+#include "../iron/object/object.h"
+#include "../iron/system/input.h"
+#include "../system/time.h"
+#include "../render2d.h"
+#include <math.h>
+
+#if ENGINE_ENABLE_PHYSICS
+#include "../events/physics_events.h"
+#include "../oimo/physics.h"
+#endif
+
+#if ENGINE_ENABLE_UI
+#include "../ui/canvas.h"
+#endif
+
+{tween_include}
+
+// Autoload includes (for traits that call autoload functions)
+{autoload_includes}
+
+// Global signals (shared across traits)
+{global_signals}
+
+{trait_implementations}

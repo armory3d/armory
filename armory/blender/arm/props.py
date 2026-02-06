@@ -206,7 +206,7 @@ def init_properties():
                ('Oimo', 'Oimo', 'Oimo')],
         name="Physics Engine", default='Bullet', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_physics_fixed_step = FloatProperty(
-        name="Fixed Step", default=1/60, min=0, max=1,
+        name="Fixed Step", default=1/30, min=0, max=1,
         description="Physics steps for fixed update"
     )
     bpy.types.World.arm_physics_dbg_draw_wireframe = BoolProperty(
@@ -325,7 +325,8 @@ def init_properties():
     bpy.types.World.arm_verbose_output = BoolProperty(name="Verbose Output", description="Print additional information to the console during compilation", default=False)
     bpy.types.World.arm_runtime = EnumProperty(
         items=[('Krom', 'Krom', 'Krom'),
-               ('Browser', 'Browser', 'Browser')],
+               ('Browser', 'Browser', 'Browser'),
+               ('Ares', 'Ares', 'Ares')],
         name="Runtime", description="Runtime to use when launching the game", default='Krom', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_loadscreen = BoolProperty(name="Loading Screen", description="Show asset loading progress on published builds", default=True)
     bpy.types.World.arm_vsync = BoolProperty(name="VSync", description="Vertical Synchronization", default=True, update=assets.invalidate_compiler_cache)
@@ -406,6 +407,7 @@ def init_properties():
                ('Mobile', 'Mobile', 'Mobile'),
                ('Max', 'Max', 'Max'),
                ('2D/Baked', '2D/Baked', '2D/Baked'),
+               ('Fast64', 'Fast64', 'Fast64'),
                ],
         name="Preset", description="Render path preset", default='Desktop')
     bpy.types.World.arm_envtex_name = StringProperty(name="Environment Texture", default='')

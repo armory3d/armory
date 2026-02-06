@@ -142,4 +142,3 @@ def discover_linked_sources() -> Dict[str, Path]:
         if sources_path.exists() and sources_path.is_dir():
             sources[lib.name] = sources_path
     return sources
-

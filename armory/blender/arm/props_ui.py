@@ -12,6 +12,7 @@ from arm.lightmapper.panels import scene
 import arm.api
 import arm.assets as assets
 from arm.exporter import ArmoryExporter
+from arm.n64.exporter import N64Exporter
 import arm.log as log
 import arm.logicnode.replacement
 import arm.make as make
@@ -1249,6 +1250,11 @@ class ArmoryPlayButton(bpy.types.Operator):
 
         arm.utils.check_default_props()
 
+        wrd = bpy.data.worlds['Arm']
+        if wrd.arm_runtime == 'Ares':
+            state.is_n64 = True
+            if not wrd.arm_cache_build:
+                bpy.ops.arm.clean_project()
         assets.invalidate_enabled = False
         if wrd.arm_clear_on_compile:
             os.system("cls")
@@ -1309,11 +1315,16 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
             if wrd.arm_rplist[i].name == item.arm_project_rp:
                 wrd.arm_rplist_index = i
                 break
+
         assets.invalidate_shader_cache(None, None)
         assets.invalidate_enabled = False
         if wrd.arm_clear_on_compile:
             os.system("cls")
-        make.build(item.arm_project_target, is_export=True)
+        if item.arm_project_target == 'n64':
+            state.is_n64 = True
+            if not wrd.arm_cache_build:
+                bpy.ops.arm.clean_project()
+        make.build('custom' if item.arm_project_target == 'n64' else item.arm_project_target, is_export=True)
         make.compile()
         wrd.arm_rplist_index = rplist_index
         assets.invalidate_enabled = True
@@ -1360,8 +1371,12 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
         make.clean()
         assets.invalidate_enabled = False
         if wrd.arm_clear_on_compile:
-            os.system("cls")
-        make.build(item.arm_project_target, is_publish=True, is_export=True)
+                os.system("cls")
+        if item.arm_project_target == 'n64':
+            state.is_n64 = True
+            if not wrd.arm_cache_build:
+                bpy.ops.arm.clean_project()
+        make.build('custom' if item.arm_project_target == 'n64' else item.arm_project_target, is_publish=True, is_export=True)
         make.compile()
         wrd.arm_rplist_index = rplist_index
         assets.invalidate_enabled = True

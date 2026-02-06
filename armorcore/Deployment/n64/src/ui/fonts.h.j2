@@ -1,0 +1,22 @@
+#pragma once
+
+#include <libdragon.h>
+
+#ifdef __cplusplus
+extern "C" {{
+#endif
+
+typedef enum {{
+{font_enum_entries}
+    FONT_COUNT = {font_count}
+}} FontId;
+
+void fonts_init(void);
+void fonts_shutdown(void);
+
+rdpq_font_t *fonts_get(FontId id);
+uint8_t fonts_get_rdpq_id(FontId id);
+
+#ifdef __cplusplus
+}}
+#endif
