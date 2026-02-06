@@ -319,8 +319,17 @@ def _extract_rigid_body(exporter, obj, half_extents):
         rigid_body_data["half_height"] = rb_half_height
     elif rb_shape == "mesh":
         rigid_body_data["mesh_data"] = rb_mesh_data
+        exporter.mesh_collider_count += 1  # Track mesh collider count
     else:
         rigid_body_data["half_extents"] = rb_half_extents
+
+    # Track dynamic body count (non-mesh shapes)
+    if rb_shape != "mesh":
+        exporter.physics_body_count += 1
+
+    # Track contact body count (triggers or objects that may have contact events)
+    if rigid_body_data.get("is_trigger", False):
+        exporter.contact_body_count += 1
 
     exporter.has_physics = True
     return rigid_body_data

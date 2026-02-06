@@ -70,6 +70,14 @@ class N64Exporter:
         self.has_ui = False
         self.has_audio = False
 
+        # Physics body counts (auto-calculated during scene export)
+        self.physics_body_count = 0      # Dynamic bodies (box, sphere, capsule)
+        self.mesh_collider_count = 0     # Static mesh colliders
+        self.contact_body_count = 0      # Bodies with contact events (triggers)
+        self.max_physics_bodies = 0      # Max across all scenes
+        self.max_mesh_colliders = 0      # Max across all scenes
+        self.max_contact_bodies = 0      # Max across all scenes
+
         # UI state
         self.ui_canvas_data = {}
         self.theme_parser = None
@@ -131,7 +139,15 @@ class N64Exporter:
                 # Skip temp scene used for linked object export
                 if linked_export.is_temp_scene(scene):
                     continue
+                # Reset per-scene counters before building scene data
+                self.physics_body_count = 0
+                self.mesh_collider_count = 0
+                self.contact_body_count = 0
                 scene_exporter.build_scene_data(self, scene)
+                # Track max counts across all scenes
+                self.max_physics_bodies = max(self.max_physics_bodies, self.physics_body_count)
+                self.max_mesh_colliders = max(self.max_mesh_colliders, self.mesh_collider_count)
+                self.max_contact_bodies = max(self.max_contact_bodies, self.contact_body_count)
 
             # Compute static flags after trait_info is loaded
             n64_utils.compute_static_flags(self.scene_data, self.trait_info)

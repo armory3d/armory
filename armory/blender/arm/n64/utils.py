@@ -41,7 +41,7 @@ def c_float(value) -> str:
 # IMPORTANT: These values must match armory.n64.mapping.Constants in Haxe.
 # If you change these, update Constants.hx to maintain parity.
 N64_CONFIG = {
-    'max_physics_bodies': 32,        # Constants.MAX_PHYSICS_BODIES
+    'max_physics_bodies': 128,        # Constants.MAX_PHYSICS_BODIES
     'max_button_subscribers': 16,    # Constants.MAX_BUTTON_SUBSCRIBERS
     'max_contact_subscribers': 4,    # Constants.MAX_CONTACT_SUBSCRIBERS (per body)
     'max_contact_bodies': 16,        # Constants.MAX_CONTACT_BODIES
