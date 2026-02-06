@@ -113,6 +113,10 @@ void physics_contact_dispatch(void)
 
     OimoContact* contact = world->_contactManager._contactList;
     while (contact != NULL) {
+        // Save next before dispatching - handlers may trigger body removal
+        // which destroys contacts, invalidating contact->_next
+        OimoContact* next = contact->_next;
+
         // Only process touching contacts
         if (contact->_touching) {
             // Get both bodies' ArmObject pointers
@@ -125,7 +129,7 @@ void physics_contact_dispatch(void)
 
             // Skip this contact if neither body has subscribers
             if (!subs1 && !subs2) {
-                contact = contact->_next;
+                contact = next;
                 continue;
             }
 
@@ -134,7 +138,7 @@ void physics_contact_dispatch(void)
 
             // Skip if either object has been marked for removal
             if (!obj1 || !obj2 || obj1->is_removed || obj2->is_removed) {
-                contact = contact->_next;
+                contact = next;
                 continue;
             }
 
@@ -152,6 +156,6 @@ void physics_contact_dispatch(void)
                 }
             }
         }
-        contact = contact->_next;
+        contact = next;
     }
 }

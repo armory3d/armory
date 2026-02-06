@@ -11,6 +11,7 @@
 #include "tween.h"
 #include <string.h>
 #include <math.h>
+#include <libdragon.h>
 
 // Tween pool - statically allocated
 static ArmTween tween_pool[MAX_TWEENS];
@@ -292,13 +293,13 @@ static float ease_cubic_in_out(float t) {
 #endif
 
 static float ease_sine_in(float t) {
-    return 1.0f - cosf(t * M_PI * 0.5f);
+    return 1.0f - fm_cosf(t * M_PI * 0.5f);
 }
 
 static float ease_sine_out(float t) {
-    return sinf(t * M_PI * 0.5f);
+    return fm_sinf(t * M_PI * 0.5f);
 }
 
 static float ease_sine_in_out(float t) {
-    return 0.5f * (1.0f - cosf(M_PI * t));
+    return 0.5f * (1.0f - fm_cosf(M_PI * t));
 }

@@ -22,9 +22,11 @@ typedef struct OimoIncidentVertex {
 typedef struct OimoFaceClipper {
     OimoScalar w, h;
     int num_vertices;
-    OimoIncidentVertex vertices[8];
     int num_tmp_vertices;
-    OimoIncidentVertex tmp_vertices[8];
+    OimoIncidentVertex buf_a[8];
+    OimoIncidentVertex buf_b[8];
+    OimoIncidentVertex *vertices;
+    OimoIncidentVertex *tmp_vertices;
 } OimoFaceClipper;
 
 typedef struct OimoBoxBoxDetector {
@@ -65,6 +67,8 @@ static inline void oimo_face_clipper_init(OimoFaceClipper* clipper, OimoScalar w
     clipper->h = h;
     clipper->num_vertices = 0;
     clipper->num_tmp_vertices = 0;
+    clipper->vertices = clipper->buf_a;
+    clipper->tmp_vertices = clipper->buf_b;
 }
 
 static inline void oimo_face_clipper_add_vertex(OimoFaceClipper* clipper,
@@ -74,13 +78,10 @@ static inline void oimo_face_clipper_add_vertex(OimoFaceClipper* clipper,
 }
 
 static inline void oimo_face_clipper_flip(OimoFaceClipper* clipper) {
-    // Swap vertices and tmp_vertices
-    OimoIncidentVertex temp[8];
-    for (int i = 0; i < 8; i++) {
-        oimo_incident_vertex_copy(&temp[i], &clipper->vertices[i]);
-        oimo_incident_vertex_copy(&clipper->vertices[i], &clipper->tmp_vertices[i]);
-        oimo_incident_vertex_copy(&clipper->tmp_vertices[i], &temp[i]);
-    }
+    // Swap buffer pointers instead of copying data
+    OimoIncidentVertex *tmp = clipper->vertices;
+    clipper->vertices = clipper->tmp_vertices;
+    clipper->tmp_vertices = tmp;
     clipper->num_vertices = clipper->num_tmp_vertices;
     clipper->num_tmp_vertices = 0;
 }
