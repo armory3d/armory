@@ -25,6 +25,7 @@ import armory.n64.converters.AudioCallConverter;
 import armory.n64.converters.TweenCallConverter;
 import armory.n64.converters.MapCallConverter;
 import armory.n64.converters.ArrayCallConverter;
+import armory.n64.converters.StringCallConverter;
 
 using haxe.macro.ExprTools;
 using haxe.macro.TypeTools;
@@ -274,6 +275,7 @@ class AutoloadExtractor implements IExtractorContext {
             new TweenCallConverter(),
             new MapCallConverter(),
             new ArrayCallConverter(),
+            new StringCallConverter(),
         ];
     }
 
@@ -659,6 +661,23 @@ class AutoloadExtractor implements IExtractorContext {
                             value: "count",  // .length -> .count for C arrays
                             object: exprToIR(obj)
                         };
+                    }
+                }
+
+                // Handle Scene.active.raw.name -> scene_get_name(scene_get_current_id())
+                if (field == "name") {
+                    switch (obj.expr) {
+                        case EField(innerObj, "raw"):
+                            switch (innerObj.expr) {
+                                case EField(sceneExpr, "active"):
+                                    switch (sceneExpr.expr) {
+                                        case EConst(CIdent("Scene")):
+                                            return { type: "c_literal", c_code: "scene_get_name(scene_get_current_id())" };
+                                        default:
+                                    }
+                                default:
+                            }
+                        default:
                     }
                 }
 

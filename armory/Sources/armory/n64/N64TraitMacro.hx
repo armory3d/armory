@@ -32,6 +32,7 @@ import armory.n64.converters.TweenCallConverter;
 import armory.n64.converters.Graphics2CallConverter;
 import armory.n64.converters.MapCallConverter;
 import armory.n64.converters.ArrayCallConverter;
+import armory.n64.converters.StringCallConverter;
 
 using haxe.macro.ExprTools;
 using haxe.macro.TypeTools;
@@ -298,6 +299,7 @@ class TraitExtractor implements IExtractorContext {
             new Graphics2CallConverter(),
             new MapCallConverter(),
             new ArrayCallConverter(),
+            new StringCallConverter(),
         ];
 
         // NOTE: We do NOT load inherited member types here to avoid triggering

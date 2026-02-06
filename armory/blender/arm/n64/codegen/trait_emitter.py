@@ -1828,6 +1828,29 @@ class TraitEmitter:
             return f"{cast}({self.emit(args[0])})"
         return ""
 
+    def emit_string_call(self, node: Dict) -> str:
+        """StringTools calls -> C string functions.
+
+        starts_with: strncmp(str, prefix, strlen(prefix)) == 0
+        ends_with:   str_ends_with(str, suffix) (custom helper)
+        contains:    strstr(str, sub) != NULL
+        """
+        func = node.get("value", "")
+        args = node.get("args", [])
+        if len(args) < 2:
+            return ""
+        s = self.emit(args[0])
+        sub = self.emit(args[1])
+        if not s or not sub:
+            return ""
+        if func == "starts_with":
+            return f"(strncmp({s}, {sub}, strlen({sub})) == 0)"
+        elif func == "ends_with":
+            return f"str_ends_with({s}, {sub})"
+        elif func == "contains":
+            return f"(strstr({s}, {sub}) != NULL)"
+        return ""
+
     def emit_debug_call(self, node: Dict) -> str:
         """trace() -> debugf()"""
         args = node.get("args", [])
