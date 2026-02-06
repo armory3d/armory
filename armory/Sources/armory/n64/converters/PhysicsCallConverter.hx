@@ -61,7 +61,14 @@ class PhysicsCallConverter implements ICallConverter {
             case "setLinearVelocity":
                 "{ OimoVec3 _v = (OimoVec3){({0}).x, ({0}).z, -({0}).y}; physics_set_linear_velocity({obj}->rigid_body, &_v); }";
             case "getLinearVelocity":
-                "physics_get_linear_velocity({obj}->rigid_body)";
+                // Returns OimoVec3, convert to ArmVec4 with reverse coordinate swizzle
+                // Oimo (x,y,z) -> Arm (x,-z,y,1.0f)
+                "({ OimoVec3 _gv = physics_get_linear_velocity({obj}->rigid_body); (ArmVec4){_gv.x, -_gv.z, _gv.y, 1.0f}; })";
+            case "getAngularVelocity":
+                // Returns OimoVec3, convert to ArmVec4 with reverse coordinate swizzle
+                "({ OimoVec3 _gv = physics_get_angular_velocity({obj}->rigid_body); (ArmVec4){_gv.x, -_gv.z, _gv.y, 1.0f}; })";
+            case "setAngularVelocity":
+                "{ OimoVec3 _v = (OimoVec3){({0}).x, ({0}).z, -({0}).y}; physics_set_angular_velocity({obj}->rigid_body, &_v); }";
             default:
                 null;
         };
