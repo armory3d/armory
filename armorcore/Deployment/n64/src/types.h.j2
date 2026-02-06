@@ -23,10 +23,19 @@
  *
  * MEMORY LIMITS (N64 Hardware)
  * ----------------------------
- *   Total RAM:           4 MB (with Expansion Pak), 8 MB addressable
+ *   Total RAM:           4 MB (8 MB with Expansion Pak)
  *   Heap available:      ~380 KB typical after engine + assets
- *   Stack size:          8 KB default
- *   Uncached memory:     Limited - used for DMA, display lists
+ *   Stack size:          64 KB (libdragon STACK_SIZE 0x10000 in system.c)
+ *   Uncached memory:     Shared heap with regular malloc - used for DMA,
+ *                        display lists, RSP mixer sample buffers, model matrices
+ *
+ *   NOTE: sbrk() prevents the heap from growing within 64 KB of the stack
+ *   pointer. Stack overflow into heap is NOT a concern with ~1200 bytes
+ *   worst-case physics stack usage. However, the uncached heap
+ *   (malloc_uncached) is shared between the RSP mixer (sample buffers)
+ *   and the scene system (model_mat allocations). Heap corruption from
+ *   any source can crash the mixer (e.g., corrupted DRAM pointer in
+ *   RSP mixer overlay).
  *
  *   Recommended limits:
  *     - Objects per scene:     64-128 max
