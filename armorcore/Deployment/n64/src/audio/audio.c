@@ -20,8 +20,8 @@ static struct {
     float channel_volumes[AUDIO_MIXER_CHANNELS];
     int8_t channel_mix_mapping[AUDIO_MIXER_CHANNELS];
     int8_t channel_sound_slot[AUDIO_MIXER_CHANNELS];
-    uint8_t channel_in_use;       // Bitfield for up to 8 channels
-    uint8_t channel_stereo_main;  // Bitfield: 1 = this channel is stereo primary (uses ch+1)
+    uint32_t channel_in_use;       // Bitfield for up to 32 channels
+    uint32_t channel_stereo_main;  // Bitfield: 1 = this channel is stereo primary (uses ch+1)
 } state;
 
 static SoundSlot sound_slots[MAX_LOADED_SOUNDS];
@@ -151,9 +151,6 @@ void arm_audio_start(ArmSoundHandle *handle)
         }
     }
 
-    // Flush finished channels before searching for a free one
-    arm_audio_update();
-
     // Find free channel(s)
     int ch = -1;
     if (is_stereo) {
@@ -169,38 +166,6 @@ void arm_audio_start(ArmSoundHandle *handle)
         // Mono needs one free channel
         for (int i = 0; i < AUDIO_MIXER_CHANNELS; i++) {
             if (!(state.channel_in_use & (1 << i))) {
-                ch = i;
-                break;
-            }
-        }
-    }
-
-    // Channel preemption: if all channels are busy, steal a non-looping one
-    if (ch < 0) {
-        for (int i = 0; i < AUDIO_MIXER_CHANNELS; i++) {
-            if (!(state.channel_in_use & (1 << i))) continue;
-
-            // Skip stereo sub-channels
-            if (i > 0 && (state.channel_stereo_main & (1 << (i - 1)))) continue;
-
-            // Only steal non-looping channels (SFX, not music)
-            int ss = state.channel_sound_slot[i];
-            if (ss >= 0 && !sound_slots[ss].loop) {
-                // Stop and release this channel
-                mixer_ch_stop(i);
-                state.channel_in_use &= ~(1 << i);
-                state.channel_mix_mapping[i] = -1;
-                state.channel_sound_slot[i] = -1;
-
-                if (state.channel_stereo_main & (1 << i)) {
-                    state.channel_stereo_main &= ~(1 << i);
-                    if (i + 1 < AUDIO_MIXER_CHANNELS) {
-                        state.channel_in_use &= ~(1 << (i + 1));
-                        state.channel_mix_mapping[i + 1] = -1;
-                        state.channel_sound_slot[i + 1] = -1;
-                    }
-                }
-
                 ch = i;
                 break;
             }

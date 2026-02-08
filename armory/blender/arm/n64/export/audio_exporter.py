@@ -108,14 +108,44 @@ def write_audio_config(exporter):
         const_name = f'AUDIO_MIX_{name.upper()}'
         mix_channel_defines.append(f'#define {const_name} {i}')
 
+    # Detect Aura channel size from source files (default 32 - N64 mixer supports up to 32)
+    channel_size = detect_aura_channel_size()
+
     output = tmpl_content.format(
-        audio_mixer_channels=8,  # Total hardware channels
+        audio_mixer_channels=channel_size,
         audio_mix_channel_count=len(mix_channel_names),
         mix_channel_defines='\n'.join(mix_channel_defines)
     )
 
     with open(out_path, 'w', encoding='utf-8') as f:
         f.write(output)
+
+
+def detect_aura_channel_size():
+    """Read Aura channel size from n64_autoloads.json.
+
+    The channel size is extracted from Aura.init() calls during macro
+    processing and stored in the audio_config section of the JSON.
+
+    Returns:
+        int: The detected channel size, or 32 if not found
+    """
+    autoloads_path = os.path.join(arm.utils.build_dir(), 'n64', 'n64_autoloads.json')
+
+    if os.path.exists(autoloads_path):
+        try:
+            with open(autoloads_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                audio_config = data.get('audio_config', {})
+                channel_size = audio_config.get('channel_size')
+                if channel_size is not None:
+                    log.info(f'Detected Aura channel size from macro: {channel_size}')
+                    return int(channel_size)
+        except (json.JSONDecodeError, IOError) as e:
+            log.warn(f'Failed to read audio config from n64_autoloads.json: {e}')
+
+    log.info('Aura channel size not found in JSON, using default: 32')
+    return 32  # Default to N64 max
 
 
 def collect_mix_channels_from_ir():

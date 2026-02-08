@@ -212,7 +212,8 @@ class N64AutoloadMacro {
 
         var output:Dynamic = {
             ir_version: 1,
-            autoloads: autoloads
+            autoloads: autoloads,
+            audio_config: N64MacroBase.audioConfig
         };
 
         N64MacroBase.writeJsonFile("n64_autoloads.json", output);

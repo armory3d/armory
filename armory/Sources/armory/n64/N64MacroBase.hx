@@ -21,6 +21,9 @@ import armory.n64.IRTypes;
  * This reduces code duplication between the two macro files.
  */
 class N64MacroBase {
+    // Global audio configuration (set by AudioCallConverter when Aura.init() is found)
+    public static var audioConfig:Dynamic = {};
+
     /**
      * Serialize an IRNode to a Dynamic object for JSON output.
      */

@@ -4,6 +4,7 @@ package armory.n64.converters;
 import haxe.macro.Expr;
 import haxe.macro.Context;
 import armory.n64.IRTypes;
+import armory.n64.N64MacroBase;
 import armory.n64.converters.ICallConverter;
 import armory.n64.util.ExprUtils;
 
@@ -92,7 +93,25 @@ class AudioCallConverter implements ICallConverter {
                 return { type: "skip", warn: "Aura.createCompBufferChannel() requires 3 arguments" };
 
             case "init":
-                // Aura.init() is handled by engine init, skip silently (intentional)
+                // Aura.init({channelSize: N}) - extract channelSize and store in global config
+                if (rawParams.length >= 1) {
+                    switch (rawParams[0].expr) {
+                        case EObjectDecl(fields):
+                            for (field in fields) {
+                                if (field.field == "channelSize") {
+                                    switch (field.expr.expr) {
+                                        case EConst(CInt(v)):
+                                            var channelSize = Std.parseInt(v);
+                                            // Clamp to N64 max of 32 channels
+                                            if (channelSize > 32) channelSize = 32;
+                                            N64MacroBase.audioConfig.channel_size = channelSize;
+                                        default:
+                                    }
+                                }
+                            }
+                        default:
+                    }
+                }
                 return { type: "skip" };
 
             default:
