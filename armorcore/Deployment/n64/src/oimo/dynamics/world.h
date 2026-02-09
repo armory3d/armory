@@ -71,8 +71,8 @@ static inline void oimo_world_init(OimoWorld* world, OimoVec3* gravity) {
     world->_numShapes = 0;
     world->_numIslands = 0;
 
-    world->_numVelocityIterations = 10;
-    world->_numPositionIterations = 5;
+    world->_numVelocityIterations = 10;  // Reduce value for performance, but may cause instability at high speeds
+    world->_numPositionIterations = 5;   // Reduce value for performance, but may cause instability at high speeds
 
     world->_timeStep = oimo_time_step_create();
     oimo_island_init(&world->_island);

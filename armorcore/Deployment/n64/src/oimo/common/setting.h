@@ -22,7 +22,7 @@ typedef float OimoScalar;
 
 #define OIMO_CONTACT_USE_ALT_POS_CORRECTION_DEPTH_THRESHOLD  0.05f
 #define OIMO_CONTACT_PERSISTENCE_THRESHOLD         0.05f
-#define OIMO_MAX_MANIFOLD_POINTS                   4
+#define OIMO_MAX_MANIFOLD_POINTS                   4  // Reduce value for performance, but may cause tunneling at high speeds
 
 #define OIMO_SLEEPING_VELOCITY_THRESHOLD           0.2f
 #define OIMO_SLEEPING_ANGULAR_VELOCITY_THRESHOLD   0.5f
