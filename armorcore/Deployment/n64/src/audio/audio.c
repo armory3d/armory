@@ -72,7 +72,7 @@ void arm_audio_shutdown(void)
 
 void arm_audio_update(void)
 {
-    uint8_t mask = state.channel_in_use;
+    uint32_t mask = state.channel_in_use;
     for (int ch = 0; mask; ch++, mask >>= 1) {
         if (!(mask & 1)) continue;
 
@@ -342,7 +342,7 @@ void arm_audio_set_mix_volume(int mix_channel, float volume)
     else if (volume > 1.0f) volume = 1.0f;
     state.mix_volumes[mix_channel] = volume;
 
-    uint8_t mask = state.channel_in_use;
+    uint32_t mask = state.channel_in_use;
     for (int ch = 0; mask; ch++, mask >>= 1) {
         if ((mask & 1) && state.channel_mix_mapping[ch] == mix_channel) {
             apply_channel_volume(ch);
@@ -358,7 +358,7 @@ float arm_audio_get_mix_volume(int mix_channel)
 
 void arm_audio_stop_all(void)
 {
-    uint8_t mask = state.channel_in_use;
+    uint32_t mask = state.channel_in_use;
     for (int ch = 0; mask; ch++, mask >>= 1) {
         if (mask & 1) {
             mixer_ch_stop(ch);

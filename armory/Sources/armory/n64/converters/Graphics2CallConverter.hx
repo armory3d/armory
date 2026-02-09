@@ -26,7 +26,7 @@ class Graphics2CallConverter implements ICallConverter {
 
     function convertGraphics2Call(method:String, args:Array<IRNode>, rawParams:Array<Expr>, ctx:IExtractorContext):IRNode {
         switch (method) {
-            case "fillRect", "drawRect":
+            case "fillRect":
                 if (args.length >= 4) {
                     return {
                         type: "render2d_fill_rect",
