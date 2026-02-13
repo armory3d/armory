@@ -1,0 +1,115 @@
+package armory.n64.converters;
+
+#if macro
+import haxe.macro.Expr;
+import haxe.ds.StringMap;
+import armory.n64.IRTypes;
+import armory.n64.mapping.Constants;
+import armory.n64.converters.ICallConverter;
+
+using StringTools;
+
+/**
+ * Converts Vec2/Vec3/Vec4 method calls to C struct operations.
+ * Handles: mult, add, sub, dot, normalize, length, clone, set
+ *
+ * Note: cross, setFrom are not yet implemented (add when needed).
+ */
+class VecCallConverter implements ICallConverter {
+    static var vecMethods = ["mult", "add", "sub", "dot", "normalize", "length", "clone", "set"];
+
+    public function new() {}
+
+    public function tryConvert(obj:Expr, method:String, args:Array<IRNode>, rawParams:Array<Expr>, ctx:IExtractorContext):IRNode {
+        // Check if this is a known Vec method
+        if (!Lambda.has(vecMethods, method)) return null;
+
+        // Check if the object type is a Vec type
+        var objType = ctx.getExprType(obj);
+        if (objType == null || !objType.startsWith("Vec")) return null;
+
+        var objIR = ctx.exprToIR(obj);
+        return convert(method, objIR, args, objType);
+    }
+
+    function convert(method:String, objIR:IRNode, args:Array<IRNode>, vecType:String):IRNode {
+        // Determine C type based on Haxe type
+        var cType = switch (vecType) {
+            case "Vec4": "ArmVec4";
+            case "Vec3": "ArmVec3";
+            default: "ArmVec2";
+        };
+        var is3D = (vecType == "Vec3" || vecType == "Vec4");
+
+        // Template uses {v} for vector, {0} for first arg
+        var c_code = switch (method) {
+            case "length":
+                is3D ? "sqrtf({v}.x*{v}.x + {v}.y*{v}.y + {v}.z*{v}.z)"
+                     : "sqrtf({v}.x*{v}.x + {v}.y*{v}.y)";
+            case "mult":
+                is3D ? "(" + cType + "){{v}.x*({0}), {v}.y*({0}), {v}.z*({0})}"
+                     : "(" + cType + "){{v}.x*({0}), {v}.y*({0})}";
+            case "add":
+                is3D ? "(" + cType + "){{v}.x+({0}).x, {v}.y+({0}).y, {v}.z+({0}).z}"
+                     : "(" + cType + "){{v}.x+({0}).x, {v}.y+({0}).y}";
+            case "sub":
+                is3D ? "(" + cType + "){{v}.x-({0}).x, {v}.y-({0}).y, {v}.z-({0}).z}"
+                     : "(" + cType + "){{v}.x-({0}).x, {v}.y-({0}).y}";
+            case "dot":
+                is3D ? "({v}.x*({0}).x + {v}.y*({0}).y + {v}.z*({0}).z)"
+                     : "({v}.x*({0}).x + {v}.y*({0}).y)";
+            case "normalize":
+                // Note: normalize modifies in-place, needs the original var name
+                // We use {vraw} placeholder for unparenthesized var
+                is3D ? "{ float _l=sqrtf({v}.x*{v}.x+{v}.y*{v}.y+{v}.z*{v}.z); if(_l>0.0f){ {vraw}.x/=_l; {vraw}.y/=_l; {vraw}.z/=_l; } }"
+                     : "{ float _l=sqrtf({v}.x*{v}.x+{v}.y*{v}.y); if(_l>0.0f){ {vraw}.x/=_l; {vraw}.y/=_l; } }";
+            case "clone":
+                // Clone creates a copy - type depends on target
+                // Special case: transform.scale is stored with SCALE_FACTOR, so multiply by inverse to get Blender values
+                var isScaleClone = (objIR.type == "field_access" && objIR.value == "transform.scale");
+                if (isScaleClone) {
+                    var inv = Constants.SCALE_FACTOR_INV_C;
+                    if (cType == "ArmVec4") '($cType){{v}.x*$inv, {v}.y*$inv, {v}.z*$inv, 1.0f}';
+                    else if (cType == "ArmVec3") '($cType){{v}.x*$inv, {v}.y*$inv, {v}.z*$inv}';
+                    else '($cType){{v}.x*$inv, {v}.y*$inv}';
+                } else {
+                    if (cType == "ArmVec4") "(" + cType + "){{v}.x, {v}.y, {v}.z, 1.0f}";
+                    else if (cType == "ArmVec3") "(" + cType + "){{v}.x, {v}.y, {v}.z}";
+                    else "(" + cType + "){{v}.x, {v}.y}";
+                }
+            case "set":
+                // set(x, y, z) or set(x, y, z, w) - modifies in-place
+                // Check if this is a transform vector (loc, scale) which uses T3DVec3
+                var isTransformVec = (objIR.type == "field_access" && objIR.value != null &&
+                    (StringTools.endsWith(objIR.value, ".loc") || StringTools.endsWith(objIR.value, ".scale")));
+                if (isTransformVec) {
+                    // Transform vectors are T3DVec3 (3 components, stored in .v array)
+                    "{ {vraw}.v[0] = {0}; {vraw}.v[1] = {1}; {vraw}.v[2] = {2}; }";
+                } else if (cType == "ArmVec4") {
+                    "{ {vraw}.x = {0}; {vraw}.y = {1}; {vraw}.z = {2}; {vraw}.w = {3}; }";
+                } else if (cType == "ArmVec3") {
+                    "{ {vraw}.x = {0}; {vraw}.y = {1}; {vraw}.z = {2}; }";
+                } else {
+                    "{ {vraw}.x = {0}; {vraw}.y = {1}; }";
+                }
+            default:
+                null;
+        };
+
+        if (c_code == null) return { type: "skip" };
+
+        return {
+            type: "vec_call",
+            c_code: c_code,
+            object: objIR,
+            args: args,
+            props: {
+                vecType: vecType,
+                cType: cType,
+                is3D: is3D
+            }
+        };
+    }
+}
+
+#end

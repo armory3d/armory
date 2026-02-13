@@ -19,6 +19,7 @@ import bpy
 
 from arm import assets
 from arm.exporter import ArmoryExporter
+from arm.n64.exporter import N64Exporter
 import arm.lib.make_datas
 import arm.lib.server
 import arm.live_patch as live_patch
@@ -35,6 +36,8 @@ if arm.is_reload(__name__):
     assets = arm.reload_module(assets)
     arm.exporter = arm.reload_module(arm.exporter)
     from arm.exporter import ArmoryExporter
+    arm.n64.exporter = arm.reload_module(arm.n64.exporter)
+    from arm.n64.exporter import N64Exporter
     arm.lib.make_datas = arm.reload_module(arm.lib.make_datas)
     arm.lib.server = arm.reload_module(arm.lib.server)
     live_patch = arm.reload_module(live_patch)
@@ -627,9 +630,13 @@ def build_done():
 
 def runtime_to_target():
     wrd = bpy.data.worlds['Arm']
-    if wrd.arm_runtime == 'Krom':
-        return 'krom'
-    return 'html5'
+    match wrd.arm_runtime:
+        case 'Krom':
+            return 'krom'
+        case 'Browser':
+            return 'html5'
+        case 'Ares':
+            return 'custom'  # N64 uses custom target for Haxe macro execution
 
 def get_khajs_path(target):
     if target == 'krom':
@@ -676,6 +683,21 @@ def play():
 def build_success():
     log.clear()
     wrd = bpy.data.worlds['Arm']
+
+    # N64 target: Krom build complete, now run N64 exporter
+    if state.is_n64:
+        state.is_n64 = False  # Reset flag
+        if state.is_play:
+            N64Exporter.play_project()
+        elif state.is_publish:
+            N64Exporter.publish_project()
+            if arm.utils.get_open_n64_rom_directory():
+                arm.utils.open_folder(os.path.abspath(arm.utils.build_dir() + '/n64'))
+        else:
+            N64Exporter.export_project()
+            if arm.utils.get_open_n64_rom_directory():
+                arm.utils.open_folder(os.path.abspath(arm.utils.build_dir() + '/n64'))
+        return
 
     if state.is_play:
         cmd = []
