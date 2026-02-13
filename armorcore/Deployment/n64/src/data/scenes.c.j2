@@ -321,9 +321,6 @@ void scene_clear(SceneId id)
     ArmScene *s = &g_scenes[id];
     scene_on_remove(id);
 
-    // Free static display list
-    renderer_free_static_dpl(s);
-
     // Free object resources
     if (s->objects != NULL) {{
         for (uint16_t i = 0; i < s->object_count; i++) {{

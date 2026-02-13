@@ -110,25 +110,12 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
 
     const T3DFrustum *frustum = &viewport->viewFrustum;
     int visible_count = 0;
-    int static_rendered = 0;
 
-    // Render batched static objects if available
-    if (scene->static_dpl) {
-        rspq_block_run(scene->static_dpl);
-        static_rendered = scene->static_count;
-        visible_count += static_rendered;
-    }
-
-    // Render dynamic objects (and unbatched static objects if threshold not met)
+    // Render dynamic objects with per-frame frustum culling
     t3d_matrix_push_pos(1);
     for (uint16_t i = 0; i < scene->object_count; i++) {
         ArmObject *obj = &scene->objects[i];
         if (!obj->visible) {
-            continue;
-        }
-
-        // Skip static objects if they were rendered via combined display list
-        if (obj->is_static && scene->static_dpl) {
             continue;
         }
 
@@ -152,7 +139,7 @@ void renderer_draw_scene(T3DViewport *viewport, ArmScene *scene)
 #ifdef ARM_DEBUG_HUD
     rdpq_sync_pipe();
     rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 200, 220, "FPS: %.2f", display_get_fps());
-    rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 200, 230, "Obj: %d/%d (S:%d)", visible_count, scene->object_count, scene->static_count);
+    rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 200, 230, "Obj: %d/%d", visible_count, scene->object_count);
 
     // Input debug
     rdpq_text_printf(NULL, FONT_BUILTIN_DEBUG_MONO, 10, 10, "Stick: %.2f, %.2f", input_stick_x(), input_stick_y());
@@ -174,47 +161,4 @@ void renderer_end_frame(T3DViewport *viewport)
     physics_debug_draw(viewport, physics_get_world());
 #endif
     rdpq_detach_show();
-}
-
-void renderer_build_static_dpl(ArmScene *scene)
-{
-    // Count static objects
-    uint16_t static_count = 0;
-    for (uint16_t i = 0; i < scene->object_count; i++) {
-        if (scene->objects[i].is_static && scene->objects[i].visible) {
-            static_count++;
-        }
-    }
-    scene->static_count = static_count;
-
-    // Only batch if we have enough static objects to make it worthwhile
-    if (static_count < STATIC_BATCH_THRESHOLD) {
-        scene->static_dpl = NULL;
-        return;
-    }
-
-    // Build combined display list for all static objects
-    // Note: This must be called AFTER initial matrix computation (after first few frames)
-    rspq_block_begin();
-    t3d_matrix_push_pos(1);
-    for (uint16_t i = 0; i < scene->object_count; i++) {
-        ArmObject *obj = &scene->objects[i];
-        if (!obj->is_static || !obj->visible || !obj->dpl) {
-            continue;
-        }
-        // Use frame 0 matrix (all frames should be identical for static objects)
-        t3d_matrix_set(&obj->model_mat[0], true);
-        rspq_block_run(obj->dpl);
-    }
-    t3d_matrix_pop(1);
-    scene->static_dpl = rspq_block_end();
-}
-
-void renderer_free_static_dpl(ArmScene *scene)
-{
-    if (scene->static_dpl) {
-        rspq_block_free(scene->static_dpl);
-        scene->static_dpl = NULL;
-    }
-    scene->static_count = 0;
 }

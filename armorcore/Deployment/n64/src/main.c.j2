@@ -32,9 +32,6 @@
 
 #define FIXED_TIMESTEP ({fixed_timestep}f)
 
-// Build static display list after this many frames (for triple-buffering)
-#define STATIC_DPL_BUILD_FRAME (FB_COUNT + 1)
-
 int main(void)
 {{
     engine_init();
@@ -60,7 +57,6 @@ int main(void)
     scene_init(current_scene);
 
     float fixed_time = 0.0f;
-    uint8_t frame_count = 0;  // Track frames for static DPL building
 
     for (;;) {{
         time_update();
@@ -104,7 +100,6 @@ int main(void)
             // Free all models to reclaim memory before loading new scene
             models_unload_all();
             fixed_time = 0.0f;
-            frame_count = 0;  // Reset frame counter for new scene
             current_scene = pending;
 #if ENGINE_ENABLE_UI
             canvas_scene_init(current_scene);  // Clears old labels and loads new canvas
@@ -125,14 +120,6 @@ int main(void)
 #if ENGINE_ENABLE_AUDIO
         arm_audio_mixer_poll();
 #endif
-
-        // Build static display list after initial frames (matrices computed for all buffers)
-        if (frame_count == STATIC_DPL_BUILD_FRAME) {{
-            renderer_build_static_dpl(scene);
-        }}
-        if (frame_count <= STATIC_DPL_BUILD_FRAME) {{
-            frame_count++;
-        }}
     }}
 
 #if ENGINE_ENABLE_UI

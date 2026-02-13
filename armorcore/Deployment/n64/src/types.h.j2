@@ -72,15 +72,10 @@
 extern "C" {{
 #endif
 
-#define FB_COUNT 3 {debug_hud_define}
+#define FB_COUNT 5 {debug_hud_define}
 
 // Number of frames to keep transform dirty for double/triple buffering
 #define TRANSFORM_DIRTY_FRAMES 3
-
-// Minimum static objects to batch into a combined display list
-#ifndef STATIC_BATCH_THRESHOLD
-#define STATIC_BATCH_THRESHOLD 3
-#endif
 
 struct OimoRigidBody;
 
@@ -245,8 +240,6 @@ typedef struct ArmScene {{
     uint16_t object_count;        // Total slots in object array
     uint16_t active_count;        // Number of active (non-removed) objects
     ArmObject *objects;
-    uint16_t static_count;        // Number of static objects
-    rspq_block_t *static_dpl;     // Combined display list for static objects
 
     // Object pool recycling - free list for removed object slots
     uint16_t *free_list;          // Array of free slot indices
