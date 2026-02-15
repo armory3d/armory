@@ -43,9 +43,13 @@ def convert_scene_data(scene_data: dict) -> dict:
             obj['pos'] = convert_vec3_list(obj['pos'])
             obj['rot'] = convert_quat_list(obj['rot'])
             obj['scale'] = convert_scale_list(obj['scale'])
-            if 'bounds_center' in obj:
-                obj['bounds_center'] = convert_vec3_list(obj['bounds_center'])
-                obj['bounds_radius'] = obj['bounds_radius'] * SCALE_FACTOR
+            if 'bounds_min' in obj:
+                obj['bounds_min'] = convert_vec3_list(obj['bounds_min'])
+                obj['bounds_max'] = convert_vec3_list(obj['bounds_max'])
+                # After axis swap (Y<->Z, negate), re-sort min/max per axis
+                for i in range(3):
+                    if obj['bounds_min'][i] > obj['bounds_max'][i]:
+                        obj['bounds_min'][i], obj['bounds_max'][i] = obj['bounds_max'][i], obj['bounds_min'][i]
 
     return scene_data
 
@@ -191,19 +195,19 @@ def generate_object_block(objects: List[Dict], trait_info: dict, scene_name: str
         lines.append(f'    {prefix}.is_static = {str(is_static).lower()};')
         lines.append(f'    {prefix}.is_removed = false;')
 
-        bc = obj.get("bounds_center", [0, 0, 0])
-        br = obj.get("bounds_radius", 1.0)
+        bmin = obj.get("bounds_min", [0, 0, 0])
+        bmax = obj.get("bounds_max", [0, 0, 0])
         pos = obj["pos"]
         scale = obj["scale"]
-        lines.append(f'    {prefix}.bounds_center = {_fmt_vec3(bc)};')
-        lines.append(f'    {prefix}.bounds_radius = {br:.6f}f;')
+        lines.append(f'    {prefix}.bounds_min = {_fmt_vec3(bmin)};')
+        lines.append(f'    {prefix}.bounds_max = {_fmt_vec3(bmax)};')
 
-        # Initialize cached world bounds (will be updated when transform.dirty > 0)
-        world_center = [pos[0] + bc[0], pos[1] + bc[1], pos[2] + bc[2]]
-        max_scale = max(scale[0], scale[1], scale[2])
-        world_radius = br * max_scale
-        lines.append(f'    {prefix}.cached_world_center = {_fmt_vec3(world_center)};')
-        lines.append(f'    {prefix}.cached_world_radius = {world_radius:.6f}f;')
+        # Initialize cached world AABB (will be updated when transform.dirty > 0)
+        # bounds are pre-scaled to world coordinates, just add position
+        world_min = [bmin[a] + pos[a] for a in range(3)]
+        world_max = [bmax[a] + pos[a] for a in range(3)]
+        lines.append(f'    {prefix}.cached_world_aabb_min = {_fmt_vec3(world_min)};')
+        lines.append(f'    {prefix}.cached_world_aabb_max = {_fmt_vec3(world_max)};')
 
         lines.append(f'    {prefix}.rigid_body = NULL;')
 

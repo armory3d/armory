@@ -72,7 +72,7 @@
 extern "C" {{
 #endif
 
-#define FB_COUNT 5 {debug_hud_define}
+#define FB_COUNT 3 {debug_hud_define}
 
 // Number of frames to keep transform dirty for double/triple buffering
 #define TRANSFORM_DIRTY_FRAMES 3
@@ -183,12 +183,12 @@ typedef struct ArmObject {{
     uint8_t trait_count;          // 1 byte
 
     // === CACHED BOUNDS (updated when dirty) ===
-    T3DVec3 cached_world_center;  // 12 bytes: world-space center for culling
-    float cached_world_radius;    // 4 bytes: world-space radius for culling
+    T3DVec3 cached_world_aabb_min; // 12 bytes: world-space AABB min for culling
+    T3DVec3 cached_world_aabb_max; // 12 bytes: world-space AABB max for culling
 
     // === COLD DATA (accessed occasionally) ===
-    T3DVec3 bounds_center;        // 12 bytes: local-space center
-    float bounds_radius;          // 4 bytes: local-space radius
+    T3DVec3 bounds_min;           // 12 bytes: local-space AABB min
+    T3DVec3 bounds_max;           // 12 bytes: local-space AABB max
     struct OimoRigidBody *rigid_body;  // 4 bytes
     ArmTrait *traits;             // 4 bytes
 

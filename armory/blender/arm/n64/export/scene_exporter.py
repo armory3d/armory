@@ -177,23 +177,27 @@ def _process_mesh_object(exporter, scene_name, obj, instance_matrix=None):
     quat = world_matrix.to_quaternion()
     scale = world_matrix.to_scale()
 
-    # Compute bounding sphere from mesh's bounding box (local space)
+    # Compute AABB from mesh's bounding box (local space)
     bb = obj.bound_box
-    min_corner = [min(v[i] for v in bb) for i in range(3)]
-    max_corner = [max(v[i] for v in bb) for i in range(3)]
-    bounds_center = [
-        (min_corner[0] + max_corner[0]) * 0.5,
-        (min_corner[1] + max_corner[1]) * 0.5,
-        (min_corner[2] + max_corner[2]) * 0.5
-    ]
+    local_min = [min(v[i] for v in bb) for i in range(3)]
+    local_max = [max(v[i] for v in bb) for i in range(3)]
     half_extents = [
-        (max_corner[0] - min_corner[0]) * 0.5,
-        (max_corner[1] - min_corner[1]) * 0.5,
-        (max_corner[2] - min_corner[2]) * 0.5
+        (local_max[0] - local_min[0]) * 0.5,
+        (local_max[1] - local_min[1]) * 0.5,
+        (local_max[2] - local_min[2]) * 0.5
     ]
-    bounds_radius = math.sqrt(
-        half_extents[0]**2 + half_extents[1]**2 + half_extents[2]**2
-    )
+
+    # Pre-scale bounds by Blender object scale so they match position coordinate space.
+    # Positions are exported in Blender world units (no SCALE_FACTOR).
+    # SCALE_FACTOR is only applied to obj.transform.scale for the SRT rendering matrix.
+    # Since bounds are used for frustum culling (which operates in the same space as
+    # positions), they must be in Blender units, not in SCALE_FACTOR-compressed space.
+    bounds_min = [local_min[i] * scale[i] for i in range(3)]
+    bounds_max = [local_max[i] * scale[i] for i in range(3)]
+    # Handle negative scale (swap min/max per axis)
+    for i in range(3):
+        if bounds_min[i] > bounds_max[i]:
+            bounds_min[i], bounds_max[i] = bounds_max[i], bounds_min[i]
 
     # Extract rigid body data
     rigid_body_data = _extract_rigid_body(exporter, obj, half_extents)
@@ -205,8 +209,8 @@ def _process_mesh_object(exporter, scene_name, obj, instance_matrix=None):
         "rot": [quat.x, quat.y, quat.z, quat.w],
         "scale": list(scale),
         "visible": not obj.hide_render,
-        "bounds_center": bounds_center,
-        "bounds_radius": bounds_radius,
+        "bounds_min": bounds_min,
+        "bounds_max": bounds_max,
         "traits": _extract_traits(obj),
         "is_static": True  # Computed after trait_info is loaded
     }
@@ -215,6 +219,7 @@ def _process_mesh_object(exporter, scene_name, obj, instance_matrix=None):
         obj_data["rigid_body"] = rigid_body_data
 
     exporter.scene_data[scene_name]["objects"].append(obj_data)
+
 
 
 def _extract_rigid_body(exporter, obj, half_extents):
