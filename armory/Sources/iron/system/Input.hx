@@ -769,13 +769,12 @@ class Gamepad extends VirtualInput {
 }
 
 class Sensor {
-
 	public var x = 0.0;
 	public var y = 0.0;
 	public var z = 0.0;
 
-	public function new() {
-		kha.input.Sensor.get(kha.input.SensorType.Accelerometer).notify(listener);
+	public function new(sensorType: kha.input.SensorType = kha.input.SensorType.Accelerometer) {
+		kha.input.Sensor.get(sensorType).notify(listener);
 	}
 
 	function listener(x: Float, y: Float, z: Float) {
