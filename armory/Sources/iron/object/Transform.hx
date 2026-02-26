@@ -261,7 +261,7 @@ class Transform {
 	public function applyParentInverse() {
 		var pt = object.parent.transform;
 		pt.buildMatrix();
-		temp.getInverse(pt.world);
+		temp.getInverse(pt.local);
 		this.local.multmat(temp);
 		this.decompose();
 		this.buildMatrix();
@@ -270,7 +270,7 @@ class Transform {
 	public function applyParent() {
 		var pt = object.parent.transform;
 		pt.buildMatrix();
-		this.local.multmat(pt.world);
+		this.local.multmat(pt.local);
 		this.decompose();
 		this.buildMatrix();
 	}
