@@ -631,6 +631,7 @@ class Scene {
 					}
 					if (++spawned == object_refs.length) {
 						groupOwner.transform.reset();
+						groupOwner.transform.buildMatrix();
 						done();
 					}
 				}, true, format, false);
