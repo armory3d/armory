@@ -1,0 +1,18 @@
+--- a/armory/Sources/iron/system/Input.hx
++++ b/armory/Sources/iron/system/Input.hx
+@@ -280,8 +280,12 @@ class Gamepad extends VirtualInput {
+ 	function buttonListener(button: Int, value: Float) {
+ 		buttonsFrame.push(button);
+ 
+ 		buttonsDown[button] = value;
+-		if (value > 0) buttonsStarted[button] = true; // Will trigger L2/R2 multiple times..
+-		else buttonsReleased[button] = true;
++		
++		// 使用状态机避免模拟按键多次触发
++		var wasPressed = buttonsDown[button] > 0.5;
++		var isPressed = value > 0.5;
++		if (isPressed && !wasPressed) buttonsStarted[button] = true;
++		if (!isPressed && wasPressed) buttonsReleased[button] = true;
+ 
+ 		if (value == 0.0) upVirtual(buttons[button]);
+ 		else if (value == 1.0) downVirtual(buttons[button]);
