@@ -1,0 +1,44 @@
+{
+    "name": "ddgi_update_pass",
+    "type": "compute",
+    "inputs": [
+        {
+            "name": "gbufferD",
+            "type": "sampler2D"
+        },
+        {
+            "name": "gbuffer0",
+            "type": "sampler2D"
+        },
+        {
+            "name": "gbuffer1",
+            "type": "sampler2D"
+        },
+        {
+            "name": "ddgiProbeGrid",
+            "type": "image3D"
+        }
+    ],
+    "constants": [
+        {
+            "name": "ddgiGridMin",
+            "type": "vec3",
+            "value": [-10, -10, -10]
+        },
+        {
+            "name": "ddgiGridMax",
+            "type": "vec3",
+            "value": [10, 10, 10]
+        },
+        {
+            "name": "ddgiGridSize",
+            "type": "vec3",
+            "value": [16, 16, 16]
+        }
+    ],
+    "compute": {
+        "local_size_x": 8,
+        "local_size_y": 8,
+        "local_size_z": 8
+    }
+}
