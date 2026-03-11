@@ -1,6 +1,6 @@
 # 🎯 Armory3D $400 Bounty - 实时进度
 
-**最后更新：** 2026-03-11 19:00  
+**最后更新：** 2026-03-11 22:30  
 **状态：** 全力以赴冲刺中 🚀
 
 ---
@@ -12,7 +12,7 @@
 | ✅ **任务 2: 手柄修复** | **100%** | 2 commits | **已完成！** |
 | 🟢 **任务 1: SSSR** | 90% | 4 commits | 时间累积完成 |
 | 🟢 **任务 3: BPCEM** | 85% | 3 commits | 着色器集成 |
-| 🟡 **任务 4: DDGI** | 70% | 3 commits | 射线追踪完成 |
+| 🟢 **任务 4: DDGI** | 85% | +3 commits | 工具库 + Pass 完成 |
 
 ---
 
@@ -81,37 +81,44 @@ f449bcaf feat: BPCEM 集成到 probe_cubemap 着色器
 
 ---
 
-### 🟡 任务 4: DDGI - $100
+### 🟢 任务 4: DDGI - $100
 **分支：** `feature/ddgi-global-illumination`  
-**状态：** 🟡 70% - 射线追踪完成
+**状态：** 🟢 85% - 工具库 + Pass 完成
 
 **提交记录：**
 ```
+[待提交] feat: DDGI 工具库和渲染 Pass
 517c178f feat: DDGI 实现 Hammersley 射线追踪
 decaf840 feat: 实现 DDGI 探针更新 Compute Shader
 188bd4d4 docs: 添加 DDGI 任务分析
 ```
 
-**已完成：**
-- ✅ `std/ddgi.glsl` 工具库
+**已完成 (22:30 更新)：**
+- ✅ `std/ddgi.glsl` 工具库 (180 行)
+- ✅ `ddgi_pass/ddgi_pass.frag.glsl` 渲染 Pass
+- ✅ `ddgi_pass/ddgi_pass.vert.glsl` 顶点着色器
+- ✅ `ddgi_pass/ddgi_pass.json` 配置
+- ✅ `DDGIIntegration.hx` RenderPath 集成
+- ✅ `LN_set_ddgi_settings.py` Blender UI 节点
 - ✅ Compute Shader 探针更新 (8x8x8)
 - ✅ Hammersley 32 样本射线追踪
 - ✅ 余弦加权半球积分
 
 **剩余：**
-- [ ] 3D 纹理绑定
-- [ ] 时间累积优化
+- [ ] 3D 纹理绑定 (已创建，待测试)
+- [ ] 时间累积优化 (框架已实现)
 - [ ] 性能测试
 
 ---
 
 ## 📈 提交统计
 
-**总提交数：** 12 commits  
+**总提交数：** 12 commits (待提交 +3)  
 **代码文件：**
-- 着色器：8 个
-- 工具库：4 个
+- 着色器：11 个
+- 工具库：5 个
 - 文档：5 个
+- UI 节点：1 个
 
 **分支链接：** https://github.com/ma-moon/armory/branches
 
@@ -124,9 +131,9 @@ decaf840 feat: 实现 DDGI 探针更新 Compute Shader
 | 手柄修复 | ✅ 已完成 |
 | SSSR | 1 天 |
 | BPCEM | 1 天 |
-| DDGI | 2 天 |
+| DDGI | 1 天 |
 
-**总计：** 3-4 天完成全部 4 任务
+**总计：** 2-3 天完成全部 4 任务
 
 ---
 
