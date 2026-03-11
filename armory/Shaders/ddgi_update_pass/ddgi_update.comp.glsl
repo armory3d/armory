@@ -37,25 +37,44 @@ void main() {
     vec3 uvw = vec3(probeIdx) / (ddgiGridSize - 1.0);
     vec3 probePos = mix(ddgiGridMin, ddgiGridMax, uvw);
     
-    // 从探针位置向 6 个方向射线追踪
+    // 从探针位置向多个方向射线追踪 (Hammersley 采样)
     vec3 irradiance = vec3(0.0);
-    vec3 directions[6] = vec3[6](
-        vec3(1, 0, 0), vec3(-1, 0, 0),
-        vec3(0, 1, 0), vec3(0, -1, 0),
-        vec3(0, 0, 1), vec3(0, 0, -1)
-    );
+    const int numSamples = 32;
     
-    for (int i = 0; i < 6; i++) {
-        vec3 dir = directions[i];
+    for (int i = 0; i < numSamples; i++) {
+        // Hammersley 序列生成方向
+        float phi = 2.0 * 3.14159265 * (float(i) / float(numSamples));
+        float cosTheta = 1.0 - 2.0 * float(i) / float(numSamples);
+        float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
         
-        // 简化的射线追踪（实际应该使用场景几何）
-        // 这里从 GBuffer 采样近似
-        float radiance = 1.0;  // TODO: 实现射线追踪
+        vec3 dir = vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
         
-        irradiance += radiance;
+        // 射线追踪 (简化版：从 GBuffer 深度测试)
+        float visibility = 1.0;
+        float maxDist = 10.0;
+        vec3 samplePos = probePos + dir * maxDist;
+        
+        // 投影到屏幕空间采样深度
+        vec4 screenPos = invVP * vec4(samplePos, 1.0);
+        screenPos.xyz /= screenPos.w;
+        screenPos.xy = screenPos.xy * 0.5 + 0.5;
+        
+        if (screenPos.x >= 0.0 && screenPos.x <= 1.0 &&
+            screenPos.y >= 0.0 && screenPos.y <= 1.0) {
+            float sceneDepth = textureLod(gbufferD, screenPos.xy, 0.0).r;
+            if (sceneDepth > 0.0 && sceneDepth < 1.0) {
+                vec3 scenePos = textureLod(gbuffer1, screenPos.xy, 0.0).rgb;
+                float distToScene = length(samplePos - scenePos);
+                visibility = smoothstep(0.5, 0.0, distToScene);
+            }
+        }
+        
+        // 余弦加权
+        float cosWeight = max(dir.y, 0.0);
+        irradiance += vec3(visibility * cosWeight);
     }
     
-    irradiance /= 6.0;
+    irradiance *= (1.0 / float(numSamples));
     
     // 写入 3D 纹理
     imageStore(ddgiProbeGrid, probeIdx, vec4(irradiance, 1.0));
