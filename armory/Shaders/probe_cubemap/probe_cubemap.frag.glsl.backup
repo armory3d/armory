@@ -1,13 +1,7 @@
 #version 450
 
-// ============================================================================
-// BPCEM - Box Projected Cubemap Environment Mapping
-// 支持传统球面映射和盒状投影两种模式
-// ============================================================================
-
 #include "compiled.inc"
 #include "std/gbuffer.glsl"
-#include "std/box_projected_cubemap.glsl"
 
 uniform samplerCube probeTex;
 uniform sampler2D gbufferD;
@@ -16,11 +10,6 @@ uniform sampler2D gbuffer1;
 uniform mat4 invVP;
 uniform vec3 probep;
 uniform vec3 eye;
-
-// BPCEM 参数
-uniform vec3 boxMin;
-uniform vec3 boxMax;
-uniform int useBoxProjection; // 0=球面映射，1=盒状投影
 
 in vec4 wvpposition;
 out vec4 fragColor;
@@ -32,7 +21,7 @@ void main() {
 	texCoord.y = 1.0 - texCoord.y;
 	#endif
 
-	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
+	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0); // Normal.xy, roughness, metallic/matid
 
 	float roughness = g0.b;
 	if (roughness > 0.95) {
@@ -60,18 +49,6 @@ void main() {
 	#ifdef _InvY
 	r.y = -r.y;
 	#endif
-	
-	// 选择映射模式
-	vec3 sampleDir;
-	if (useBoxProjection == 1) {
-		// 盒状投影模式
-		sampleDir = boxProjectFast(wp, boxMin, boxMax, r);
-	} else {
-		// 传统球面映射
-		sampleDir = r;
-	}
-	
-	// 采样立方体贴图
 	float intensity = clamp((1.0 - roughness) * dot(wp - probep, n), 0.0, 1.0);
-	fragColor.rgb = texture(probeTex, sampleDir).rgb * intensity;
+	fragColor.rgb = texture(probeTex, r).rgb * intensity;
 }
