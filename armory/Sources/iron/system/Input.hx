@@ -759,12 +759,19 @@ class Gamepad extends VirtualInput {
 	function buttonListener(button: Int, value: Float) {
 		buttonsFrame.push(button);
 
+		// 使用状态机避免模拟按键 (L2/R2) 多次触发 started
+		var wasPressed = buttonsDown[button] > 0.5;
+		var isPressed = value > 0.5;
+		
 		buttonsDown[button] = value;
-		if (value > 0) buttonsStarted[button] = true; // Will trigger L2/R2 multiple times..
-		else buttonsReleased[button] = true;
+		
+		// 只有状态改变时才触发 started/released
+		if (isPressed && !wasPressed) buttonsStarted[button] = true;
+		if (!isPressed && wasPressed) buttonsReleased[button] = true;
 
-		if (value == 0.0) upVirtual(buttons[button]);
-		else if (value == 1.0) downVirtual(buttons[button]);
+		// 虚拟按键映射 (使用阈值避免中间值问题)
+		if (value < 0.2) upVirtual(buttons[button]);
+		else if (value > 0.8) downVirtual(buttons[button]);
 	}
 }
 
