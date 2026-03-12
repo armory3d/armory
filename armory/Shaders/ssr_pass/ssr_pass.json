@@ -1,41 +1,49 @@
 {
-	"contexts": [
-		{
-			"name": "ssr_pass",
-			"depth_write": false,
-			"compare_mode": "always",
-			"cull_mode": "none",
-			"links": [
-				{
-					"name": "P",
-					"link": "_projectionMatrix"
-				},
-				{
-					"name": "V3",
-					"link": "_viewMatrix3"
-				},
-				{
-					"name": "invP",
-					"link": "_inverseProjectionMatrix"
-				},
-				{
-					"name": "cameraProj",
-					"link": "_cameraPlaneProj"
-				},
-				{
-					"name": "PPComp9",
-					"link": "_PPComp9",
-					"ifdef": ["_CPostprocess"]
-				},
-				{
-					"name": "PPComp10",
-					"link": "_PPComp10",
-					"ifdef": ["_CPostprocess"]
-				}
-			],
-			"texture_params": [],
-			"vertex_shader": "../include/pass_viewray2.vert.glsl",
-			"fragment_shader": "ssr_pass.frag.glsl"
-		}
-	]
+    "name": "ssr_pass",
+    "type": "draw",
+    "inputs": [
+        {
+            "name": "tex",
+            "type": "sampler2D"
+        },
+        {
+            "name": "gbufferD",
+            "type": "sampler2D"
+        },
+        {
+            "name": "gbuffer0",
+            "type": "sampler2D"
+        },
+        {
+            "name": "gbuffer1",
+            "type": "sampler2D"
+        },
+        {
+            "name": "sssrBlueNoiseTex",
+            "type": "sampler2D",
+            "optional": true
+        },
+        {
+            "name": "sssrHistoryColor",
+            "type": "sampler2D",
+            "optional": true
+        },
+        {
+            "name": "sssrHistoryDepth",
+            "type": "sampler2D",
+            "optional": true
+        }
+    ],
+    "constants": [
+        {
+            "name": "sssrFrameIndex",
+            "type": "int",
+            "value": 0
+        },
+        {
+            "name": "sssrTexelSize",
+            "type": "vec2",
+            "value": [0.001, 0.001]
+        }
+    ]
 }

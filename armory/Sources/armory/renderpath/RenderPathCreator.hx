@@ -17,6 +17,10 @@ class RenderPathCreator {
 	public static var setTargetMeshes: Void->Void = RenderPathDeferred.setTargetMeshes;
 	public static var drawMeshes: Void->Void = RenderPathDeferred.drawMeshes;
 	public static var applyConfig: Void->Void = RenderPathDeferred.applyConfig;
+	#elseif (rp_renderer == "Raytracer")
+	public static var setTargetMeshes: Void->Void = RenderPathRaytracer.setTargetMeshes;
+	public static var drawMeshes: Void->Void = RenderPathRaytracer.drawMeshes;
+	public static var applyConfig: Void->Void = RenderPathRaytracer.applyConfig;
 	#else
 	public static var setTargetMeshes: Void->Void = function() {};
 	public static var drawMeshes: Void->Void = function() {};
@@ -42,8 +46,14 @@ class RenderPathCreator {
 			path.setupDepthTexture = RenderPathForward.setupDepthTexture;
 		#elseif (rp_renderer == "Deferred")
 			RenderPathDeferred.init(path);
+			#if rp_sssr
+			SSSRIntegration.init(path);
+			#end
 			path.commands = function() {
 				RenderPathDeferred.commands();
+				#if rp_sssr
+				renderSSSRPass();
+				#end
 				commands();
 			}
 			path.setupDepthTexture = RenderPathDeferred.setupDepthTexture;
@@ -56,6 +66,18 @@ class RenderPathCreator {
 		#end
 		return path;
 	}
+
+	#if rp_sssr
+	static var sssrFrameIndex: Int = 0;
+
+	static function renderSSSRPass() {
+		// 更新帧索引用于蓝噪声采样旋转
+		sssrFrameIndex = (sssrFrameIndex + 1) % 64;
+		
+		// 执行 SSSR 反射 Pass
+		SSSRIntegration.renderSSSR();
+	}
+	#end
 
 	// Last target before drawing to framebuffer
 	public static var finalTarget: RenderTarget = null;
