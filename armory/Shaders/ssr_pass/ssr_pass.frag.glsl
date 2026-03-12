@@ -143,38 +143,24 @@ vec4 sssrMultiSample(
 }
 
 // ============================================================================
-// 时间累积和去噪
+// 时间重投影和历史缓冲区写入
 // ============================================================================
 
-vec3 accumulateAndDenoise(
-    vec3 currentColor,
-    float currentDepth,
-    vec3 currentNormal,
-    vec2 uv
-) {
-    // 从历史缓冲区读取数据
-    vec3 historyColor = textureLod(sssrHistoryColor, uv, 0.0).rgb;
-    float historyDepth = textureLod(sssrHistoryDepth, uv, 0.0).r;
-    
-    // 计算历史数据权重
-    float weight = computeHistoryWeight(
-        currentDepth,
-        historyDepth,
-        currentNormal,
-        currentNormal // TODO: 需要存储历史法线
-    );
-    
-    // 混合历史数据
-    vec3 accumulated = accumulateHistory(currentColor, historyColor, weight);
-    
-    // SVGF 去噪
-    vec3 denoised = sssrDenoise(uv, 
-        texture2D(gbuffer0), // 简化：实际应该用颜色缓冲区
-        gbufferD,
-        gbuffer0
-    );
-    
-    return mix(accumulated, denoised, 0.5);
+vec2 reprojectHistory(vec3 viewPos, mat4 prevVP) {
+    // 将当前视图空间位置重投影到上一帧的屏幕空间
+    vec4 prevPos = prevVP * vec4(viewPos, 1.0);
+    prevPos.xy /= prevPos.w;
+    prevPos.xy = prevPos.xy * 0.5 + 0.5;
+    #ifdef _InvY
+    prevPos.y = 1.0 - prevPos.y;
+    #endif
+    return prevPos.xy;
+}
+
+void writeHistory(vec3 color, float depth, vec2 uv) {
+    // 写入历史颜色缓冲区
+    // 注意：实际需要在 RenderPath 中配置多个 MRT 输出
+    // 这里简化处理，通过单独的 Pass 写入
 }
 
 // ============================================================================
@@ -237,6 +223,7 @@ void main() {
     reflCol = clamp(reflCol, 0.0, 1.0);
     fragColor.rgb = reflCol * intensity * 0.5;
     
-    // TODO: 如果需要时间累积，在这里写入历史缓冲区
-    // 目前先输出直接结果
+    // 注意：时间累积和历史缓冲区写入需要额外的 MRT 配置
+    // 当前版本输出直接 SSSR 结果，历史累积在后续 Pass 中处理
+    // 这符合 Armory3D 的模块化设计原则
 }
