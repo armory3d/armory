@@ -359,6 +359,8 @@ def build():
         assets.add_khafile_def('rp_voxels={0}'.format(rpdat.rp_voxels))
         assets.add_khafile_def('rp_voxelgi_resolution={0}'.format(rpdat.rp_voxelgi_resolution))
         assets.add_khafile_def('rp_voxelgi_resolution_z={0}'.format(rpdat.rp_voxelgi_resolution_z))
+    else:
+        assets.add_khafile_def('rp_voxels=Off')
 
     if rpdat.arm_rp_resolution == 'Custom':
         assets.add_khafile_def('rp_resolution_filter={0}'.format(rpdat.arm_rp_resolution_filter))
