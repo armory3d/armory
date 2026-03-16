@@ -518,9 +518,11 @@ class RenderPath {
 		end();
 	}
 
+	#if (rp_voxels != "Off")
 	public function getComputeShader(handle: String): kha.compute.Shader {
 		return Reflect.field(kha.Shaders, handle + "_comp");
 	}
+	#end
 
 	#if arm_vr
 	public function drawStereo(drawMeshes: Void->Void) {

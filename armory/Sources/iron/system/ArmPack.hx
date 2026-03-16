@@ -114,7 +114,8 @@ class ArmPack {
 		var out = Type.createEmptyInstance(getClass(key, parentKey));
 		#end
 		for (n in 0...length) {
-			var k = Std.string(read(i));
+			var raw = read(i);
+			var k = Std.string(raw);
 			var v = read(i, k, key);
 			Reflect.setField(out, k, v);
 		}
