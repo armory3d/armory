@@ -59,6 +59,7 @@ def get_signature(mat, object: bpy.types.Object):
         sign += mat.arm_billboard
         sign += '_skin' if arm_utils.export_bone_data(object) else '0'
         sign += '_morph' if arm_utils.export_morph_targets(object) else '0'
+        # sign += '_tilesheet' if mat.arm_tilesheet_flag else '0'
         return sign
 
 def traverse_tree2(node, ar):

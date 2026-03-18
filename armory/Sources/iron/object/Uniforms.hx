@@ -1065,14 +1065,19 @@ class Uniforms {
 			var vy: Null<kha.FastFloat> = null;
 			switch (c.link) {
 				case "_tilesheetOffset": {
-					var ts = cast(object, MeshObject).activeTilesheet;
+					var ts = cast(object, MeshObject).tilesheet;
 					vx = ts.tileX;
 					vy = ts.tileY;
 				}
+				case "_tilesheetFlip": {
+					var ts = cast(object, MeshObject).tilesheet;
+					vx = ts.flipX ? 1.0 : 0.0;
+					vy = ts.flipY ? 1.0 : 0.0;
+				}
 				case "_tilesheetTiles": {
-					var ts = cast(object, MeshObject).activeTilesheet;
-					vx = ts.raw.tilesx;
-					vy = ts.raw.tilesy;
+					var ts = cast(object, MeshObject).tilesheet;
+					vx = ts.getTilesX();
+					vy = ts.getTilesY();
 				}
 				#if arm_morph_target
 				case "_morphScaleOffset": {

@@ -429,9 +429,12 @@ class ParticleSystemCPU {
 		// Just using the first slot for now: 1 texture slot
 		// TODO: use all available slots ?
 		for (slot in textureSlots.keys()) {
-			if (textureSlots[slot].use_map_size) return textureSlots[slot].size_factor * textureFactor;
+			if (textureSlots[slot].use_map_size) {
+				var sizeFactor: FastFloat = textureSlots[slot].size_factor;
+				return sizeFactor * textureFactor;
+			}
 		}
-		return 0;
+		return 0.0;
 	}
 
 	function getRampElementsLength(): Int {

@@ -746,7 +746,11 @@ class Gamepad extends VirtualInput {
 		}
 		else if (axis == 1 || axis == 3) { // Y
 			stick.lastY = stick.y;
+			#if (kha_html5 || kha_debug_html5)
+			stick.y = -value;
+			#else
 			stick.y = value;
+			#end
 			stick.movementY = stick.y - stick.lastY;
 		}
 		stick.moved = true;
@@ -765,13 +769,12 @@ class Gamepad extends VirtualInput {
 }
 
 class Sensor {
-
 	public var x = 0.0;
 	public var y = 0.0;
 	public var z = 0.0;
 
-	public function new() {
-		kha.input.Sensor.get(kha.input.SensorType.Accelerometer).notify(listener);
+	public function new(sensorType: kha.input.SensorType = kha.input.SensorType.Accelerometer) {
+		kha.input.Sensor.get(sensorType).notify(listener);
 	}
 
 	function listener(x: Float, y: Float, z: Float) {

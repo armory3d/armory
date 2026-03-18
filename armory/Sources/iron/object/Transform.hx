@@ -129,11 +129,7 @@ class Transform {
 		if (boneParent != null) local.multmats(boneParent, local);
 
 		if (object.parent != null && !localOnly) {
-			// Swap multiplication order for linked objects to keep local transform intact
-			var swapMult: Bool = object.raw != null && object.parent.raw != null && object.parent.raw.group_ref != null && object.parent.raw.group_ref != "";
-			var a: Mat4 = swapMult ? object.parent.transform.world : local;
-			var b: Mat4 = swapMult ? local : object.parent.transform.world;
-			world.multmats3x4(a, b);
+			world.multmats3x4(local, object.parent.transform.world);
 		}
 		else {
 			world.setFrom(local);
@@ -265,7 +261,7 @@ class Transform {
 	public function applyParentInverse() {
 		var pt = object.parent.transform;
 		pt.buildMatrix();
-		temp.getInverse(pt.world);
+		temp.getInverse(pt.local);
 		this.local.multmat(temp);
 		this.decompose();
 		this.buildMatrix();
@@ -274,7 +270,7 @@ class Transform {
 	public function applyParent() {
 		var pt = object.parent.transform;
 		pt.buildMatrix();
-		this.local.multmat(pt.world);
+		this.local.multmat(pt.local);
 		this.decompose();
 		this.buildMatrix();
 	}
