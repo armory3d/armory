@@ -2069,18 +2069,18 @@ class Handle {
 	public static var global = new Handle();
 }
 
-@:enum abstract Layout(Int) from Int {
+enum abstract Layout(Int) from Int {
 	var Vertical = 0;
 	var Horizontal = 1;
 }
 
-@:enum abstract Align(Int) from Int {
+enum abstract Align(Int) from Int {
 	var Left = 0;
 	var Center = 1;
 	var Right = 2;
 }
 
-@:enum abstract State(Int) from Int {
+enum abstract State(Int) from Int {
 	var Idle = 0;
 	var Started = 1;
 	var Down = 2;

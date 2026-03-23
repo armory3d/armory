@@ -789,7 +789,7 @@ class RigidBody extends iron.Trait {
 	}
 }
 
-@:enum abstract Shape(Int) from Int to Int {
+enum abstract Shape(Int) from Int to Int {
 	var Box = 0;
 	var Sphere = 1;
 	var ConvexHull = 2;

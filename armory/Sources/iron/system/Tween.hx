@@ -255,7 +255,7 @@ typedef TAnim = {
 	@:optional var _normalize: Array<Bool>;
 }
 
-@:enum abstract Ease(Int) from Int to Int {
+enum abstract Ease(Int) from Int to Int {
 	var Linear = 0;
 	var SineIn = 1;
 	var SineOut = 2;
