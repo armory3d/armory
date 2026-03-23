@@ -515,10 +515,10 @@ def apply_unix_permissions(sdk):
             os.path.join(sdk, "Kha/Tools/linux_x64/haxe"),
             os.path.join(sdk, "Kha/Tools/linux_x64/lame"),
             os.path.join(sdk, "Kha/Tools/linux_x64/oggenc"),
-            # Kinc tools x64
-            os.path.join(sdk, "Kha/Kinc/Tools/linux_x64/kmake"),
-            os.path.join(sdk, "Kha/Kinc/Tools/linux_x64/kraffiti"),
-            os.path.join(sdk, "Kha/Kinc/Tools/linux_x64/krafix"),
+            # Kore tools x64
+            os.path.join(sdk, "Kha/Kore/Tools/linux_x64/kmake"),
+            os.path.join(sdk, "Kha/Kore/Tools/linux_x64/kraffiti"),
+            os.path.join(sdk, "Kha/Kore/Tools/linux_x64/krafix"),
         ]
         for path in paths:
             os.chmod(path, 0o777)
@@ -532,10 +532,10 @@ def apply_unix_permissions(sdk):
             os.path.join(sdk, "Kha/Tools/macos/haxe"),
             os.path.join(sdk, "Kha/Tools/macos/lame"),
             os.path.join(sdk, "Kha/Tools/macos/oggenc"),
-            # Kinc tools
-            os.path.join(sdk, "Kha/Kinc/Tools/macos/kmake"),
-            os.path.join(sdk, "Kha/Kinc/Tools/macos/kraffiti"),
-            os.path.join(sdk, "Kha/Kinc/Tools/macos/krafix"),
+            # Kore tools
+            os.path.join(sdk, "Kha/Kore/Tools/macos/kmake"),
+            os.path.join(sdk, "Kha/Kore/Tools/macos/kraffiti"),
+            os.path.join(sdk, "Kha/Kore/Tools/macos/krafix"),
         ]
         for path in paths:
             os.chmod(path, 0o777)
