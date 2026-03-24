@@ -529,13 +529,13 @@ def apply_unix_permissions(sdk):
             os.path.join(sdk, "nodejs/node-osx"),
             os.path.join(sdk, "Krom/Krom.app/Contents/MacOS/Krom"),
             # Kha tools
-            os.path.join(sdk, "Kha/Tools/macos/haxe"),
-            os.path.join(sdk, "Kha/Tools/macos/lame"),
-            os.path.join(sdk, "Kha/Tools/macos/oggenc"),
+            os.path.join(sdk, "Kha/Tools/macos_x64/haxe"),
+            os.path.join(sdk, "Kha/Tools/macos_x64/lame"),
+            os.path.join(sdk, "Kha/Tools/macos_x64/oggenc"),
             # Kore tools
-            os.path.join(sdk, "Kha/Kore/Tools/macos/kmake"),
-            os.path.join(sdk, "Kha/Kore/Tools/macos/kraffiti"),
-            os.path.join(sdk, "Kha/Kore/Tools/macos/krafix"),
+            os.path.join(sdk, "Kha/Kore/Tools/macos_x64/kmake"),
+            os.path.join(sdk, "Kha/Kore/Tools/macos_x64/kraffiti"),
+            os.path.join(sdk, "Kha/Kore/Tools/macos_x64/krafix"),
         ]
         for path in paths:
             os.chmod(path, 0o777)
