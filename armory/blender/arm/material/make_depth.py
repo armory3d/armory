@@ -1,5 +1,3 @@
-from typing import Any, Callable, Optional
-
 import bpy
 
 import arm.material.cycles as cycles
@@ -14,8 +12,6 @@ import arm.material.make_particle as make_particle
 import arm.material.make_finalize as make_finalize
 import arm.material.make_morph_target as make_morph_target
 import arm.assets as assets
-import arm.material.shader as shader
-import arm.material.make_mesh
 import arm.utils
 
 if arm.is_reload(__name__):
@@ -32,10 +28,6 @@ if arm.is_reload(__name__):
 else:
     arm.enable_reload(__name__)
 
-# User callbacks
-write_material_attribs: Optional[Callable[[dict[str, Any], shader.Shader], bool]] = None
-write_material_attribs_post: Optional[Callable[[dict[str, Any], shader.Shader], None]] = None
-write_vertex_attribs: Optional[Callable[[shader.Shader], bool]] = None
 
 def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
 
@@ -97,33 +89,7 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
             vert.add_uniform('mat3 N', '_normalMatrixCylinder')
         else:
             vert.add_uniform('mat3 N', '_normalMatrix')
-
-        vattr_written = False
-        rpdat = arm.utils.get_rp()
-        wrd = bpy.data.worlds['Arm']
-        if is_disp:
-            if rpdat.arm_rp_displacement == 'Vertex':
-                frag.ins = vert.outs
-            else: # Tessellation
-                tesc = con_depth.make_tesc()
-                tese = con_depth.make_tese()
-                tesc.ins = vert.outs
-                tese.ins = tesc.outs
-                frag.ins = tese.outs
-                make_tess.tesc_levels(tesc, rpdat.arm_tess_mesh_inner, rpdat.arm_tess_mesh_outer)
-                make_tess.interpolate(tese, 'wvpposition', 3, declare_out=True)
-
-        attribs_written = False
-        if write_material_attribs is not None:
-            attribs_written = write_material_attribs(con_depth, frag)
-        if not attribs_written:
-            make_mesh._write_material_attribs_default(frag, parse_opacity)
-            cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity)
-        if write_material_attribs_post is not None:
-            write_material_attribs_post(con_depth, frag)
-
-        make_attrib.write_tex_coords(con_depth, vert, frag, tese)
-
+        make_mesh._write_material_attribs_default(frag, parse_opacity)
     elif parse_opacity:
         frag.write('float opacity;')
         frag.write('float ior;')
@@ -188,6 +154,10 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
             make_tess.tesc_levels(tesc, rpdat.arm_tess_shadows_inner, rpdat.arm_tess_shadows_outer)
             make_tess.interpolate(tese, 'wposition', 3)
             make_tess.interpolate(tese, 'wnormal', 3, normalize=True)
+            if shadowmap_transparent:
+                make_tess.interpolate(tese, 'wvpposition', 4)
+                tese.add_out('vec4 wvpposition')
+                tese.write('wvpposition = gl_Position;')
 
             cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=parse_opacity)
 
@@ -214,11 +184,9 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
                 tese.write_pre = False
 
             if shadowmap:
-                tese.add_out('vec4 wvpposition')
                 tese.add_uniform('mat4 LVP', '_lightViewProjectionMatrix')
                 tese.write('wposition += wnormal * disp;')
                 tese.write('gl_Position = LVP * vec4(wposition, 1.0);')
-                tese.write('wvpposition = gl_Position;')
             else:
                 tese.add_uniform('mat4 VP', '_viewProjectionMatrix')
                 tese.write('wposition += wnormal * disp;')
