@@ -54,80 +54,62 @@ uniform sampler2D clustersData;
 uniform vec2 cameraPlane;
 #endif
 
-#ifdef _SinglePoint // Fast path for single light
-uniform vec3 pointPos;
-uniform vec3 pointCol;
-	#ifdef _ShadowMap
-	uniform float pointBias;
-	#endif
-	#ifdef _Spot
-	uniform vec3 spotDir;
-	uniform vec3 spotRight;
-	uniform vec4 spotData;
-	#endif
-#endif
-
-#ifdef _CPostprocess
-    uniform vec3 PPComp12;
-#endif
-
 #ifdef _ShadowMap
-	#ifdef _SinglePoint
-		#ifdef _Spot
-			#ifndef _LTC
-				uniform sampler2DShadow shadowMapSpot[1];
-				#ifdef _ShadowMapTransparent
-				uniform sampler2D shadowMapSpotTransparent[1];
-				#endif
-				uniform mat4 LWVPSpot[1];
-			#endif
-		#else
-			uniform samplerCubeShadow shadowMapPoint[1];
-			#ifdef _ShadowMapTransparent
-			uniform samplerCube shadowMapPointTransparent[1];
-			#endif
-			uniform vec2 lightProj;
-		#endif
-	#endif
-	#ifdef _Clusters
-		#ifdef _SingleAtlas
-		uniform sampler2DShadow shadowMapAtlas;
-		#ifdef _ShadowMapTransparent
-		uniform sampler2D shadowMapAtlasTransparent;
-		#endif
-		#endif
-		uniform vec2 lightProj;
-		#ifdef _ShadowMapAtlas
-		#ifndef _SingleAtlas
-		uniform sampler2DShadow shadowMapAtlasPoint;
-		#ifdef _ShadowMapTransparent
-		uniform sampler2D shadowMapAtlasPointTransparent;
-		#endif
-		//!uniform vec4 pointLightDataArray[maxLightsCluster * 6];
-		#else
-		uniform samplerCubeShadow shadowMapPoint[4];
-		#ifdef _ShadowMapTransparent
-		uniform samplerCube shadowMapPointTransparent[4];
-		#endif
-		#endif
-		#endif
-		#ifdef _Spot
-			#ifdef _ShadowMapAtlas
-			#ifndef _SingleAtlas
-			uniform sampler2DShadow shadowMapAtlasSpot;
-			#ifdef _ShadowMapTransparent
-			uniform sampler2D shadowMapAtlasSpotTransparent;
-			#endif
-			#endif
-			#else
-			uniform sampler2DShadow shadowMapSpot[4];
-			#ifdef _ShadowMapTransparent
-			uniform sampler2D shadowMapSpotTransparent[4];
-			#endif
-			#endif
-			uniform mat4 LWVPSpotArray[maxLightsCluster];
-		#endif
-	#endif
+#ifdef _SinglePoint
+#ifdef _Spot
+#ifndef _LTC
+uniform sampler2DShadow shadowMapSpot[1];
+#ifdef _ShadowMapTransparent
+uniform sampler2D shadowMapSpotTransparent[1];
+#endif
+uniform mat4 LWVPSpotArray[1];
+#endif
+#else
+uniform samplerCubeShadow shadowMapPoint[1];
+#ifdef _ShadowMapTransparent
+uniform samplerCube shadowMapPointTransparent[1];
+#endif
+uniform vec2 lightProj;
+#endif
+#endif
+#ifdef _Clusters
+#ifdef _SingleAtlas
+//!uniform sampler2DShadow shadowMapAtlas;
+#ifdef _ShadowMapTransparent
+//!uniform sampler2D shadowMapAtlasTransparent;
+#endif
+#endif
+uniform vec2 lightProj;
+#ifdef _ShadowMapAtlas
+#ifndef _SingleAtlas
+uniform sampler2DShadow shadowMapAtlasPoint;
+#ifdef _ShadowMapTransparent
+uniform sampler2D shadowMapAtlasPointTransparent;
+#endif
+#endif
+#else
+uniform samplerCubeShadow shadowMapPoint[4];
+#ifdef _ShadowMapTransparent
+uniform samplerCube shadowMapPointTransparent[4];
+#endif
+#endif
+#ifdef _Spot
+#ifdef _ShadowMapAtlas
+#ifndef _SingleAtlas
+uniform sampler2DShadow shadowMapAtlasSpot;
+#ifdef _ShadowMapTransparent
+uniform sampler2D shadowMapAtlasSpotTransparent;
+#endif
+#endif
+#else
+uniform sampler2DShadow shadowMapSpot[4];
+#ifdef _ShadowMapTransparent
+uniform sampler2D shadowMapSpotTransparent[4];
+#endif
+#endif
+uniform mat4 LWVPSpotArray[maxLightsCluster];
+#endif
+#endif
 #endif
 
 #ifdef _LTC
@@ -139,17 +121,20 @@ uniform sampler2D sltcMat;
 uniform sampler2D sltcMag;
 #ifdef _ShadowMap
 #ifndef _Spot
-	#ifdef _SinglePoint
-		uniform sampler2DShadow shadowMapSpot[1];
-		#ifdef _ShadowMapTransparent
-		uniform sampler2D shadowMapSpotTransparent[1];
-		#endif
-		uniform mat4 LWVPSpot[1];
-	#endif
-	#ifdef _Clusters
-		uniform sampler2DShadow shadowMapSpot[maxLightsCluster];
-		uniform mat4 LWVPSpotArray[maxLightsCluster];
-	#endif
+#ifdef _SinglePoint
+uniform sampler2DShadow shadowMapSpot[1];
+#ifdef _ShadowMapTransparent
+uniform sampler2D shadowMapSpotTransparent[1];
+#endif
+uniform mat4 LWVPSpotArray[1];
+#endif
+#ifdef _Clusters
+uniform sampler2DShadow shadowMapSpot[maxLightsCluster];
+#ifdef _ShadowMapTransparent
+uniform sampler2D shadowMapSpotTransparent[maxLightsCluster];
+#endif
+uniform mat4 LWVPSpotArray[maxLightsCluster];
+#endif
 #endif
 #endif
 #endif
