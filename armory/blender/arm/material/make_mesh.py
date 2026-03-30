@@ -718,7 +718,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_VoxelAOvar' in wrd.world_defs:
         frag.write('envl *= (1.0 - traceAO(wposition, n, voxels, clipmaps));')
 
-    if '_VoxelGI' in wrd.world_defs:
+    if '_VoxelGI' in wrd.world_defs or '_VoxelAO' in wrd.world_defs:
         frag.write('vec3 indirect = vec3(0.0);')
     else:
         frag.write('vec3 indirect = envl;')
