@@ -337,7 +337,7 @@ def get_haxe_path():
     if get_os() == 'win':
         return get_kha_path() + '/Tools/windows_x64/haxe.exe'
     elif get_os() == 'mac':
-        return get_kha_path() + '/Tools/macos/haxe'
+        return get_kha_path() + '/Tools/macos_x64/haxe'
     else:
         return get_kha_path() + '/Tools/linux_x64/haxe'
 
@@ -740,7 +740,7 @@ def get_haxe_json_string(d: dict) -> str:
 
 def asset_name(bdata):
     """Get the qualified asset name, with library suffix for linked data.
-    
+
     For local assets, returns just the name.
     For linked assets, returns 'name_libraryname' to ensure uniqueness.
     """

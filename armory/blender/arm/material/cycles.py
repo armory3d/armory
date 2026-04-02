@@ -643,7 +643,7 @@ def store_var_name(node: bpy.types.Node) -> str:
     return name + '_store'
 
 
-def texture_store(node, tex, tex_name, to_linear=False, tex_link=None, default_value=None, is_arm_mat_param=None):
+def texture_store(node, tex, tex_name, to_linear=False, unpremultiply=False, tex_link=None, default_value=None, is_arm_mat_param=None):
     curshader = state.curshader
 
     tex_store = store_var_name(node)
@@ -681,6 +681,9 @@ def texture_store(node, tex, tex_name, to_linear=False, tex_link=None, default_v
             curshader.write('vec4 {0} = textureGrad({1}, {2}.xy, g2.xy, g2.zw);'.format(tex_store, tex_name, uv_name))
         else:
             curshader.write('vec4 {0} = texture({1}, {2}.xy);'.format(tex_store, tex_name, uv_name))
+
+    if unpremultiply:
+        curshader.write('if ({0}.a > 0.0) {0}.rgb /= {0}.a;'.format(tex_store))
 
     if to_linear:
         curshader.write('{0}.rgb = pow({0}.rgb, vec3(2.2));'.format(tex_store))

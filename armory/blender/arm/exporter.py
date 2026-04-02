@@ -1623,16 +1623,16 @@ class ArmoryExporter:
                 for v in lay0.data:
                     if abs(v.uv[0]) > maxdim:
                         maxdim = abs(v.uv[0])
-                    if abs(v.uv[1]) > maxdim:
-                        maxdim = abs(v.uv[1])
+                    if abs(1.0 - v.uv[1]) > maxdim:
+                        maxdim = abs(1.0 - v.uv[1])
                 if has_tex1:
                     lay1 = uv_layers[t1map]
                     for v in lay1.data:
                         if abs(v.uv[0]) > maxdim:
                             maxdim = abs(v.uv[0])
                             maxdim_uvlayer = lay1
-                        if abs(v.uv[1]) > maxdim:
-                            maxdim = abs(v.uv[1])
+                        if abs(1.0 - v.uv[1]) > maxdim:
+                            maxdim = abs(1.0 - v.uv[1])
                             maxdim_uvlayer = lay1
             if has_morph_target:
                 morph_data = np.empty(num_verts * 2, dtype='<f4')
@@ -1641,8 +1641,8 @@ class ArmoryExporter:
                     if abs(v.uv[0]) > maxdim:
                         maxdim = abs(v.uv[0])
                         maxdim_uvlayer = lay2
-                    if abs(v.uv[1]) > maxdim:
-                        maxdim = abs(v.uv[1])
+                    if abs(1.0 - v.uv[1]) > maxdim:
+                        maxdim = abs(1.0 - v.uv[1])
                         maxdim_uvlayer = lay2
             if maxdim > 1:
                 o['scale_tex'] = maxdim

@@ -20,7 +20,6 @@ import iron.object.Uniforms;
 import iron.object.Clipmap;
 
 class RenderPath {
-
 	public static var active: RenderPath;
 
 	public var frameScissor = false;
@@ -518,9 +517,11 @@ class RenderPath {
 		end();
 	}
 
+	#if (rp_voxels != "Off")
 	public function getComputeShader(handle: String): kha.compute.Shader {
 		return Reflect.field(kha.Shaders, handle + "_comp");
 	}
+	#end
 
 	#if arm_vr
 	public function drawStereo(drawMeshes: Void->Void) {
@@ -916,7 +917,7 @@ class CachedShaderContext {
 	public function new() {}
 }
 
-@:enum abstract DrawOrder(Int) from Int {
+enum abstract DrawOrder(Int) from Int {
 	var Distance = 0; // Early-z
 	var Index = 1; // Less state changes
 	// var Mix = 2; // Distance buckets sorted by shader
