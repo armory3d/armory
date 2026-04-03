@@ -861,6 +861,10 @@ class ArmoryExporter:
                         self.process_bobject(child)
                         self.export_object(child, out_parent)
                         child_out = self.object_to_arm_object_dict[child]
+                        # Child may have been inlined (nested collection instance),
+                        # in which case it has no 'name' — skip it from base_objects
+                        if 'name' not in child_out:
+                            continue
                         # Save a deep copy before composing (for cloning later)
                         base_objects.append(copy.deepcopy(child_out))
                         # Compose empty transform with child transform
