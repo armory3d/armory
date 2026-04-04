@@ -532,7 +532,7 @@ let project = new Project('""" + arm.utils.safesrc(wrd.arm_project_name + '-' + 
         if wrd.arm_project_icon != '':
             icon_src = os.path.normpath(bpy.path.abspath(wrd.arm_project_icon))
             icon_dst = os.path.normpath(os.path.join(project_path, 'icon.png'))
-            if not os.path.samefile(icon_src, icon_dst):
+            if not os.path.isfile(icon_dst) or not os.path.samefile(icon_src, icon_dst):
                 shutil.copy2(icon_src, icon_dst)
 
         if wrd.arm_khafile is not None:
