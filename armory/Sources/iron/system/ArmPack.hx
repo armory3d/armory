@@ -111,7 +111,8 @@ class ArmPack {
 		#if js
 		var out = {};
 		#else
-		var out = Type.createEmptyInstance(getClass(key, parentKey));
+		var cls = getClass(key, parentKey);
+		var out:Dynamic = cls != null ? Type.createEmptyInstance(cls) : {};
 		#end
 		for (n in 0...length) {
 			var raw = read(i);
@@ -160,7 +161,7 @@ class ArmPack {
 			case "anim": TAnimation;
 			case "tracks": TTrack;
 			case "morph_target": TMorphTarget;
-			case _: TSceneFormat;
+			case _: null;
 		}
 	}
 	#end

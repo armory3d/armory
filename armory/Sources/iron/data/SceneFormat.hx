@@ -168,6 +168,7 @@ typedef TShaderOverride = {
 @:structInit class TShaderOverride {
 #end
 	@:optional public var cull_mode: String;
+	@:optional public var compare_mode: String;
 	@:optional public var addressing: String;
 	@:optional public var filter: String;
 	@:optional public var shared_sampler: String;
