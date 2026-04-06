@@ -431,7 +431,7 @@ class ParticleSystemCPU {
 		// Just using the first slot for now: 1 texture slot
 		// TODO: use all available slots ?
 		for (slot in textureSlots.keys()) {
-			var s:Dynamic = textureSlots[slot];
+			var s: Dynamic = textureSlots[slot];
 			if (s != null && s.use_map_size) {
 				var sizeFactor: FastFloat = s.size_factor;
 				return sizeFactor * textureFactor;
@@ -442,14 +442,14 @@ class ParticleSystemCPU {
 
 	function getRampElementsLength(): Int {
 		for (slot in textureSlots.keys()) {
-			var s:Dynamic = textureSlots[slot];
+			var s: Dynamic = textureSlots[slot];
 			if (s == null) continue;
-			var tex:Dynamic = s.texture;
+			var tex: Dynamic = s.texture;
 			if (tex == null) continue;
 			if (tex.use_color_ramp) {
-				var ramp:Dynamic = tex.color_ramp;
+				var ramp: Dynamic = tex.color_ramp;
 				if (ramp == null) continue;
-				var elems:Dynamic = ramp.elements;
+				var elems: Dynamic = ramp.elements;
 				if (elems == null) continue;
 				return elems.length;
 			}
