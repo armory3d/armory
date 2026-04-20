@@ -1218,8 +1218,22 @@ namespace {
 			to[i * 2    ] = (float)(left [i] / 32767.0);
 			to[i * 2 + 1] = (float)(right[i] / 32767.0);
 		}
-		args.GetReturnValue().Set(buffer);
+
+		int sample_rate = sound->samples_per_second;
+		int channels = sound->channel_count;
+		double length = (double)sound->size / (double)sample_rate;
+
 		kinc_a1_sound_destroy(sound);
+
+		Local<ObjectTemplate> templ = ObjectTemplate::New(isolate);
+		Local<Object> obj = templ->NewInstance(isolate->GetCurrentContext()).ToLocalChecked();
+
+		obj->Set(isolate->GetCurrentContext(), String::NewFromUtf8(isolate, "buffer").ToLocalChecked(), buffer);
+		obj->Set(isolate->GetCurrentContext(), String::NewFromUtf8(isolate, "sampleRate").ToLocalChecked(), Int32::New(isolate, sample_rate));
+		obj->Set(isolate->GetCurrentContext(), String::NewFromUtf8(isolate, "channels").ToLocalChecked(), Int32::New(isolate, channels));
+		obj->Set(isolate->GetCurrentContext(), String::NewFromUtf8(isolate, "length").ToLocalChecked(), Number::New(isolate, length));
+
+		args.GetReturnValue().Set(obj);
 	}
 
 	void krom_write_audio_buffer(const FunctionCallbackInfo<Value> &args) {
