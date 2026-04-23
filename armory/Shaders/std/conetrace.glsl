@@ -276,10 +276,9 @@ traceConeShadow(
     const float clipmaps[voxelgiClipmapCount * 10]
 ) {
     #ifdef _VoxelGI
-    vec3 transmittance = vec3(1.0); // colored shadow
-    #else
-    float alpha = 0.0;              // grayscale occlusion
-    #endif
+    vec3 transmittance = vec3(1.0);
+	#endif
+	float alpha = 0.0;
 
     float voxelSize0 = float(clipmaps[0]) * 2.0;
     float dist = voxelSize0;
@@ -333,12 +332,10 @@ traceConeShadow(
             #endif
         }
 
-        // === Shadow accumulation === by chatgpt
-        #ifdef _VoxelGI
-        float absorb = mipSample.a;
-        transmittance *= (1.0 - absorb) + mipSample.rgb * absorb;
-        #else
         float a = 1.0 - alpha;
+        #ifdef _VoxelGI
+        transmittance *= (1.0 - mipSample.a) + mipSample.rgb * a;
+        #else
         alpha += a * mipSample;
         #endif
 

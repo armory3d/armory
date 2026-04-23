@@ -102,7 +102,7 @@ void main() {
 
     vec4 coords = rayCast(dir);
     float dist = length(hitCoord - hitCoord1);
-    vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb * exp(log(1.0 - opac) * dist);
+    vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb; /* * exp(log(1.0 - opac) * dist); */
 
 	vec4 g1 = textureLod(gbuffer1, texCoord, 0.0); // Basecolor.rgb, spec/occ
 	vec3 f0 = surfaceF0(refractionCol.rgb, metallic);

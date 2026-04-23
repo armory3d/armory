@@ -165,6 +165,19 @@ uniform vec3 sunCol;
 	#endif // _ShadowMap
 #endif
 
+#ifdef _SinglePoint // Fast path for single light
+uniform vec3 pointPos;
+uniform vec3 pointCol;
+#ifdef _ShadowMap
+uniform float pointBias;
+#endif
+#ifdef _Spot
+uniform vec3 spotDir;
+uniform vec3 spotRight;
+uniform vec4 spotData;
+#endif
+#endif
+
 vec3 sampleLight(const vec3 p, const vec3 n, const vec3 lp, const vec3 lightCol
 	#ifdef _ShadowMap
 		, int index, float bias, bool receiveShadow, bool transparent
