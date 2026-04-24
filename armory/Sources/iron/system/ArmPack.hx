@@ -160,9 +160,6 @@ class ArmPack {
 			case "anim": TAnimation;
 			case "tracks": TTrack;
 			case "morph_target": TMorphTarget;
-			case "vertex_groups": TVertex_groups;
-			case "tilesheet": TTilesheetData;
-			case "events": TTilesheetEvent;
 			case _: TSceneFormat;
 		}
 	}

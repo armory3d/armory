@@ -429,9 +429,8 @@ class ParticleSystemCPU {
 		// Just using the first slot for now: 1 texture slot
 		// TODO: use all available slots ?
 		for (slot in textureSlots.keys()) {
-			var s:Dynamic = textureSlots[slot];
-			if (s != null && s.use_map_size) {
-				var sizeFactor: FastFloat = s.size_factor;
+			if (textureSlots[slot].use_map_size) {
+				var sizeFactor: FastFloat = textureSlots[slot].size_factor;
 				return sizeFactor * textureFactor;
 			}
 		}
@@ -440,16 +439,8 @@ class ParticleSystemCPU {
 
 	function getRampElementsLength(): Int {
 		for (slot in textureSlots.keys()) {
-			var s:Dynamic = textureSlots[slot];
-			if (s == null) continue;
-			var tex:Dynamic = s.texture;
-			if (tex == null) continue;
-			if (tex.use_color_ramp) {
-				var ramp:Dynamic = tex.color_ramp;
-				if (ramp == null) continue;
-				var elems:Dynamic = ramp.elements;
-				if (elems == null) continue;
-				return elems.length;
+			if (textureSlots[slot].texture.use_color_ramp) {
+				return textureSlots[slot].texture.color_ramp.elements.length;
 			}
 		}
 		return 0;
@@ -459,18 +450,10 @@ class ParticleSystemCPU {
 		// Just using the first slot for now: 1 texture slot
 		// TODO: use all available slots ?
 		for (slot in textureSlots.keys()) {
-			var s: Dynamic = textureSlots[slot];
-			if (s == null) continue;
-			var tex: Dynamic = s.texture;
-			if (tex == null) continue;
-			if (tex.use_color_ramp) {
-				var ramp: Dynamic = tex.color_ramp;
-				if (ramp == null) continue;
-				var elems: Dynamic = ramp.elements;
-				if (elems == null) continue;
+			if (textureSlots[slot].texture.use_color_ramp) {
 				var positions: Array<FastFloat> = [];
-				for (i in 0...elems.length) {
-					positions.push(elems[i].position);
+				for (i in 0...textureSlots[slot].texture.color_ramp.elements.length) {
+					positions.push(textureSlots[slot].texture.color_ramp.elements[i].position);
 				}
 				return positions;
 			}
@@ -482,18 +465,10 @@ class ParticleSystemCPU {
 		// Just using the first slot for now: 1 texture slot
 		// TODO: use all available slots ?
 		for (slot in textureSlots.keys()) {
-			var s: Dynamic = textureSlots[slot];
-			if (s == null) continue;
-			var tex: Dynamic = s.texture;
-			if (tex == null) continue;
-			if (tex.use_color_ramp) {
-				var ramp: Dynamic = tex.color_ramp;
-				if (ramp == null) continue;
-				var elems: Dynamic = ramp.elements;
-				if (elems == null) continue;
+			if (textureSlots[slot].texture.use_color_ramp) {
 				var colors: Array<FastFloat> = [];
-				for (i in 0...elems.length) {
-					colors.push(elems[i].color.b); // Just need R, G or B for black and white images. Using B as it can be interpreted as V with HSV
+				for (i in 0...textureSlots[slot].texture.color_ramp.elements.length) {
+					colors.push(textureSlots[slot].texture.color_ramp.elements[i].color.b); // Just need R, G or B for black and white images. Using B as it can be interpreted as V with HSV
 				}
 				return colors;
 			}
