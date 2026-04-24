@@ -918,16 +918,10 @@ class Scene {
 
 				// Set trait properties
 				if (t.props != null) {
-					#if hl
-					var traitFields = Type.getInstanceFields(Type.getClass(traitInst));
-					#end
 					for (i in 0...Std.int(t.props.length / 3)) {
 						var pname: String = t.props[i * 3];
 						var ptype: String = t.props[i * 3 + 1];
 						var pval: Dynamic = t.props[i * 3 + 2];
-						#if hl
-						if (traitFields.indexOf(pname) == -1) continue;
-						#end
 
 						if (StringTools.endsWith(ptype, "Object") && pval != "") {
 							Reflect.setProperty(traitInst, pname, Scene.active.getChild(pval));

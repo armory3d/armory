@@ -191,10 +191,7 @@ def init_properties():
     bpy.types.World.arm_project_win_build_cpu = IntProperty(name="CPU Count", description="Specifies the maximum number of concurrent processes to use when building", default=1, min=1, max=multiprocessing.cpu_count())
     bpy.types.World.arm_project_win_build_open = BoolProperty(name="Open Build Directory", description="Open the build directory after successfully assemble", default=False)
 
-    if bpy.app.version >= (4, 5, 0):
-        bpy.types.World.arm_project_icon = StringProperty(name="Icon (PNG)", description="Exported project icon, must be a PNG image", default="", subtype="FILE_PATH", update=assets.invalidate_compiler_cache, options={'PATH_SUPPORTS_BLEND_RELATIVE'})
-    else:
-        bpy.types.World.arm_project_icon = StringProperty(name="Icon (PNG)", description="Exported project icon, must be a PNG image", default="", subtype="FILE_PATH", update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_project_icon = StringProperty(name="Icon (PNG)", description="Exported project icon, must be a PNG image", default="", subtype="FILE_PATH", update=assets.invalidate_compiler_cache)
     if bpy.app.version >= (4, 5, 0):
         bpy.types.World.arm_project_root = StringProperty(name="Root", description="Set root folder for linked assets", default="", subtype="DIR_PATH", update=assets.invalidate_compiler_cache, options={'PATH_SUPPORTS_BLEND_RELATIVE'})
     else:
