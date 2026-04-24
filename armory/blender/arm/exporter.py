@@ -11,7 +11,6 @@ This software is licensed under the Creative Commons
 Attribution-ShareAlike 3.0 Unported License:
 https://creativecommons.org/licenses/by-sa/3.0/deed.en_US
 """
-import copy
 from enum import Enum, unique
 import math
 import os
@@ -150,15 +149,6 @@ class ArmoryExporter:
 
         self.referenced_collections: list[bpy.types.Collection] = []
         """Collections referenced by collection instances"""
-
-        self.inlined_collections: set = set()
-        """Linked collections inlined as children of their instance empty"""
-
-        self._collection_base_objects: dict = {}
-        """collection -> list of deepcopy arm objects (before transform composition) for cloning"""
-
-        self.inlined_empty_children: dict = {}
-        """empty bobject -> list of exported child names, for fixing collection object_refs"""
 
         self.has_spawning_camera = False
         """Whether there is at least one camera in the scene that spawns by default"""
@@ -821,7 +811,7 @@ class ArmoryExporter:
         #     self.indentLevel -= 1
         #     self.IndentWrite(B"}\n")
 
-    def export_object(self, bobject: bpy.types.Object, out_parent: Dict = None, allow_inline: bool = True) -> None:
+    def export_object(self, bobject: bpy.types.Object, out_parent: Dict = None) -> None:
         """This function exports a single object in the scene and
         includes its name, object reference, material references (for
         meshes), and transform.
@@ -829,70 +819,6 @@ class ArmoryExporter:
         """
         if not bobject.arm_export:
             return
-
-        # Inline linked collections: skip the empty,
-        # export collection objects directly at this level
-        # If the empty has traits, preserve it as a wrapper (group_ref path)
-        # Only inline during Phase 2 (scene objects), not when called from export_collection
-        if allow_inline and bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
-            collection = bobject.instance_collection
-            empty_has_traits = hasattr(bobject, 'arm_traitlist') and len(bobject.arm_traitlist) > 0
-            if collection.library is not None and not empty_has_traits:
-                self.inlined_collections.add(collection)
-                empty_matrix = bobject.matrix_local
-                is_first = collection not in self._collection_base_objects
-
-                if is_first:
-                    # First instance: do the full export (meshes, materials, etc.)
-                    for cobj in collection.objects:
-                        if cobj not in self.object_to_arm_object_dict:
-                            self.object_to_arm_object_dict[cobj] = {'traits': []}
-
-                    base_objects = []
-                    for child in collection.objects:
-                        if not child.arm_export:
-                            continue
-                        if child.parent is not None and child.parent.name in collection.objects:
-                            continue
-                        if child.type == 'CAMERA':
-                            asset_name = child.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
-                            self.output['camera_ref'] = asset_name
-                            self.has_spawning_camera = True
-                        self.process_bobject(child)
-                        self.export_object(child, out_parent)
-                        child_out = self.object_to_arm_object_dict[child]
-                        # Child may have been inlined (nested collection instance),
-                        # in which case it has no 'name' — skip it from base_objects
-                        if 'name' not in child_out:
-                            continue
-                        # Save a deep copy before composing (for cloning later)
-                        base_objects.append(copy.deepcopy(child_out))
-                        # Compose empty transform with child transform
-                        if 'transform' in child_out:
-                            v = child_out['transform']['values']
-                            child_matrix = Matrix((v[0:4], v[4:8], v[8:12], v[12:16]))
-                            composed = empty_matrix @ child_matrix
-                            child_out['transform']['values'] = ArmoryExporter.write_matrix(composed)
-                    self._collection_base_objects[collection] = base_objects
-                    self.inlined_empty_children[bobject] = [obj['name'] for obj in base_objects]
-                else:
-                    # Subsequent instances: clone from saved base objects
-                    for base_obj in self._collection_base_objects[collection]:
-                        instance_obj = copy.deepcopy(base_obj)
-                        # Compose this instance's empty transform
-                        if 'transform' in instance_obj:
-                            v = instance_obj['transform']['values']
-                            child_matrix = Matrix((v[0:4], v[4:8], v[8:12], v[12:16]))
-                            composed = empty_matrix @ child_matrix
-                            instance_obj['transform']['values'] = ArmoryExporter.write_matrix(composed)
-                        if out_parent is None:
-                            self.output['objects'].append(instance_obj)
-                        else:
-                            if 'children' not in out_parent:
-                                out_parent['children'] = []
-                            out_parent['children'].append(instance_obj)
-                    self.inlined_empty_children[bobject] = [obj['name'] for obj in self._collection_base_objects[collection]]
-                return
 
         bobject_ref = self.bobject_array.get(bobject)
         if bobject_ref is not None:
@@ -1294,7 +1220,7 @@ class ArmoryExporter:
 
             self.post_export_object(bobject, out_object, object_type)
 
-            if 'children' not in out_object and len(bobject.children) > 0:
+            if not hasattr(out_object, 'children') and len(bobject.children) > 0:
                 out_object['children'] = []
 
         if bobject.arm_instanced == 'Off':
@@ -2126,13 +2052,6 @@ Make sure the mesh only has tris/quads.""")
             if not bobject.arm_export:
                 continue
 
-            # If this object was an inlined collection instance,
-            # reference its exported children instead of the removed empty
-            if bobject in self.inlined_empty_children:
-                for child_name in self.inlined_empty_children[bobject]:
-                    out_collection['object_refs'].append(child_name)
-                continue
-
             # Only add unparented objects or objects with their parent
             # outside the collection, then instantiate the full object
             # child tree if the collection gets spawned as a whole
@@ -2159,7 +2078,7 @@ Make sure the mesh only has tris/quads.""")
                         continue
 
                     self.process_bobject(bobject)
-                    self.export_object(bobject, allow_inline=False)
+                    self.export_object(bobject)
 
                 if bobject.type == 'CAMERA':
                     self.output['camera_ref'] = asset_name
@@ -2785,8 +2704,7 @@ Make sure the mesh only has tris/quads.""")
                     continue
 
                 if self.scene.user_of_id(collection) or collection.library and not self.scene.library or collection in self.referenced_collections:
-                    if collection not in self.inlined_collections:
-                        self.export_collection(collection)
+                    self.export_collection(collection)
 
         if not ArmoryExporter.option_mesh_only:
             if self.scene.camera is not None:
