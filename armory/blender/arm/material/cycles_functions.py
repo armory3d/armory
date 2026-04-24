@@ -1,9 +1,9 @@
 str_tex_proc = """
-//	Hash functions by Dave Hoskins
-//	<https://www.shadertoy.com/view/4djSRW>
-float hash_f(float p) { p = fract(p * 0.1031); p *= p + 33.33; p *= p + p; return fract(p); }
-float hash_f(vec2 p) { vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
-float hash_f(vec3 p3) { p3 = fract(p3 * 0.1031); p3 += dot(p3, p3.zyx + 31.32); return fract((p3.x + p3.y) * p3.z); }
+//	<https://www.shadertoy.com/view/4dS3Wd>
+//	By Morgan McGuire @morgan3d, http://graphicscodex.com
+float hash_f(const float n) { return fract(sin(n) * 1e4); }
+float hash_f(const vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }
+float hash_f(const vec3 co){ return fract(sin(dot(co.xyz, vec3(12.9898,78.233,52.8265)) * 24.384) * 43758.5453); }
 
 float noise(const vec3 x) {
 	const vec3 step = vec3(110, 241, 171);
