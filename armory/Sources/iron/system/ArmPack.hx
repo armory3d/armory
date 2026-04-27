@@ -111,13 +111,18 @@ class ArmPack {
 		#if js
 		var out = {};
 		#else
-		var out = Type.createEmptyInstance(getClass(key, parentKey));
+		var cls = getClass(key, parentKey);
+		var out: Dynamic = cls != null ? Type.createEmptyInstance(cls) : {};
+		var fields: Array<String> = cls != null ? Type.getInstanceFields(cls) : null;
 		#end
 		for (n in 0...length) {
 			var raw = read(i);
 			var k = Std.string(raw);
 			var v = read(i, k, key);
-			Reflect.setField(out, k, v);
+			#if !js
+			if (fields == null || fields.indexOf(k) != -1)
+			#end
+				Reflect.setField(out, k, v);
 		}
 		return out;
 	}
@@ -160,7 +165,10 @@ class ArmPack {
 			case "anim": TAnimation;
 			case "tracks": TTrack;
 			case "morph_target": TMorphTarget;
-			case _: TSceneFormat;
+			case "vertex_groups": TVertex_groups;
+			case "tilesheet": TTilesheetData;
+			case "events": TTilesheetEvent;
+			case _: null;
 		}
 	}
 	#end
