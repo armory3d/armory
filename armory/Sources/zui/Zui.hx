@@ -1190,14 +1190,22 @@ class Zui {
 		}
 		if (submitTextHandle == handle) {
 			submitTextEdit();
+			var previousValue: Float = handle.value;
 			#if js
 			try {
-				handle.value = js.Lib.eval(handle.text);
+				var evalResult: Dynamic = js.Lib.eval(handle.text);
+				var parsedValue: Float = Std.parseFloat(Std.string(evalResult));
+				handle.value = Math.isNaN(parsedValue) ? previousValue : parsedValue;
 			}
-			catch(_) {}
+			catch(_) {
+				handle.value = previousValue;
+			}
 			#else
-			handle.value = Std.parseFloat(handle.text);
+			var parsedValue: Float = Std.parseFloat(handle.text);
+			handle.value = Math.isNaN(parsedValue) ? previousValue : parsedValue;
 			#end
+			if (handle.value < from) handle.value = from;
+			else if (handle.value > to) handle.value = to;
 			handle.changed = changed = true;
 		}
 
@@ -2069,18 +2077,18 @@ class Handle {
 	public static var global = new Handle();
 }
 
-@:enum abstract Layout(Int) from Int {
+enum abstract Layout(Int) from Int {
 	var Vertical = 0;
 	var Horizontal = 1;
 }
 
-@:enum abstract Align(Int) from Int {
+enum abstract Align(Int) from Int {
 	var Left = 0;
 	var Center = 1;
 	var Right = 2;
 }
 
-@:enum abstract State(Int) from Int {
+enum abstract State(Int) from Int {
 	var Idle = 0;
 	var Started = 1;
 	var Down = 2;

@@ -254,7 +254,7 @@ class Canvas {
 				if (element.editable == null) element.editable = true;
 
 				zui.Ext.textArea(ui, h.nest(element.id), element.alignment, element.editable, getText(canvas, element), true);
-				
+
 				//handle does not change
 				if (h.nest(element.id).changed) {
 					var e = element.event;
@@ -483,7 +483,7 @@ typedef TTranslatedText = {
 	var text: String;
 }
 
-@:enum abstract ElementType(Int) from Int to Int {
+enum abstract ElementType(Int) from Int to Int {
 	var Text = 0;
 	var Image = 1;
 	var Button = 2;
@@ -507,7 +507,7 @@ typedef TTranslatedText = {
 	var TextArea = 20;
 }
 
-@:enum abstract Anchor(Int) from Int to Int {
+enum abstract Anchor(Int) from Int to Int {
 	var TopLeft = 0;
 	var Top = 1;
 	var TopRight = 2;

@@ -23,7 +23,7 @@ let root = __dirname;
 const libdir = root + '/v8/libraries/' + system + '/' + build + '/';
 
 let project = new Project(flags.name);
-await project.addProject('Kinc');
+await project.addProject('Kore');
 project.cppStd = "c++17";
 project.setDebugDir('Deployment');
 

@@ -214,7 +214,7 @@ class Module {
 							if( v.ret.t != TVoid )
 								e = { expr : EReturn(e), pos : p };
 							else if( isConstr )
-								e = macro this = $e;
+								e = macro this = cast $e;
 							return e;
 						}
 

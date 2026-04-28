@@ -3,7 +3,7 @@ package armory.trait.physics;
 #if (!arm_physics)
 
 class RigidBody extends iron.Trait { public function new() { super(); } }
-@:enum abstract Shape(Int) from Int to Int { }
+enum abstract Shape(Int) from Int to Int { }
 
 #else
 

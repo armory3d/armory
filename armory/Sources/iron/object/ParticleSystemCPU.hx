@@ -123,8 +123,10 @@ class ParticleSystemCPU {
             gravityFactor = r.weight_gravity * (frameRate / baseFrameRate);
 			textureFactor = r.weight_texture;
 
-			for (slot in Reflect.fields(r.texture_slots)) {
-				textureSlots[slot] = Reflect.field(r.texture_slots, slot);
+			if (r.texture_slots != null) {
+				for (slot in Reflect.fields(r.texture_slots)) {
+					textureSlots[slot] = Reflect.field(r.texture_slots, slot);
+				}
 			}
 
             autoStart = r.auto_start;
@@ -429,8 +431,9 @@ class ParticleSystemCPU {
 		// Just using the first slot for now: 1 texture slot
 		// TODO: use all available slots ?
 		for (slot in textureSlots.keys()) {
-			if (textureSlots[slot].use_map_size) {
-				var sizeFactor: FastFloat = textureSlots[slot].size_factor;
+			var s: Dynamic = textureSlots[slot];
+			if (s != null && s.use_map_size) {
+				var sizeFactor: FastFloat = s.size_factor;
 				return sizeFactor * textureFactor;
 			}
 		}
@@ -439,8 +442,16 @@ class ParticleSystemCPU {
 
 	function getRampElementsLength(): Int {
 		for (slot in textureSlots.keys()) {
-			if (textureSlots[slot].texture.use_color_ramp) {
-				return textureSlots[slot].texture.color_ramp.elements.length;
+			var s: Dynamic = textureSlots[slot];
+			if (s == null) continue;
+			var tex: Dynamic = s.texture;
+			if (tex == null) continue;
+			if (tex.use_color_ramp) {
+				var ramp: Dynamic = tex.color_ramp;
+				if (ramp == null) continue;
+				var elems: Dynamic = ramp.elements;
+				if (elems == null) continue;
+				return elems.length;
 			}
 		}
 		return 0;
@@ -450,10 +461,18 @@ class ParticleSystemCPU {
 		// Just using the first slot for now: 1 texture slot
 		// TODO: use all available slots ?
 		for (slot in textureSlots.keys()) {
-			if (textureSlots[slot].texture.use_color_ramp) {
+			var s: Dynamic = textureSlots[slot];
+			if (s == null) continue;
+			var tex: Dynamic = s.texture;
+			if (tex == null) continue;
+			if (tex.use_color_ramp) {
+				var ramp: Dynamic = tex.color_ramp;
+				if (ramp == null) continue;
+				var elems: Dynamic = ramp.elements;
+				if (elems == null) continue;
 				var positions: Array<FastFloat> = [];
-				for (i in 0...textureSlots[slot].texture.color_ramp.elements.length) {
-					positions.push(textureSlots[slot].texture.color_ramp.elements[i].position);
+				for (i in 0...elems.length) {
+					positions.push(elems[i].position);
 				}
 				return positions;
 			}
@@ -465,10 +484,18 @@ class ParticleSystemCPU {
 		// Just using the first slot for now: 1 texture slot
 		// TODO: use all available slots ?
 		for (slot in textureSlots.keys()) {
-			if (textureSlots[slot].texture.use_color_ramp) {
+			var s: Dynamic = textureSlots[slot];
+			if (s == null) continue;
+			var tex: Dynamic = s.texture;
+			if (tex == null) continue;
+			if (tex.use_color_ramp) {
+				var ramp: Dynamic = tex.color_ramp;
+				if (ramp == null) continue;
+				var elems: Dynamic = ramp.elements;
+				if (elems == null) continue;
 				var colors: Array<FastFloat> = [];
-				for (i in 0...textureSlots[slot].texture.color_ramp.elements.length) {
-					colors.push(textureSlots[slot].texture.color_ramp.elements[i].color.b); // Just need R, G or B for black and white images. Using B as it can be interpreted as V with HSV
+				for (i in 0...elems.length) {
+					colors.push(elems[i].color.b); // Just need R, G or B for black and white images. Using B as it can be interpreted as V with HSV
 				}
 				return colors;
 			}

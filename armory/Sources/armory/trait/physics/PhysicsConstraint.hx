@@ -3,7 +3,7 @@ package armory.trait.physics;
 #if (!arm_physics)
 
 class PhysicsConstraint extends iron.Trait { public function new() { super(); } }
-@:enum abstract ConstraintAxis(Int) from Int to Int { }
+enum abstract ConstraintAxis(Int) from Int to Int { }
 
 #else
 
