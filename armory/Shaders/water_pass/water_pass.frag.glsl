@@ -75,16 +75,13 @@ vec4 binarySearch(vec3 dir) {
 }
 
 vec4 rayCast(vec3 dir) {
-	#ifdef _CPostprocess
-		dir *= PPComp9.x;
-	#else
-		dir *= ssrRayStep;
-	#endif
-	for (int i = 0; i < maxSteps; i++) {
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-	}
-	return vec4(0.0);
+    float ddepth;
+    for (int i = 0; i < maxSteps; i++) {
+        hitCoord += dir * ssrRayStep;
+        ddepth = getDeltaDepth(hitCoord);
+        if (ddepth > 0.0)
+            return binarySearch(dir);
+    }
 }
 #endif //SSR
 
@@ -148,8 +145,8 @@ void main() {
 	//if (spec == 0.0) { fragColor.rgb = vec3(0.0); return; }
 
 	vec3 viewNormal = n2;
-	vec3 viewPos = getPosView(viewRay, gdepth, cameraProj);
-	vec3 reflected = reflect(normalize(viewPos), viewNormal);
+	vec3 viewPos = getPosView(normalize(viewRay), gdepth, cameraProj);
+	vec3 reflected = reflect(viewPos, viewNormal);
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess

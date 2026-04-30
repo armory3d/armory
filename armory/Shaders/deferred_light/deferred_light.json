@@ -12,18 +12,13 @@
 					"link": "_cameraPosition"
 				},
 				{
-					"name": "voxelBlend",
-					"link": "_voxelBlend",
-					"ifdef": ["_VoxelTemporal"]
-				},
-				{
 					"name": "eyeLook",
 					"link": "_cameraLook"
 				},
 				{
 					"name": "clipmaps",
 					"link": "_clipmaps",
-					"ifdef": ["VoxelShadow"]
+					"ifdef": ["_VoxelShadow"]
 				},
 				{
 					"name": "invVP",
@@ -117,6 +112,15 @@
 					"name": "VP",
 					"link": "_viewProjectionMatrix",
 					"ifdef": ["_SSRS"]
+				},
+				{
+					"name": "frame",
+					"link": "_frame",
+					"ifdef": ["_SSRS"]
+				},
+				{
+					"name": "dirInv",
+					"link": "_vec2xInv"
 				},
 				{
 					"name": "texClouds",

@@ -34,8 +34,12 @@ uniform sampler3D voxels;
 uniform sampler3D voxelsSDF;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
+uniform sampler2D gbuffer2;
+#ifdef _VoxelGI
+uniform layout(rgba8) image2D voxels_shadows;
+#else
 uniform layout(r8) image2D voxels_shadows;
-
+#endif
 uniform float clipmaps[voxelgiClipmapCount * 10];
 uniform mat4 InvVP;
 uniform vec2 cameraProj;
@@ -43,6 +47,8 @@ uniform vec3 eye;
 uniform vec3 eyeLook;
 uniform vec2 postprocess_resolution;
 uniform vec3 lPos;
+uniform vec3 sunDir;
+uniform int lightType;
 
 void main() {
 	const vec2 pixel = gl_GlobalInvocationID.xy;
@@ -69,7 +75,19 @@ void main() {
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
 	n = normalize(n);
 
-	float occ = 1.0 - traceShadow(P, n, voxels, voxelsSDF, normalize(lPos - P), clipmaps, pixel);
+	vec4 g2 = textureLod(gbuffer2, uv, 0.0);
 
-	imageStore(voxels_shadows, ivec2(pixel), vec4(occ));
+	vec3 lightDir = vec3(0.0);
+	if (lightType == 0 || lightType == 2)
+		lightDir = sunDir; // spot or sun
+	else
+		lightDir = normalize(lPos - P); // point
+
+	#ifdef _VoxelGI
+	vec3 shadow = traceShadow(P, n, voxels, voxelsSDF, lightDir, clipmaps, pixel, -g2.rg).rgb;
+	imageStore(voxels_shadows, ivec2(pixel), vec4(shadow, 1.0));
+	#else
+	float shadow = 1.0 - traceShadow(P, n, voxels, voxelsSDF, lightDir, clipmaps, pixel, -g2.rg);
+	imageStore(voxels_shadows, ivec2(pixel), vec4(shadow));
+	#endif
 }

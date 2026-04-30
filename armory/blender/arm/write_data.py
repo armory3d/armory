@@ -802,20 +802,19 @@ const float waterDensity = """ + str(round(rpdat.arm_water_density * 100) / 100)
 const float waterRefract = """ + str(round(rpdat.arm_water_refract * 100) / 100) + """;
 const float waterReflect = """ + str(round(rpdat.arm_water_reflect * 100) / 100) + """;
 """)
-        if rpdat.rp_ssgi == 'SSAO' or rpdat.rp_ssgi == 'RTAO' or rpdat.rp_volumetriclight:
+        if rpdat.rp_ssgi == 'SSAO' or rpdat.rp_ssgi == 'SSGI' or rpdat.rp_ssgi == 'RTAO' or rpdat.rp_volumetriclight:
             f.write(
 """const float ssaoRadius = """ + str(round(rpdat.arm_ssgi_radius * 100) / 100) + """;
 const float ssaoStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100) + """;
 const float ssaoScale = """ + ("2.0" if rpdat.arm_ssgi_half_res else "20.0") + """;
 """)
 
-        if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
+        if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO' or rpdat.rp_ssgi == 'SSGI':
             f.write(
-"""const int ssgiMaxSteps = """ + str(rpdat.arm_ssgi_max_steps) + """;
+"""const int ssgiSamples = """ + str(rpdat.arm_ssgi_samples) + """;
 const float ssgiRayStep = 0.005 * """ + str(round(rpdat.arm_ssgi_step * 100) / 100) + """;
 const float ssgiStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100) + """;
 """)
-
         if rpdat.rp_bloom:
 
             follow_blender = rpdat.arm_bloom_follow_blender if bpy.app.version < (4, 3, 0) else False;
@@ -854,7 +853,10 @@ const float ss_refractionJitter = """ + str(round(rpdat.arm_ss_refraction_jitter
 
         if rpdat.arm_ssrs:
             f.write(
-"""const float ssrsRayStep = """ + str(round(rpdat.arm_ssrs_ray_step * 100) / 100) + """;
+"""const float ssrsSamples = """ + str(round(rpdat.arm_ssrs_samples * 100) / 100) + """;
+const float ssrsRayStep = """ + str(round(rpdat.arm_ssrs_ray_step * 100) / 100) + """;
+const float ssrsSearchDist = """ + str(round(rpdat.arm_ssrs_search_dist * 100) / 100) + """;
+const float ssrsThickness = """ + str(round(rpdat.arm_ssrs_thickness * 100) / 100) + """;
 """)
 
         if rpdat.rp_volumetriclight:
@@ -951,10 +953,10 @@ const int voxelgiClipmapCount = """ + str(rpdat.arm_voxelgi_clipmap_count) + """
 const float voxelgiOcc = """ + str(round(rpdat.arm_voxelgi_occ * 100) / 100) + """;
 const float voxelgiVoxelSize = """ + str(round(rpdat.arm_voxelgi_size * 1000) / 1000) + """;
 const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 1000) / 1000) + """;
-const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;
 const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 1000) / 1000) + """;
-const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) / 100) + """;
+const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;
 const float voxelgiShad = """ + str(round(rpdat.arm_voxelgi_shad * 100) / 100) + """;
+const float voxelgiEnv = """ + str(round(rpdat.arm_voxelgi_env * 100) / 100) + """;
 """)
         if rpdat.rp_voxels == 'Voxel GI':
             f.write("""
