@@ -6,7 +6,7 @@ import haxe.io.Bytes;
 typedef BinaryType = js.html.BinaryType;
 #else
 
-@:enum abstract BinaryType(String) {
+enum abstract BinaryType(String) {
 	var ARRAYBUFFER = "arraybuffer";
 
 	@:to public function toString() {

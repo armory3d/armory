@@ -346,7 +346,7 @@ class KinematicCharacterController extends Trait {
 	}
 }
 
-@:enum abstract ControllerShape(Int) from Int to Int {
+enum abstract ControllerShape(Int) from Int to Int {
 	var Box = 0;
 	var Sphere = 1;
 	var ConvexHull = 2;
@@ -355,7 +355,7 @@ class KinematicCharacterController extends Trait {
 	var Capsule = 5;
 }
 
-@:enum abstract ControllerActivationState(Int) from Int to Int {
+enum abstract ControllerActivationState(Int) from Int to Int {
 	var Active = 1;
 	var NoDeactivation = 4;
 	var NoSimulation = 5;

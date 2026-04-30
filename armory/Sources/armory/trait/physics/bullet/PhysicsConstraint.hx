@@ -36,23 +36,23 @@ class PhysicsConstraint extends iron.Trait {
 
 	/**
 	 * Function to initialize physics constraint trait.
-	  * 
-	  * @param object Pivot object to which this constraint trait will be added. The constraint limits are applied along the local axes of this object. This object need not 
+	  *
+	  * @param object Pivot object to which this constraint trait will be added. The constraint limits are applied along the local axes of this object. This object need not
 	  * be a Rigid Body. Typically an `Empty` object may be used. Moving/rotating/parenting this pivot object has no effect once the constraint trait is added. Removing
 	  * the pivot object removes the constraint.
-	  * 
+	  *
 	  * @param body1 First rigid body to be constrained. This rigid body may be constrained by other constraints.
-	  * 
+	  *
 	  * @param body2 Second rigid body to be constrained. This rigid body may be constrained by other constraints.
-	  * 
+	  *
 	  * @param type Type of the constraint.
-	  * 
+	  *
 	  * @param disableCollisions Disable collisions between constrained objects.
-	  * 
+	  *
 	  * @param breakingThreshold Break the constraint if stress on this constraint exceeds this value. Set to 0 to make un-breakable.
-	  * 
+	  *
 	  * @param limits Constraint limits. This may be set before adding the trait to pivot object using the set limits functions.
-	  * 
+	  *
  	**/
 	public function new(body1: Object, body2: Object, type: ConstraintType, disableCollisions: Bool, breakingThreshold: Float, limits: Array<Float> = null) {
 		super();
@@ -335,7 +335,7 @@ class PhysicsConstraint extends iron.Trait {
 			if (breakingThreshold > 0) con.setBreakingImpulseThreshold(breakingThreshold);
 
 			physics.addPhysicsConstraint(this);
-			
+
 			id = nextId;
 			nextId++;
 
@@ -351,10 +351,10 @@ class PhysicsConstraint extends iron.Trait {
 
 	/**
  	 * Function to set constraint limits when using Hinge constraint. May be used after initalizing this trait but before adding it
-     * to the pivot object 
+     * to the pivot object
  	**/
 	public function setHingeConstraintLimits(angLimit: Bool, lowerAngLimit: Float, upperAngLimit: Float) {
-		
+
 		angLimit? limits[0] = 1 : limits[0] = 0;
 
 		limits[1] = lowerAngLimit * (Math.PI/ 180);
@@ -363,10 +363,10 @@ class PhysicsConstraint extends iron.Trait {
 
 	/**
  	 * Function to set constraint limits when using Slider constraint. May be used after initalizing this trait but before adding it
-     * to the pivot object 
+     * to the pivot object
  	**/
 	public function setSliderConstraintLimits(linLimit: Bool, lowerLinLimit: Float, upperLinLimit: Float) {
-		
+
 		linLimit? limits[0] = 1 : limits[0] = 0;
 
 		limits[1] = lowerLinLimit;
@@ -375,10 +375,10 @@ class PhysicsConstraint extends iron.Trait {
 
 	/**
  	 * Function to set constraint limits when using Piston constraint. May be used after initalizing this trait but before adding it
-     * to the pivot object 
+     * to the pivot object
  	**/
 	public function setPistonConstraintLimits(linLimit: Bool, lowerLinLimit: Float, upperLinLimit: Float, angLimit: Bool, lowerAngLimit: Float, upperAngLimit: Float) {
-		
+
 		linLimit? limits[0] = 1 : limits[0] = 0;
 
 		limits[1] = lowerLinLimit;
@@ -401,7 +401,7 @@ class PhysicsConstraint extends iron.Trait {
 		var radian = (Math.PI/ 180);
 
 		switch (axis){
-			case X: 
+			case X:
 				i = 0;
 			case Y:
 				i = 3;
@@ -429,7 +429,7 @@ class PhysicsConstraint extends iron.Trait {
 		var j = 0;
 
 		switch (axis){
-			case X: 
+			case X:
 				i = 18;
 			case Y:
 				i = 21;
@@ -453,10 +453,10 @@ class PhysicsConstraint extends iron.Trait {
 		#end
 	}
 
-	
+
 }
 
-@:enum abstract ConstraintType(Int) from Int to Int {
+enum abstract ConstraintType(Int) from Int to Int {
 	var Fixed = 0;
 	var Point = 1;
 	var Hinge = 2;
@@ -467,7 +467,7 @@ class PhysicsConstraint extends iron.Trait {
 	var Motor = 7;
 }
 
-@:enum abstract ConstraintAxis(Int) from Int to Int {
+enum abstract ConstraintAxis(Int) from Int to Int {
 	var X = 0;
 	var Y = 1;
 	var Z = 2;

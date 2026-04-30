@@ -73,7 +73,7 @@ typedef TTheme = {
 	var FULL_TABS: Bool; // Make tabs take full window width
 }
 
-@:enum abstract LinkStyle(Int) from Int {
+enum abstract LinkStyle(Int) from Int {
 	var Line = 0;
 	var CubicBezier = 1;
 }

@@ -1,6 +1,6 @@
 package armory.network;
 
-@:enum abstract OpCode(Int) {
+enum abstract OpCode(Int) {
 	var Continuation = 0x00;
 	var Text = 0x01;
 	var Binary = 0x02;
