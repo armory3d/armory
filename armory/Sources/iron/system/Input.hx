@@ -601,8 +601,10 @@ class Keyboard extends VirtualInput {
 
 	function downListener(code: KeyCode) {
 		var s = keyCode(code);
-		keysFrame.push(s);
-		keysStarted.set(s, true);
+		if (!keysDown.get(s)) {
+			keysFrame.push(s);
+			keysStarted.set(s, true);
+		}
 		keysDown.set(s, true);
 		repeatTime = kha.Scheduler.time() + 0.4;
 
@@ -618,8 +620,10 @@ class Keyboard extends VirtualInput {
 
 	function upListener(code: KeyCode) {
 		var s = keyCode(code);
-		keysFrame.push(s);
-		keysReleased.set(s, true);
+		if (keysDown.get(s)) {
+			keysFrame.push(s);
+			keysReleased.set(s, true);
+		}
 		keysDown.set(s, false);
 
 		#if kha_android_rmb
