@@ -112,9 +112,10 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		vec3(1.0, 0.0, t.y),
 		vec3(0.0, t.z, 0.0),
 		vec3(t.w, 0.0, t.x));
-	float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lightArea0, lightArea1, lightArea2, lightArea3);
+	const float PI = 3.1415926535;
+	float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lightArea0, lightArea1, lightArea2, lightArea3) / PI;
 	ltcspec *= textureLod(sltcMag, tuv, 0.0).a;
-	float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lightArea0, lightArea1, lightArea2, lightArea3);
+	float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lightArea0, lightArea1, lightArea2, lightArea3) / PI;
 	vec3 direct = albedo * ltcdiff + ltcspec * spec * 0.05;
 	#else
 	vec3 direct = lambertDiffuseBRDF(albedo, dotNL) +
