@@ -292,14 +292,11 @@ def make_gi(context_id):
 
     frag.add_include('std/light.glsl')
     is_shadows = '_ShadowMap' in wrd.world_defs
-    is_transparent_shadows = '_ShadowMapTransparent' in wrd.world_defs
     is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
     is_single_atlas = is_shadows_atlas and '_SingleAtlas' in wrd.world_defs
     shadowmap_sun = 'shadowMap'
-    shadowmap_sun_tr = 'shadowMapTransparent'
     if is_shadows_atlas:
         shadowmap_sun = 'shadowMapAtlasSun' if not is_single_atlas else 'shadowMapAtlas'
-        shadowmap_sun_tr = 'shadowMapAtlasSunTransparent' if not is_single_atlas else 'shadowMapAtlasTransparent'
         frag.add_uniform('vec2 smSizeUniform', '_shadowMapSize', included=True)
 
     frag.write('vec3 direct = vec3(0.0);')
@@ -307,7 +304,7 @@ def make_gi(context_id):
     if '_Sun' in wrd.world_defs:
         frag.add_uniform('vec3 sunCol', '_sunColor')
         frag.add_uniform('vec3 sunDir', '_sunDirection')
-        frag.write('vec3 svisibility = vec3(1.0);')
+        frag.write('float svisibility = 1.0;')
         frag.write('vec3 sh = normalize(vVec + sunDir);')
         frag.write('float sdotNL = dot(N, sunDir);')
         frag.write('float sdotNH = dot(N, sh);')
@@ -327,8 +324,6 @@ def make_gi(context_id):
                 if is_transparent_shadows:
                     frag.write(f'{shadowmap_sun_tr},')
                 frag.write('eye, P + N * shadowsBias * 10, shadowsBias')
-                if is_transparent_shadows:
-                    frag.write(', false')
                 frag.write(');')
             else:
                 vert.add_out('vec4 lightPositionGeom')
@@ -340,8 +335,6 @@ def make_gi(context_id):
                 if is_transparent_shadows:
                     frag.write(f'{shadowmap_sun_tr},')
                 frag.write('lPos.xy, lPos.z - shadowsBias, smSize')
-                if is_transparent_shadows:
-                    frag.write(', false')
                 frag.write(');')
             frag.write('}') # receiveShadow
         frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular) * sunCol * svisibility;')
@@ -361,15 +354,11 @@ def make_gi(context_id):
                 # Skip world matrix, already in world-space
                 frag.add_uniform('mat4 LWVPSpot[1]', link='_biasLightViewProjectionMatrixSpotArray', included=True)
                 frag.add_uniform('sampler2DShadow shadowMapSpot[1]', included=True)
-                if is_transparent_shadows:
-                    frag.add_uniform('sampler2D shadowMapSpotTransparent[1]', included=True)
             else:
                 frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
-                if is_transparent_shadows:
-                    frag.add_uniform('samplerCube shadowMapPointTransparent[1]', included=True)
         frag.write('direct += sampleLightVoxels(')
-        frag.write('  P, N, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0, opacity != 1.0')
+        frag.write('  P, N, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0')
         if is_shadows:
             frag.write(', 0, pointBias, receiveShadow')
         if '_Spot' in wrd.world_defs:
@@ -388,8 +377,6 @@ def make_gi(context_id):
             if is_shadows_atlas:
                 if not is_single_atlas:
                     frag.add_uniform('sampler2DShadow shadowMapAtlasPoint', included=True)
-                    if is_transparent_shadows:
-                        frag.add_uniform('sampler2D shadowMapAtlasPointTransparent', included=True)
                 else:
                     frag.add_uniform('sampler2DShadow shadowMapAtlas', top=True)
                     if is_transparent_shadows:
@@ -397,7 +384,6 @@ def make_gi(context_id):
                 frag.add_uniform('vec4 pointLightDataArray[maxLightsCluster]', link='_pointLightsAtlasArray', included=True)
             else:
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[4]', included=True)
-                frag.add_uniform('samplerCube shadowMapPointTransparent[4]', included=True)
 
         vert.add_out('vec4 wvppositionGeom')
         vert.add_uniform('mat4 VP', '_viewProjectionMatrix')
@@ -419,16 +405,10 @@ def make_gi(context_id):
                 if is_shadows_atlas:
                     if not is_single_atlas:
                         frag.add_uniform('sampler2DShadow shadowMapAtlasSpot', included=True)
-                        if is_transparent_shadows:
-                            frag.add_uniform('sampler2D shadowMapAtlasSpotTransparent', included=True)
                     else:
                         frag.add_uniform('sampler2DShadow shadowMapAtlas', top=True)
-                        if is_transparent_shadows:
-                            frag.add_uniform('sampler2D shadowMapAtlasTransparent', top=True)
                 else:
                     frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
-                    if is_transparent_shadows:
-                        frag.add_uniform('sampler2D shadowMapSpotTransparent[4]', included=True)
                 frag.add_uniform('mat4 LWVPSpotArray[maxLightsCluster]', link='_biasLightWorldViewProjectionMatrixSpotArray', included=True)
 
         frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
@@ -443,8 +423,7 @@ def make_gi(context_id):
         frag.write('    albedo,')
         frag.write('    roughness,')
         frag.write('    specular,')
-        frag.write('    f0, ')
-        frag.write('    opacity != 1.0')
+        frag.write('    f0 ')
         if is_shadows:
             frag.write('\t, li, lightsArray[li * 3 + 2].x, receiveShadow') # bias
         if '_Spot' in wrd.world_defs:

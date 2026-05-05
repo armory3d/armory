@@ -228,7 +228,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 
 #ifdef _VoxelGI
 vec3 sampleLightVoxels(const vec3 p, const vec3 n, const vec3 v, const float dotNV, const vec3 lp, const vec3 lightCol,
-					   const vec3 albedo, const float rough, const float spec, const vec3 f0, bool transparent
+					   const vec3 albedo, const float rough, const float spec, const vec3 f0
 					   #ifdef _ShadowMap
 					   , int index, float bias, bool receiveShadow
 					   #endif
@@ -262,14 +262,6 @@ vec3 sampleLightVoxels(const vec3 p, const vec3 n, const vec3 v, const float dot
 	#endif
 	direct *= attenuate(distance(p, lp));
 	direct *= lightCol;
-
-	#ifdef _MicroShadowing
-	direct *= clamp(dotNL + 2.0 * occ * occ - 1.0, 0.0, 1.0);
-	#endif
-
-	#ifdef _SSRS
-	direct *= traceShadowSS(l, p, gbufferD, invVP, eye);
-	#endif
 
 	#ifdef _LTC
 	#ifdef _ShadowMap
