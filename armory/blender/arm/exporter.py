@@ -3673,7 +3673,7 @@ Make sure the mesh only has tris/quads.""")
         strength = world.arm_envtex_strength
 
         mobile_mat = rpdat.arm_material_model in ('Mobile', 'Solid')
-        if mobile_mat:
+        if mobile_mat or '_EnvCol' in world.world_defs:
             arm_radiance = False
 
         out_probe = {'name': arm.utils.asset_name(world) if world.library else world.name}

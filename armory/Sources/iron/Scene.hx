@@ -401,6 +401,7 @@ class Scene {
 				#end
 
 				var objectsCount = getObjectsCount(format.objects);
+				spawnDepth++; // Defer trait creation until all objects are ready
 				function traverseObjects(parent: Object, objects: Array<TObj>, parentObject: TObj, done: Void->Void) {
 					if (objects == null) return;
 					for (i in 0...objects.length) {
@@ -418,11 +419,16 @@ class Scene {
 				}
 
 				if (format.objects == null || format.objects.length == 0) {
+					spawnDepth--;
 					createTraits(format.traits, parent); // Scene traits
 					done(parent);
 				}
 				else {
 					traverseObjects(parent, format.objects, null, function() { // Scene objects
+						spawnDepth--;
+						if (!initializing) {
+							createTraitsBottomUp(parent);
+						}
 						createTraits(format.traits, parent); // Scene traits
 						done(parent);
 					});
