@@ -485,7 +485,11 @@ class Uniforms {
 					v = helpVec;
 				}
 				case "_backgroundCol": {
-					if (camera.data.raw.clear_color != null) helpVec.set(camera.data.raw.clear_color[0], camera.data.raw.clear_color[1], camera.data.raw.clear_color[2]);
+					if (Scene.active.world != null) {
+						var col = Scene.active.world.raw.background_color;
+						helpVec.set(((col >> 16) & 0xff) / 255, ((col >> 8) & 0xff) / 255, (col & 0xff) / 255);
+					}
+					else if (camera.data.raw.clear_color != null) helpVec.set(camera.data.raw.clear_color[0], camera.data.raw.clear_color[1], camera.data.raw.clear_color[2]);
 					v = helpVec;
 				}
 				case "_hosekSunDirection": {
