@@ -86,9 +86,6 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#ifdef _Spot
 		, bool isSpot, float spotSize, float spotBlend, vec3 spotDir, vec2 scale, vec3 right
 	#endif
-	#ifdef _VoxelShadow
-		, vec2 texCoord
-	#endif
 	#ifdef _MicroShadowing
 		, float occ
 	#endif
