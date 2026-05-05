@@ -312,8 +312,6 @@ def make_gi(context_id):
         if is_shadows:
             frag.add_uniform('bool receiveShadow')
             frag.add_uniform(f'sampler2DShadow {shadowmap_sun}', top=True)
-            if is_transparent_shadows:
-                frag.add_uniform(f'sampler2D {shadowmap_sun_tr}', top=True)
             frag.add_uniform('float shadowsBias', '_sunShadowsBias')
             frag.write('if (receiveShadow) {')
             if '_CSM' in wrd.world_defs:
@@ -321,8 +319,6 @@ def make_gi(context_id):
                 frag.add_uniform('vec4 casData[shadowmapCascades * 4 + 4]', '_cascadeData', included=True)
                 frag.add_uniform('vec3 eye', '_cameraPosition')
                 frag.write(f'svisibility = shadowTestCascade({shadowmap_sun},')
-                if is_transparent_shadows:
-                    frag.write(f'{shadowmap_sun_tr},')
                 frag.write('eye, P + N * shadowsBias * 10, shadowsBias')
                 frag.write(');')
             else:
@@ -332,8 +328,6 @@ def make_gi(context_id):
                 frag.write('vec3 lPos = lightPosition.xyz / lightPosition.w;')
                 frag.write('const vec2 smSize = shadowmapSize;')
                 frag.write(f'svisibility = PCF({shadowmap_sun},')
-                if is_transparent_shadows:
-                    frag.write(f'{shadowmap_sun_tr},')
                 frag.write('lPos.xy, lPos.z - shadowsBias, smSize')
                 frag.write(');')
             frag.write('}') # receiveShadow
@@ -379,8 +373,6 @@ def make_gi(context_id):
                     frag.add_uniform('sampler2DShadow shadowMapAtlasPoint', included=True)
                 else:
                     frag.add_uniform('sampler2DShadow shadowMapAtlas', top=True)
-                    if is_transparent_shadows:
-                        frag.add_uniform('sampler2D shadowMapAtlasTransparent', top=True)
                 frag.add_uniform('vec4 pointLightDataArray[maxLightsCluster]', link='_pointLightsAtlasArray', included=True)
             else:
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[4]', included=True)
