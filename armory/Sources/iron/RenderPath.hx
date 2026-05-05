@@ -295,7 +295,9 @@ class RenderPath {
 	public function clearTarget(colorFlag: Null<Int> = null, depthFlag: Null<Float> = null) {
 		if (colorFlag == -1) { // -1 == 0xffffffff
 			if (Scene.active.world != null) {
-				colorFlag = Scene.active.world.raw.background_color;
+				var col = Scene.active.world.raw.background_color;
+				var strength = Scene.active.world.probe != null ? Scene.active.world.probe.raw.strength : 1.0;
+				colorFlag = Color.fromFloats(((col >> 16) & 0xff) / 255 * strength, ((col >> 8) & 0xff) / 255 * strength, (col & 0xff) / 255 * strength);
 			}
 			else if (Scene.active.camera != null) {
 				var cc = Scene.active.camera.data.raw.clear_color;

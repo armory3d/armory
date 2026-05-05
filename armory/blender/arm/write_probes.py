@@ -439,8 +439,10 @@ def write_sky_irradiance(base_name):
 
 def write_color_irradiance(base_name, col):
     """Constant color irradiance"""
-    # Adjust to Cycles
-    irradiance_floats = [col[0] * 1.13, col[1] * 1.13, col[2] * 1.13]
+    # Match shIrradiance()'s c4 factor so a constant color environment
+    # decodes back to the same diffuse radiance at strength 1.
+    sh_l00 = 1.0 / 0.886227
+    irradiance_floats = [col[0] * sh_l00, col[1] * sh_l00, col[2] * sh_l00]
     for i in range(0, 24):
         irradiance_floats.append(0.0)
 
