@@ -913,18 +913,9 @@ class Uniforms {
 			}
 
 			if (m == null) {
-				#if arm_spot
-				if (c.link.startsWith("_biasLightWorldViewProjectionMatrixSpot")) {
-					var light = getSpot(c.link.charCodeAt(c.link.length - 1) - "0".code);
-					if (light != null) {
-						object == null ? helpMat.setIdentity() : helpMat.setFrom(object.transform.worldUnpack);
-						helpMat.multmat(light.VP);
-						helpMat.multmat(biasMat);
-						m = helpMat;
-					}
-				}
+				#if (!arm_clusters && arm_spot)
 				if (c.link.startsWith("_biasLightViewProjectionMatrixSpot")) {
-					var light = getSpot(c.link.charCodeAt(c.link.length - 1) - "0".code);
+					var light = getSpot(0);
 					if (light != null) {
 						helpMat.setFrom(light.VP);
 						helpMat.multmat(biasMat);
