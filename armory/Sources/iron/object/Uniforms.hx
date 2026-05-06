@@ -1004,8 +1004,10 @@ class Uniforms {
 							v.z = scale.z == 0.0 ? 0.0 : scale.x / scale.z;
 							v.w = scale.z == 0.0 ? 0.0 : scale.y / scale.z;
 						} else {
-							var sx: kha.FastFloat = point.data.raw.size != null ? point.data.raw.size * 0.5 : 0.0;
-							var sy: kha.FastFloat = point.data.raw.size_y != null ? point.data.raw.size_y * 0.5 : 0.0;
+							var sx: kha.FastFloat = 0.0;
+							var sy: kha.FastFloat = 0.0;
+							if (point.data.raw.size != null) sx = (point.data.raw.size : kha.FastFloat) * 0.5;
+							if (point.data.raw.size_y != null) sy = (point.data.raw.size_y : kha.FastFloat) * 0.5;
 							v.z = sx * scale.x;
 							v.w = sy * scale.y;
 						}

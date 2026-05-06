@@ -544,14 +544,14 @@ class LightObject extends Object {
 			lightsArray[i * 12    ] = l.transform.worldx();
 			lightsArray[i * 12 + 1] = l.transform.worldy();
 			lightsArray[i * 12 + 2] = l.transform.worldz();
-			lightsArray[i * 12 + 3] = 0.0; // padding or spot scale x
+			lightsArray[i * 12 + 3] = 0.0;
 
 			// light color
 			var f = l.data.raw.strength;
 			lightsArray[i * 12 + 4] = l.data.raw.color[0] * f;
 			lightsArray[i * 12 + 5] = l.data.raw.color[1] * f;
 			lightsArray[i * 12 + 6] = l.data.raw.color[2] * f;
-			lightsArray[i * 12 + 7] = 0.0; // padding or spot scale y
+			lightsArray[i * 12 + 7] = 0.0;
 
 			// other data
 			lightsArray[i * 12 + 8] = l.data.raw.shadows_bias; // bias
@@ -564,29 +564,32 @@ class LightObject extends Object {
 				var isSpot = l.data.raw.type == "spot";
 				lightsArray[i * 12 + 9] = isSpot ? l.data.raw.spot_size : 0.0;
 
-				var dir = l.look().normalize();
-				lightsArraySpot[i * 8    ] = dir.x;
-				lightsArraySpot[i * 8 + 1] = dir.y;
-				lightsArraySpot[i * 8 + 2] = dir.z;
+				var m = l.transform.world;
+				var look = new Vec4(m._02, m._12, m._22).normalize();
+				var right = new Vec4(m._00, m._10, m._20).normalize();
+
+				lightsArraySpot[i * 8    ] = look.x;
+				lightsArraySpot[i * 8 + 1] = look.y;
+				lightsArraySpot[i * 8 + 2] = look.z;
 				lightsArraySpot[i * 8 + 3] = isSpot ? l.data.raw.spot_blend : -1.0;
 
-				var scale = l.transform.scale;
-				if (isSpot) {
-					// Premultiply scale with z component
-					lightsArray[i * 12 + 3] = scale.z == 0.0 ? 0.0 : scale.x / scale.z;
-					lightsArray[i * 12 + 7] = scale.z == 0.0 ? 0.0 : scale.y / scale.z;
-				} else {
-					var sx: kha.FastFloat = l.data.raw.size != null ? l.data.raw.size * 0.5 : 0.0;
-					var sy: kha.FastFloat = l.data.raw.size_y != null ? l.data.raw.size_y * 0.5 : 0.0;
-					lightsArray[i * 12 + 3] = sx * scale.x;
-					lightsArray[i * 12 + 7] = sy * scale.y;
-				}
-
-				final right = l.right().normalize();
 				lightsArraySpot[i * 8 + 4] = right.x;
 				lightsArraySpot[i * 8 + 5] = right.y;
 				lightsArraySpot[i * 8 + 6] = right.z;
-				lightsArraySpot[i * 8 + 7] = 0.0; // padding
+				lightsArraySpot[i * 8 + 7] = 0.0;
+
+				if (isSpot) {
+					var scale = l.transform.scale;
+					lightsArray[i * 12 + 3] = scale.z == 0.0 ? 0.0 : scale.x / scale.z;
+					lightsArray[i * 12 + 7] = scale.z == 0.0 ? 0.0 : scale.y / scale.z;
+				} else {
+					var sx: kha.FastFloat = 0.0;
+					var sy: kha.FastFloat = 0.0;
+					if (l.data.raw.size != null) sx = (l.data.raw.size : kha.FastFloat) * 0.5;
+					if (l.data.raw.size_y != null) sy = (l.data.raw.size_y : kha.FastFloat) * 0.5;
+					lightsArray[i * 12 + 3] = sx * l.transform.world.getScale().x;
+					lightsArray[i * 12 + 7] = sy * l.transform.world.getScale().y;
+				}
 			}
 			#end
 			i++;
