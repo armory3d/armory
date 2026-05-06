@@ -368,7 +368,7 @@ void main() {
 	#ifdef _VoxelShadow
 	svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
 	#endif
-	
+
 	#ifdef _SSRS
 	// vec2 coords = getProjectedCoord(hitCoord);
 	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
@@ -468,66 +468,66 @@ void main() {
 		#ifdef _Spot
 		bool isSpot = (lightsArray[li * 3 + 2].y != 0.0);
 		fragColor.rgb += sampleLight(
-			p, 
-			n, 
-			v, 
-			dotNV, 
-			lightsArray[li * 3].xyz, 
-			lightsArray[li * 3 + 1].xyz, 
-			albedo, 
-			roughness, 
-			occspec.y, 
+			p,
+			n,
+			v,
+			dotNV,
+			lightsArray[li * 3].xyz,
+			lightsArray[li * 3 + 1].xyz,
+			albedo,
+			roughness,
+			occspec.y,
 			f0
 			#ifdef _ShadowMap
 				, i, lightsArray[li * 3 + 2].x, (lightsArray[li * 3 + 2].z != 0.0 && (i < numPoints || isSpot))
 			#endif
-			, isSpot, 
-			lightsArray[li * 3 + 2].y, 
-			lightsArraySpot[li * 2].w, 
-			lightsArraySpot[li * 2].xyz, 
-			vec2(lightsArray[li * 3].w, 
-			lightsArray[li * 3 + 1].w), 
+			, isSpot,
+			lightsArray[li * 3 + 2].y,
+			lightsArraySpot[li * 2].w,
+			lightsArraySpot[li * 2].xyz,
+			vec2(lightsArray[li * 3].w,
+			lightsArray[li * 3 + 1].w),
 			lightsArraySpot[li * 2 + 1].xyz
-			#ifdef _VoxelShadow 
-			, texCoord 
-			#endif 
-			#ifdef _MicroShadowing 
-			, occspec.x 
-			#endif 
-			#ifdef _SSRS 
-			, gbufferD, 
-			invVP, 
-			eye 
+			#ifdef _VoxelShadow
+			, texCoord
+			#endif
+			#ifdef _MicroShadowing
+			, occspec.x
+			#endif
+			#ifdef _SSRS
+			, gbufferD,
+			invVP,
+			eye
 			#endif
 		);
 		#else
 		fragColor.rgb += sampleLight(
-			p, 
-			n, 
-			v, 
-			dotNV, 
-			lightsArray[li * 3].xyz, 
-			lightsArray[li * 3 + 1].xyz, 
-			albedo, 
-			roughness, 
-			occspec.y, 
+			p,
+			n,
+			v,
+			dotNV,
+			lightsArray[li * 3].xyz,
+			lightsArray[li * 3 + 1].xyz,
+			albedo,
+			roughness,
+			occspec.y,
 			f0
 			#ifdef _ShadowMap
-			, 
-			i, 
-			lightsArray[li * 3 + 2].x, 
+			,
+			i,
+			lightsArray[li * 3 + 2].x,
 			lightsArray[li * 3 + 2].z != 0.0
 			#endif
-			#ifdef _VoxelShadow 
-			, texCoord 
-			#endif 
-			#ifdef _MicroShadowing 
-			, occspec.x 
-			#endif 
-			#ifdef _SSRS 
-			, gbufferD, 
-			invVP, 
-			eye 
+			#ifdef _VoxelShadow
+			, texCoord
+			#endif
+			#ifdef _MicroShadowing
+			, occspec.x
+			#endif
+			#ifdef _SSRS
+			, gbufferD,
+			invVP,
+			eye
 			#endif
 		);
 		#endif
