@@ -90,14 +90,10 @@ def add_world_defs():
     for bo in bpy.data.objects: # TODO: temp
         if bo.arm_export and bo.type == 'LIGHT':
             light = bo.data
-            if light.type == 'AREA':
+            if light.type == 'AREA' and '_LTC' not in wrd.world_defs:
                 point_lights += 1
-                if '_LTC' not in wrd.world_defs:
-                    wrd.world_defs += '_LTC'
-                    assets.add_khafile_def('arm_ltc')
-                if '_Spot' not in wrd.world_defs:
-                    wrd.world_defs += '_Spot'
-                    assets.add_khafile_def('arm_spot')
+                wrd.world_defs += '_LTC'
+                assets.add_khafile_def('arm_ltc')
             if light.type == 'SUN' and '_Sun' not in wrd.world_defs:
                 wrd.world_defs += '_Sun'
             if light.type == 'POINT' or light.type == 'SPOT':

@@ -102,53 +102,23 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	float dotNH = max(0.0, dot(n, h));
 	float dotVH = max(0.0, dot(v, h));
 	float dotNL = max(0.0, dot(n, l));
-	
-	bool isArea = false;
+
 	#ifdef _LTC
-		#ifdef _Spot
-			if (!isSpot && spotBlend < -0.5) isArea = true;
-		#else
-			isArea = true;
-		#endif
-	#endif
-
-	vec3 direct;
-	#ifdef _LTC
-	if (isArea) {
-		const float PI = 3.1415926535;
-		float theta = acos(dotNV);
-		vec2 tuv = vec2(rough, theta / (0.5 * PI));
-		tuv = tuv * LUT_SCALE + LUT_BIAS;
-		vec4 t = textureLod(sltcMat, tuv, 0.0);
-		mat3 invM = mat3(
-			vec3(1.0, 0.0, t.y),
-			vec3(0.0, t.z, 0.0),
-			vec3(t.w, 0.0, t.x));
-
-		#if defined(_Clusters) && defined(_Spot)
-		vec3 up = cross(spotDir, right);
-		vec3 p0 = lp - right * scale.x + up * scale.y;
-		vec3 p1 = lp + right * scale.x + up * scale.y;
-		vec3 p2 = lp + right * scale.x - up * scale.y;
-		vec3 p3 = lp - right * scale.x - up * scale.y;
-		#else
-		vec3 p0 = lightArea0;
-		vec3 p1 = lightArea1;
-		vec3 p2 = lightArea2;
-		vec3 p3 = lightArea3;
-		#endif
-
-		float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, p0, p1, p2, p3) / PI;
-		ltcspec *= textureLod(sltcMag, tuv, 0.0).a;
-		float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), p0, p1, p2, p3) / PI;
-		direct = albedo * ltcdiff + ltcspec * spec * 0.05;
-	}
-	else {
-		direct = lambertDiffuseBRDF(albedo, dotNL) +
-				 specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) * spec;
-	}
+	float theta = acos(dotNV);
+	vec2 tuv = vec2(rough, theta / (0.5 * PI));
+	tuv = tuv * LUT_SCALE + LUT_BIAS;
+	vec4 t = textureLod(sltcMat, tuv, 0.0);
+	mat3 invM = mat3(
+		vec3(1.0, 0.0, t.y),
+		vec3(0.0, t.z, 0.0),
+		vec3(t.w, 0.0, t.x));
+	const float PI = 3.1415926535;
+	float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lightArea0, lightArea1, lightArea2, lightArea3) / PI;
+	ltcspec *= textureLod(sltcMag, tuv, 0.0).a;
+	float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lightArea0, lightArea1, lightArea2, lightArea3) / PI;
+	vec3 direct = albedo * ltcdiff + ltcspec * spec * 0.05;
 	#else
-	direct = lambertDiffuseBRDF(albedo, dotNL) +
+	vec3 direct = lambertDiffuseBRDF(albedo, dotNL) +
 				  specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) * spec;
 	#endif
 	direct *= attenuate(distance(p, lp));
@@ -163,35 +133,33 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 
 	#ifdef _LTC
-	if (isArea) {
-		#ifdef _ShadowMap
-			if (receiveShadow) {
-				#ifdef _SinglePoint
+	#ifdef _ShadowMap
+		if (receiveShadow) {
+			#ifdef _SinglePoint
+			vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
+			direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
+			#endif
+			#ifdef _Clusters
+			if (index == 0) {
 				vec4 lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
 				direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
-				#endif
-				#ifdef _Clusters
-				vec4 lPos = LWVPSpotArray[index] * vec4(p + n * bias * 10, 1.0);
-				#ifdef _ShadowMapAtlas
-					direct *= shadowTest(
-						#ifndef _SingleAtlas
-						shadowMapAtlasSpot
-						#else
-						shadowMapAtlas
-						#endif
-						, lPos.xyz / lPos.w, bias
-					);
-				#else
-						 if (index == 0) direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
-					else if (index == 1) direct *= shadowTest(shadowMapSpot[1], lPos.xyz / lPos.w, bias);
-					else if (index == 2) direct *= shadowTest(shadowMapSpot[2], lPos.xyz / lPos.w, bias);
-					else if (index == 3) direct *= shadowTest(shadowMapSpot[3], lPos.xyz / lPos.w, bias);
-				#endif
-				#endif
 			}
-		#endif
-		return direct;
-	}
+			else if (index == 1) {
+				vec4 lPos = LWVPSpot[1] * vec4(p + n * bias * 10, 1.0);
+				direct *= shadowTest(shadowMapSpot[1], lPos.xyz / lPos.w, bias);
+			}
+			else if (index == 2) {
+				vec4 lPos = LWVPSpot[2] * vec4(p + n * bias * 10, 1.0);
+				direct *= shadowTest(shadowMapSpot[2], lPos.xyz / lPos.w, bias);
+			}
+			else if (index == 3) {
+				vec4 lPos = LWVPSpot[3] * vec4(p + n * bias * 10, 1.0);
+				direct *= shadowTest(shadowMapSpot[3], lPos.xyz / lPos.w, bias);
+			}
+			#endif
+		}
+	#endif
+	return direct;
 	#endif
 
 	#ifdef _Spot
