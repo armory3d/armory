@@ -418,7 +418,8 @@ class LightObject extends Object {
 		lights.sort(function(a, b): Int {
 			if (a.data.raw.type == "point" && b.data.raw.type != "point") return -1;
 			if (a.data.raw.type != "point" && b.data.raw.type == "point") return 1;
-			return a.data.raw.type >= b.data.raw.type ? 1 : -1;
+			if (a.data.raw.type == b.data.raw.type) return 0;
+			return a.data.raw.type > b.data.raw.type ? 1 : -1;
 		});
 		#end
 
@@ -490,6 +491,13 @@ class LightObject extends Object {
 				continue;
 			}
 			#end
+			if (minX < 0) minX = 0;
+			if (maxX >= slicesX) maxX = slicesX - 1;
+			if (minY < 0) minY = 0;
+			if (maxY >= slicesY) maxY = slicesY - 1;
+			if (minZ < 0) minZ = 0;
+			if (maxZ >= slicesZ) maxZ = slicesZ - 1;
+
 			// Mark affected clusters
 			for (z in minZ...maxZ + 1) {
 				for (y in minY...maxY + 1) {
