@@ -13,8 +13,8 @@ vec3 L4;
 
 float integrateEdge(vec3 v1, vec3 v2) {
 	float cosTheta = dot(v1, v2);
-	float theta = acos(clamp(cosTheta, -1.0, 1.0));    
-	float res = cross(v1, v2).z * ((theta > 0.01) ? theta / sin(theta) : 1.0);
+	float theta = acos(cosTheta);
+	float res = cross(v1, v2).z * ((theta > 0.001) ? theta / sin(theta) : 1.0);
 	return res;
 }
 
@@ -104,7 +104,7 @@ int clipQuadToHorizon(/*inout vec3 L[5], out int n*/) {
 	else if (config == 15) { // V1 V2 V3 V4
 		n = 4;
 	}
-	
+
 	if (n == 3) L3 = L0;
 	if (n == 4) L4 = L0;
 	return n;
@@ -113,7 +113,7 @@ int clipQuadToHorizon(/*inout vec3 L[5], out int n*/) {
 float ltcEvaluate(vec3 N, vec3 V, float dotNV, vec3 P, mat3 Minv, vec3 points0, vec3 points1, vec3 points2, vec3 points3) {
 	// Construct orthonormal basis around N
 	vec3 T1, T2;
-	T1 = normalize(V - N * dotNV + 1e-4);
+	T1 = normalize(V - N * dotNV);
 	T2 = cross(N, T1);
 
 	// Rotate area light in (T1, T2, R) basis
@@ -129,15 +129,15 @@ float ltcEvaluate(vec3 N, vec3 V, float dotNV, vec3 P, mat3 Minv, vec3 points0, 
 
 	// int n;
 	int n = clipQuadToHorizon(/*L, n*/);
-	
+
 	if (n == 0) return 0.0;
 
 	// Project onto sphere
-	L0 = normalize(L0 + 1e-4);
-	L1 = normalize(L1 + 1e-4);
-	L2 = normalize(L2 + 1e-4);
-	L3 = normalize(L3 + 1e-4);
-	L4 = normalize(L4 + 1e-4);
+	L0 = normalize(L0);
+	L1 = normalize(L1);
+	L2 = normalize(L2);
+	L3 = normalize(L3);
+	L4 = normalize(L4);
 
 	// Integrate
 	float sum = 0.0;
@@ -145,7 +145,7 @@ float ltcEvaluate(vec3 N, vec3 V, float dotNV, vec3 P, mat3 Minv, vec3 points0, 
 	sum += integrateEdge(L0, L1);
 	sum += integrateEdge(L1, L2);
 	sum += integrateEdge(L2, L3);
-	
+
 	if (n >= 4) sum += integrateEdge(L3, L4);
 	if (n == 5) sum += integrateEdge(L4, L0);
 
