@@ -2120,14 +2120,15 @@ Make sure the mesh only has tris/quads.""")
             if light_ref.shadow_soft_size > 0.0:
                 out_light['light_size'] = light_ref.shadow_soft_size * 10
         elif objtype == 'AREA':
-            light_area = light_ref.size * light_ref.size_y
+            scale = light_object.matrix_world.to_scale() if light_object is not None else [1.0, 1.0, 1.0]
+            light_area = (light_ref.size * scale[0]) * (light_ref.size_y * scale[1])
             if light_ref.shape in ('DISK', 'ELLIPSE'):
                 light_area *= math.pi / 4.0
 
             if light_area > 0.0:
-                out_light['strength'] *= 1.0 / (light_area * math.pi)
+                out_light['strength'] *= 1.0 / (light_area * 2.0 * math.pi)
             else:
-                out_light['strength'] *= 1.0 / (math.pi)
+                out_light['strength'] *= 1.0 / (2.0 * math.pi)
 
             out_light['size'] = light_ref.size
             out_light['size_y'] = light_ref.size_y

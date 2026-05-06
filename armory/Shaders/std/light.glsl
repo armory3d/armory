@@ -153,7 +153,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, p0, p1, p2, p3) / PI;
 		ltcspec *= textureLod(sltcMag, tuv, 0.0).a;
 		float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), p0, p1, p2, p3) / PI;
-		direct = albedo * ltcdiff + ltcspec * spec * 0.05;
+		direct = (albedo * ltcdiff + ltcspec * spec * f0) * lightCol;
 
 		#ifdef _ShadowMap
 			if (receiveShadow) {

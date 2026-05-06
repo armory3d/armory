@@ -1106,7 +1106,8 @@ class Uniforms {
 					f = object.uid;
 				}
 				case "_objectInfoMaterialIndex": {
-					f = currentMat(object).uid;
+					var mat = currentMat(object);
+					f = mat != null ? mat.uid : 0;
 				}
 				case "_objectInfoRandom": {
 					f = object.urandom;
@@ -1257,6 +1258,7 @@ class Uniforms {
 	static function currentMat(object: Object): MaterialData {
 		if (object != null && Std.isOfType(object, iron.object.MeshObject)) {
 			var mo = cast(object, MeshObject);
+			if (mo.materials == null || mo.materials.length == 0) return null;
 			return mo.materials[mo.materialIndex];
 		}
 		#if rp_decals
