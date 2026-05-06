@@ -3,7 +3,7 @@ package armory.trait.physics;
 #if (!arm_physics)
 
 class RigidBody extends iron.Trait { public function new() { super(); } }
-@:enum abstract Shape(Int) from Int to Int { }
+enum abstract Shape(Int) from Int to Int { }
 
 #else
 
@@ -11,11 +11,13 @@ class RigidBody extends iron.Trait { public function new() { super(); } }
 
 	typedef RigidBody = armory.trait.physics.bullet.RigidBody;
 	typedef Shape = armory.trait.physics.bullet.RigidBody.Shape;
+	typedef RigidBodyParams = armory.trait.physics.bullet.RigidBody.RigidBodyParams;
 
 	#else
 
 	typedef RigidBody = armory.trait.physics.oimo.RigidBody;
 	typedef Shape = armory.trait.physics.oimo.RigidBody.Shape;
+	typedef RigidBodyParams = armory.trait.physics.oimo.RigidBody.RigidBodyParams;
 
 	#end
 

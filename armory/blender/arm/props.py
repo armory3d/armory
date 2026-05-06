@@ -191,7 +191,10 @@ def init_properties():
     bpy.types.World.arm_project_win_build_cpu = IntProperty(name="CPU Count", description="Specifies the maximum number of concurrent processes to use when building", default=1, min=1, max=multiprocessing.cpu_count())
     bpy.types.World.arm_project_win_build_open = BoolProperty(name="Open Build Directory", description="Open the build directory after successfully assemble", default=False)
 
-    bpy.types.World.arm_project_icon = StringProperty(name="Icon (PNG)", description="Exported project icon, must be a PNG image", default="", subtype="FILE_PATH", update=assets.invalidate_compiler_cache)
+    if bpy.app.version >= (4, 5, 0):
+        bpy.types.World.arm_project_icon = StringProperty(name="Icon (PNG)", description="Exported project icon, must be a PNG image", default="", subtype="FILE_PATH", update=assets.invalidate_compiler_cache, options={'PATH_SUPPORTS_BLEND_RELATIVE'})
+    else:
+        bpy.types.World.arm_project_icon = StringProperty(name="Icon (PNG)", description="Exported project icon, must be a PNG image", default="", subtype="FILE_PATH", update=assets.invalidate_compiler_cache)
     if bpy.app.version >= (4, 5, 0):
         bpy.types.World.arm_project_root = StringProperty(name="Root", description="Set root folder for linked assets", default="", subtype="DIR_PATH", update=assets.invalidate_compiler_cache, options={'PATH_SUPPORTS_BLEND_RELATIVE'})
     else:
@@ -379,9 +382,6 @@ def init_properties():
             subtype='LAYER')
     bpy.types.Object.arm_relative_physics_constraint = BoolProperty(name="Relative Physics Constraint", description="Add physics constraint relative to the parent object or collection when spawned", default=False)
     bpy.types.Object.arm_animation_enabled = BoolProperty(name="Animation", description="Enable skinning & timeline animation", default=True)
-    bpy.types.Object.arm_tilesheet = StringProperty(name="Tilesheet", description="Set tilesheet animation", default='')
-    bpy.types.Object.arm_tilesheet_action = StringProperty(name="Tilesheet Action", description="Set startup action", default='')
-    bpy.types.Object.arm_use_custom_tilesheet_node = BoolProperty(name="Use custom tilesheet node", description="Use custom tilesheet shader node", default=False)
     # For speakers
     bpy.types.Speaker.arm_play_on_start = BoolProperty(name="Play on Start", description="Play this sound automatically", default=False)
     bpy.types.Speaker.arm_loop = BoolProperty(name="Loop", description="Loop this sound", default=False)

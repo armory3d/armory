@@ -20,7 +20,6 @@ import iron.object.Uniforms;
 import iron.object.Clipmap;
 
 class RenderPath {
-
 	public static var active: RenderPath;
 
 	public var frameScissor = false;
@@ -296,7 +295,9 @@ class RenderPath {
 	public function clearTarget(colorFlag: Null<Int> = null, depthFlag: Null<Float> = null) {
 		if (colorFlag == -1) { // -1 == 0xffffffff
 			if (Scene.active.world != null) {
-				colorFlag = Scene.active.world.raw.background_color;
+				var col = Scene.active.world.raw.background_color;
+				var strength = Scene.active.world.probe != null ? Scene.active.world.probe.raw.strength : 1.0;
+				colorFlag = Color.fromFloats(((col >> 16) & 0xff) / 255 * strength, ((col >> 8) & 0xff) / 255 * strength, (col & 0xff) / 255 * strength);
 			}
 			else if (Scene.active.camera != null) {
 				var cc = Scene.active.camera.data.raw.clear_color;
@@ -518,9 +519,11 @@ class RenderPath {
 		end();
 	}
 
+	#if (rp_voxels != "Off")
 	public function getComputeShader(handle: String): kha.compute.Shader {
 		return Reflect.field(kha.Shaders, handle + "_comp");
 	}
+	#end
 
 	#if arm_vr
 	public function drawStereo(drawMeshes: Void->Void) {
@@ -916,7 +919,7 @@ class CachedShaderContext {
 	public function new() {}
 }
 
-@:enum abstract DrawOrder(Int) from Int {
+enum abstract DrawOrder(Int) from Int {
 	var Distance = 0; // Early-z
 	var Index = 1; // Less state changes
 	// var Mix = 2; // Distance buckets sorted by shader

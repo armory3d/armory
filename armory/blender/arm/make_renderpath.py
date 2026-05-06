@@ -155,7 +155,7 @@ def add_world_defs():
         wrd.world_defs += '_Clusters'
         assets.add_khafile_def('arm_clusters')
 
-    if '_Rad' in wrd.world_defs and '_Brdf' not in wrd.world_defs:
+    if ('_Rad' in wrd.world_defs or ('_EnvCol' in wrd.world_defs and rpdat.arm_material_model == 'Full')) and '_Brdf' not in wrd.world_defs:
         wrd.world_defs += '_Brdf'
         assets.add_khafile_def("arm_brdf")
 
@@ -364,6 +364,8 @@ def build():
         assets.add_khafile_def('rp_voxels={0}'.format(rpdat.rp_voxels))
         assets.add_khafile_def('rp_voxelgi_resolution={0}'.format(rpdat.rp_voxelgi_resolution))
         assets.add_khafile_def('rp_voxelgi_resolution_z={0}'.format(rpdat.rp_voxelgi_resolution_z))
+    else:
+        assets.add_khafile_def('rp_voxels=Off')
 
     if rpdat.arm_rp_resolution == 'Custom':
         assets.add_khafile_def('rp_resolution_filter={0}'.format(rpdat.arm_rp_resolution_filter))

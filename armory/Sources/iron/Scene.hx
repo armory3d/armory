@@ -64,7 +64,6 @@ class Scene {
 	#end
 	public var empties: Array<Object>;
 	public var animations: Array<Animation>;
-	public var tilesheets: Array<Tilesheet>;
 	#if arm_skin
 	public var armatures: Array<Armature>;
 	#end
@@ -78,6 +77,9 @@ class Scene {
 	public var traitRemoves: Array<Void->Void> = [];
 
 	var initializing: Bool; // Is the scene in its initialization phase?
+	var spawnDepth: Int = 0; // Nested spawn counter (defer trait creation while > 0)
+	var spawning(get, never): Bool;
+	inline function get_spawning(): Bool return spawnDepth > 0;
 
 	public function new() {
 		uid = uidCounter++;
@@ -101,7 +103,6 @@ class Scene {
 		#end
 		empties = [];
 		animations = [];
-		tilesheets = [];
 		#if arm_skin
 		armatures = [];
 		#end
@@ -124,9 +125,8 @@ class Scene {
 
 			// Startup scene
 			active.addScene(format.name, null, function(sceneObject: Object) {
-				for (object in sceneObject.getChildren(true)) {
-					createTraits(object.raw.traits, object);
-				}
+				// Create traits bottom-up (children first, then parents)
+				createTraitsBottomUp(sceneObject);
 
 				#if arm_terrain
 				if (format.terrain_ref != null) {
@@ -141,15 +141,27 @@ class Scene {
 				active.camera = active.getCamera(format.camera_ref);
 				active.sceneParent = sceneObject;
 
-				active.ready = true;
-
 				for (f in active.traitInits) f();
 				active.traitInits = [];
 
+				active.ready = true;
 				active.initializing = false;
 				done(sceneObject);
 			});
 		});
+	}
+
+	// Create traits in post-order (bottom-up): children's traits are created before parents.
+	// This ensures that when a parent's notifyOnInit runs, children are already initialized.
+	static function createTraitsBottomUp(object: Object) {
+		// First, recursively process all children
+		for (child in object.children) {
+			createTraitsBottomUp(child);
+		}
+		// Then create traits for this object
+		if (object.raw != null) {
+			createTraits(object.raw.traits, object);
+		}
 	}
 
 	#if arm_patch
@@ -212,6 +224,8 @@ class Scene {
 
 		Data.getSceneRaw(sceneName, function(format: TSceneFormat) {
 			Scene.create(format, function(o: Object) {
+				framePassed = true;
+
 				if (done != null) done(o);
 
 				#if (rp_background == "World")
@@ -241,10 +255,6 @@ class Scene {
 	public function renderFrame(g: kha.graphics4.Graphics) {
 		if (!ready || RenderPath.active == null) return;
 		framePassed = true;
-
-		for (tilesheet in tilesheets) {
-			tilesheet.update();
-		}
 
 		// Render probes
 		#if rp_probes
@@ -391,6 +401,7 @@ class Scene {
 				#end
 
 				var objectsCount = getObjectsCount(format.objects);
+				spawnDepth++; // Defer trait creation until all objects are ready
 				function traverseObjects(parent: Object, objects: Array<TObj>, parentObject: TObj, done: Void->Void) {
 					if (objects == null) return;
 					for (i in 0...objects.length) {
@@ -408,11 +419,16 @@ class Scene {
 				}
 
 				if (format.objects == null || format.objects.length == 0) {
+					spawnDepth--;
 					createTraits(format.traits, parent); // Scene traits
 					done(parent);
 				}
 				else {
 					traverseObjects(parent, format.objects, null, function() { // Scene objects
+						spawnDepth--;
+						if (!initializing) {
+							createTraitsBottomUp(parent);
+						}
 						createTraits(format.traits, parent); // Scene traits
 						done(parent);
 					});
@@ -426,7 +442,7 @@ class Scene {
 		var result = objects.length;
 		for (o in objects) {
 			if (discardNoSpawn && o.spawn != null && o.spawn == false) continue; // Do not count children of non-spawned objects
-			if (o.children != null) result += getObjectsCount(o.children);
+			if (o.children != null) result += getObjectsCount(o.children, discardNoSpawn);
 		}
 		return result;
 	}
@@ -440,11 +456,16 @@ class Scene {
 		@param	srcRaw If not `null`, spawn the object from the given scene data instead of using the scene this function is called on. Useful to spawn objects from other scenes.
 	**/
 	public function spawnObject(name: String, parent: Null<Object>, done: Null<Object->Void>, spawnChildren = true, srcRaw: Null<TSceneFormat> = null) {
+		spawnObjectInternal(name, parent, done, spawnChildren, srcRaw, true);
+	}
+
+	function spawnObjectInternal(name: String, parent: Null<Object>, done: Null<Object->Void>, spawnChildren: Bool, srcRaw: Null<TSceneFormat>, createTraits: Bool) {
 		if (srcRaw == null) srcRaw = raw;
 		var objectsTraversed = 0;
 		var obj = getRawObjectByName(srcRaw, name);
 		var objectsCount = spawnChildren ? getObjectsCount([obj], false) : 1;
 		var rootId = -1;
+		spawnDepth++; // Defer trait creation until all objects are ready
 		function spawnObjectTree(obj: TObj, parent: Object, parentObject: TObj, done: Object->Void) {
 			createObject(obj, srcRaw, parent, parentObject, function(object: Object) {
 				if (rootId == -1) {
@@ -453,14 +474,20 @@ class Scene {
 				if (spawnChildren && obj.children != null) {
 					for (child in obj.children) spawnObjectTree(child, object, obj, done);
 				}
-				if (++objectsTraversed == objectsCount && done != null) {
+				if (++objectsTraversed == objectsCount) {
 					// Retrieve the originally spawned object from the current
 					// child object to ensure done() is called with the right
 					// object
 					while (object.uid != rootId) {
 						object = object.parent;
 					}
-					done(object);
+					// Create traits bottom-up after all objects are ready
+					spawnDepth--;
+					if (createTraits) {
+						createTraitsBottomUp(object);
+					}
+					// Then call user callback
+					if (done != null) done(object);
 				}
 			});
 		}
@@ -592,7 +619,7 @@ class Scene {
 		else {
 			for (object_ref in object_refs) {
 				// Spawn top-level collection objects and their children
-				spawnObject(object_ref, groupOwner, function(spawnedObject: Object) {
+				spawnObjectInternal(object_ref, groupOwner, function(spawnedObject: Object) {
 					// Apply collection/group instance offset to all
 					// top-level parents of that group
 					if (!isObjectInGroup(groupRef, spawnedObject.parent, format)) {
@@ -610,9 +637,10 @@ class Scene {
 					}
 					if (++spawned == object_refs.length) {
 						groupOwner.transform.reset();
+						groupOwner.transform.buildMatrix();
 						done();
 					}
-				}, true, format);
+				}, true, format, false);
 			}
 		}
 	}
@@ -792,9 +820,9 @@ class Scene {
 				for (ref in o.particle_refs) cast(object, MeshObject).setupParticleSystem(sceneName, ref);
 			}
 			#end
-			// Attach tilesheet
-			if (o.tilesheet_ref != null) {
-				cast(object, MeshObject).setupTilesheet(sceneName, o.tilesheet_ref, o.tilesheet_action_ref);
+			// Attach tilesheet from embedded object data
+			if (o.tilesheet != null) {
+				cast(object, MeshObject).setupTilesheet(o.tilesheet);
 			}
 
 
@@ -862,9 +890,9 @@ class Scene {
 				}
 			}
 
-			// If the scene is still initializing, traits will be created later
+			// If the scene is still initializing or spawning, traits will be created later
 			// to ensure that object references for trait properties are valid
-			if (!active.initializing) createTraits(o.traits, object);
+			if (!active.initializing && !active.spawning) createTraits(o.traits, object);
 		}
 		done(object);
 	}
@@ -896,10 +924,12 @@ class Scene {
 
 				// Set trait properties
 				if (t.props != null) {
+					var traitFields = Type.getInstanceFields(Type.getClass(traitInst));
 					for (i in 0...Std.int(t.props.length / 3)) {
 						var pname: String = t.props[i * 3];
 						var ptype: String = t.props[i * 3 + 1];
 						var pval: Dynamic = t.props[i * 3 + 2];
+						if (traitFields.indexOf(pname) == -1) continue;
 
 						if (StringTools.endsWith(ptype, "Object") && pval != "") {
 							Reflect.setProperty(traitInst, pname, Scene.active.getChild(pval));

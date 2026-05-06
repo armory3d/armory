@@ -11,6 +11,7 @@ This software is licensed under the Creative Commons
 Attribution-ShareAlike 3.0 Unported License:
 https://creativecommons.org/licenses/by-sa/3.0/deed.en_US
 """
+import copy
 from enum import Enum, unique
 import math
 import os
@@ -26,6 +27,7 @@ import bmesh
 
 import arm.utils
 import arm.profiler
+import arm.linked_utils as linked_utils
 from arm import assets, exporter_opt, log, make_renderpath
 from arm.material import cycles, make as make_material, mat_batch
 
@@ -39,6 +41,7 @@ if arm.is_reload(__name__):
     mat_batch = arm.reload_module(mat_batch)
     arm.utils = arm.reload_module(arm.utils)
     arm.profiler = arm.reload_module(arm.profiler)
+    linked_utils = arm.reload_module(linked_utils)
 else:
     arm.enable_reload(__name__)
 
@@ -62,7 +65,14 @@ class NodeType(Enum):
         if bobject.type == "MESH":
             if bobject.data.polygons or bobject.data.edges or bobject.data.vertices:
                 return cls.MESH
-        elif bobject.type in ('FONT', 'META'):
+        elif bobject.type in ('FONT', 'META', 'CURVE'): # FIXME: curves with meshes shouldn't be used in modifiers for now.
+            if bobject.type == 'CURVE':
+                mesh = bobject.to_mesh()
+                if mesh is not None:
+                    has_geometry = len(mesh.polygons) > 0
+                    bobject.to_mesh_clear()
+                    if not has_geometry:
+                        return cls.EMPTY
             return cls.MESH
         elif bobject.type == "LIGHT":
             return cls.LIGHT
@@ -140,6 +150,15 @@ class ArmoryExporter:
 
         self.referenced_collections: list[bpy.types.Collection] = []
         """Collections referenced by collection instances"""
+
+        self.inlined_collections: set = set()
+        """Linked collections inlined as children of their instance empty"""
+
+        self._collection_base_objects: dict = {}
+        """collection -> list of deepcopy arm objects (before transform composition) for cloning"""
+
+        self.inlined_empty_children: dict = {}
+        """empty bobject -> list of exported child names, for fixing collection object_refs"""
 
         self.has_spawning_camera = False
         """Whether there is at least one camera in the scene that spawns by default"""
@@ -336,29 +355,9 @@ class ArmoryExporter:
     def export_object_transform(self, bobject: bpy.types.Object, o):
         wrd = bpy.data.worlds['Arm']
 
-        if bpy.app.version >= (4, 2, 0):
-            # HACK: For linked objects, we need to temporarily add them to the scene's collection
-            # to properly evaluate their matrix through the depsgraph
-            is_linked = bobject.name not in self.scene.collection.children
-            temp_collection = None
-
-            if is_linked:
-                temp_collection = bpy.data.collections.new("temp_collection")
-                bpy.context.scene.collection.children.link(temp_collection)
-                temp_collection.objects.link(bobject)
-                temp_depsgraph = bpy.context.evaluated_depsgraph_get()
-                evaluated_obj = bobject.evaluated_get(temp_depsgraph)
-            else:
-                evaluated_obj = bobject.evaluated_get(self.depsgraph)
-
-            matrix_local = evaluated_obj.matrix_local.copy()
-
-            if is_linked and temp_collection:
-                temp_collection.objects.unlink(bobject)
-                bpy.context.scene.collection.children.unlink(temp_collection)
-                bpy.data.collections.remove(temp_collection)
-        else:
-            matrix_local = bobject.matrix_local
+        # Use TransformEvaluator to handle linked object transform evaluation
+        with linked_utils.TransformEvaluator(bobject, self.scene, self.depsgraph) as evaluator:
+            matrix_local = evaluator.matrix_local
 
         # Static transform
         o['transform'] = {'values': ArmoryExporter.write_matrix(matrix_local)}
@@ -464,7 +463,7 @@ class ArmoryExporter:
             if bobject.type == 'CAMERA' and bobject.library:
                 struct_name = bobject.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
             else:
-                struct_name = arm.utils.asset_name(bobject)
+                struct_name = linked_utils.asset_name(bobject)
 
             self.bobject_array[bobject] = {
                 "objectType": btype,
@@ -645,18 +644,31 @@ class ArmoryExporter:
             # Skinning
             if arm.utils.export_bone_data(bobject):
                 variant_suffix = '_armskin'
-            # Tilesheets
-            elif bobject.arm_tilesheet != '':
-                if not bobject.arm_use_custom_tilesheet_node:
+            # Tilesheets - check if object has tilesheet enabled
+            elif bobject.type == 'MESH' and len(bobject.material_slots) > 0:
+                if bobject.arm_tilesheet_enabled:
                     variant_suffix = '_armtile'
-            elif arm.utils.export_morph_targets(bobject):
+            # For collection instances, check objects inside the instanced collection
+            elif bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
+                for cobj in bobject.instance_collection.all_objects:
+                    if cobj.type == 'MESH' and cobj.arm_tilesheet_enabled:
+                        variant_suffix = '_armtile'
+                        break
+            if variant_suffix == '' and arm.utils.export_morph_targets(bobject):
                 variant_suffix = '_armskey'
 
             if variant_suffix == '':
                 continue
 
+            # For regular mesh objects, process their material slots
             for slot in bobject.material_slots:
-                if slot.material is None or slot.material.library is not None:
+                if slot.material is None:
+                    continue
+                # For linked materials, set the flag directly (can't create variants)
+                if slot.material.library is not None:
+                    if variant_suffix == '_armtile':
+                        slot.material.arm_tilesheet_flag = True
+                        slot.material.arm_cached = False
                     continue
                 if slot.material.name.endswith(variant_suffix):
                     continue
@@ -672,6 +684,23 @@ class ArmoryExporter:
                         mat.arm_tilesheet_flag = True
                     matvars.append(mat)
                 slot.material = mat
+
+            # For collection instances, set tilesheet flag on materials of objects inside the collection
+            # ONLY for objects that have arm_tilesheet_enabled set
+            if bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
+                for cobj in bobject.instance_collection.all_objects:
+                    if cobj.type != 'MESH':
+                        continue
+                    # Only apply tilesheet flag to objects that have it enabled
+                    if not cobj.arm_tilesheet_enabled:
+                        continue
+                    for slot in cobj.material_slots:
+                        if slot.material is None:
+                            continue
+                        # Set the flag and invalidate cache to force shader regeneration
+                        if variant_suffix == '_armtile':
+                            slot.material.arm_tilesheet_flag = True
+                            slot.material.arm_cached = False
 
         # Particle and non-particle objects can not share material
         particle_sys: bpy.types.ParticleSettings
@@ -792,7 +821,7 @@ class ArmoryExporter:
         #     self.indentLevel -= 1
         #     self.IndentWrite(B"}\n")
 
-    def export_object(self, bobject: bpy.types.Object, out_parent: Dict = None) -> None:
+    def export_object(self, bobject: bpy.types.Object, out_parent: Dict = None, allow_inline: bool = True) -> None:
         """This function exports a single object in the scene and
         includes its name, object reference, material references (for
         meshes), and transform.
@@ -800,6 +829,70 @@ class ArmoryExporter:
         """
         if not bobject.arm_export:
             return
+
+        # Inline linked collections: skip the empty,
+        # export collection objects directly at this level
+        # If the empty has traits, preserve it as a wrapper (group_ref path)
+        # Only inline during Phase 2 (scene objects), not when called from export_collection
+        if allow_inline and bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
+            collection = bobject.instance_collection
+            empty_has_traits = hasattr(bobject, 'arm_traitlist') and len(bobject.arm_traitlist) > 0
+            if collection.library is not None and not empty_has_traits:
+                self.inlined_collections.add(collection)
+                empty_matrix = bobject.matrix_local
+                is_first = collection not in self._collection_base_objects
+
+                if is_first:
+                    # First instance: do the full export (meshes, materials, etc.)
+                    for cobj in collection.objects:
+                        if cobj not in self.object_to_arm_object_dict:
+                            self.object_to_arm_object_dict[cobj] = {'traits': []}
+
+                    base_objects = []
+                    for child in collection.objects:
+                        if not child.arm_export:
+                            continue
+                        if child.parent is not None and child.parent.name in collection.objects:
+                            continue
+                        if child.type == 'CAMERA':
+                            asset_name = child.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
+                            self.output['camera_ref'] = asset_name
+                            self.has_spawning_camera = True
+                        self.process_bobject(child)
+                        self.export_object(child, out_parent)
+                        child_out = self.object_to_arm_object_dict[child]
+                        # Child may have been inlined (nested collection instance),
+                        # in which case it has no 'name' — skip it from base_objects
+                        if 'name' not in child_out:
+                            continue
+                        # Save a deep copy before composing (for cloning later)
+                        base_objects.append(copy.deepcopy(child_out))
+                        # Compose empty transform with child transform
+                        if 'transform' in child_out:
+                            v = child_out['transform']['values']
+                            child_matrix = Matrix((v[0:4], v[4:8], v[8:12], v[12:16]))
+                            composed = empty_matrix @ child_matrix
+                            child_out['transform']['values'] = ArmoryExporter.write_matrix(composed)
+                    self._collection_base_objects[collection] = base_objects
+                    self.inlined_empty_children[bobject] = [obj['name'] for obj in base_objects]
+                else:
+                    # Subsequent instances: clone from saved base objects
+                    for base_obj in self._collection_base_objects[collection]:
+                        instance_obj = copy.deepcopy(base_obj)
+                        # Compose this instance's empty transform
+                        if 'transform' in instance_obj:
+                            v = instance_obj['transform']['values']
+                            child_matrix = Matrix((v[0:4], v[4:8], v[8:12], v[12:16]))
+                            composed = empty_matrix @ child_matrix
+                            instance_obj['transform']['values'] = ArmoryExporter.write_matrix(composed)
+                        if out_parent is None:
+                            self.output['objects'].append(instance_obj)
+                        else:
+                            if 'children' not in out_parent:
+                                out_parent['children'] = []
+                            out_parent['children'].append(instance_obj)
+                    self.inlined_empty_children[bobject] = [obj['name'] for obj in self._collection_base_objects[collection]]
+                return
 
         bobject_ref = self.bobject_array.get(bobject)
         if bobject_ref is not None:
@@ -842,10 +935,41 @@ class ArmoryExporter:
                 out_object['group_ref'] = bobject.instance_collection.name
                 self.referenced_collections.append(bobject.instance_collection)
 
-            if bobject.arm_tilesheet != '':
-                out_object['tilesheet_ref'] = bobject.arm_tilesheet
-                out_object['tilesheet_action_ref'] = bobject.arm_tilesheet_action
-
+            # Export tilesheet data if enabled on this object
+            if bobject.arm_tilesheet_enabled:
+                out_object['tilesheet'] = {
+                    'start_action': bobject.arm_tilesheet_default_action,
+                    'flipx': bobject.arm_tilesheet_flipx,
+                    'flipy': bobject.arm_tilesheet_flipy,
+                    'actions': []
+                }
+                for action in bobject.arm_tilesheet_actionlist:
+                    action_data = {
+                        'name': action.name,
+                        'start': action.start_prop,
+                        'end': action.end_prop,
+                        'loop': action.loop_prop,
+                        'tilesx': action.tilesx_prop,
+                        'tilesy': action.tilesy_prop,
+                        'framerate': action.framerate_prop
+                    }
+                    # Mesh swap reference (for later implementation)
+                    if action.mesh_prop != '':
+                        # Look up the actual mesh to get proper name with library suffix if linked
+                        mesh_data = bpy.data.meshes.get(action.mesh_prop)
+                        if mesh_data is not None:
+                            action_data['mesh'] = arm.utils.safestr(arm.utils.asset_name(mesh_data))
+                        else:
+                            action_data['mesh'] = arm.utils.safestr(action.mesh_prop)
+                    # Export events if any
+                    if len(action.events) > 0:
+                        action_data['events'] = []
+                        for evt in action.events:
+                            action_data['events'].append({
+                                'name': evt.name,
+                                'frame': evt.frame_prop
+                            })
+                    out_object['tilesheet']['actions'].append(action_data)
 
             if len(bobject.vertex_groups) > 0:
                 out_object['vertex_groups'] = []
@@ -899,7 +1023,7 @@ class ArmoryExporter:
             # Export the object reference and material references
             objref = bobject.data
             if objref is not None:
-                objname = arm.utils.asset_name(objref)
+                objname = linked_utils.asset_name(objref)
 
             # LOD
             if bobject.type == 'MESH' and hasattr(objref, 'arm_lodlist') and len(objref.arm_lodlist) > 0:
@@ -1170,7 +1294,7 @@ class ArmoryExporter:
 
             self.post_export_object(bobject, out_object, object_type)
 
-            if not hasattr(out_object, 'children') and len(bobject.children) > 0:
+            if 'children' not in out_object and len(bobject.children) > 0:
                 out_object['children'] = []
 
         if bobject.arm_instanced == 'Off':
@@ -1573,16 +1697,16 @@ class ArmoryExporter:
                 for v in lay0.data:
                     if abs(v.uv[0]) > maxdim:
                         maxdim = abs(v.uv[0])
-                    if abs(v.uv[1]) > maxdim:
-                        maxdim = abs(v.uv[1])
+                    if abs(1.0 - v.uv[1]) > maxdim:
+                        maxdim = abs(1.0 - v.uv[1])
                 if has_tex1:
                     lay1 = uv_layers[t1map]
                     for v in lay1.data:
                         if abs(v.uv[0]) > maxdim:
                             maxdim = abs(v.uv[0])
                             maxdim_uvlayer = lay1
-                        if abs(v.uv[1]) > maxdim:
-                            maxdim = abs(v.uv[1])
+                        if abs(1.0 - v.uv[1]) > maxdim:
+                            maxdim = abs(1.0 - v.uv[1])
                             maxdim_uvlayer = lay1
             if has_morph_target:
                 morph_data = np.empty(num_verts * 2, dtype='<f4')
@@ -1591,8 +1715,8 @@ class ArmoryExporter:
                     if abs(v.uv[0]) > maxdim:
                         maxdim = abs(v.uv[0])
                         maxdim_uvlayer = lay2
-                    if abs(v.uv[1]) > maxdim:
-                        maxdim = abs(v.uv[1])
+                    if abs(1.0 - v.uv[1]) > maxdim:
+                        maxdim = abs(1.0 - v.uv[1])
                         maxdim_uvlayer = lay2
             if maxdim > 1:
                 o['scale_tex'] = maxdim
@@ -1861,27 +1985,11 @@ Make sure the mesh only has tris/quads.""")
         apply_modifiers = not armature
 
         if apply_modifiers:
-            # HACK: For linked objects with duplicate names, we need to force evaluation
-            # by temporarily adding the object to the current scene's collection
-            is_linked = bobject.name not in self.scene.collection.children
-            temp_collection = None
-
-            if is_linked:
-                temp_collection = bpy.data.collections.new("temp_collection")
-                bpy.context.scene.collection.children.link(temp_collection)
-                temp_collection.objects.link(bobject)
-
-            temp_depsgraph = bpy.context.evaluated_depsgraph_get()
-            bobject_eval = bobject.evaluated_get(temp_depsgraph)
-
-            if is_linked and temp_collection:
-                temp_collection.objects.unlink(bobject)
-                bpy.context.scene.collection.children.unlink(temp_collection)
-                bpy.data.collections.remove(temp_collection)
+            with linked_utils.evaluated_mesh(bobject, self.scene, self.depsgraph, apply_modifiers=True) as (bobject_eval, _):
+                export_mesh = bobject_eval.to_mesh(preserve_all_data_layers=True, depsgraph=self.depsgraph)
         else:
             bobject_eval = bobject
-
-        export_mesh = bobject_eval.to_mesh(preserve_all_data_layers=True, depsgraph=self.depsgraph)
+            export_mesh = bobject_eval.to_mesh(preserve_all_data_layers=True, depsgraph=self.depsgraph)
 
         # Export shape keys here
         if shape_keys:
@@ -1889,25 +1997,11 @@ Make sure the mesh only has tris/quads.""")
             # Update dependancy after new UV layer was added
             self.depsgraph.update()
             if apply_modifiers:
-                # HACK: Force individual evaluation again after shape key changes
-                is_linked = bobject.name not in self.scene.collection.children
-                temp_collection = None
-
-                if is_linked:
-                    temp_collection = bpy.data.collections.new("temp_collection")
-                    bpy.context.scene.collection.children.link(temp_collection)
-                    temp_collection.objects.link(bobject)
-
-                temp_depsgraph = bpy.context.evaluated_depsgraph_get()
-                bobject_eval = bobject.evaluated_get(temp_depsgraph)
-
-                if is_linked and temp_collection:
-                    temp_collection.objects.unlink(bobject)
-                    bpy.context.scene.collection.children.unlink(temp_collection)
-                    bpy.data.collections.remove(temp_collection)
+                with linked_utils.evaluated_mesh(bobject, self.scene, self.depsgraph, apply_modifiers=True) as (bobject_eval, _):
+                    export_mesh = bobject_eval.to_mesh(preserve_all_data_layers=True, depsgraph=self.depsgraph)
             else:
                 bobject_eval = bobject
-            export_mesh = bobject_eval.to_mesh(preserve_all_data_layers=True, depsgraph=self.depsgraph)
+                export_mesh = bobject_eval.to_mesh(preserve_all_data_layers=True, depsgraph=self.depsgraph)
 
         if export_mesh is None:
             log.warn(oid + ' was not exported')
@@ -2032,6 +2126,13 @@ Make sure the mesh only has tris/quads.""")
             if not bobject.arm_export:
                 continue
 
+            # If this object was an inlined collection instance,
+            # reference its exported children instead of the removed empty
+            if bobject in self.inlined_empty_children:
+                for child_name in self.inlined_empty_children[bobject]:
+                    out_collection['object_refs'].append(child_name)
+                continue
+
             # Only add unparented objects or objects with their parent
             # outside the collection, then instantiate the full object
             # child tree if the collection gets spawned as a whole
@@ -2058,7 +2159,7 @@ Make sure the mesh only has tris/quads.""")
                         continue
 
                     self.process_bobject(bobject)
-                    self.export_object(bobject)
+                    self.export_object(bobject, allow_inline=False)
 
                 if bobject.type == 'CAMERA':
                     self.output['camera_ref'] = asset_name
@@ -2263,7 +2364,7 @@ Make sure the mesh only has tris/quads.""")
                 material.signature = signature
 
             o = {}
-            o['name'] = arm.utils.asset_name(material)
+            o['name'] = linked_utils.asset_name(material)
 
             if material.arm_skip_context != '':
                 o['skip_context'] = material.arm_skip_context
@@ -2529,26 +2630,6 @@ Make sure the mesh only has tris/quads.""")
 
         return result
 
-    def export_tilesheets(self):
-        wrd = bpy.data.worlds['Arm']
-        if len(wrd.arm_tilesheetlist) > 0:
-            self.output['tilesheet_datas'] = []
-        for ts in wrd.arm_tilesheetlist:
-            o = {}
-            o['name'] = ts.name
-            o['tilesx'] = ts.tilesx_prop
-            o['tilesy'] = ts.tilesy_prop
-            o['framerate'] = ts.framerate_prop
-            o['actions'] = []
-            for tsa in ts.arm_tilesheetactionlist:
-                ao = {}
-                ao['name'] = tsa.name
-                ao['start'] = tsa.start_prop
-                ao['end'] = tsa.end_prop
-                ao['loop'] = tsa.loop_prop
-                o['actions'].append(ao)
-            self.output['tilesheet_datas'].append(o)
-
     def export_world(self):
         """Exports the world of the current scene."""
         world = self.scene.world
@@ -2704,7 +2785,8 @@ Make sure the mesh only has tris/quads.""")
                     continue
 
                 if self.scene.user_of_id(collection) or collection.library and not self.scene.library or collection in self.referenced_collections:
-                    self.export_collection(collection)
+                    if collection not in self.inlined_collections:
+                        self.export_collection(collection)
 
         if not ArmoryExporter.option_mesh_only:
             if self.scene.camera is not None:
@@ -2729,7 +2811,6 @@ Make sure the mesh only has tris/quads.""")
             self.export_particle_systems()
             self.output['world_datas'] = []
             self.export_world()
-            self.export_tilesheets()
 
             if self.scene.world is not None:
                 self.output['world_ref'] = arm.utils.safestr(arm.utils.asset_name(self.scene.world) if self.scene.world.library else self.scene.world.name)
@@ -2929,89 +3010,136 @@ Make sure the mesh only has tris/quads.""")
 
         # Rigid body trait
         if bobject.rigid_body is not None and phys_enabled:
-            ArmoryExporter.export_physics = True
-            rb = bobject.rigid_body
-            shape = 0  # BOX
-
-            if rb.collision_shape == 'SPHERE':
-                shape = 1
-            elif rb.collision_shape == 'CONVEX_HULL':
-                shape = 2
-            elif rb.collision_shape == 'MESH':
-                shape = 3
-            elif rb.collision_shape == 'CONE':
-                shape = 4
-            elif rb.collision_shape == 'CYLINDER':
-                shape = 5
-            elif rb.collision_shape == 'CAPSULE':
-                shape = 6
-
-            body_mass = rb.mass
-            is_static = self.rigid_body_static(rb)
-            if is_static:
-                body_mass = 0
-            x = {}
-            x['type'] = 'Script'
-            x['class_name'] = 'armory.trait.physics.' + phys_pkg + '.RigidBody'
-            col_group = ''
-            for b in rb.collision_collections:
-                col_group = ('1' if b else '0') + col_group
-            col_mask = ''
-            for b in bobject.arm_rb_collision_filter_mask:
-                col_mask = ('1' if b else '0') + col_mask
-
-            x['parameters'] = [str(shape), str(body_mass), str(rb.friction), str(rb.restitution), str(int(col_group, 2)), str(int(col_mask, 2)) ]
-            lx = bobject.arm_rb_linear_factor[0]
-            ly = bobject.arm_rb_linear_factor[1]
-            lz = bobject.arm_rb_linear_factor[2]
-            ax = bobject.arm_rb_angular_factor[0]
-            ay = bobject.arm_rb_angular_factor[1]
-            az = bobject.arm_rb_angular_factor[2]
-            if bobject.lock_location[0]:
-                lx = 0
-            if bobject.lock_location[1]:
-                ly = 0
-            if bobject.lock_location[2]:
-                lz = 0
-            if bobject.lock_rotation[0]:
-                ax = 0
-            if bobject.lock_rotation[1]:
-                ay = 0
-            if bobject.lock_rotation[2]:
-                az = 0
-            col_margin = rb.collision_margin if rb.use_margin else 0.0
-            if rb.use_deactivation:
-                deact_lv = rb.deactivate_linear_velocity
-                deact_av = rb.deactivate_angular_velocity
-                deact_time = bobject.arm_rb_deactivation_time
+            # Skip children of compound parents - their shapes are baked into the parent
+            is_compound_child = (bobject.parent is not None and
+                                 bobject.parent.rigid_body is not None and
+                                 bobject.parent.rigid_body.collision_shape == 'COMPOUND')
+            if is_compound_child:
+                pass  # Don't export RigidBody trait for compound children
             else:
-                deact_lv = 0.0
-                deact_av = 0.0
-                deact_time = 0.0
-            body_params = {}
-            body_params['linearDamping'] = rb.linear_damping
-            body_params['angularDamping'] = rb.angular_damping
-            body_params['linearFactorsX'] = lx
-            body_params['linearFactorsY'] = ly
-            body_params['linearFactorsZ'] = lz
-            body_params['angularFactorsX'] = ax
-            body_params['angularFactorsY'] = ay
-            body_params['angularFactorsZ'] = az
-            body_params['angularFriction'] = bobject.arm_rb_angular_friction
-            body_params['collisionMargin'] = col_margin
-            body_params['linearDeactivationThreshold'] = deact_lv
-            body_params['angularDeactivationThrshold'] = deact_av
-            body_params['deactivationTime'] = deact_time
-            body_flags = {}
-            body_flags['animated'] = rb.kinematic
-            body_flags['trigger'] = bobject.arm_rb_trigger
-            body_flags['ccd'] = bobject.arm_rb_ccd
-            body_flags['interpolate'] = bobject.arm_rb_interpolate
-            body_flags['staticObj'] = is_static
-            body_flags['useDeactivation'] = rb.use_deactivation
-            x['parameters'].append(arm.utils.get_haxe_json_string(body_params))
-            x['parameters'].append(arm.utils.get_haxe_json_string(body_flags))
-            o['traits'].append(x)
+                ArmoryExporter.export_physics = True
+                rb = bobject.rigid_body
+                shape = 0  # BOX
+
+                if rb.collision_shape == 'SPHERE':
+                    shape = 1
+                elif rb.collision_shape == 'CONVEX_HULL':
+                    shape = 2
+                elif rb.collision_shape == 'MESH':
+                    shape = 3
+                elif rb.collision_shape == 'CONE':
+                    shape = 4
+                elif rb.collision_shape == 'CYLINDER':
+                    shape = 5
+                elif rb.collision_shape == 'CAPSULE':
+                    shape = 6
+                elif rb.collision_shape == 'COMPOUND':
+                    shape = 8
+
+                body_mass = rb.mass
+                is_static = self.rigid_body_static(rb)
+                if is_static:
+                    body_mass = 0
+                x = {}
+                x['type'] = 'Script'
+                x['class_name'] = 'armory.trait.physics.' + phys_pkg + '.RigidBody'
+                col_group = ''
+                for b in rb.collision_collections:
+                    col_group = ('1' if b else '0') + col_group
+                col_mask = ''
+                for b in bobject.arm_rb_collision_filter_mask:
+                    col_mask = ('1' if b else '0') + col_mask
+
+                x['parameters'] = [str(shape), str(body_mass), str(rb.friction), str(rb.restitution), str(int(col_group, 2)), str(int(col_mask, 2)) ]
+                lx = bobject.arm_rb_linear_factor[0]
+                ly = bobject.arm_rb_linear_factor[1]
+                lz = bobject.arm_rb_linear_factor[2]
+                ax = bobject.arm_rb_angular_factor[0]
+                ay = bobject.arm_rb_angular_factor[1]
+                az = bobject.arm_rb_angular_factor[2]
+                if bobject.lock_location[0]:
+                    lx = 0
+                if bobject.lock_location[1]:
+                    ly = 0
+                if bobject.lock_location[2]:
+                    lz = 0
+                if bobject.lock_rotation[0]:
+                    ax = 0
+                if bobject.lock_rotation[1]:
+                    ay = 0
+                if bobject.lock_rotation[2]:
+                    az = 0
+                col_margin = rb.collision_margin if rb.use_margin else 0.0
+                if rb.use_deactivation:
+                    deact_lv = rb.deactivate_linear_velocity
+                    deact_av = rb.deactivate_angular_velocity
+                    deact_time = bobject.arm_rb_deactivation_time
+                else:
+                    deact_lv = 0.0
+                    deact_av = 0.0
+                    deact_time = 0.0
+                body_params = {}
+                body_params['linearDamping'] = rb.linear_damping
+                body_params['angularDamping'] = rb.angular_damping
+                body_params['linearFactorsX'] = lx
+                body_params['linearFactorsY'] = ly
+                body_params['linearFactorsZ'] = lz
+                body_params['angularFactorsX'] = ax
+                body_params['angularFactorsY'] = ay
+                body_params['angularFactorsZ'] = az
+                body_params['angularFriction'] = bobject.arm_rb_angular_friction
+                body_params['collisionMargin'] = col_margin
+                body_params['linearDeactivationThreshold'] = deact_lv
+                body_params['angularDeactivationThrshold'] = deact_av
+                body_params['deactivationTime'] = deact_time
+
+                # Collect compound children shapes if this is a compound parent
+                if rb.collision_shape == 'COMPOUND':
+                    compound_children = []
+                    for child in bobject.children:
+                        if child.rigid_body is not None:
+                            child_rb = child.rigid_body
+                            # Map child collision shape to int
+                            child_shape = 0  # BOX default
+                            if child_rb.collision_shape == 'SPHERE':
+                                child_shape = 1
+                            elif child_rb.collision_shape == 'CONVEX_HULL':
+                                child_shape = 2
+                            elif child_rb.collision_shape == 'MESH':
+                                child_shape = 3
+                            elif child_rb.collision_shape == 'CONE':
+                                child_shape = 4
+                            elif child_rb.collision_shape == 'CYLINDER':
+                                child_shape = 5
+                            elif child_rb.collision_shape == 'CAPSULE':
+                                child_shape = 6
+
+                            # Get child's local transform relative to parent
+                            local_matrix = bobject.matrix_world.inverted() @ child.matrix_world
+                            loc = local_matrix.to_translation()
+                            rot = local_matrix.to_quaternion()
+
+                            # Get child dimensions
+                            child_dim = child.dimensions
+
+                            compound_children.append({
+                                'shape': child_shape,
+                                'posX': loc.x, 'posY': loc.y, 'posZ': loc.z,
+                                'rotX': rot.x, 'rotY': rot.y, 'rotZ': rot.z, 'rotW': rot.w,
+                                'dimX': child_dim.x, 'dimY': child_dim.y, 'dimZ': child_dim.z
+                            })
+                    body_params['compoundChildren'] = compound_children
+
+                body_flags = {}
+                body_flags['animated'] = rb.kinematic
+                body_flags['trigger'] = bobject.arm_rb_trigger
+                body_flags['ccd'] = bobject.arm_rb_ccd
+                body_flags['interpolate'] = bobject.arm_rb_interpolate
+                body_flags['staticObj'] = is_static
+                body_flags['useDeactivation'] = rb.use_deactivation
+                x['parameters'].append(arm.utils.get_haxe_json_string(body_params))
+                x['parameters'].append(arm.utils.get_haxe_json_string(body_flags))
+                o['traits'].append(x)
 
         # Phys traits
         if phys_enabled:
@@ -3517,7 +3645,7 @@ Make sure the mesh only has tris/quads.""")
         strength = world.arm_envtex_strength
 
         mobile_mat = rpdat.arm_material_model in ('Mobile', 'Solid')
-        if mobile_mat:
+        if mobile_mat or '_EnvCol' in world.world_defs:
             arm_radiance = False
 
         out_probe = {'name': arm.utils.asset_name(world) if world.library else world.name}

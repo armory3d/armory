@@ -297,7 +297,7 @@ class SoftBody extends Trait {
 		vertOffsetX /= numNodes;
 		vertOffsetY /= numNodes;
 		vertOffsetZ /= numNodes;
-		
+
 		//Setting the mean position as object local location
 		mo.transform.scale.set(1, 1, 1);
 		mo.transform.loc.set(vertOffsetX, vertOffsetY, vertOffsetZ);
@@ -343,7 +343,7 @@ class SoftBody extends Trait {
 			var mx = nodePos.x() - vertOffsetX;
 			var my = nodePos.y() - vertOffsetY;
 			var mz = nodePos.z() - vertOffsetZ;
-			
+
 			var nx = nodeNor.x();
 			var ny = nodeNor.y();
 			var nz = nodeNor.z();
@@ -423,7 +423,7 @@ class SoftBody extends Trait {
 #end
 }
 
-@:enum abstract SoftShape(Int) from Int {
+enum abstract SoftShape(Int) from Int {
 	var Cloth = 0;
 	var Volume = 1;
 }

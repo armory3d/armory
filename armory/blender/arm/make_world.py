@@ -31,12 +31,39 @@ callback = None
 shader_datas = []
 
 
+def add_world_def(world: bpy.types.World, define: str):
+    if define not in world.world_defs:
+        world.world_defs += define
+
+
+def add_global_def(define: str):
+    wrd = bpy.data.worlds['Arm']
+    if define not in wrd.world_defs:
+        wrd.world_defs += define
+
+
+def add_irradiance_defs(world: bpy.types.World, rpdat):
+    if rpdat.arm_irradiance and rpdat.arm_material_model != 'Solid':
+        add_world_def(world, '_Irr')
+        add_global_def('_Irr')
+        assets.add_khafile_def("arm_irradiance")
+
+
+def mark_color_environment(world: bpy.types.World):
+    add_world_def(world, '_EnvCol')
+    add_global_def('_EnvCol')
+
+
 def build():
     """Builds world shaders for all exported worlds."""
     global shader_datas
 
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
+
+    if rpdat is None:
+        log.error("No render path found. Please ensure a valid render path is selected.")
+        return
 
     mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
     envpath = os.path.join(arm.utils.get_fp_build(), 'compiled', 'Assets', 'envmaps')
@@ -170,7 +197,7 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
 
     # film_transparent, do not render
     if bpy.context.scene is not None and bpy.context.scene.render.film_transparent:
-        world.world_defs += '_EnvCol'
+        mark_color_environment(world)
         frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
         frag.write('fragColor.rgb = backgroundCol;')
         return
@@ -191,15 +218,11 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
 
     # No world nodes/no output node, use background color
     if not is_parsed:
-        solid_mat = rpdat.arm_material_model == 'Solid'
-        if rpdat.arm_irradiance and not solid_mat:
-            world.world_defs += '_Irr'
-            assets.add_khafile_def("arm_irradiance")
+        add_irradiance_defs(world, rpdat)
         col = world.color
         world.arm_envtex_color = [col[0], col[1], col[2], 1.0]
         world.arm_envtex_strength = 1.0
-        world.world_defs += '_EnvCol'
-        assets.add_khafile_def("arm_envcol")
+        mark_color_environment(world)
 
     # Clouds enabled
     if rpdat.arm_clouds and world.arm_use_clouds:
@@ -209,13 +232,13 @@ def build_node_tree(world: bpy.types.World, frag: Shader, vert: Shader, con: Sha
         wrd.world_defs += '_EnvClouds'
         frag_write_clouds(world, frag)
 
-    if '_EnvSky' in world.world_defs or '_EnvTex' in world.world_defs or '_EnvImg' in world.world_defs or '_EnvClouds' in world.world_defs:
+    if '_EnvSky' in world.world_defs or '_EnvTex' in world.world_defs or '_EnvImg' in world.world_defs or '_EnvCol' in world.world_defs or '_EnvClouds' in world.world_defs:
         frag.add_uniform('float envmapStrength', link='_envmapStrength')
 
     # Clear background color
     if '_EnvCol' in world.world_defs:
         frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
-        frag.write('fragColor.rgb = backgroundCol;')
+        frag.write('fragColor.rgb = backgroundCol * envmapStrength;')
 
     elif '_EnvTex' in world.world_defs and '_EnvLDR' in world.world_defs:
         frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(2.2));')
@@ -274,15 +297,11 @@ def parse_world_output(world: bpy.types.World, node_output: bpy.types.Node, frag
 
 
 def parse_surface(world: bpy.types.World, node_surface: bpy.types.Node, frag: Shader):
-    wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
-    solid_mat = rpdat.arm_material_model == 'Solid'
 
     if node_surface.type in ('BACKGROUND', 'EMISSION'):
         # Append irradiance define
-        if rpdat.arm_irradiance and not solid_mat:
-            wrd.world_defs += '_Irr'
-            assets.add_khafile_def("arm_irradiance")
+        add_irradiance_defs(world, rpdat)
 
         # Extract environment strength
         # Todo: follow/parse strength input
@@ -293,12 +312,8 @@ def parse_surface(world: bpy.types.World, node_surface: bpy.types.Node, frag: Sh
         frag.write(f'fragColor.rgb = {out};')
 
         if not node_surface.inputs[0].is_linked:
-            solid_mat = rpdat.arm_material_model == 'Solid'
-            if rpdat.arm_irradiance and not solid_mat:
-                world.world_defs += '_Irr'
-                assets.add_khafile_def('arm_irradiance')
             world.arm_envtex_color = node_surface.inputs[0].default_value
-            world.arm_envtex_strength = 1.0
+            mark_color_environment(world)
 
     else:
         log.warn(f'World node type {node_surface.type} must not be connected to the world output node!')

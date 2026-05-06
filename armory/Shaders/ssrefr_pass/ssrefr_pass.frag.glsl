@@ -96,13 +96,13 @@ void main() {
     vec3 viewNormal = V3 * n;
     vec3 viewPos = getPosView(normalize(viewRay), d, cameraProj);
     vec3 refracted = refract(viewPos, viewNormal, 1.0 / ior);
-    hitCoord = viewPos;
+    vec3 hitCoord1 = viewPos;
 
 	vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter * roughness) * 2.0;
 
     vec4 coords = rayCast(dir);
-
-    vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb;
+    float dist = length(hitCoord - hitCoord1);
+    vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb; /* * exp(log(1.0 - opac) * dist); */
 
 	vec4 g1 = textureLod(gbuffer1, texCoord, 0.0); // Basecolor.rgb, spec/occ
 	vec3 f0 = surfaceF0(refractionCol.rgb, metallic);

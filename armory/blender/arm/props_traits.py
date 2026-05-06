@@ -27,7 +27,7 @@ else:
 
 ICON_HAXE = ui_icons.get_id('haxe')
 ICON_NODES = 'NODETREE'
-ICON_CANVAS = 'NODE_COMPOSITING'
+ICON_CANVAS = 'WINDOW'
 ICON_BUNDLED = ui_icons.get_id('bundle')
 ICON_WASM = ui_icons.get_id('wasm')
 
@@ -118,7 +118,7 @@ class ARM_UL_TraitList(bpy.types.UIList):
         elif item.type_prop == "WebAssembly":
             custom_icon_value = ICON_WASM
         elif item.type_prop == "UI Canvas":
-            custom_icon = "NODE_COMPOSITING"
+            custom_icon = "WINDOW"
         elif item.type_prop == "Bundled Script":
             custom_icon_value = ICON_BUNDLED
         elif item.type_prop == "Logic Nodes":
@@ -982,7 +982,7 @@ def draw_traits_panel(layout: bpy.types.UILayout, obj: Union[bpy.types.Object, b
             row.operator("arm.new_canvas", icon="FILE_NEW").is_object = is_object
             column = row.column(align=True)
             column.enabled = item.canvas_name_prop != ''
-            column.operator("arm.edit_canvas", icon="NODE_COMPOSITING").is_object = is_object
+            column.operator("arm.edit_canvas", icon="WINDOW").is_object = is_object
 
             refresh_op = "arm.refresh_object_scripts" if is_object else "arm.refresh_scripts"
             row.operator(refresh_op, text="Refresh", icon="FILE_REFRESH")

@@ -157,13 +157,13 @@ def write_probes(image_filepath: str, disable_hdr: bool, from_srgb: bool, cached
 
     if arm.utils.get_os() == 'win':
         cmft_path = sdk_path + '/lib/armory_tools/cmft/cmft.exe'
-        kraffiti_path = kha_path + '/Kinc/Tools/windows_x64/kraffiti.exe'
+        kraffiti_path = kha_path + '/Kore/Tools/windows_x64/kraffiti.exe'
     elif arm.utils.get_os() == 'mac':
         cmft_path = '"' + sdk_path + '/lib/armory_tools/cmft/cmft-osx"'
-        kraffiti_path = '"' + kha_path + '/Kinc/Tools/macos/kraffiti"'
+        kraffiti_path = '"' + kha_path + '/Kore/Tools/macos_x64/kraffiti"'
     else:
         cmft_path = '"' + sdk_path + '/lib/armory_tools/cmft/cmft-linux64"'
-        kraffiti_path = '"' + kha_path + '/Kinc/Tools/linux_x64/kraffiti"'
+        kraffiti_path = '"' + kha_path + '/Kore/Tools/linux_x64/kraffiti"'
 
     input_file = arm.utils.asset_path(image_filepath)
 
@@ -439,8 +439,10 @@ def write_sky_irradiance(base_name):
 
 def write_color_irradiance(base_name, col):
     """Constant color irradiance"""
-    # Adjust to Cycles
-    irradiance_floats = [col[0] * 1.13, col[1] * 1.13, col[2] * 1.13]
+    # Match shIrradiance()'s c4 factor so a constant color environment
+    # decodes back to the same diffuse radiance at strength 1.
+    sh_l00 = 1.0 / 0.886227
+    irradiance_floats = [col[0] * sh_l00, col[1] * sh_l00, col[2] * sh_l00]
     for i in range(0, 24):
         irradiance_floats.append(0.0)
 

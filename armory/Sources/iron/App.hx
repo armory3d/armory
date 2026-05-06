@@ -28,7 +28,8 @@ class App {
 	static var time = 0.0;
 	static var lastw = -1;
 	static var lasth = -1;
-	public static var onResize: Void->Void = null;
+	public static var onResize: Void->Void = null; // TODO: deprecate this. Use armory.system.Signal 'resized' instead.
+	public static var resized: armory.system.Signal = new armory.system.Signal(); // args: (w: Int, h: Int)
 
 	public static function init(done: Void->Void) {
 		new App(done);
@@ -60,6 +61,7 @@ class App {
 			lasth = App.h();
 		}
 		if (lastw != App.w() || lasth != App.h()) {
+			resized.emit(App.w(), App.h());
 			if (onResize != null) onResize();
 			else {
 				if (Scene.active != null && Scene.active.camera != null) {
@@ -85,16 +87,19 @@ class App {
 			time -= iron.system.Time.fixedStep;
 		}
 
+		@:privateAccess iron.system.Time._fixedStepInterpolation = time / iron.system.Time.fixedStep;
+
 		var i = 0;
 		var l = traitUpdates.length;
 		while (i < l) {
-			if (traitInits.length > 0) {
-				for (f in traitInits) {
-					traitInits.length > 0 ? f() : break;
-				}
-				traitInits.splice(0, traitInits.length);
+			while (traitInits.length > 0) {
+				var f = traitInits.shift();
+				if (f != null) f();
 			}
-			traitUpdates[i]();
+			// Re-check bounds after processing inits (scene switch may have removed traits)
+			if (i < traitUpdates.length) {
+				traitUpdates[i]();
+			}
 			// Account for removed traits
 			l <= traitUpdates.length ? i++ : l = traitUpdates.length;
 		}
@@ -130,11 +135,9 @@ class App {
 		startTime = kha.Scheduler.realTime();
 		#end
 
-		if (traitInits.length > 0) {
-			for (f in traitInits) {
-				traitInits.length > 0 ? f() : break;
-			}
-			traitInits.splice(0, traitInits.length);
+		while (traitInits.length > 0) {
+			var f = traitInits.shift();
+			if (f != null) f();
 		}
 
 		Scene.active.renderFrame(frame.g4);
