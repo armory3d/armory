@@ -219,6 +219,15 @@ class Object {
 		return null;
 	}
 
+	public function getAnimation(): Null<Animation> {
+		if (animation != null) return animation;
+		for (c in getChildren(true)) {
+			var a = c.getAnimation();
+			if (a != null) return a;
+		}
+		return null;
+	}
+
 	#if arm_skin
 	public function getParentArmature(name: String): BoneAnimation {
 		for (a in Scene.active.animations) if (a.armature != null && a.armature.name == name) return cast a;
