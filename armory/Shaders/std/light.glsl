@@ -128,9 +128,11 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#ifdef _LTC
 	if (isArea) {
 		const float PI = 3.1415926535;
-		float theta = acos(clamp(dotNV, -1.0, 1.0));
-		vec2 tuv = vec2(max(rough, 0.02), theta / (0.5 * PI));
+		float dotNV_safe = clamp(dotNV, 0.001, 0.999);
+		float theta = acos(dotNV_safe);
+		vec2 tuv = vec2(clamp(rough, 0.01, 0.99), theta / (0.5 * PI));
 		tuv = tuv * LUT_SCALE + LUT_BIAS;
+		tuv = clamp(tuv, 0.5 / LUT_SIZE, (LUT_SIZE - 0.5) / LUT_SIZE);
 		vec4 t = textureLod(sltcMat, tuv, 0.0);
 		if (t.x == 0.0 && t.y == 0.0 && t.z == 0.0) return vec3(0.0);
 		mat3 invM = mat3(
@@ -139,20 +141,25 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 			vec3(t.w, 0.0, t.x));
 
 		#if defined(_Clusters) && defined(_Spot)
-		vec3 up = cross(spotDir, right);
-		vec3 p0 = lp - right * scale.x + up * scale.y;
-		vec3 p1 = lp + right * scale.x + up * scale.y;
-		vec3 p2 = lp + right * scale.x - up * scale.y;
-		vec3 p3 = lp - right * scale.x - up * scale.y;
+		vec3 rightAxis = right;
+		vec3 upAxis = spotDir;
+		vec3 lightNormal = -normalize(cross(rightAxis, upAxis));
+		if (dot(lightNormal, normalize(p - lp)) < 0.0) return vec3(0.0);
+		vec3 p0 = lp - rightAxis * scale.x + upAxis * scale.y;
+		vec3 p1 = lp + rightAxis * scale.x + upAxis * scale.y;
+		vec3 p2 = lp + rightAxis * scale.x - upAxis * scale.y;
+		vec3 p3 = lp - rightAxis * scale.x - upAxis * scale.y;
 		#else
 		vec3 p0 = lightArea0;
 		vec3 p1 = lightArea1;
 		vec3 p2 = lightArea2;
 		vec3 p3 = lightArea3;
+		vec3 lightNormal = normalize(cross(p1 - p0, p2 - p1));
+		if (dot(lightNormal, p - p0) < 0.0) return vec3(0.0);
 		#endif
 
 		float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, p0, p1, p2, p3) / PI;
-		ltcspec *= textureLod(sltcMag, tuv, 0.0).a;
+		ltcspec *= textureLod(sltcMag, tuv, 0.0).r;
 		float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), p0, p1, p2, p3) / PI;
 		direct = (albedo * ltcdiff + ltcspec * spec * f0) * lightCol;
 

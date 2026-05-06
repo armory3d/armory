@@ -556,7 +556,7 @@ class LightObject extends Object {
 			// other data
 			lightsArray[i * 12 + 8] = l.data.raw.shadows_bias; // bias
 			lightsArray[i * 12 + 9] = 0.0; // cutoff for detecting spot
-			lightsArray[i * 12 + 10] = l.data.raw.cast_shadow ? 1.0 : 0.0; // hasShadows
+			lightsArray[i * 12 + 10] = (l.data.raw.cast_shadow && l.data.raw.type != "area") ? 1.0 : 0.0; // hasShadows
 			lightsArray[i * 12 + 11] = 0.0; // padding
 
 			#if arm_spot
@@ -565,12 +565,12 @@ class LightObject extends Object {
 				lightsArray[i * 12 + 9] = isSpot ? l.data.raw.spot_size : 0.0;
 
 				var m = l.transform.world;
-				var look = new Vec4(m._02, m._12, m._22).normalize();
+				var up = isSpot ? new Vec4(m._02, m._12, m._22).normalize() : new Vec4(m._01, m._11, m._21).normalize();
 				var right = new Vec4(m._00, m._10, m._20).normalize();
 
-				lightsArraySpot[i * 8    ] = look.x;
-				lightsArraySpot[i * 8 + 1] = look.y;
-				lightsArraySpot[i * 8 + 2] = look.z;
+				lightsArraySpot[i * 8    ] = up.x;
+				lightsArraySpot[i * 8 + 1] = up.y;
+				lightsArraySpot[i * 8 + 2] = up.z;
 				lightsArraySpot[i * 8 + 3] = isSpot ? l.data.raw.spot_blend : -1.0;
 
 				lightsArraySpot[i * 8 + 4] = right.x;
