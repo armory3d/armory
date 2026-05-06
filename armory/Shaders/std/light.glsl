@@ -116,9 +116,16 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	float dotVH = max(0.0, dot(v, h));
 
 	bool isArea = false;
+	bool lIsSpot = false;
+	#ifdef _Spot
+		lIsSpot = isSpot;
+	#endif
 	#ifdef _LTC
 		#ifdef _Spot
-			if (!isSpot && spotBlend < -0.5) isArea = true;
+			if (spotBlend < -0.5) {
+				isArea = true;
+				lIsSpot = false;
+			}
 		#else
 			isArea = true;
 		#endif
@@ -214,7 +221,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 
 	#ifdef _Spot
-	if (isSpot) {
+	if (lIsSpot) {
 		direct *= spotlightMask(l, spotDir, right, scale, spotSize, spotBlend);
 
 		#ifdef _ShadowMap

@@ -562,11 +562,11 @@ class LightObject extends Object {
 			#if arm_spot
 			if (l.data.raw.type == "spot" || l.data.raw.type == "area") {
 				var isSpot = l.data.raw.type == "spot";
-				lightsArray[i * 12 + 9] = isSpot ? l.data.raw.spot_size : 0.0;
+				lightsArray[i * 12 + 9] = isSpot ? l.data.raw.spot_size : 1.0;
 
 				var m = l.transform.world;
-				var up = isSpot ? new Vec4(m._02, m._12, m._22).normalize() : new Vec4(m._01, m._11, m._21).normalize();
-				var right = new Vec4(m._00, m._10, m._20).normalize();
+				var up = isSpot ? new Vec4(m._20, m._21, m._22).normalize() : new Vec4(m._10, m._11, m._12).normalize();
+				var right = new Vec4(m._00, m._01, m._02).normalize();
 
 				lightsArraySpot[i * 8    ] = up.x;
 				lightsArraySpot[i * 8 + 1] = up.y;
