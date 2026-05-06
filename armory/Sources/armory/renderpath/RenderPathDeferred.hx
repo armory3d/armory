@@ -613,8 +613,6 @@ class RenderPathDeferred {
 
 			Inc.computeVoxelsTemporal();
 
-			trace('ok');
-
 			#if (rp_voxels == "Voxel GI")
 			Inc.computeVoxelsSDF();
 			#end

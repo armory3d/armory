@@ -504,7 +504,13 @@ class Inc {
 
 		#if (rp_voxels != "Off")
 		path.bindTarget("voxelsOut", "voxels");
+		#if (rp_voxels == "Voxel GI" || arm_voxelgi_shadows)
 		path.bindTarget("voxelsSDF", "voxelsSDF");
+		#end
+		#end
+
+		#if rp_ssrs
+		path.bindTarget("_main", "gbufferD");
 		#end
 
 		path.drawMeshes("translucent");
@@ -550,7 +556,7 @@ class Inc {
 	public static function initGI(tname = "voxels") {
 		var t = new RenderTargetRaw();
 		t.name = tname;
-		
+
 		#if arm_config
 		var config = armory.data.Config.raw;
 		if (config.rp_voxels != true || voxelsCreated) return;
@@ -560,37 +566,37 @@ class Inc {
 		var res = iron.RenderPath.getVoxelRes();
 		var resZ =  iron.RenderPath.getVoxelResZ();
 
-		if (t.name == "voxels_diffuse" || t.name == "voxels_specular" || t.name == "voxels_refraction" || t.name == "voxels_shadows" || t.name == "voxels_ao") {
+		if (t.name == "voxels_diffuse" || t.name == "voxels_specular" || t.name == "voxels_ao" || t.name == "voxels_shadows") {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = getDisplayp();
-			//t.scale = Inc.getSuperSampling();
-			if (t.name == "voxels_ao" || t.name == "voxels_shadows")
-				t.format = "R8";
-			else
-				t.format = "RGBA32";
+			t.format = t.name == "voxels_shadows" ? #if (rp_voxels == "Voxel AO") "L8" #else "RGBA32" #end : "RGBA32";
+			t.mipmaps = true;
 		}
 		else {
 			if (t.name == "voxelsSDF" || t.name == "voxelsSDFtmp") {
-				t.format = "R16";
+				t.format = "A16";
 				t.width = res;
 				t.height = res * Main.voxelgiClipmapCount;
 				t.depth = res;
+				t.mipmaps = false;
 			}
 			else {
 				#if (rp_voxels == "Voxel AO")
 				{
 					if (t.name == "voxelsOut" || t.name == "voxelsOutB") {
-						t.format = "R8";
 						t.width = res * (6 + 16);
 						t.height = res * Main.voxelgiClipmapCount;
 						t.depth = res;
+						t.format = "R8";
+						t.mipmaps = false;
 					}
 					else {
-						t.format = "R32";
+						t.format = "A32";
 						t.width = res * 6;
 						t.height = res;
-						t.depth = res;
+						t.depth = res * 2;
+						t.mipmaps = false;
 					}
 				}
 				#else
@@ -600,25 +606,20 @@ class Inc {
 						t.width = res * (6 + 16);
 						t.height = res * Main.voxelgiClipmapCount;
 						t.depth = res;
-					}
-					else if (t.name == "voxelsLight") {
-						t.format = "R32";
-						t.width = res;
-						t.height = res;
-						t.depth = res * 3;
+						t.mipmaps = false;
 					}
 					else {
-						t.format = "R32";
+						t.format = "A32";
 						t.width = res * 6;
 						t.height = res;
-						t.depth = res * 12;
+						t.depth = res * 16;
+						t.mipmaps = false;
 					}
 				}
 				#end
 			}
 		}
 		t.is_image = true;
-		t.mipmaps = false;
 		path.createRenderTarget(t);
 	}
 	#end

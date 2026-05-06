@@ -655,14 +655,11 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     frag.add_include('std/light.glsl')
     is_shadows = '_ShadowMap' in wrd.world_defs
-    is_transparent_shadows = '_ShadowMapTransparent' in wrd.world_defs
     is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
     is_single_atlas = is_shadows_atlas and '_SingleAtlas' in wrd.world_defs
     shadowmap_sun = 'shadowMap'
-    shadowmap_sun_tr = 'shadowMapTransparent'
     if is_shadows_atlas:
         shadowmap_sun = 'shadowMapAtlasSun' if not is_single_atlas else 'shadowMapAtlas'
-        shadowmap_sun_tr = 'shadowMapAtlasSunTransparent' if not is_single_atlas else 'shadowMapAtlasTransparent'
         frag.add_uniform('vec2 smSizeUniform', '_shadowMapSize', included=True)
 
     frag.write('vec3 albedo = surfaceAlbedo(basecol, metallic);')
@@ -751,11 +748,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.add_uniform('vec3 eye', '_cameraPosition')
                 frag.write(f'svisibility = shadowTestCascade({shadowmap_sun},')
                 frag.write('eye, wposition + n * shadowsBias * 10, shadowsBias')
-                if is_transparent_shadows:
-                    if parse_opacity:
-                        frag.write(', true')
-                    else:
-                        frag.write(', false')
                 frag.write(');')
             else:
                 if tese is not None:
@@ -775,11 +767,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.write('const vec2 smSize = shadowmapSize;')
                 frag.write(f'svisibility = PCF({shadowmap_sun},')
                 frag.write('lPos.xy, lPos.z - shadowsBias, smSize')
-                if is_transparent_shadows:
-                    if parse_opacity:
-                        frag.write(', true')
-                    else:
-                        frag.write(', false')
                 frag.write(');')
             frag.write('}') # receiveShadow
 
@@ -803,10 +790,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
         frag.write('direct += sampleLight(')
         frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0')
-        if parse_opacity:
-            frag.write(', true')
-        else:
-            frag.write(', false')
         if is_shadows:
             frag.write(', 0, pointBias, receiveShadow')
         if '_Spot' in wrd.world_defs:
