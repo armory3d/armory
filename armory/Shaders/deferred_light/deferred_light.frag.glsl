@@ -465,39 +465,72 @@ void main() {
 
 	for (int i = 0; i < min(numLights, maxLightsCluster); i++) {
 		int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);
+		#ifdef _Spot
+		bool isSpot = (lightsArray[li * 3 + 2].y != 0.0);
 		fragColor.rgb += sampleLight(
-			p,
-			n,
-			v,
-			dotNV,
-			lightsArray[li * 3].xyz, // lp
-			lightsArray[li * 3 + 1].xyz, // lightCol
-			albedo,
-			roughness,
-			occspec.y,
+			p, 
+			n, 
+			v, 
+			dotNV, 
+			lightsArray[li * 3].xyz, 
+			lightsArray[li * 3 + 1].xyz, 
+			albedo, 
+			roughness, 
+			occspec.y, 
 			f0
 			#ifdef _ShadowMap
-				// light index, shadow bias, cast_shadows
-				, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0
+				, i, lightsArray[li * 3 + 2].x, (lightsArray[li * 3 + 2].z != 0.0 && (i < numPoints || isSpot))
 			#endif
-			#ifdef _Spot
-			, lightsArray[li * 3 + 2].y != 0.0
-			, lightsArray[li * 3 + 2].y // spot size (cutoff)
-			, lightsArraySpot[li * 2].w // spot blend (exponent)
-			, lightsArraySpot[li * 2].xyz // spotDir
-			, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w) // scale
-			, lightsArraySpot[li * 2 + 1].xyz // right
-			#endif
-			#ifdef _VoxelShadow
-			, texCoord
-			#endif
-			#ifdef _MicroShadowing
-			, occspec.x
-			#endif
-			#ifdef _SSRS
-			, gbufferD, invVP, eye
+			, isSpot, 
+			lightsArray[li * 3 + 2].y, 
+			lightsArraySpot[li * 2].w, 
+			lightsArraySpot[li * 2].xyz, 
+			vec2(lightsArray[li * 3].w, 
+			lightsArray[li * 3 + 1].w), 
+			lightsArraySpot[li * 2 + 1].xyz
+			#ifdef _VoxelShadow 
+			, texCoord 
+			#endif 
+			#ifdef _MicroShadowing 
+			, occspec.x 
+			#endif 
+			#ifdef _SSRS 
+			, gbufferD, 
+			invVP, 
+			eye 
 			#endif
 		);
+		#else
+		fragColor.rgb += sampleLight(
+			p, 
+			n, 
+			v, 
+			dotNV, 
+			lightsArray[li * 3].xyz, 
+			lightsArray[li * 3 + 1].xyz, 
+			albedo, 
+			roughness, 
+			occspec.y, 
+			f0
+			#ifdef _ShadowMap
+			, 
+			i, 
+			lightsArray[li * 3 + 2].x, 
+			lightsArray[li * 3 + 2].z != 0.0
+			#endif
+			#ifdef _VoxelShadow 
+			, texCoord 
+			#endif 
+			#ifdef _MicroShadowing 
+			, occspec.x 
+			#endif 
+			#ifdef _SSRS 
+			, gbufferD, 
+			invVP, 
+			eye 
+			#endif
+		);
+		#endif
 	}
 #endif // _Clusters
 

@@ -416,6 +416,8 @@ class LightObject extends Object {
 
 		#if arm_spot // Point lamps first
 		lights.sort(function(a, b): Int {
+			if (a.data.raw.type == "point" && b.data.raw.type != "point") return -1;
+			if (a.data.raw.type != "point" && b.data.raw.type == "point") return 1;
 			return a.data.raw.type >= b.data.raw.type ? 1 : -1;
 		});
 		#end
