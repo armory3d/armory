@@ -365,8 +365,6 @@ class LightObject extends Object {
 	}
 	#end // arm_csm
 
-	#if arm_clusters
-
 	// Centralize discarding conditions when iterating over lights
 	// Important to avoid issues later with "misaligned" data in uniforms (lightsArray, clusterData, LWVPSpotArray)
 	public inline static function discardLight(light: LightObject) {
@@ -376,7 +374,8 @@ class LightObject extends Object {
 	public inline static function discardLightCulled(light: LightObject) {
 		return #if arm_shadowmap_atlas light.culledLight || #end discardLight(light);
 	}
-
+	
+	#if arm_clusters
 	#if (arm_shadowmap_atlas && arm_shadowmap_atlas_lod)
 	// Arbitrary function to map from [0-16] to [1.0-0.0]
 	public inline static function zToShadowMapScale(z: Int, max: Int): Float {
