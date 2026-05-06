@@ -22,10 +22,13 @@ uniform sampler2D gbuffer1;
 #ifdef _gbuffer2
 	uniform sampler2D gbuffer2;
 #endif
+#ifndef _LTC
 #ifdef _EmissionShaded
 	uniform sampler2D gbufferEmission;
 #endif
+#endif
 
+#ifndef _LTC
 #ifdef _VoxelGI
 uniform sampler2D voxels_diffuse;
 uniform sampler2D voxels_specular;
@@ -36,13 +39,16 @@ uniform sampler2D voxels_ao;
 #ifdef _VoxelShadow
 uniform sampler2D voxels_shadows;
 #endif
+#endif
 
 uniform float envmapStrength;
 #ifdef _Irr
 uniform vec4 shirr[7];
 #endif
+#ifndef _LTC
 #ifdef _Brdf
 uniform sampler2D senvmapBrdf;
+#endif
 #endif
 #ifdef _Rad
 uniform sampler2D senvmapRadiance;
@@ -52,8 +58,10 @@ uniform int envmapNumMipmaps;
 uniform vec3 backgroundCol;
 #endif
 
+#ifndef _LTC
 #ifdef _SSAO
 uniform sampler2D ssaotex;
+#endif
 #endif
 
 #ifdef _SSS
@@ -148,8 +156,12 @@ uniform vec3 sunDir;
 uniform vec3 sunCol;
 	#ifdef _ShadowMap
 	#ifdef _ShadowMapAtlas
+	#ifndef _LTC
 	#ifndef _SingleAtlas
 	uniform sampler2DShadow shadowMapAtlasSun;
+	#endif
+	#else
+	#define shadowMapAtlasSun shadowMapAtlas
 	#endif
 	#else
 	uniform sampler2DShadow shadowMap;
@@ -176,9 +188,11 @@ uniform vec3 pointCol;
 	#endif
 #endif
 
+#ifndef _LTC
 #ifdef _LightClouds
 uniform sampler2D texClouds;
 uniform float time;
+#endif
 #endif
 
 #include "std/light.glsl"
@@ -218,8 +232,10 @@ void main() {
 	occspec.x = mix(1.0, occspec.x, dotNV); // AO Fresnel
 #endif
 
+#ifndef _LTC
 #ifdef _Brdf
 	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
+#endif
 #endif
 
 	// Envmap
@@ -257,10 +273,13 @@ void main() {
 
 	envl.rgb *= albedo;
 
+#ifndef _LTC
 #ifdef _Brdf
 	envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
 #endif
+#endif
 
+#ifndef _LTC
 #ifdef _Rad // Indirect specular
 	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
 #else
@@ -268,17 +287,22 @@ void main() {
 	envl.rgb += backgroundCol * (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
 	#endif
 #endif
+#endif
 
 	envl.rgb *= envmapStrength * occspec.x;
 
+#ifndef _LTC
 #ifdef _VoxelGI
 	fragColor.rgb = textureLod(voxels_diffuse, texCoord, 0.0).rgb * albedo * voxelgiDiff;
 	if(roughness < 1.0 && occspec.y > 0.0)
 		fragColor.rgb += textureLod(voxels_specular, texCoord, 0.0).rgb * occspec.y * voxelgiRefl;
 #endif
+#endif
 
+#ifndef _LTC
 #ifdef _VoxelAOvar
 	envl.rgb *= textureLod(voxels_ao, texCoord, 0.0).r;
+#endif
 #endif
 
 #ifndef _VoxelGI
@@ -297,12 +321,14 @@ void main() {
 	// Show SSAO
 	// fragColor.rgb = texture(ssaotex, texCoord).rrr;
 
+#ifndef _LTC
 #ifdef _SSAO
 	// #ifdef _RTGI
 	// fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
 	// #else
 	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	// #endif
+#endif
 #endif
 
 #ifdef _EmissionShadeless
@@ -312,6 +338,7 @@ void main() {
 		return;
 	}
 #endif
+#ifndef _LTC
 #ifdef _EmissionShaded
 	#ifdef _EmissionShadeless
 	else {
@@ -321,6 +348,7 @@ void main() {
 	#ifdef _EmissionShadeless
 	}
 	#endif
+#endif
 #endif
 
 #ifdef _Sun
@@ -365,9 +393,11 @@ void main() {
 		#endif
 	#endif
 
+#ifndef _LTC
 	#ifdef _VoxelShadow
 	svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
 	#endif
+#endif
 
 	#ifdef _SSRS
 	// vec2 coords = getProjectedCoord(hitCoord);
@@ -376,9 +406,11 @@ void main() {
 	svisibility *= traceShadowSS(sunDir, p, gbufferD, invVP, eye);
 	#endif
 
+#ifndef _LTC
 	#ifdef _LightClouds
 	svisibility *= textureLod(texClouds, vec2(p.xy / 100.0 + time / 80.0), 0.0).r * dot(n, vec3(0,0,1));
 	#endif
+#endif
 
 	#ifdef _MicroShadowing
 	// See https://advances.realtimerendering.com/other/2016/naughty_dog/NaughtyDog_TechArt_Final.pdf
