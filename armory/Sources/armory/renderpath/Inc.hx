@@ -10,8 +10,6 @@ class Inc {
 	static var path: RenderPath;
 	public static var superSample = 1.0;
 
-	static var pointIndex = 0;
-	static var spotIndex = 0;
 	static var lastFrame = -1;
 
 	#if ((rp_voxels != 'Off') && arm_config)
@@ -351,29 +349,35 @@ class Inc {
 			path.bindTarget(n, n);
 			break;
 		}
-		for (i in 0...pointIndex) {
-			var n = "shadowMapPoint[" + i + "]";
-			path.bindTarget(n, n);
-		}
-		for (i in 0...spotIndex) {
-			var n = "shadowMapSpot[" + i + "]";
-			path.bindTarget(n, n);
+		var lightIndex = 0;
+		for (l in iron.Scene.active.lights) {
+			if (iron.object.LightObject.discardLightCulled(l)) continue;
+			
+			if (l.data.raw.type == "point") {
+				var n = "shadowMapPoint[" + lightIndex + "]";
+				path.bindTarget(n, n);
+			}
+			else if (l.data.raw.type == "spot" || l.data.raw.type == "area") {
+				var n = "shadowMapSpot[" + lightIndex + "]";
+				path.bindTarget(n, n);
+			}
+			lightIndex++;
 		}
 	}
 
-	static function shadowMapName(light: LightObject): String {
+	static function shadowMapName(light: LightObject, index: Int): String {
 		switch (light.data.raw.type) {
 			case "sun":
 				return "shadowMap";
 			case "point":
-				return "shadowMapPoint[" + pointIndex + "]";
+				return "shadowMapPoint[" + index + "]";
 			default:
-				return "shadowMapSpot[" + spotIndex + "]";
+				return "shadowMapSpot[" + index + "]";
 		}
 	}
 
-	static function getShadowMap(l: iron.object.LightObject): String {
-		var target = shadowMapName(l);
+	static function getShadowMap(l: iron.object.LightObject, index: Int): String {
+		var target = shadowMapName(l, index);
 		var rt = path.renderTargets.get(target);
 		// Create shadowmap on the fly
 		if (rt == null) {
@@ -416,13 +420,12 @@ class Inc {
 		lastFrame = RenderPath.active.frame;
 		#end
 
-		pointIndex = 0;
-		spotIndex = 0;
+		var lightIndex = 0;
 		for (l in iron.Scene.active.lights) {
 			if (!l.visible) continue;
 
 			path.light = l;
-			var shadowmap = Inc.getShadowMap(l);
+			var shadowmap = Inc.getShadowMap(l, lightIndex);
 			var faces = l.data.raw.shadowmap_cube ? 6 : 1;
 			for (i in 0...faces) {
 				if (faces > 1) path.currentFace = i;
@@ -434,8 +437,9 @@ class Inc {
 			}
 			path.currentFace = -1;
 
-			if (l.data.raw.type == "point") pointIndex++;
-			else if (l.data.raw.type == "spot" || l.data.raw.type == "area") spotIndex++;
+			if (!iron.object.LightObject.discardLightCulled(l)) {
+				lightIndex++;
+			}
 		}
 		#end // rp_shadowmap
 	}
@@ -1406,7 +1410,7 @@ class Inc {
 	 	var clipmap = clipmaps[iron.RenderPath.clipmapLevel];
 		var lights = iron.Scene.active.lights;
 
-	 	pointIndex = spotIndex = 0;
+	 	var lightIndex = 0;
 	 	for (i in 0...lights.length) {
 	 		var l = lights[i];
 	 		if (!l.visible) continue;
@@ -1458,8 +1462,7 @@ class Inc {
 	 			kha.compute.Compute.setSampledTexture(voxel_tc5, rts.get("shadowMapAtlasSpot").image);
 	 			#end
 	 			#else
-	 			kha.compute.Compute.setSampledTexture(voxel_tc5, rts.get("shadowMapSpot[" + spotIndex + "]").image);
-	 			spotIndex++;
+	 			kha.compute.Compute.setSampledTexture(voxel_tc5, rts.get("shadowMapSpot[" + lightIndex + "]").image);
 	 			#end
 	 			kha.compute.Compute.setInt(voxel_ch5, 2);
 	 		}
@@ -1473,11 +1476,14 @@ class Inc {
 				kha.compute.Compute.setFloats(voxel_cm5, iron.object.LightObject.pointLightsData);
 				#end
 				#else
-	 			kha.compute.Compute.setSampledCubeMap(voxel_td5, rts.get("shadowMapPoint[" + pointIndex + "]").cubeMap);
-	 			pointIndex++;
+	 			kha.compute.Compute.setSampledCubeMap(voxel_td5, rts.get("shadowMapPoint[" + lightIndex + "]").cubeMap);
 	 			#end
 	 			kha.compute.Compute.setInt(voxel_ch5, 3);
 	 		}
+			
+			if (!iron.object.LightObject.discardLightCulled(l)) {
+				lightIndex++;
+			}
 
 	 		// lightProj
 	 		var near = l.data.raw.near_plane;

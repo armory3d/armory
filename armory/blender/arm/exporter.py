@@ -2054,7 +2054,30 @@ Make sure the mesh only has tris/quads.""")
         """Exports a single light object."""
         rpdat = arm.utils.get_rp()
         light_ref = object_ref[0]
+        light_objects = object_ref[1]["objectTable"]
+        light_object = light_objects[0] if len(light_objects) > 0 else None
         objtype = light_ref.type
+        color = [light_ref.color[0], light_ref.color[1], light_ref.color[2]]
+        if light_ref.use_temperature:
+            temperature_color = light_ref.temperature_color
+            color[0] *= temperature_color[0]
+            color[1] *= temperature_color[1]
+            color[2] *= temperature_color[2]
+
+        strength = light_ref.energy * math.pow(2.0, light_ref.exposure)
+        if not light_ref.normalize:
+            area = 0.0
+            try:
+                if light_object is not None:
+                    area = light_ref.area(matrix_world=light_object.matrix_world)
+                else:
+                    area = light_ref.area()
+            except TypeError:
+                area = light_ref.area()
+
+            if area > 0.0:
+                strength *= area
+
         out_light = {
             'name': object_ref[1]["structName"],
             'type': objtype.lower(),
@@ -2062,8 +2085,8 @@ Make sure the mesh only has tris/quads.""")
             'near_plane': light_ref.arm_clip_start,
             'far_plane': light_ref.arm_clip_end,
             'fov': light_ref.arm_fov,
-            'color': [light_ref.color[0], light_ref.color[1], light_ref.color[2]],
-            'strength': light_ref.energy,
+            'color': color,
+            'strength': strength,
             'shadows_bias': light_ref.arm_shadows_bias * 0.0001
         }
         if rpdat.rp_shadows:
@@ -2075,27 +2098,40 @@ Make sure the mesh only has tris/quads.""")
             out_light['shadowmap_size'] = 0
 
         if objtype == 'SUN':
-            out_light['strength'] *= 0.325
             # Scale bias for ortho light matrix
             out_light['shadows_bias'] *= 20.0
             if out_light['shadowmap_size'] > 1024:
                 # Less bias for bigger maps
                 out_light['shadows_bias'] *= 1 / (out_light['shadowmap_size'] / 1024)
         elif objtype == 'POINT':
-            out_light['strength'] *= 0.01
+            out_light['strength'] *= 1.0 / (4.0 * math.pi)
             out_light['fov'] = 1.5708 # pi/2
             out_light['shadowmap_cube'] = True
             if light_ref.shadow_soft_size > 0.1:
                 out_light['light_size'] = light_ref.shadow_soft_size * 10
         elif objtype == 'SPOT':
-            out_light['strength'] *= 0.01
-            out_light['spot_size'] = math.cos(light_ref.spot_size / 2)
-            # Cycles defaults to 0.15
-            out_light['spot_blend'] = light_ref.spot_blend / 10
+            out_light['strength'] *= 1.0 / (4.0 * math.pi)
+            half_angle = light_ref.spot_size * 0.5
+            outer_cos = math.cos(half_angle)
+            blend = max(0.0, min(1.0, light_ref.spot_blend))
+            inner_angle = math.atan(math.tan(half_angle) * (1.0 - blend))
+            out_light['spot_size'] = outer_cos
+            out_light['spot_blend'] = max(0.0001, math.cos(inner_angle) - outer_cos)
+            if light_ref.shadow_soft_size > 0.0:
+                out_light['light_size'] = light_ref.shadow_soft_size * 10
         elif objtype == 'AREA':
-            out_light['strength'] *= 0.01
+            light_area = light_ref.size * light_ref.size_y
+            if light_ref.shape in ('DISK', 'ELLIPSE'):
+                light_area *= math.pi / 4.0
+            
+            if light_area > 0.0:
+                out_light['strength'] *= 1.0 / (light_area * math.pi)
+            else:
+                out_light['strength'] *= 1.0 / (math.pi)
+
             out_light['size'] = light_ref.size
             out_light['size_y'] = light_ref.size_y
+
 
         self.output['light_datas'].append(out_light)
 
