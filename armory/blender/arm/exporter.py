@@ -2123,7 +2123,7 @@ Make sure the mesh only has tris/quads.""")
             light_area = light_ref.size * light_ref.size_y
             if light_ref.shape in ('DISK', 'ELLIPSE'):
                 light_area *= math.pi / 4.0
-            
+
             if light_area > 0.0:
                 out_light['strength'] *= 1.0 / (light_area * math.pi)
             else:

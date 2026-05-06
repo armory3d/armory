@@ -996,11 +996,19 @@ class Uniforms {
 					var point = RenderPath.active.point;
 					if (point != null) {
 						v = helpVec;
-						v.x = point.data.raw.spot_size;
-						v.y = point.data.raw.spot_blend;
+						var isSpot = point.data.raw.type == "spot";
+						v.x = isSpot ? point.data.raw.spot_size : 0.0;
+						v.y = isSpot ? point.data.raw.spot_blend : -1.0;
 						var scale = point.transform.scale;
-						v.z = scale.z == 0.0 ? 0.0 : scale.x / scale.z;
-						v.w = scale.z == 0.0 ? 0.0 : scale.y / scale.z;
+						if (isSpot) {
+							v.z = scale.z == 0.0 ? 0.0 : scale.x / scale.z;
+							v.w = scale.z == 0.0 ? 0.0 : scale.y / scale.z;
+						} else {
+							var sx: kha.FastFloat = point.data.raw.size != null ? point.data.raw.size * 0.5 : 0.0;
+							var sy: kha.FastFloat = point.data.raw.size_y != null ? point.data.raw.size_y * 0.5 : 0.0;
+							v.z = sx * scale.x;
+							v.w = sy * scale.y;
+						}
 					}
 				}
 				#end

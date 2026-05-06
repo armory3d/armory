@@ -550,19 +550,27 @@ class LightObject extends Object {
 			lightsArray[i * 12 + 11] = 0.0; // padding
 
 			#if arm_spot
-			if (l.data.raw.type == "spot") {
-				lightsArray[i * 12 + 9] = l.data.raw.spot_size;
+			if (l.data.raw.type == "spot" || l.data.raw.type == "area") {
+				var isSpot = l.data.raw.type == "spot";
+				lightsArray[i * 12 + 9] = isSpot ? l.data.raw.spot_size : 0.0;
 
 				var dir = l.look().normalize();
 				lightsArraySpot[i * 8    ] = dir.x;
 				lightsArraySpot[i * 8 + 1] = dir.y;
 				lightsArraySpot[i * 8 + 2] = dir.z;
-				lightsArraySpot[i * 8 + 3] = l.data.raw.spot_blend;
+				lightsArraySpot[i * 8 + 3] = isSpot ? l.data.raw.spot_blend : -1.0;
 
-				// Premultiply scale with z component
 				var scale = l.transform.scale;
-				lightsArray[i * 12 + 3] = scale.z == 0.0 ? 0.0 : scale.x / scale.z;
-				lightsArray[i * 12 + 7] = scale.z == 0.0 ? 0.0 : scale.y / scale.z;
+				if (isSpot) {
+					// Premultiply scale with z component
+					lightsArray[i * 12 + 3] = scale.z == 0.0 ? 0.0 : scale.x / scale.z;
+					lightsArray[i * 12 + 7] = scale.z == 0.0 ? 0.0 : scale.y / scale.z;
+				} else {
+					var sx: kha.FastFloat = l.data.raw.size != null ? l.data.raw.size * 0.5 : 0.0;
+					var sy: kha.FastFloat = l.data.raw.size_y != null ? l.data.raw.size_y * 0.5 : 0.0;
+					lightsArray[i * 12 + 3] = sx * scale.x;
+					lightsArray[i * 12 + 7] = sy * scale.y;
+				}
 
 				final right = l.right().normalize();
 				lightsArraySpot[i * 8 + 4] = right.x;
