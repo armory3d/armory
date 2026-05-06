@@ -80,9 +80,10 @@ float lpToDepth(vec3 lp, const vec2 lightProj) {
 }
 
 float PCFCube(samplerCubeShadow shadowMapCube, const vec3 lp, vec3 ml, const float bias, const vec2 lightProj, const vec3 n) {
-	const float s = shadowmapCubePcfSize; // TODO: incorrect...
-	float compare = lpToDepth(lp, lightProj) - bias * 1.5;
-	ml = ml + n * bias * 20;
+	const float s = shadowmapCubePcfSize;
+	float dotNL = max(0.0, dot(n, normalize(-ml)));
+	float compare = lpToDepth(lp, lightProj) - bias * (10.0 + (1.0 - dotNL) * 100.0);
+	ml = ml + n * bias * 10.0;
 	#ifdef _InvY
 	ml.y = -ml.y;
 	#endif
@@ -197,9 +198,10 @@ vec2 transformOffsetedUV(const int faceIndex, out int newFaceIndex, vec2 uv) {
 }
 
 float PCFFakeCube(sampler2DShadow shadowMap, const vec3 lp, vec3 ml, const float bias, const vec2 lightProj, const vec3 n, const int index) {
-	const vec2 smSize = smSizeUniform; // TODO: incorrect...
-	const float compare = lpToDepth(lp, lightProj) - bias * 1.5;
-	ml = ml + n * bias * 20;
+	const vec2 smSize = smSizeUniform;
+	float dotNL = max(0.0, dot(n, normalize(-ml)));
+	float compare = lpToDepth(lp, lightProj) - bias * (10.0 + (1.0 - dotNL) * 100.0);
+	ml = ml + n * bias * 10.0;
 
 	int faceIndex = 0;
 	const int lightIndex = index * 6;
