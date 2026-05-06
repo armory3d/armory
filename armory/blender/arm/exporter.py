@@ -2123,7 +2123,7 @@ Make sure the mesh only has tris/quads.""")
             light_area = light_ref.size * light_ref.size_y
             if light_ref.shape in ('DISK', 'ELLIPSE'):
                 light_area *= math.pi / 4.0
-            
+
             if light_area > 0.0:
                 out_light['strength'] *= 1.0 / (light_area * math.pi)
             else:
@@ -3365,8 +3365,6 @@ Make sure the mesh only has tris/quads.""")
 
                         if trait_prop.type.endswith("Object"):
                             value = arm.utils.asset_name(trait_prop.value_object)
-                        elif trait_prop.type == "TSceneFormat":
-                            value = arm.utils.asset_name(trait_prop.value_scene)
                         else:
                             value = trait_prop.get_value()
 
