@@ -132,6 +132,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		vec2 tuv = vec2(max(rough, 0.02), theta / (0.5 * PI));
 		tuv = tuv * LUT_SCALE + LUT_BIAS;
 		vec4 t = textureLod(sltcMat, tuv, 0.0);
+		if (t.x == 0.0 && t.y == 0.0 && t.z == 0.0) return vec3(0.0);
 		mat3 invM = mat3(
 			vec3(1.0, 0.0, t.y),
 			vec3(0.0, t.z, 0.0),
@@ -156,7 +157,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		direct = (albedo * ltcdiff + ltcspec * spec * f0) * lightCol;
 
 		#ifdef _ShadowMap
-			if (receiveShadow) {
+			if (receiveShadow && !isArea) {
 				vec4 lPos;
 				#ifdef _SinglePoint
 				lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
