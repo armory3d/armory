@@ -7,6 +7,10 @@
 			"cull_mode": "none",
 			"links": [
 				{
+					"name": "eye",
+					"link": "_cameraPosition"
+				},
+				{
 					"name": "P",
 					"link": "_projectionMatrix"
 				},
@@ -29,6 +33,11 @@
 				{
 					"name": "cameraProj",
 					"link": "_cameraPlaneProj"
+				},
+				{
+					"name": "senvmapBrdf",
+					"link": "$brdf.png",
+					"ifdef": ["_Brdf"]
 				}
 			],
 			"vertex_shader": "../include/pass_viewray2.vert.glsl",

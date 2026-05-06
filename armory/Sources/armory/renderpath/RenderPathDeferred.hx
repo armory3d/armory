@@ -61,11 +61,7 @@ class RenderPathDeferred {
 			Inc.initGI("voxelsSDF");
 			Inc.initGI("voxelsSDFtmp");
 			#end
-			#if arm_voxelgi_shadows
-			Inc.initGI("voxels_shadows");
-			#end
 			#if (rp_voxels == "Voxel GI")
-			Inc.initGI("voxelsLight");
 			Inc.initGI("voxels_diffuse");
 			Inc.initGI("voxels_specular");
 			#else
@@ -343,11 +339,8 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if rp_ssrefr
+		#if (rp_ssrefr || arm_voxelgi_refract)
 		{
-			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
-			path.loadShader("shader_datas/copy_pass/copy_pass");
-
 			var t = new RenderTargetRaw();
 			t.name = "gbuffer_refraction";
 			t.width = 0;
@@ -357,24 +350,30 @@ class RenderPathDeferred {
 			t.format = "RGBA64";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
+		}
+		#end
 
-			// holds colors before refractive meshes are drawn
-			var t = new RenderTargetRaw();
-			t.name = "refr";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = Inc.getHdrFormat();
-			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
+		#if rp_ssrefr
+		{
+			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
+			path.loadShader("shader_datas/copy_pass/copy_pass");
 
-			// holds background depth
 			var t = new RenderTargetRaw();
 			t.name = "gbufferD1";
 			t.width = 0;
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			t.format = "R32";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+
+			// holds background color
+			var t = new RenderTargetRaw();
+			t.name = "refr";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
@@ -466,7 +465,7 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if rp_ssrefr
+		#if (rp_ssrefr || arm_voxelgi_refract)
 		{
 			path.setTarget("gbuffer_refraction");
 			path.clearTarget(0xffffff00);
@@ -580,9 +579,6 @@ class RenderPathDeferred {
 
 			if (iron.RenderPath.pre_clear == true)
 			{
-				#if (rp_voxels == "Voxel GI")
-				path.clearImage("voxelsLight", 0x00000000);
-				#end
 				path.clearImage("voxels", 0x00000000);
 				path.clearImage("voxelsOut", 0x00000000);
 				path.clearImage("voxelsOutB", 0x00000000);
@@ -594,26 +590,30 @@ class RenderPathDeferred {
 			}
 			else
 			{
-				#if (rp_voxels == "Voxel GI")
-				path.clearImage("voxelsLight", 0x00000000);
-				#end
 				path.clearImage("voxels", 0x00000000);
 				Inc.computeVoxelsOffsetPrev();
 			}
 
-			path.setTarget("");
 			var res = iron.RenderPath.getVoxelRes();
+			path.setTarget("");
 			path.setViewport(res, res);
+
+			#if rp_shadowmap
+			{
+				#if arm_shadowmap_atlas
+				Inc.bindShadowMapAtlas();
+				#else
+				Inc.bindShadowMap();
+				#end
+			}
+			#end
 
 			path.bindTarget("voxels", "voxels");
 			path.drawMeshes("voxel");
-			#if (rp_voxels == "Voxel GI")
-			Inc.computeVoxelsLight();
-			#end
 
 			Inc.computeVoxelsTemporal();
 
-			#if (arm_voxelgi_shadows || rp_voxels == "Voxel GI")
+			#if (rp_voxels == "Voxel GI")
 			Inc.computeVoxelsSDF();
 			#end
 
@@ -624,9 +624,6 @@ class RenderPathDeferred {
 				path.clearImage("voxels_specular", 0x00000000);
 				#else
 				path.clearImage("voxels_ao", 0x00000000);
-				#end
-				#if arm_voxelgi_shadows
-				path.clearImage("voxels_shadows", 0x00000000);
 				#end
 			}
 		}
@@ -681,10 +678,6 @@ class RenderPathDeferred {
 			Inc.resolveSpecular();
 			path.bindTarget("voxels_diffuse", "voxels_diffuse");
 			path.bindTarget("voxels_specular", "voxels_specular");
-			#end
-			#if arm_voxelgi_shadows
-			Inc.resolveShadows();
-			path.bindTarget("voxels_shadows", "voxels_shadows");
 			#end
 		}
 		#end
@@ -825,29 +818,51 @@ class RenderPathDeferred {
 			if (armory.data.Config.raw.rp_ssrefr != false)
 			{
 				//save depth
+				#if (!kha_opengl)
+				path.setDepthFrom("gbuffer0", "gbuffer1"); // Unbind depth so we can read it
+				path.depthToRenderTarget.set("main", path.renderTargets.get("tex")); // tex and gbuffer0 share a depth buffer
+				#end
+
+				// Copy the depth buffer to the depth texture
 				path.setTarget("gbufferD1");
 				path.bindTarget("_main", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
-				//save render
+				#if (!kha_opengl)
+				path.setDepthFrom("gbuffer0", "tex"); // Re-bind depth
+				path.depthToRenderTarget.set("main", path.renderTargets.get("gbuffer0"));
+				#end
+
+				//save color
 				path.setTarget("refr");
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
-				path.setTarget("tex", ["gbuffer0", "gbuffer_refraction"]);
+				path.setTarget("gbuffer0", ["gbuffer1", "gbuffer_refraction"]);
+
 				#if (rp_voxels != "Off")
 				path.bindTarget("voxelsOut", "voxels");
 				path.bindTarget("voxelsSDF", "voxelsSDF");
 				#end
 
+				#if rp_shadowmap
+				{
+					#if arm_shadowmap_atlas
+					Inc.bindShadowMapAtlas();
+					#else
+					Inc.bindShadowMap();
+					#end
+				}
+				#end
+
 				path.drawMeshes("refraction");
 
 				path.setTarget("tex");
-				path.bindTarget("refr", "tex1");
-				path.bindTarget("tex", "tex");
-				path.bindTarget("_main", "gbufferD");
+				path.bindTarget("refr", "tex");
 				path.bindTarget("gbufferD1", "gbufferD1");
 				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("gbuffer1", "tex1");
+				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 
 				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
