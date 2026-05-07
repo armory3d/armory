@@ -631,7 +631,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.add_uniform('vec2 smSizeUniform', '_shadowMapSize', included=True)
 
     frag.write('vec3 albedo = surfaceAlbedo(basecol, metallic);')
-    frag.write('vec3 f0 = surfaceF0(basecol, metallic);')
+    frag.write('vec3 f0 = surfaceF0(basecol, metallic, specular);')
 
     if '_Brdf' in wrd.world_defs:
         frag.add_uniform('sampler2D senvmapBrdf', link='$brdf.png')
@@ -754,7 +754,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.write('svisibility *= traceShadow(wposition, n, voxels, voxelsSDF, sunDir, clipmaps, texCoord);')
             else:
                 frag.write('svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;')
-        frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular) * sunCol * svisibility;')
+        frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH)) * sunCol * svisibility;')
         # sun
 
     if '_SinglePoint' in wrd.world_defs:
