@@ -663,10 +663,10 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_Brdf' in wrd.world_defs:
         frag.write('envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y);')
     if '_Rad' in wrd.world_defs:
-        frag.write('envl += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);')
+        frag.write('envl += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5;')
     elif '_EnvCol' in wrd.world_defs:
         frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
-        frag.write('envl += backgroundCol * (f0 * envBRDF.x + envBRDF.y);')
+        frag.write('envl += backgroundCol * (f0 * envBRDF.x + envBRDF.y) * 1.5;')
 
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
     frag.write('envl *= envmapStrength * occlusion;')
