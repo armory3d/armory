@@ -168,7 +168,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, p0, p1, p2, p3) / PI;
 		ltcspec *= textureLod(sltcMag, tuv, 0.0).r;
 		float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), p0, p1, p2, p3) / PI;
-		direct = (albedo * ltcdiff + ltcspec * f0) * lightCol;
+		direct = (albedo * ltcdiff + ltcspec * spec * f0) * lightCol;
 
 		#ifdef _ShadowMap
 			if (receiveShadow && !isArea) {
@@ -203,11 +203,11 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	}
 	else {
 		direct = lambertDiffuseBRDF(albedo, dotNL) +
-				 specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH);
+				 specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) * spec;
 	}
 	#else
 	direct = lambertDiffuseBRDF(albedo, dotNL) +
-				  specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH);
+				  specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) * spec;
 	#endif
 	direct *= attenuate(distance(p, lp));
 	direct *= lightCol;

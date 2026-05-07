@@ -217,7 +217,7 @@ void main() {
 	vec4 g1 = textureLod(gbuffer1, texCoord, 0.0); // Basecolor.rgb, spec/occ
 	vec2 occspec = unpackFloat2(g1.a);
 	vec3 albedo = surfaceAlbedo(g1.rgb, metallic); // g1.rgb - basecolor
-	vec3 f0 = surfaceF0(g1.rgb, metallic, occspec.y);
+	vec3 f0 = surfaceF0(g1.rgb, metallic);
 
 	float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 	vec3 p = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);
@@ -358,7 +358,7 @@ void main() {
 	float sdotNL = max(0.0, dot(n, sunDir));
 	float svisibility = 1.0;
 	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) +
-	               specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH);
+	               specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
 
 	#ifdef _ShadowMap
 		#ifdef _CSM
