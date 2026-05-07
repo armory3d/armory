@@ -86,8 +86,8 @@ vec3 surfaceAlbedo(const vec3 baseColor, const float metalness) {
 	return mix(baseColor, vec3(0.0), metalness);
 }
 
-vec3 surfaceF0(const vec3 baseColor, const float metalness, const float specular) {
-	return mix(vec3(0.08 * specular), baseColor, metalness);
+vec3 surfaceF0(const vec3 baseColor, const float metalness) {
+	return mix(vec3(0.04), baseColor, metalness);
 }
 
 float getMipFromRoughness(const float roughness, const float numMipmaps) {

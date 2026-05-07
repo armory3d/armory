@@ -631,7 +631,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.add_uniform('vec2 smSizeUniform', '_shadowMapSize', included=True)
 
     frag.write('vec3 albedo = surfaceAlbedo(basecol, metallic);')
-    frag.write('vec3 f0 = surfaceF0(basecol, metallic, specular);')
+    frag.write('vec3 f0 = surfaceF0(basecol, metallic);')
 
     if '_Brdf' in wrd.world_defs:
         frag.add_uniform('sampler2D senvmapBrdf', link='$brdf.png')
@@ -661,12 +661,12 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag.write('envl *= albedo;')
 
     if '_Brdf' in wrd.world_defs:
-        frag.write('envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y);')
+        frag.write('envl.rgb *= max(1.0 - (f0 * envBRDF.x + envBRDF.y), 0.0);')
     if '_Rad' in wrd.world_defs:
-        frag.write('envl += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);')
+        frag.write('envl += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5;')
     elif '_EnvCol' in wrd.world_defs:
         frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
-        frag.write('envl += backgroundCol * (f0 * envBRDF.x + envBRDF.y);')
+        frag.write('envl += backgroundCol * (f0 * envBRDF.x + envBRDF.y) * 1.5;')
 
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
     frag.write('envl *= envmapStrength * occlusion;')
@@ -754,7 +754,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.write('svisibility *= traceShadow(wposition, n, voxels, voxelsSDF, sunDir, clipmaps, texCoord);')
             else:
                 frag.write('svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;')
-        frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH)) * sunCol * svisibility;')
+        frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular) * sunCol * svisibility;')
         # sun
 
     if '_SinglePoint' in wrd.world_defs:

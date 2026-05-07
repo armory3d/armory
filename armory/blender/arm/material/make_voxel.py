@@ -207,7 +207,7 @@ def make_gi(context_id):
     frag.write('vec3 direction_weights = abs(N);')
 
     frag.write('vec3 albedo = surfaceAlbedo(basecol, metallic);')
-    frag.write('vec3 f0 = surfaceF0(basecol, metallic, specular);')
+    frag.write('vec3 f0 = surfaceF0(basecol, metallic);')
 
     frag.add_uniform('vec3 eye', '_cameraPosition')
     frag.write('vec3 eyeDir = eye - wposition;')

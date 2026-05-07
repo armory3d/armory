@@ -203,7 +203,7 @@ void main() {
 	vec4 g1 = textureLod(gbuffer1, texCoord, 0.0); // Basecolor.rgb, spec/occ
 	vec2 occspec = unpackFloat2(g1.a);
 	vec3 albedo = surfaceAlbedo(g1.rgb, metallic); // g1.rgb - basecolor
-	vec3 f0 = surfaceF0(g1.rgb, metallic, occspec.y);
+	vec3 f0 = surfaceF0(g1.rgb, metallic);
 
 	float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 	vec3 p = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);
@@ -262,10 +262,10 @@ void main() {
 #endif
 
 #ifdef _Rad // Indirect specular
-	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
+	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5;
 #else
 	#ifdef _EnvCol
-	envl.rgb += backgroundCol * (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
+	envl.rgb += backgroundCol * (f0 * envBRDF.x + envBRDF.y) * 1.5;
 	#endif
 #endif
 
