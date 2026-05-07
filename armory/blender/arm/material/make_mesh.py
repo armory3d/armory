@@ -661,7 +661,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag.write('envl *= albedo;')
 
     if '_Brdf' in wrd.world_defs:
-        frag.write('envl.rgb *= max(1.0 - (f0 * envBRDF.x + envBRDF.y), 0.0);')
+        frag.write('envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y);')
     if '_Rad' in wrd.world_defs:
         frag.write('envl += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5;')
     elif '_EnvCol' in wrd.world_defs:
