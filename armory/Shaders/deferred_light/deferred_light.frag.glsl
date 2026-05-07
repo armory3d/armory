@@ -281,10 +281,10 @@ void main() {
 
 #ifndef _LTC
 #ifdef _Rad // Indirect specular
-	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
+	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5;
 #else
 	#ifdef _EnvCol
-	envl.rgb += backgroundCol * (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
+	envl.rgb += backgroundCol * (f0 * envBRDF.x + envBRDF.y) * 1.5;
 	#endif
 #endif
 #endif
