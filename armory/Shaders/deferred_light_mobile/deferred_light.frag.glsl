@@ -176,7 +176,7 @@ void main() {
 	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5 * occspec.y;
 #else
 	#ifdef _EnvCol
-	envl.rgb += backgroundCol * f0;
+	envl.rgb += backgroundCol * surfaceF0(g1.rgb, metallic); // f0
 	#endif
 #endif
 
