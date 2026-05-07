@@ -29,7 +29,6 @@ float g2_approx(const float NdotL, const float NdotV, const float alpha)
 
 float d_ggx(const float nh, const float a) {
 	float a2 = a * a;
-	a2 = max(a2, 0.0001);
 	float denom = nh * nh * (a2 - 1.0) + 1.0;
 	denom = max(denom * denom, 0.00006103515625 /* 2^-14 = smallest possible half float value, prevent div by zero */);
 	return a2 * (1.0 / 3.1415926535) / denom;
