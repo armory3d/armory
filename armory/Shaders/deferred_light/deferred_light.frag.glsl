@@ -45,10 +45,8 @@ uniform float envmapStrength;
 #ifdef _Irr
 uniform vec4 shirr[7];
 #endif
-#ifndef _LTC
 #ifdef _Brdf
 uniform sampler2D senvmapBrdf;
-#endif
 #endif
 #ifdef _Rad
 uniform sampler2D senvmapRadiance;
@@ -156,10 +154,8 @@ uniform vec3 sunDir;
 uniform vec3 sunCol;
 	#ifdef _ShadowMap
 	#ifdef _ShadowMapAtlas
-	#ifndef _LTC
 	#ifndef _SingleAtlas
 	uniform sampler2DShadow shadowMapAtlasSun;
-	#endif
 	#else
 	#define shadowMapAtlasSun shadowMapAtlas
 	#endif
@@ -188,11 +184,9 @@ uniform vec3 pointCol;
 	#endif
 #endif
 
-#ifndef _LTC
 #ifdef _LightClouds
 uniform sampler2D texClouds;
 uniform float time;
-#endif
 #endif
 
 #include "std/light.glsl"
@@ -232,10 +226,8 @@ void main() {
 	occspec.x = mix(1.0, occspec.x, dotNV); // AO Fresnel
 #endif
 
-#ifndef _LTC
 #ifdef _Brdf
 	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
-#endif
 #endif
 
 	// Envmap
@@ -273,20 +265,16 @@ void main() {
 
 	envl.rgb *= albedo;
 
-#ifndef _LTC
 #ifdef _Brdf
 	envl.rgb *= 1.0 - (f0 * envBRDF.x + envBRDF.y); //LV: We should take refracted light into account
 #endif
-#endif
 
-#ifndef _LTC
 #ifdef _Rad // Indirect specular
-	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y); //LV: Removed "1.5 * occspec.y". Specular should be weighted only by FV LUT
+	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5;
 #else
 	#ifdef _EnvCol
-	envl.rgb += backgroundCol * (f0 * envBRDF.x + envBRDF.y); //LV: Eh, what's the point of weighting it only by F0?
+	envl.rgb += backgroundCol * (f0 * envBRDF.x + envBRDF.y) * 1.5;
 	#endif
-#endif
 #endif
 
 	envl.rgb *= envmapStrength * occspec.x;
@@ -394,9 +382,9 @@ void main() {
 	#endif
 
 #ifndef _LTC
-	#ifdef _VoxelShadow
-	svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
-	#endif
+#ifdef _VoxelShadow
+svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
+#endif
 #endif
 
 	#ifdef _SSRS
@@ -406,10 +394,8 @@ void main() {
 	svisibility *= traceShadowSS(sunDir, p, gbufferD, invVP, eye);
 	#endif
 
-#ifndef _LTC
-	#ifdef _LightClouds
-	svisibility *= textureLod(texClouds, vec2(p.xy / 100.0 + time / 80.0), 0.0).r * dot(n, vec3(0,0,1));
-	#endif
+#ifdef _LightClouds
+svisibility *= textureLod(texClouds, vec2(p.xy / 100.0 + time / 80.0), 0.0).r * dot(n, vec3(0,0,1));
 #endif
 
 	#ifdef _MicroShadowing
