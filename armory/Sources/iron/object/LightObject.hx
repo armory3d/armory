@@ -416,8 +416,6 @@ class LightObject extends Object {
 
 		#if arm_spot // Point lamps first
 		lights.sort(function(a, b): Int {
-			if (a.data.raw.type == "point" && b.data.raw.type != "point") return -1;
-			if (a.data.raw.type != "point" && b.data.raw.type == "point") return 1;
 			if (a.data.raw.type == b.data.raw.type) return 0;
 			return a.data.raw.type > b.data.raw.type ? 1 : -1;
 		});
@@ -544,14 +542,14 @@ class LightObject extends Object {
 			lightsArray[i * 12    ] = l.transform.worldx();
 			lightsArray[i * 12 + 1] = l.transform.worldy();
 			lightsArray[i * 12 + 2] = l.transform.worldz();
-			lightsArray[i * 12 + 3] = 0.0;
+			lightsArray[i * 12 + 3] = 0.0; // padding or spot scale x
 
 			// light color
 			var f = l.data.raw.strength;
 			lightsArray[i * 12 + 4] = l.data.raw.color[0] * f;
 			lightsArray[i * 12 + 5] = l.data.raw.color[1] * f;
 			lightsArray[i * 12 + 6] = l.data.raw.color[2] * f;
-			lightsArray[i * 12 + 7] = 0.0;
+			lightsArray[i * 12 + 7] = 0.0; // padding or spot scale y
 
 			// other data
 			lightsArray[i * 12 + 8] = l.data.raw.shadows_bias; // bias
@@ -576,7 +574,7 @@ class LightObject extends Object {
 				lightsArraySpot[i * 8 + 4] = right.x;
 				lightsArraySpot[i * 8 + 5] = right.y;
 				lightsArraySpot[i * 8 + 6] = right.z;
-				lightsArraySpot[i * 8 + 7] = 0.0;
+				lightsArraySpot[i * 8 + 7] = 0.0; // padding
 
 				if (isSpot) {
 					var scale = l.transform.scale;
