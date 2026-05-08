@@ -367,9 +367,9 @@ void main() {
 		#endif
 	#endif
 
-#ifdef _VoxelShadow
-svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
-#endif
+	#ifdef _VoxelShadow
+	svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
+	#endif
 
 	#ifdef _SSRS
 	// vec2 coords = getProjectedCoord(hitCoord);
@@ -378,9 +378,9 @@ svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
 	svisibility *= traceShadowSS(sunDir, p, gbufferD, invVP, eye);
 	#endif
 
-#ifdef _LightClouds
-svisibility *= textureLod(texClouds, vec2(p.xy / 100.0 + time / 80.0), 0.0).r * dot(n, vec3(0,0,1));
-#endif
+	#ifdef _LightClouds
+	svisibility *= textureLod(texClouds, vec2(p.xy / 100.0 + time / 80.0), 0.0).r * dot(n, vec3(0,0,1));
+	#endif
 
 	#ifdef _MicroShadowing
 	// See https://advances.realtimerendering.com/other/2016/naughty_dog/NaughtyDog_TechArt_Final.pdf
