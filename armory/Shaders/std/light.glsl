@@ -40,11 +40,7 @@
 		uniform sampler2DShadow shadowMapAtlasPoint;
 		#endif
 		#else
-		#if defined(KHA_HTML5) && defined(_LTC)
-		uniform samplerCubeShadow shadowMapPoint[1];
-		#else
 		uniform samplerCubeShadow shadowMapPoint[4];
-		#endif
 		#endif
 		#ifdef _Spot
 			#ifdef _ShadowMapAtlas
@@ -52,11 +48,7 @@
 			uniform sampler2DShadow shadowMapAtlasSpot;
 			#endif
 			#else
-			#if defined(KHA_HTML5) && defined(_LTC)
-			uniform sampler2DShadow shadowMapSpot[1];
-			#else
 			uniform sampler2DShadow shadowMapSpot[4];
-			#endif
 			#endif
 			uniform mat4 LWVPSpotArray[maxLightsCluster];
 		#endif
@@ -82,12 +74,6 @@ uniform sampler2D sltcMag;
 	#endif
 	#endif
 #endif
-#endif
-
-#if defined(KHA_HTML5) && defined(_LTC)
-#define MAX_SHADOW_SAMPLERS 1
-#else
-#define MAX_SHADOW_SAMPLERS 4
 #endif
 
 vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, const vec3 lp, const vec3 lightCol,
@@ -280,11 +266,9 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 				);
 				#else
 					 if (index == 0) direct *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
-					 #if MAX_SHADOW_SAMPLERS > 1
 				else if (index == 1) direct *= PCFCube(shadowMapPoint[1], ld, -l, bias, lightProj, n);
 				else if (index == 2) direct *= PCFCube(shadowMapPoint[2], ld, -l, bias, lightProj, n);
 				else if (index == 3) direct *= PCFCube(shadowMapPoint[3], ld, -l, bias, lightProj, n);
-					 #endif
 				#endif
 			#endif
 		}
