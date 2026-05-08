@@ -62,23 +62,28 @@ def write(vert: shader.Shader, frag: shader.Shader):
     frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
     frag.write('int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
 
+    frag.write('direct += sampleLight(')
+    frag.write('    wposition,')
+    frag.write('    n,')
+    frag.write('    vVec,')
+    frag.write('    dotNV,')
+    frag.write('    lightsArray[li * 3].xyz,') # lp
+    frag.write('    lightsArray[li * 3 + 1].xyz,') # lightCol
+    frag.write('    albedo,')
+    frag.write('    roughness,')
+    frag.write('    specular,')
+    frag.write('    f0')
+
     if is_shadows:
-        # Pass i (cluster index) for proper shadow atlas lookup (index * 6 for points)
-        # Disable shadows for area lights (isSpot check)
-        if '_Spot' in wrd.world_defs:
-            frag.write('\tbool isSpot = (lightsArray[li * 3 + 2].y != 0.0);')
-            frag.write('\tdirect += sampleLight(')
-            frag.write('wposition, n, vVec, dotNV, lightsArray[li * 3].xyz, lightsArray[li * 3 + 1].xyz, albedo, roughness, specular, f0')
-            frag.write(', i, lightsArray[li * 3 + 2].x, (lightsArray[li * 3 + 2].z != 0.0 && (i < numPoints || isSpot))')
-            frag.write(', isSpot, lightsArray[li * 3 + 2].y, lightsArraySpot[li * 2].w, lightsArraySpot[li * 2].xyz, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w), lightsArraySpot[li * 2 + 1].xyz')
-        else:
-            frag.write('\tdirect += sampleLight(')
-            frag.write('wposition, n, vVec, dotNV, lightsArray[li * 3].xyz, lightsArray[li * 3 + 1].xyz, albedo, roughness, specular, f0')
-            frag.write(', i, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0')
-    else:
-        frag.write('\tdirect += sampleLight(')
-        frag.write('wposition, n, vVec, dotNV, lightsArray[li * 3].xyz, lightsArray[li * 3 + 1].xyz, albedo, roughness, specular, f0')
-    
+        frag.write('\t, li, lightsArray[li * 3 + 2].x, lightsArray[li * 3 + 2].z != 0.0') # bias
+    if '_Spot' in wrd.world_defs:
+        frag.write('\t, lightsArray[li * 3 + 2].y != 0.0')
+        frag.write('\t, lightsArray[li * 3 + 2].y') # spot size (cutoff)
+        frag.write('\t, lightsArraySpot[li * 2].w') # spot blend (exponent)
+        frag.write('\t, lightsArraySpot[li * 2].xyz') # spotDir
+        frag.write('\t, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w)') # scale
+        frag.write('\t, lightsArraySpot[li * 2 + 1].xyz') # right
+
     if '_VoxelShadow' in wrd.world_defs:
         frag.add_uniform("sampler2D voxels_shadows", top=True)
         frag.write(', texCoord')
