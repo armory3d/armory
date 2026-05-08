@@ -348,58 +348,58 @@ class Data {
 	}
 
 	public static function getMeshRawByName(datas: Array<TMeshData>, name: String): TMeshData {
-		if (name == "" && datas.length > 0) return datas[0];
+		if (name == "") return datas[0];
 		for (dat in datas) if (dat.name == name) return dat;
 		return null;
 	}
 
 	public static function getLightRawByName(datas: Array<TLightData>, name: String): TLightData {
-		if (name == "" && datas.length > 0) return datas[0];
+		if (name == "") return datas[0];
 		for (dat in datas) if (dat.name == name) return dat;
 		return null;
 	}
 
 	#if rp_probes
 	public static function getProbeRawByName(datas: Array<TProbeData>, name: String): TProbeData {
-		if (name == "" && datas.length > 0) return datas[0];
+		if (name == "") return datas[0];
 		for (dat in datas) if (dat.name == name) return dat;
 		return null;
 	}
 	#end
 
 	public static function getCameraRawByName(datas: Array<TCameraData>, name: String): TCameraData {
-		if (name == "" && datas.length > 0) return datas[0];
+		if (name == "") return datas[0];
 		for (dat in datas) if (dat.name == name) return dat;
 		return null;
 	}
 
 	public static function getMaterialRawByName(datas: Array<TMaterialData>, name: String): TMaterialData {
-		if (name == "" && datas.length > 0) return datas[0];
+		if (name == "") return datas[0];
 		for (dat in datas) if (dat.name == name) return dat;
 		return null;
 	}
 
 	public static function getParticleRawByName(datas: Array<TParticleData>, name: String): TParticleData {
-		if (name == "" && datas.length > 0) return datas[0];
+		if (name == "") return datas[0];
 		for (dat in datas) if (dat.name == name) return dat;
 		return null;
 	}
 
 	public static function getWorldRawByName(datas: Array<TWorldData>, name: String): TWorldData {
-		if (name == "" && datas.length > 0) return datas[0];
+		if (name == "") return datas[0];
 		for (dat in datas) if (dat.name == name) return dat;
 		return null;
 	}
 
 	public static function getShaderRawByName(datas: Array<TShaderData>, name: String): TShaderData {
-		if (name == "" && datas.length > 0) return datas[0];
+		if (name == "") return datas[0];
 		for (dat in datas) if (dat.name == name) return dat;
 		return null;
 	}
 
 	#if arm_audio
 	public static function getSpeakerRawByName(datas: Array<TSpeakerData>, name: String): TSpeakerData {
-		if (name == "" && datas.length > 0) return datas[0];
+		if (name == "") return datas[0];
 		for (dat in datas) if (dat.name == name) return dat;
 		return null;
 	}
