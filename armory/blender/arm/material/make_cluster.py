@@ -83,7 +83,6 @@ def write(vert: shader.Shader, frag: shader.Shader):
         frag.write('\t, lightsArraySpot[li * 2].xyz') # spotDir
         frag.write('\t, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w)') # scale
         frag.write('\t, lightsArraySpot[li * 2 + 1].xyz') # right
-
     if '_VoxelShadow' in wrd.world_defs:
         frag.add_uniform("sampler2D voxels_shadows", top=True)
         frag.write(', texCoord')
