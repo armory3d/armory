@@ -22,13 +22,10 @@ uniform sampler2D gbuffer1;
 #ifdef _gbuffer2
 	uniform sampler2D gbuffer2;
 #endif
-#ifndef _LTC
 #ifdef _EmissionShaded
 	uniform sampler2D gbufferEmission;
 #endif
-#endif
 
-#ifndef _LTC
 #ifdef _VoxelGI
 uniform sampler2D voxels_diffuse;
 uniform sampler2D voxels_specular;
@@ -38,7 +35,6 @@ uniform sampler2D voxels_ao;
 #endif
 #ifdef _VoxelShadow
 uniform sampler2D voxels_shadows;
-#endif
 #endif
 
 uniform float envmapStrength;
@@ -56,10 +52,8 @@ uniform int envmapNumMipmaps;
 uniform vec3 backgroundCol;
 #endif
 
-#ifndef _LTC
 #ifdef _SSAO
 uniform sampler2D ssaotex;
-#endif
 #endif
 
 #ifdef _SSS
@@ -156,8 +150,6 @@ uniform vec3 sunCol;
 	#ifdef _ShadowMapAtlas
 	#ifndef _SingleAtlas
 	uniform sampler2DShadow shadowMapAtlasSun;
-	#else
-	#define shadowMapAtlasSun shadowMapAtlas
 	#endif
 	#else
 	uniform sampler2DShadow shadowMap;
@@ -279,18 +271,14 @@ void main() {
 
 	envl.rgb *= envmapStrength * occspec.x;
 
-#ifndef _LTC
 #ifdef _VoxelGI
 	fragColor.rgb = textureLod(voxels_diffuse, texCoord, 0.0).rgb * albedo * voxelgiDiff;
 	if(roughness < 1.0 && occspec.y > 0.0)
 		fragColor.rgb += textureLod(voxels_specular, texCoord, 0.0).rgb * occspec.y * voxelgiRefl;
 #endif
-#endif
 
-#ifndef _LTC
 #ifdef _VoxelAOvar
 	envl.rgb *= textureLod(voxels_ao, texCoord, 0.0).r;
-#endif
 #endif
 
 #ifndef _VoxelGI
@@ -326,7 +314,6 @@ void main() {
 		return;
 	}
 #endif
-#ifndef _LTC
 #ifdef _EmissionShaded
 	#ifdef _EmissionShadeless
 	else {
@@ -336,7 +323,6 @@ void main() {
 	#ifdef _EmissionShadeless
 	}
 	#endif
-#endif
 #endif
 
 #ifdef _Sun
@@ -381,10 +367,8 @@ void main() {
 		#endif
 	#endif
 
-#ifndef _LTC
 #ifdef _VoxelShadow
 svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
-#endif
 #endif
 
 	#ifdef _SSRS
