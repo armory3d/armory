@@ -56,7 +56,6 @@ vec2 sampleCube(vec3 dir, out int faceIndex) {
 #endif
 
 float PCF(sampler2DShadow shadowMap, const vec2 uv, const float compare, const vec2 smSize) {
-	#ifdef _PCF
 	float result = textureLod(shadowMap, vec3(uv + (vec2(-1.0, -1.0) / smSize), compare), 0.0);
 	result += textureLod(shadowMap, vec3(uv + (vec2(-1.0, 0.0) / smSize), compare), 0.0);
 	result += textureLod(shadowMap, vec3(uv + (vec2(-1.0, 1.0) / smSize), compare), 0.0);
@@ -67,9 +66,6 @@ float PCF(sampler2DShadow shadowMap, const vec2 uv, const float compare, const v
 	result += textureLod(shadowMap, vec3(uv + (vec2(1.0, 0.0) / smSize), compare), 0.0);
 	result += textureLod(shadowMap, vec3(uv + (vec2(1.0, 1.0) / smSize), compare), 0.0);
 	return result / 9.0;
-	#else
-	return textureLod(shadowMap, vec3(uv, compare), 0.0);
-	#endif
 }
 
 float lpToDepth(vec3 lp, const vec2 lightProj) {
@@ -87,7 +83,6 @@ float PCFCube(samplerCubeShadow shadowMapCube, const vec3 lp, vec3 ml, const flo
 	#ifdef _InvY
 	ml.y = -ml.y;
 	#endif
-	#ifdef _PCF
 	float result = texture(shadowMapCube, vec4(ml, compare));
 	result += texture(shadowMapCube, vec4(ml + vec3(s, s, s), compare));
 	result += texture(shadowMapCube, vec4(ml + vec3(-s, s, s), compare));
@@ -98,9 +93,6 @@ float PCFCube(samplerCubeShadow shadowMapCube, const vec3 lp, vec3 ml, const flo
 	result += texture(shadowMapCube, vec4(ml + vec3(-s, s, -s), compare));
 	result += texture(shadowMapCube, vec4(ml + vec3(-s, -s, -s), compare));
 	return result / 9.0;
-	#else
-	return texture(shadowMapCube, vec4(ml, compare));
-	#endif
 }
 
 #ifdef _ShadowMapAtlas
@@ -214,7 +206,6 @@ float PCFFakeCube(sampler2DShadow shadowMap, const vec3 lp, vec3 ml, const float
 	#endif
 
 	float result = textureLod(shadowMap, vec3(uvtiled, compare), 0.0);
-	#ifdef _PCF
 	// soft shadowing
 	int newFaceIndex = 0;
 	uvtiled = transformOffsetedUV(faceIndex, newFaceIndex, vec2(uv + (vec2(-1.0, 0.0) / smSize)));
@@ -282,9 +273,6 @@ float PCFFakeCube(sampler2DShadow shadowMap, const vec3 lp, vec3 ml, const float
 	result += textureLod(shadowMap, vec3(uvtiled, compare), 0.0);
 
 	return result / 9.0;
-	#else
-	return result;
-	#endif
 }
 #endif
 
