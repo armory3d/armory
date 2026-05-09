@@ -299,21 +299,25 @@ class Scene {
 		return root.children.length > 0 ? root.children[0].getTrait(c) : null;
 	}
 
+	// TODO: solve name referencing for linked objects
 	public function getMesh(name: String): MeshObject {
 		for (m in meshes) if (m.name == name) return m;
 		return null;
 	}
 
+	// TODO: solve name referencing for linked objects
 	public function getLight(name: String): LightObject {
 		for (l in lights) if (l.name == name) return l;
 		return null;
 	}
 
+	// TODO: solve name referencing for linked objects
 	public function getCamera(name: String): CameraObject {
 		for (c in cameras) if (c.name == name) return c;
 		return null;
 	}
 
+	// TODO: solve name referencing for linked objects
 	#if arm_audio
 	public function getSpeaker(name: String): SpeakerObject {
 		for (s in speakers) if (s.name == name) return s;
@@ -321,11 +325,13 @@ class Scene {
 	}
 	#end
 
+	// TODO: solve name referencing for linked objects
 	public function getEmpty(name: String): Object {
 		for (e in empties) if (e.name == name) return e;
 		return null;
 	}
 
+	// TODO: solve name referencing for linked objects
 	public function getGroup(name: String): Array<Object> {
 		if (groups == null) groups = new Map();
 		var g = groups.get(name);
@@ -494,6 +500,7 @@ class Scene {
 		spawnObjectTree(obj, parent, null, done);
 	}
 
+	// TODO: solve name referencing for linked objects
 	public function parseObject(sceneName: String, objectName: String, parent: Object, done: Object->Void) {
 		Data.getSceneRaw(sceneName, function(format: TSceneFormat) {
 			var o: TObj = getRawObjectByName(format, objectName);
@@ -803,6 +810,7 @@ class Scene {
 		#end
 	}
 
+	// TODO: solve name referencing for linked objects
 	public function returnMeshObject(object_file: String, data_ref: String, sceneName: String, armature: #if arm_skin Armature #else Null<Int> #end, materials: Vector<MaterialData>, parent: Object, parentObject: TObj, o: TObj, done: Object->Void) {
 		Data.getMesh(object_file, data_ref, function(mesh: MeshData) {
 			#if arm_skin
