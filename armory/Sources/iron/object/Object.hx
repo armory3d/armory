@@ -11,6 +11,7 @@ class Object {
 	public var raw: TObj = null;
 
 	public var name: String = "";
+	public var filename: String = "";
 	public var transform: Transform;
 	public var constraints: Array<Constraint> = null;
 	public var traits: Array<Trait> = [];

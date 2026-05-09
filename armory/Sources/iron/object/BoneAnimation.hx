@@ -101,14 +101,23 @@ class BoneAnimation extends Animation {
 		}
 		ar.push(o);
 	}
-	
+
 	public function removeBoneChild(bone: String, o: Object) {
 		if (boneChildren != null) {
 			var ar = boneChildren.get(bone);
 			if (ar != null) ar.remove(o);
 		}
 	}
- 
+
+	function getName(n: String): String {
+		var fn: String = n; // fn -> final name
+		if (fn != "" && object != null && object.filename != "") {
+			var sufix = "_" + object.filename;
+			if (fn.indexOf(sufix) == -1) fn += sufix;
+		}
+		return fn;
+	}
+
 	@:access(iron.object.Transform)
 	function updateBoneChildren(bone: TObj, bm: Mat4) {
 		var ar = boneChildren.get(bone.name);
@@ -201,21 +210,24 @@ class BoneAnimation extends Animation {
 	}
 
 	override public function play(action = "", onComplete: Void->Void = null, blendTime = 0.2, speed = 1.0, loop = true) {
-		super.play(action, onComplete, blendTime, speed, loop);
-		if (action != "") {
-			blendTime > 0 ? setActionBlend(action) : setAction(action);
+		var actionName: String = getName(action);
+		super.play(actionName, onComplete, blendTime, speed, loop);
+		if (actionName != "") {
+			blendTime > 0 ? setActionBlend(actionName) : setAction(actionName);
 		}
 		blendFactor = 0.0;
 	}
 
 	override public function blend(action1: String, action2: String, factor: FastFloat) {
+		var actionName1: String = getName(action1);
+		var actionName2: String = getName(action2);
 		if (factor == 0.0) {
-			setAction(action1);
+			setAction(actionName1);
 			return;
 		}
-		setAction(action2);
-		setActionBlend(action1);
-		super.blend(action1, action2, factor);
+		setAction(actionName2);
+		setActionBlend(actionName1);
+		super.blend(actionName1, actionName2, factor);
 	}
 
 	override public function update(delta: FastFloat) {
