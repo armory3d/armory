@@ -523,8 +523,8 @@ class Scene {
 		for (o in children) {
 			if (o.name == name) return o;
 			else if (o.filename != "") {
-				var fn: String = name + "_" + o.filename;
-				if (o.name == fn) return o;
+				var n: String = name + "_" + o.filename;
+				if (o.name == n) return o;
 			}
 			if (o.children != null) {
 				var res = traverseObjs(o.children, name);

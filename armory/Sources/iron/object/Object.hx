@@ -112,12 +112,15 @@ class Object {
 	**/
 	public function getChild(name: String): Object {
 		if (this.name == name) return this;
-		else {
-			for (c in children) {
-				var r = c.getChild(name);
-				if (r != null) return r;
-			}
+		else if (this.filename != "") {
+			if (this.name == name + "_" + this.filename) return this;
 		}
+
+		for (c in children) {
+			var r = c.getChild(name);
+			if (r != null) return r;
+		}
+
 		return null;
 	}
 
@@ -231,7 +234,8 @@ class Object {
 
 	#if arm_skin
 	public function getParentArmature(name: String): BoneAnimation {
-		for (a in Scene.active.animations) if (a.armature != null && a.armature.name == name) return cast a;
+		var n: String = filename != "" ? name + "_" + filename : name;
+		for (a in Scene.active.animations) if (a.armature != null && a.armature.name == n) return cast a;
 		return null;
 	}
 	#else
