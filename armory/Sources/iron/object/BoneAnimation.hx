@@ -66,6 +66,15 @@ class BoneAnimation extends Animation {
 		}
 	}
 
+	override function get_action(): String {
+		var an: String = action; // an -> action name
+		if (an != "" && object != null && object.filename != "") {
+			var sufix = "_" + object.filename;
+			if (an.indexOf(sufix) != -1) an = StringTools.replace(an, sufix, "");
+		}
+		return an;
+	}
+
 	public inline function getNumBones(): Int {
 		if (skeletonBones == null) return 0;
 		return skeletonBones.length;
