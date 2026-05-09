@@ -522,6 +522,10 @@ class Scene {
 	static function traverseObjs(children: Array<TObj>, name: String): TObj {
 		for (o in children) {
 			if (o.name == name) return o;
+			else if (o.filename != "") {
+				var fn: String = name + "_" + o.filename;
+				if (o.name == fn) return o;
+			}
 			if (o.children != null) {
 				var res = traverseObjs(o.children, name);
 				if (res != null) return res;
