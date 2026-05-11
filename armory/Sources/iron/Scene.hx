@@ -299,21 +299,25 @@ class Scene {
 		return root.children.length > 0 ? root.children[0].getTrait(c) : null;
 	}
 
+	// TODO: solve name referencing for linked objects
 	public function getMesh(name: String): MeshObject {
 		for (m in meshes) if (m.name == name) return m;
 		return null;
 	}
 
+	// TODO: solve name referencing for linked objects
 	public function getLight(name: String): LightObject {
 		for (l in lights) if (l.name == name) return l;
 		return null;
 	}
 
+	// TODO: solve name referencing for linked objects
 	public function getCamera(name: String): CameraObject {
 		for (c in cameras) if (c.name == name) return c;
 		return null;
 	}
 
+	// TODO: solve name referencing for linked objects
 	#if arm_audio
 	public function getSpeaker(name: String): SpeakerObject {
 		for (s in speakers) if (s.name == name) return s;
@@ -321,11 +325,13 @@ class Scene {
 	}
 	#end
 
+	// TODO: solve name referencing for linked objects
 	public function getEmpty(name: String): Object {
 		for (e in empties) if (e.name == name) return e;
 		return null;
 	}
 
+	// TODO: solve name referencing for linked objects
 	public function getGroup(name: String): Array<Object> {
 		if (groups == null) groups = new Map();
 		var g = groups.get(name);
@@ -494,6 +500,7 @@ class Scene {
 		spawnObjectTree(obj, parent, null, done);
 	}
 
+	// TODO: solve name referencing for linked objects
 	public function parseObject(sceneName: String, objectName: String, parent: Object, done: Object->Void) {
 		Data.getSceneRaw(sceneName, function(format: TSceneFormat) {
 			var o: TObj = getRawObjectByName(format, objectName);
@@ -522,6 +529,10 @@ class Scene {
 	static function traverseObjs(children: Array<TObj>, name: String): TObj {
 		for (o in children) {
 			if (o.name == name) return o;
+			else if (o.filename != "") {
+				var n: String = name + "_" + o.filename;
+				if (o.name == n) return o;
+			}
 			if (o.children != null) {
 				var res = traverseObjs(o.children, name);
 				if (res != null) return res;
@@ -799,6 +810,7 @@ class Scene {
 		#end
 	}
 
+	// TODO: solve name referencing for linked objects
 	public function returnMeshObject(object_file: String, data_ref: String, sceneName: String, armature: #if arm_skin Armature #else Null<Int> #end, materials: Vector<MaterialData>, parent: Object, parentObject: TObj, o: TObj, done: Object->Void) {
 		Data.getMesh(object_file, data_ref, function(mesh: MeshData) {
 			#if arm_skin
@@ -862,6 +874,7 @@ class Scene {
 		if (object != null) {
 			object.raw = o;
 			object.name = o.name;
+			if (o.filename != null) object.filename = o.filename;
 			if (o.visible != null) object.visible = o.visible;
 			if (o.visible_mesh != null) object.visibleMesh = o.visible_mesh;
 			if (o.visible_shadow != null) object.visibleShadow = o.visible_shadow;
