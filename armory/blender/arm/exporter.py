@@ -931,6 +931,14 @@ class ArmoryExporter:
 
             out_object['mobile'] = bobject.arm_mobile
 
+            lib = bobject.library
+            if lib is None and bobject.data:
+                lib = bobject.data.library
+            if lib is None and bobject.override_library:
+                lib = bobject.override_library.library
+            if lib is not None:
+                out_object['filename'] = lib.name
+
             if bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
                 out_object['group_ref'] = bobject.instance_collection.name
                 self.referenced_collections.append(bobject.instance_collection)
