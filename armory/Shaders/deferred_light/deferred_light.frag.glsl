@@ -80,16 +80,6 @@ uniform mat4 invVP;
 //!uniform vec3 lightArea3;
 //!uniform sampler2D sltcMat;
 //!uniform sampler2D sltcMag;
-#ifdef _ShadowMap
-	#ifdef _SinglePoint
-	//!uniform sampler2DShadow shadowMapSpot[1];
-	//!uniform mat4 LWVPSpot[1];
-	#endif
-	#ifdef _Clusters
-	//!uniform sampler2DShadow shadowMapSpot[4];
-	//!uniform mat4 LWVPSpotArray[4];
-	#endif
-#endif
 #endif
 
 uniform vec2 cameraProj;
@@ -297,14 +287,12 @@ void main() {
 	// Show SSAO
 	// fragColor.rgb = texture(ssaotex, texCoord).rrr;
 
-#ifndef _LTC
 #ifdef _SSAO
 	// #ifdef _RTGI
 	// fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
 	// #else
 	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	// #endif
-#endif
 #endif
 
 #ifdef _EmissionShadeless
@@ -467,58 +455,26 @@ void main() {
 
 	for (int i = 0; i < min(numLights, maxLightsCluster); i++) {
 		int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);
-		#ifdef _Spot
-		bool isSpot = (lightsArray[li * 3 + 2].y != 0.0);
 		fragColor.rgb += sampleLight(
-			p,
-			n,
-			v,
-			dotNV,
+			p, n, v, dotNV,
 			lightsArray[li * 3].xyz,
 			lightsArray[li * 3 + 1].xyz,
-			albedo,
-			roughness,
-			occspec.y,
-			f0
+			albedo, roughness, occspec.y, f0
 			#ifdef _ShadowMap
-				, i, lightsArray[li * 3 + 2].x, (lightsArray[li * 3 + 2].z != 0.0 && (i < numPoints || isSpot))
+				, i, lightsArray[li * 3 + 2].x
+				#ifdef _Spot
+				, (lightsArray[li * 3 + 2].z != 0.0 && (i < numPoints || lightsArray[li * 3 + 2].y != 0.0))
+				#else
+				, lightsArray[li * 3 + 2].z != 0.0
+				#endif
 			#endif
-			, isSpot,
-			lightsArray[li * 3 + 2].y,
-			lightsArraySpot[li * 2].w,
-			lightsArraySpot[li * 2].xyz,
-			vec2(lightsArray[li * 3].w,
-			lightsArray[li * 3 + 1].w),
-			lightsArraySpot[li * 2 + 1].xyz
-			#ifdef _VoxelShadow
-			, texCoord
-			#endif
-			#ifdef _MicroShadowing
-			, occspec.x
-			#endif
-			#ifdef _SSRS
-			, gbufferD,
-			invVP,
-			eye
-			#endif
-		);
-		#else
-		fragColor.rgb += sampleLight(
-			p,
-			n,
-			v,
-			dotNV,
-			lightsArray[li * 3].xyz,
-			lightsArray[li * 3 + 1].xyz,
-			albedo,
-			roughness,
-			occspec.y,
-			f0
-			#ifdef _ShadowMap
-			,
-			i,
-			lightsArray[li * 3 + 2].x,
-			lightsArray[li * 3 + 2].z != 0.0
+			#ifdef _Spot
+			, (lightsArray[li * 3 + 2].y != 0.0) // isSpot
+			, lightsArray[li * 3 + 2].y // spotSize
+			, lightsArraySpot[li * 2].w // spotBlend
+			, lightsArraySpot[li * 2].xyz // spotDir
+			, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w) // scale
+			, lightsArraySpot[li * 2 + 1].xyz // right
 			#endif
 			#ifdef _VoxelShadow
 			, texCoord
@@ -527,12 +483,9 @@ void main() {
 			, occspec.x
 			#endif
 			#ifdef _SSRS
-			, gbufferD,
-			invVP,
-			eye
+			, gbufferD, invVP, eye
 			#endif
 		);
-		#endif
 	}
 #endif // _Clusters
 

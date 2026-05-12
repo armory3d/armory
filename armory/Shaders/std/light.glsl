@@ -62,18 +62,6 @@ uniform vec3 lightArea2;
 uniform vec3 lightArea3;
 uniform sampler2D sltcMat;
 uniform sampler2D sltcMag;
-#ifdef _ShadowMap
-#ifndef _Spot
-	#ifdef _SinglePoint
-		uniform sampler2DShadow shadowMapSpot[1];
-		uniform mat4 LWVPSpot[1];
-	#endif
-	#ifdef _Clusters
-		uniform sampler2DShadow shadowMapSpot[maxLightsCluster];
-		uniform mat4 LWVPSpotArray[maxLightsCluster];
-	#endif
-	#endif
-#endif
 #endif
 
 vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, const vec3 lp, const vec3 lightCol,
@@ -152,34 +140,6 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		ltcspec *= textureLod(sltcMag, tuv, 0.0).r;
 		float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), p0, p1, p2, p3) / PI;
 		direct = (albedo * ltcdiff + ltcspec * spec * f0) * lightCol;
-
-		#ifdef _ShadowMap
-			if (receiveShadow && !isArea) {
-				vec4 lPos;
-				#ifdef _SinglePoint
-				lPos = LWVPSpot[0] * vec4(p + n * bias * 10, 1.0);
-				direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
-				#endif
-				#ifdef _Clusters
-				lPos = LWVPSpotArray[index] * vec4(p + n * bias * 10, 1.0);
-				#ifdef _ShadowMapAtlas
-					direct *= shadowTest(
-						#ifndef _SingleAtlas
-						shadowMapAtlasSpot
-						#else
-						shadowMapAtlas
-						#endif
-						, lPos.xyz / lPos.w, bias
-					);
-				#else
-					if (index == 0) direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
-					else if (index == 1) direct *= shadowTest(shadowMapSpot[1], lPos.xyz / lPos.w, bias);
-					else if (index == 2) direct *= shadowTest(shadowMapSpot[2], lPos.xyz / lPos.w, bias);
-					else if (index == 3) direct *= shadowTest(shadowMapSpot[3], lPos.xyz / lPos.w, bias);
-				#endif
-				#endif
-			}
-		#endif
 		return direct;
 	}
 	else {

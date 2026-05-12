@@ -507,7 +507,7 @@ class LightObject extends Object {
 							bytes.set(cluster, numLights);
 							bytes.set(cluster + stride * numLights, i);
 							#if arm_spot
-							if (l.data.raw.type == "spot") {
+							if (l.data.raw.type == "spot" || l.data.raw.type == "area") {
 								// Last line
 								var numSpots = bytes.get(cluster + stride * (maxLightsCluster + 1)) + 1;
 								bytes.set(cluster + stride * (maxLightsCluster + 1), numSpots);
@@ -563,17 +563,20 @@ class LightObject extends Object {
 				lightsArray[i * 12 + 9] = isSpot ? l.data.raw.spot_size : 1.0;
 
 				var m = l.transform.world;
-				var up = isSpot ? new Vec4(m._20, m._21, m._22).normalize() : new Vec4(m._10, m._11, m._12).normalize();
-				var right = new Vec4(m._00, m._01, m._02).normalize();
+				var spotUp = lpos.set(isSpot ? m._20 : m._10, isSpot ? m._21 : m._11, isSpot ? m._22 : m._12).normalize();
+				var spotUpX = spotUp.x;
+				var spotUpY = spotUp.y;
+				var spotUpZ = spotUp.z;
+				var spotRight = lpos.set(m._00, m._01, m._02).normalize();
 
-				lightsArraySpot[i * 8    ] = up.x;
-				lightsArraySpot[i * 8 + 1] = up.y;
-				lightsArraySpot[i * 8 + 2] = up.z;
+				lightsArraySpot[i * 8    ] = spotUpX;
+				lightsArraySpot[i * 8 + 1] = spotUpY;
+				lightsArraySpot[i * 8 + 2] = spotUpZ;
 				lightsArraySpot[i * 8 + 3] = isSpot ? l.data.raw.spot_blend : -1.0;
 
-				lightsArraySpot[i * 8 + 4] = right.x;
-				lightsArraySpot[i * 8 + 5] = right.y;
-				lightsArraySpot[i * 8 + 6] = right.z;
+				lightsArraySpot[i * 8 + 4] = spotRight.x;
+				lightsArraySpot[i * 8 + 5] = spotRight.y;
+				lightsArraySpot[i * 8 + 6] = spotRight.z;
 				lightsArraySpot[i * 8 + 7] = 0.0; // padding
 
 				if (isSpot) {
@@ -585,8 +588,9 @@ class LightObject extends Object {
 					var sy: kha.FastFloat = 0.0;
 					if (l.data.raw.size != null) sx = (l.data.raw.size : kha.FastFloat) * 0.5;
 					if (l.data.raw.size_y != null) sy = (l.data.raw.size_y : kha.FastFloat) * 0.5;
-					lightsArray[i * 12 + 3] = sx * l.transform.world.getScale().x;
-					lightsArray[i * 12 + 7] = sy * l.transform.world.getScale().y;
+					var worldScale = l.transform.world.getScale();
+					lightsArray[i * 12 + 3] = sx * worldScale.x;
+					lightsArray[i * 12 + 7] = sy * worldScale.y;
 				}
 			}
 			#end
