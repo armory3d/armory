@@ -287,12 +287,14 @@ void main() {
 	// Show SSAO
 	// fragColor.rgb = texture(ssaotex, texCoord).rrr;
 
+#if !defined(_LTC) || defined(_ShadowMapAtlas)
 #ifdef _SSAO
 	// #ifdef _RTGI
 	// fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
 	// #else
 	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	// #endif
+#endif
 #endif
 
 #ifdef _EmissionShadeless
