@@ -104,6 +104,29 @@ FCURVE_TARGET_NAMES = {
 current_output = None
 
 
+class BuildExportCache:
+    """Shared cache across all scene exports in a single build.
+    Created once in make.py, passed to each ArmoryExporter instance."""
+    def __init__(self):
+        # TODO?
+        # self.collection_exports: Dict = {}
+        # self.collection_objects: Dict = {}
+        # self.collection_camera_refs: Dict = {}
+        # self.collection_mesh_refs: Dict = {}
+        # self.collection_material_refs: Dict = {}
+        self.exported_mesh_files: set = set()
+        self.exported_action_files: set = set()
+
+    def reset(self):
+        # self.collection_exports.clear()
+        # self.collection_objects.clear()
+        # self.collection_camera_refs.clear()
+        # self.collection_mesh_refs.clear()
+        # self.collection_material_refs.clear()
+        self.exported_mesh_files.clear()
+        self.exported_action_files.clear()
+
+
 class ArmoryExporter:
     """Export to Armory format.
 
@@ -124,8 +147,10 @@ class ArmoryExporter:
     # Class names of referenced traits
     import_traits: List[str] = []
 
-    def __init__(self, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene = None, depsgraph: bpy.types.Depsgraph = None):
+    def __init__(self, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene = None, depsgraph: bpy.types.Depsgraph = None, build_cache=None):
         global current_output
+
+        self.build_cache = build_cache or BuildExportCache()
 
         self.filepath = filepath
         self.scene = context.scene if scene is None else scene
@@ -178,12 +203,12 @@ class ArmoryExporter:
         ArmoryExporter.preprocess()
 
     @classmethod
-    def export_scene(cls, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene = None, depsgraph: bpy.types.Depsgraph = None) -> None:
+    def export_scene(cls, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene = None, depsgraph: bpy.types.Depsgraph = None, build_cache=None) -> None:
         """Exports the given scene to the given file path. This is the
         function that is called in make.py and the entry point of the
         exporter."""
         with arm.profiler.Profile('profile_exporter.prof', arm.utils.get_pref_or_default('profile_exporter', False)):
-            cls(context, filepath, scene, depsgraph).execute()
+            cls(context, filepath, scene, depsgraph, build_cache).execute()
 
     @classmethod
     def preprocess(cls):
@@ -1233,7 +1258,7 @@ class ArmoryExporter:
                     skelobj.animation_data.action = action
                     fp = self.get_meshes_file_path('action_' + armatureid + '_' + aname, compressed=ArmoryExporter.compress_enabled)
                     assets.add(fp)
-                    if not bdata.arm_cached or not os.path.exists(fp):
+                    if (not bdata.arm_cached or not os.path.exists(fp)) and fp not in self.build_cache.exported_action_files:
                         # Store action to use it after autobake was handled
                         original_action = action
 
@@ -1279,6 +1304,7 @@ class ArmoryExporter:
                         # Save action separately
                         action_obj = {'name': aname, 'objects': bones}
                         arm.utils.write_arm(fp, action_obj)
+                        self.build_cache.exported_action_files.add(fp)
 
                 # Use relative bone constraints
                 out_object['relative_bone_constraints'] = bdata.arm_relative_bone_constraints
@@ -1957,7 +1983,7 @@ Make sure the mesh only has tris/quads.""")
             fp = self.get_meshes_file_path('mesh_' + oid, compressed=ArmoryExporter.compress_enabled)
             assets.add(fp)
             # No export necessary
-            if bobject.data.arm_cached and os.path.exists(fp):
+            if bobject.data.arm_cached and os.path.exists(fp) or fp in self.build_cache.exported_mesh_files:
                 return
 
         # Mesh users have different modifier stack
@@ -2053,6 +2079,7 @@ Make sure the mesh only has tris/quads.""")
             out_mesh['dynamic_usage'] = bobject.data.arm_dynamic_usage
 
         self.write_mesh(bobject, fp, out_mesh)
+        self.build_cache.exported_mesh_files.add(fp)
         # print('Mesh exported in ' + str(time.time() - profile_time))
 
         if hasattr(bobject, 'evaluated_get'):
