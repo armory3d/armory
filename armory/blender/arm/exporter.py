@@ -104,16 +104,13 @@ FCURVE_TARGET_NAMES = {
 current_output = None
 
 
+#HACK: cache linked meshes and actions to prevent them from being re-exported per scene and reduce scene export time.
 class BuildExportCache:
     """Shared cache across all scene exports in a single build.
     Created once in make.py, passed to each ArmoryExporter instance."""
     def __init__(self):
         self.exported_mesh_files: set = set()
         self.exported_action_files: set = set()
-
-    def reset(self):
-        self.exported_mesh_files.clear()
-        self.exported_action_files.clear()
 
 
 class ArmoryExporter:
