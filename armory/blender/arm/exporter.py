@@ -108,21 +108,10 @@ class BuildExportCache:
     """Shared cache across all scene exports in a single build.
     Created once in make.py, passed to each ArmoryExporter instance."""
     def __init__(self):
-        # TODO?
-        # self.collection_exports: Dict = {}
-        # self.collection_objects: Dict = {}
-        # self.collection_camera_refs: Dict = {}
-        # self.collection_mesh_refs: Dict = {}
-        # self.collection_material_refs: Dict = {}
         self.exported_mesh_files: set = set()
         self.exported_action_files: set = set()
 
     def reset(self):
-        # self.collection_exports.clear()
-        # self.collection_objects.clear()
-        # self.collection_camera_refs.clear()
-        # self.collection_mesh_refs.clear()
-        # self.collection_material_refs.clear()
         self.exported_mesh_files.clear()
         self.exported_action_files.clear()
 
@@ -484,7 +473,6 @@ class ArmoryExporter:
             if btype is not NodeType.MESH and ArmoryExporter.option_mesh_only:
                 return
 
-            is_local_to_linked_scene = bobject.name in self.scene.objects and bobject.name not in self.scene.collection.children and self.scene.library
             if bobject.type == 'CAMERA' and bobject.library:
                 struct_name = bobject.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
             else:
@@ -2208,7 +2196,6 @@ Make sure the mesh only has tris/quads.""")
             # outside the collection, then instantiate the full object
             # child tree if the collection gets spawned as a whole
             if bobject.parent is None or bobject.parent.name not in collection.objects:
-                is_local_to_linked_scene = bobject.name in self.scene.objects and bobject.name not in self.scene.collection.children and self.scene.library
                 if bobject.type == 'CAMERA':
                     asset_name = bobject.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
                 else:
