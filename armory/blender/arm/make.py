@@ -251,7 +251,7 @@ def export_data(fp, sdk_path):
             continue
         for o in scene.collection.all_objects:
             if o.type in ('MESH', 'EMPTY'):
-                if o.name not in export_coll_names:
+                if o.name not in export_coll_names or o.library:
                     export_coll.objects.link(o)
                     export_coll_names.add(o.name)
     depsgraph = bpy.context.evaluated_depsgraph_get()

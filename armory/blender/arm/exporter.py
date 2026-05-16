@@ -2838,8 +2838,7 @@ Make sure the mesh only has tris/quads.""")
             for collection in bpy.data.collections:
                 if collection.name.startswith(('RigidBodyWorld', 'Trait|')):
                     continue
-
-                if self.scene.user_of_id(collection) or collection.library and not self.scene.library or collection in self.referenced_collections:
+                if self.scene.user_of_id(collection) or collection in self.referenced_collections:
                     if collection not in self.inlined_collections:
                         self.export_collection(collection)
 
