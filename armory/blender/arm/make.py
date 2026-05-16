@@ -18,6 +18,7 @@ import webbrowser
 import bpy
 
 from arm import assets
+from arm.exporter import BuildExportCache
 from arm.exporter import ArmoryExporter
 import arm.lib.make_datas
 import arm.lib.server
@@ -250,11 +251,12 @@ def export_data(fp, sdk_path):
             continue
         for o in scene.collection.all_objects:
             if o.type in ('MESH', 'EMPTY'):
-                if o.name not in export_coll_names:
+                if o.name not in export_coll_names or o.library:
                     export_coll.objects.link(o)
                     export_coll_names.add(o.name)
     depsgraph = bpy.context.evaluated_depsgraph_get()
     bpy.data.collections.remove(export_coll)  # Destroy the "zoo" collection
+    build_cache = BuildExportCache()
 
     for scene in bpy.data.scenes:
         if scene.arm_export:
@@ -262,7 +264,7 @@ def export_data(fp, sdk_path):
             assets.reset_shader_cons()
             ext = '.lz4' if ArmoryExporter.compress_enabled else '.arm'
             asset_path = build_dir + '/compiled/Assets/' + arm.utils.safestr(scene.name + "_" + os.path.basename(scene.library.filepath).replace(".blend", "") if scene.library else scene.name) + ext
-            ArmoryExporter.export_scene(bpy.context, asset_path, scene=scene, depsgraph=depsgraph)
+            ArmoryExporter.export_scene(bpy.context, asset_path, scene=scene, depsgraph=depsgraph, build_cache=build_cache)
             if ArmoryExporter.export_physics:
                 physics_found = True
             if ArmoryExporter.export_navigation:
