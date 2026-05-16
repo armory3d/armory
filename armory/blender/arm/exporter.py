@@ -111,6 +111,7 @@ class BuildExportCache:
     def __init__(self):
         self.exported_mesh_files: set = set()
         self.exported_action_files: set = set()
+        self.processed_mesh_names: set = set()
 
 
 class ArmoryExporter:
@@ -1098,8 +1099,9 @@ class ArmoryExporter:
                                         self.export_particle_system_ref(bobject.particle_systems[i], out_object)
 
                 aabb = bobject.data.arm_aabb
-                if aabb[0] == 0 and aabb[1] == 0 and aabb[2] == 0:
+                if oid not in self.build_cache.processed_mesh_names or (aabb[0] == 0 and aabb[1] == 0 and aabb[2] == 0):
                     self.calc_aabb(bobject)
+                    self.build_cache.processed_mesh_names.add(oid)
                 out_object['dimensions'] = [aabb[0], aabb[1], aabb[2]]
 
                 # shapeKeys = ArmoryExporter.get_shape_keys(objref)
