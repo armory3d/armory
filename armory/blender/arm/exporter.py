@@ -144,6 +144,12 @@ class ArmoryExporter:
 
         # The output dict contains all data that is later exported to Iron format
         self.output: Dict[str, Any] = {'frame_time': 1.0 / (self.scene.render.fps / self.scene.render.fps_base)}
+
+        # Export FPS limit if set (fixes #3018)
+        fps_limit = int(self.scene.render.fps)
+        if fps_limit > 0:
+            self.output['fps_limit'] = fps_limit
+
         current_output = self.output
 
         # Stores the object type ("objectType") and the asset name
