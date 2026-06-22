@@ -1,183 +1,148 @@
  ```diff
---- a/armory/Sources/armory/renderpath/RenderPathCreator.hx
-+++ b/armory/Sources/armory/renderpath/RenderPathCreator.hx
+--- a/armory/Sources/armory/renderpath/RenderPathDeferred.hx
++++ b/armory/Sources/armory/renderpath/RenderPathDeferred.hx
 @@ -1,5 +1,6 @@
  package armory.renderpath;
  
-+import armory.renderpath.Inc;
- import iron.RenderPath;
- 
- class RenderPathCreator {
-@@ -7,6 +8,7 @@ class RenderPathCreator {
- 	public static var path:RenderPath;
- 
- 	public static function get():RenderPath {
-+		Inc.init();
- 		path = new RenderPath();
- 		RenderPathCreator.path = path;
- 		#if (rp_gi == "Voxel GI")
-@@ -15,6 +17,7 @@ class RenderPathCreator {
- 		#end
- 		#if (rp_renderer == "Forward")
- 		{
-+			Inc.initForward();
- 			armory.renderpath.Forward.init(path);
- 			armory.renderpath.Forward.commands();
- 		}
-@@ -24,6 +27,7 @@ class RenderPathCreator {
- 		}
- 		#else
- 		{
-+			Inc.initDeferred();
- 			armory.renderpath.Deferred.init(path);
- 			armory.renderpath.Deferred.commands();
- 		}
---- /dev/null
-+++ b/armory/Sources/armory/renderpath/BoxProject.hx
-@@ -0,0 +1,56 @@
-+package armory.renderpath;
-+
 +import iron.math.Vec4;
-+
-+class BoxProject {
-+	
-+	public static var boxProjCenter:Vec4 = new Vec4(0.0, 0.0, 0.0);
-+	public static var boxProjSize:Vec4 = new Vec4(1.0, 1.0, 1.0);
-+	public static var boxProjBlend:Float = 1.0;
-+	public static var boxProjEnabled:Bool = false;
-+
-+	public static function setBoxProjection(center:Vec4, size:Vec4, blend:Float = 1.0) {
-+		boxProjCenter.setFrom(center);
-+		boxProjSize.setFrom(size);
-+		boxProjBlend = blend;
-+		boxProjEnabled = true;
-+	}
-+
-+	public static function disableBoxProjection() {
-+		boxProjEnabled = false;
-+	}
-+
-+	public static inline function getBoxProjectedCoords():Vec4 {
-+		return new Vec4(
-+			boxProjCenter.x,
-+			boxProjCenter.y,
-+			boxProjCenter.z,
-+			boxProjBlend
-+		);
-+	}
-+
-+	public static inline function getBoxProjectedSize():Vec4 {
-+		return new Vec4(
-+			boxProjSize.x,
-+			boxProjSize.y,
-+			boxProjSize.z,
-+			0.0
-+		);
-+	}
-+
-+	public static function applyUniforms(object:Dynamic) {
-+		if (object == null) return;
-+		var g = object;
-+		if (g == null) return;
-+		
-+		if (Std.is(g, kha.graphics4.Graphics)) {
-+			var gg: kha.graphics4.Graphics = cast g;
-+			if (boxProjEnabled) {
-+				gg.setFloat4(Inc.getBoxProjectedCenterLocation(), boxProjCenter.x, boxProjCenter.y, boxProjCenter.z, boxProjBlend);
-+				gg.setFloat4(Inc.getBoxProjectedSizeLocation(), boxProjSize.x, boxProjSize.y, boxProjSize.z, 0.0);
-+			}
-+		}
-+	}
-+
-+	public static function isEnabled():Bool {
-+		return boxProjEnabled;
-+	}
-+}
---- /dev/null
-+++ b/armory/Sources/armory/renderpath/BoxProjectShader.hx
-@@ -0,0 +1,10 @@
-+package armory.renderpath;
-+
-+class BoxProjectShader {
-+	
-+	public static var boxProjectedCenter:iron.math.Vec4 = null;
-+	public static var boxProjectedSize:iron.math.Vec4 = null;
-+	public static var boxProjectedBlend:Float = 1.0;
-+	public static var boxProjectedEnabled:Bool = false;
-+
-+	public function new() {}
-+}
---- a/armory/Sources/armory/renderpath/Inc.hx
-+++ b/armory/Sources/armory/renderpath/Inc.hx
-@@ -1,5 +1,6 @@
- package armory.renderpath;
+ import iron.data.SceneFormat;
+ import iron.data.RenderPath;
+ import iron.data.RenderPath.RenderPass;
+@@ -10,6 +11,7 @@
+ 	public static var screenAlignedQuadVB: kha.graphics4.VertexBuffer;
+ 	public static var screenAlignedQuadIB: kha.graphics4.IndexBuffer;
+ 	public static var pointLightData: kha.FastFloatBuffer;
++	public static var boxProjectedCubemapData: kha.FastFloatBuffer;
  
-+import kha.graphics4.Graphics;
- import iron.RenderPath;
- import iron.data.MaterialData;
- import iron.data.ShaderData;
-@@ -9,6 +10,7 @@ import iron.object.MeshObject;
- import iron.math.Vec4;
- import iron.math.Mat4;
- import iron.Scene;
-+import armory.renderpath.BoxProject;
- 
- class Inc {
- 
-@@ -16,6 +18,12 @@ class Inc {
- 	static var pointIndex = 0;
- 	static var spotIndex = 0;
- 
-+	// Box projection uniforms
-+	static var boxProjectedCenterLocation:ConstantLocation = null;
-+	static var boxProjectedSizeLocation:ConstantLocation = null;
-+	static var boxProjectedEnabledLocation:ConstantLocation = null;
-+	static var boxProjectedInit:Bool = false;
-+
- 	public static function init() {
- 		#if (rp_gi == "Voxel GI")
- 		{
-@@ -23,6 +31,7 @@ class Inc {
- 			armory.renderpath.Voxelizer.init();
+ 	public static function init(_path: RenderPath) {
+ 		path = _path;
+@@ -21,6 +23,9 @@
+ 		if (pointLightData == null) {
+ 			pointLightData = new kha.FastFloatBuffer(20 * 1024);
  		}
- 		#end
-+		boxProjectedInit = false;
++		if (boxProjectedCubemapData == null) {
++			boxProjectedCubemapData = new kha.FastFloatBuffer(8);
++		}
+ 
+ 		// Mesh
+ 		var vertexLayout = new kha.graphics4.VertexLayout([
+@@ -44,6 +49,10 @@
+ 		screenAlignedQuadIB.unlock();
  	}
  
- 	public static function initDeferred() {
-@@ -30,6 +39,9 @@ class Inc {
++	public static function setBoxProjectedCubemapData(boxMin: Vec4, boxMax: Vec4) {
++		boxProjectedCubemapData = new kha.FastFloatBuffer(8);
++		boxProjectedCubemapData.set(0, boxMin.x);
++		boxProjectedCubemapData.set(1, boxMin.y);
++		boxProjectedCubemapData.set(2, boxMin.z);
++		boxProjectedCubemapData.set(3, 0.0);
++		boxProjectedCubemapData.set(4, boxMax.x);
++		boxProjectedCubemapData.set(5, boxMax.y);
++		boxProjectedCubemapData.set(6, boxMax.z);
++		boxProjectedCubemapData.set(7, 0.0);
++	}
++
+ 	public static function commands() {
  
- 	public static function initForward() {
- 	}
-+
-+	public static function initBoxProjected(g:kha.graphics4.Graphics, shader:kha.graphics4.Shader) {
-+	}
+ 		if (path == null) return;
+@@ -51,6 +60,7 @@
+ 		var camera = iron.Scene.active.camera;
+ 		var g = iron.App.graphics4;
+ 		var rt = path.renderTargets;
++		var boxProjectedCubemap = iron.Scene.active.raw.box_projected_cubemap;
  
- 	public static function bindShadowsCubeMap() {
- 		#if (rp_shadowmap)
-@@ -41,6 +53,46 @@ class Inc {
- 		#end
- 	}
- 
-+	public static function getBoxProjectedCenterLocation():ConstantLocation {
-+		return boxProjectedCenterLocation;
-+	}
-+
-+	public static function getBoxProjectedSizeLocation():ConstantLocation {
-+		return boxProjectedSizeLocation;
-+	}
-+
-+	public static function getBoxProjectedEnabledLocation():ConstantLocation {
-+		return boxProjectedEnabledLocation;
-+	}
-+
-+	public static function initBoxProjection(g:kha.graphics4.Graphics, shader:kha.graphics4.Shader) {
-+		if (boxProjectedInit) return;
-+		boxProjectedCenterLocation = shader.getConstantLocation("_boxProjectedCenter");
-+		boxProjectedSizeLocation = shader.getConstantLocation("_boxProjectedSize");
-+		boxProjectedEnabledLocation = shader.getConstantLocation("_boxProjectedEnabled");
-+		boxProjectedInit = true;
-+	}
-+
-+	public static function setBoxProjectionConstants(g:kha.graphics4.Graphics) {
-+	
+ 		#if rp_shadows
+ 		{
+@@ -168,6 +178,11 @@
+ 				path.bindTarget("_main", "gbufferD");
+ 				#if rp_gbuffer2
+ 				path.bindTarget("gbuffer2", "gbuffer2");
++				#end
++				#if rp_box_projected_cubemap
++				if (boxProjectedCubemap != null) {
++					path.bindTarget("boxProjectedCubemapData",Internal, "boxProjectedCubemapData");
++				}
+ 				#end
+ 				path.drawMeshes("translucent");
+ 				path.end();
+@@ -232,6 +247,11 @@
+ 				path.bindTarget("_main", "gbufferD");
+ 				#if rp_gbuffer2
+ 				path.bindTarget("gbuffer2", "gbuffer2");
++				#end
++				#if rp_box_projected_cubemap
++				if (boxProjectedCubemap != null) {
++					path.bindTarget("boxProjectedCubemapData",Internal, "boxProjectedCubemapData");
++				}
+ 				#end
+ 				path.drawMeshes("translucent");
+ 				path.end();
+@@ -296,6 +316,11 @@
+ 				path.bindTarget("_main", "gbufferD");
+ 				#if rp_gbuffer2
+ 				path.bindTarget("gbuffer2", "gbuffer2");
++				#end
++				#if rp_box_projected_cubemap
++				if (boxProjectedCubemap != null) {
++					path.bindTarget("boxProjectedCubemapData",Internal, "boxProjectedCubemapData");
+anticubemapData");
++				}
+ 				#end
+ 				path.drawMeshes("translucent");
+ 				path.end();
+@@ -360,6 +385,11 @@
+ 				path.bindTarget("_main", "gbufferD");
+ 				#if rp_gbuffer2
+ 				path.bindTarget("gbuffer2", "gbuffer2");
++				#end
++				#if rp_box_projected_cubemap
++				if (boxProjectedCubemap != null) {
++					path.bindTarget("boxProjectedCubemapData",Internal, "boxProjectedCubemapData");
++				}
+ 				#end
+ 				path.drawMeshes("translucent");
+ 				path.end();
+@@ -424,6 +454,11 @@
+ 				path.bindTarget("_main", "gbufferD");
+ 				#if rp_gbuffer2
+ 				path.bindTarget("gbuffer2", "gbuffer2");
++				#end
++				#if rp_box_projected_cubemap
++				if (boxProjectedCubemap != null) {
++					path.bindTarget("boxProjectedCubemapData",Internal, "boxProjectedCubemapData");
++				}
+ 				#end
+ 				path.drawMeshes("translucent");
+ 				path.end();
+@@ -488,6 +523,11 @@
+ 				path.bindTarget("_main", "gbufferD");
+ 				#if rp_gbuffer2
+ 				path.bindTarget("gbuffer2", "gbuffer2");
++				#end
++				#if rp_box_projected_cubemap
++				if (boxProjectedCubemap != null) {
++					path.bindTarget("boxProjectedCubemapData",Internal, "boxProjectedCubemapData");
++				}
+ 				#end
+ 				path.drawMeshes("translucent");
+ 				path.end();
+@@ -552,6 +592,11 @@
+ 				path.bindTarget("_main", "gbufferD");
+ 				#if rp_gbuffer2
+ 				path.bindTarget("gbuffer2", "gbuffer2");
++				#end
++				#if rp_box_projected_cubemap
++				if (boxProjectedCubemap != null) {
++					path.bindTarget("boxProjectedCubemapData",Internal, "boxProjectedCubemapData");
++				}
+ 				#end
+ 				path.drawMeshes("translucent");
+ 				path.end();
+@@ -616,6 +661,11 @@
+ 				path.bindTarget("_main", "gbufferD");
+ 				#if rp_gbuffer2
+ 				path.bindTarget("gbuffer2", "gbuffer2");
++				#end
++				#if rp_box_projected_cubemap
++				if (boxProjectedCubemap != null) {
++					path.bindTarget("boxProject
