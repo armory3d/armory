@@ -1,0 +1,62 @@
+{
+	"contexts": [
+		{
+			"name": "downsample_pass",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "screenSizeInv",
+					"link": "_screenSizeInv"
+				},
+				{
+					"name": "currentMipLevel",
+					"link": "_downsampleCurrentMip"
+				},
+				{
+					"name": "BloomThresholdData",
+					"link": "_BloomThresholdData",
+					"ifdef": ["_CPostprocess"]
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "downsample_pass.frag.glsl"
+		},
+		{
+			"name": "upsample_pass",
+			"blend_source": "blend_one",
+			"blend_destination": "blend_one",
+			"blend_operation": "add",
+			"alpha_blend_source": "blend_zero",
+			"alpha_blend_destination": "blend_one",
+			"alpha_blend_operation": "add",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "screenSizeInv",
+					"link": "_screenSizeInv"
+				},
+				{
+					"name": "currentMipLevel",
+					"link": "_upsampleCurrentMip"
+				},
+				{
+					"name": "sampleScale",
+					"link": "_bloomSampleScale"
+				},
+				{
+					"name": "PPComp11",
+					"link": "_PPComp11",
+					"ifdef": ["_CPostprocess"]
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "upsample_pass.frag.glsl"
+		}
+	]
+}

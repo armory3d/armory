@@ -1,0 +1,24 @@
+{
+	"contexts": [
+		{
+			"name": "motion_blur_veloc_pass",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "frameScale",
+					"link": "_frameScale"
+				},
+				{
+					"name": "texStep",
+					"link": "_screenSizeInv",
+					"ifdef": ["_Disabled"]
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "motion_blur_veloc_pass.frag.glsl"
+		}
+	]
+}

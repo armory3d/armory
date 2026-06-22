@@ -1,0 +1,1 @@
+-cmd haxelib run dox -i build -o pages --title "Armory 3D Engine" -D themeColor 0xcf2b43 -D textColor 0xffffff -D website "https://armory3d.org/" -D logo "https://avatars.githubusercontent.com/u/20436620?s=48" -theme ./theme

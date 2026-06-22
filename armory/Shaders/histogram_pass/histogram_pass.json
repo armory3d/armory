@@ -1,0 +1,23 @@
+{
+	"contexts": [
+		{
+			"name": "histogram_pass",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"blend_source": "source_alpha",
+			"blend_destination": "inverse_source_alpha",
+			"blend_operation": "add",
+			"links": [
+				{
+					"name": "PPComp8",
+					"link": "_PPComp8",
+					"ifdef": ["_CPostprocess"]
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "histogram_pass.frag.glsl"
+		}
+	]
+}

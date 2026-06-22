@@ -1,0 +1,14 @@
+{
+	"contexts": [
+		{
+			"name": "copy_mrt2_pass",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "copy_mrt2_pass.frag.glsl"
+		}
+	]
+}

@@ -1,0 +1,31 @@
+{
+	"contexts": [
+		{
+			"name": "smaa_blend_weight",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "areaTex",
+					"link": "$smaa_area.png"
+				},
+				{
+					"name": "searchTex",
+					"link": "$smaa_search.png"
+				},
+				{
+					"name": "screenSize",
+					"link": "_screenSize"
+				},
+				{
+					"name": "screenSizeInv",
+					"link": "_screenSizeInv"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "smaa_blend_weight.vert.glsl",
+			"fragment_shader": "smaa_blend_weight.frag.glsl"
+		}
+	]
+}

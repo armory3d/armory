@@ -1,0 +1,19 @@
+{
+	"contexts": [
+		{
+			"name": "fxaa_pass",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "screenSizeInv",
+					"link": "_screenSizeInv"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "fxaa_pass.frag.glsl"
+		}
+	]
+}

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   sodipodi:docname="icons.svg"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+   inkscape:export-ydpi="96"
+   inkscape:export-xdpi="96"
+   id="SVGRoot"
+   version="1.1"
+   viewBox="0 0 512 512"
+   height="512"
+   width="512">
+  <title
+     id="title819">Icons for Armory2d</title>
+  <defs
+     id="defs3713" />
+  <sodipodi:namedview
+     inkscape:document-rotation="0"
+     inkscape:pagecheckerboard="false"
+     borderlayer="true"
+     fit-margin-right="2"
+     showguides="true"
+     inkscape:grid-bbox="true"
+     inkscape:window-maximized="1"
+     inkscape:window-y="-8"
+     inkscape:window-x="-8"
+     inkscape:window-height="1017"
+     inkscape:window-width="1920"
+     showgrid="true"
+     inkscape:current-layer="layer1"
+     inkscape:document-units="px"
+     inkscape:cy="224.79827"
+     inkscape:cx="351.24016"
+     inkscape:zoom="1"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#333333"
+     id="base">
+    <inkscape:grid
+       empspacing="1"
+       dotted="true"
+       empopacity="0.25098039"
+       empcolor="#ffa43f"
+       opacity="0.1254902"
+       color="#ff7229"
+       spacingy="0.5"
+       spacingx="0.5"
+       id="grid3726"
+       type="xygrid" />
+    <inkscape:grid
+       empspacing="1"
+       id="grid881"
+       type="xygrid" />
+    <inkscape:grid
+       empopacity="0.25098039"
+       empcolor="#3fff52"
+       opacity="0.1254902"
+       color="#00f92c"
+       empspacing="0"
+       spacingy="16"
+       spacingx="16"
+       id="grid817"
+       type="xygrid" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata3716">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>Icons for Armory2d</dc:title>
+        <dc:description>https://github.com/armory3d/armory2d</dc:description>
+        <dc:contributor>
+          <cc:Agent>
+            <dc:title>Moritz Brückner</dc:title>
+          </cc:Agent>
+        </dc:contributor>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(0,496)"
+     id="layer1"
+     inkscape:groupmode="layer"
+     inkscape:label="Canvas">
+    <path
+       sodipodi:nodetypes="ccc"
+       inkscape:connector-curvature="0"
+       id="path839"
+       d="m 6,-483 4,-6 4,6"
+       style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:1px;stroke-linecap:square;stroke-linejoin:round;stroke-opacity:1" />
+    <path
+       sodipodi:nodetypes="ccc"
+       inkscape:connector-curvature="0"
+       id="path841"
+       d="m 2,-483 3,-4 2,2"
+       style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path883"
+       d="m 1.5,-493.5 v 11 h 13 v -11 z"
+       style="fill:none;stroke:#ffffff;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1" />
+  </g>
+</svg>
