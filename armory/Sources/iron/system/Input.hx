@@ -815,10 +815,10 @@ class Gamepad extends VirtualInput {
 			stick.lastY = stick.y;
 			#if (kha_html5 || kha_debug_html5)
 			stick.y = -value;
-			#elseif (kha_android || isAndroid)
+			#elseif kha_android
 			stick.y = -value;
 			#else
-			stick.y = value;
+			stick.y = isAndroid ? -value : value;
 			#end
 			stick.movementY = stick.y - stick.lastY;
 		}
