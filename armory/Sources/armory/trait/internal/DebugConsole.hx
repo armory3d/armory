@@ -106,7 +106,12 @@ class DebugConsole extends Trait {
 			shortcutScaleIn = keyCodeScaleIn;
 			shortcutScaleOut = keyCodeScaleOut;
 
-			notifyOnRender2D(render2D);
+			// Register render2D last to ensure debug console renders on top of Draw nodes
+			// Fixes #2999 - Debug console hidden behind Draw node features
+			Scheduler.addFrameTask(function() {
+				notifyOnRender2D(render2D);
+			}, 0);
+
 			notifyOnUpdate(update);
 			if (haxeTrace == null) {
 				haxeTrace = haxe.Log.trace;
