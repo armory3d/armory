@@ -328,7 +328,8 @@ class RenderPath {
 			if (depthDiff != 0) return depthDiff;
 			#end
 
-			return a.cameraDistance >= b.cameraDistance ? 1 : -1;
+			if (a.cameraDistance == b.cameraDistance) return 0;
+			return a.cameraDistance > b.cameraDistance ? 1 : -1;
 		});
 	}
 
@@ -342,8 +343,8 @@ class RenderPath {
 			if (a.data.sortingIndex != b.data.sortingIndex) {
 				return a.data.sortingIndex > b.data.sortingIndex ? 1 : -1;
 			}
-
-			return a.data.name >= b.data.name ? 1 : -1;
+			if (a.data.name == b.data.name) return 0;
+			return a.data.name > b.data.name ? 1 : -1;
 		});
 	}
 

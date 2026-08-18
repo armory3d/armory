@@ -153,12 +153,8 @@ if bpy.app.version > (4, 1, 0):
                 pass
             if (node.inputs['Emission Strength'].is_linked or node.inputs['Emission Strength'].default_value != 0.0)\
                     and (node.inputs['Emission Color'].is_linked or not mat_utils.equals_color_socket(node.inputs['Emission Color'], (0.0, 0.0, 0.0), comp_alpha=False)):
-                if bpy.app.version >= (4, 4, 0):
-                    emission_col = c.parse_vector_input(node.inputs[27])
-                    emission_strength = c.parse_value_input(node.inputs[28])
-                else:
-                    emission_col = c.parse_vector_input(node.inputs[26])
-                    emission_strength = c.parse_value_input(node.inputs[27])
+                emission_col = c.parse_vector_input(node.inputs['Emission Color'])
+                emission_strength = c.parse_value_input(node.inputs['Emission Strength'])
                 state.out_emission_col = '({0} * {1})'.format(emission_col, emission_strength)
                 mat_state.emission_type = mat_state.EmissionType.SHADED
             else:

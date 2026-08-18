@@ -17,6 +17,7 @@ import math
 import os
 import time
 from typing import Any, Dict, List, Tuple, Union, Optional
+from bpy_extras import anim_utils
 
 import numpy as np
 
@@ -104,6 +105,15 @@ FCURVE_TARGET_NAMES = {
 current_output = None
 
 
+class BuildExportCache:
+    """Shared cache across all scene exports in a single build.
+    Created once in make.py, passed to each ArmoryExporter instance."""
+    def __init__(self):
+        self.exported_mesh_files: set = set()
+        self.exported_action_files: set = set()
+        self.processed_mesh_names: set = set()
+
+
 class ArmoryExporter:
     """Export to Armory format.
 
@@ -124,8 +134,10 @@ class ArmoryExporter:
     # Class names of referenced traits
     import_traits: List[str] = []
 
-    def __init__(self, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene = None, depsgraph: bpy.types.Depsgraph = None):
+    def __init__(self, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene = None, depsgraph: bpy.types.Depsgraph = None, build_cache=None):
         global current_output
+
+        self.build_cache = build_cache or BuildExportCache()
 
         self.filepath = filepath
         self.scene = context.scene if scene is None else scene
@@ -178,12 +190,12 @@ class ArmoryExporter:
         ArmoryExporter.preprocess()
 
     @classmethod
-    def export_scene(cls, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene = None, depsgraph: bpy.types.Depsgraph = None) -> None:
+    def export_scene(cls, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene = None, depsgraph: bpy.types.Depsgraph = None, build_cache=None) -> None:
         """Exports the given scene to the given file path. This is the
         function that is called in make.py and the entry point of the
         exporter."""
         with arm.profiler.Profile('profile_exporter.prof', arm.utils.get_pref_or_default('profile_exporter', False)):
-            cls(context, filepath, scene, depsgraph).execute()
+            cls(context, filepath, scene, depsgraph, build_cache).execute()
 
     @classmethod
     def preprocess(cls):
@@ -215,6 +227,22 @@ class ArmoryExporter:
 
         ext = '.lz4' if compressed else '.arm'
         return mesh_fp + object_id + ext
+
+    @staticmethod
+    def get_fcurves(action):
+        if action is None:
+            return []
+
+        if bpy.app.version < (5, 0, 0):
+            return action.fcurves
+
+        fcurves = []
+        if action.slots:
+            for slot in action.slots:
+                channelbag = anim_utils.action_ensure_channelbag_for_slot(action, slot)
+                if channelbag:
+                    fcurves.extend(channelbag.fcurves)
+        return fcurves
 
     @staticmethod
     def get_shape_keys(mesh):
@@ -257,8 +285,9 @@ class ArmoryExporter:
 
         if armature.animation_data:
             action = armature.animation_data.action
+            fcurves = ArmoryExporter.get_fcurves(action)
             if action:
-                return [fcurve for fcurve in action.fcurves if fcurve.data_path.startswith(path)]
+                return [fcurve for fcurve in fcurves if fcurve.data_path.startswith(path)]
 
         return []
 
@@ -304,15 +333,16 @@ class ArmoryExporter:
         frame_range = action.frame_range
         start = frame_range[0]
         end = frame_range[1]
+        fcurves = ArmoryExporter.get_fcurves(action)
 
         # Blender 4.0+ compatibility: Handle zero-length frame ranges
         if start == end:
             start = 1
             end = 2
 
-            if action.fcurves:
+            if fcurves:
                 all_keyframes = []
-                for fcurve in action.fcurves:
+                for fcurve in fcurves:
                     if fcurve.keyframe_points:
                         for keyframe in fcurve.keyframe_points:
                             all_keyframes.append(keyframe.co[0])
@@ -325,7 +355,7 @@ class ArmoryExporter:
 
         # Take FCurve modifiers into account if they have a restricted
         # frame range
-        for fcurve in action.fcurves:
+        for fcurve in fcurves:
             for modifier in fcurve.modifiers:
                 if not modifier.use_restricted_range:
                     continue
@@ -365,6 +395,7 @@ class ArmoryExporter:
         # Animated transform
         if bobject.animation_data is not None and bobject.type != "ARMATURE":
             action = bobject.animation_data.action
+            fcurves = self.get_fcurves(action)
 
             if action is not None:
                 action_name = arm.utils.safestr(arm.utils.asset_name(action))
@@ -389,7 +420,7 @@ class ArmoryExporter:
                 self.export_pose_markers(out_anim, action)
 
                 unresolved_data_paths = set()
-                for fcurve in action.fcurves:
+                for fcurve in fcurves:
                     data_path = fcurve.data_path
 
                     try:
@@ -459,7 +490,6 @@ class ArmoryExporter:
             if btype is not NodeType.MESH and ArmoryExporter.option_mesh_only:
                 return
 
-            is_local_to_linked_scene = bobject.name in self.scene.objects and bobject.name not in self.scene.collection.children and self.scene.library
             if bobject.type == 'CAMERA' and bobject.library:
                 struct_name = bobject.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
             else:
@@ -931,6 +961,14 @@ class ArmoryExporter:
 
             out_object['mobile'] = bobject.arm_mobile
 
+            lib = bobject.library
+            if lib is None and bobject.data:
+                lib = bobject.data.library
+            if lib is None and bobject.override_library:
+                lib = bobject.override_library.library
+            if lib is not None:
+                out_object['filename'] = lib.name
+
             if bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
                 out_object['group_ref'] = bobject.instance_collection.name
                 self.referenced_collections.append(bobject.instance_collection)
@@ -1080,8 +1118,9 @@ class ArmoryExporter:
                                         self.export_particle_system_ref(bobject.particle_systems[i], out_object)
 
                 aabb = bobject.data.arm_aabb
-                if aabb[0] == 0 and aabb[1] == 0 and aabb[2] == 0:
+                if oid not in self.build_cache.processed_mesh_names or (aabb[0] == 0 and aabb[1] == 0 and aabb[2] == 0):
                     self.calc_aabb(bobject)
+                    self.build_cache.processed_mesh_names.add(oid)
                 out_object['dimensions'] = [aabb[0], aabb[1], aabb[2]]
 
                 # shapeKeys = ArmoryExporter.get_shape_keys(objref)
@@ -1225,7 +1264,7 @@ class ArmoryExporter:
                     skelobj.animation_data.action = action
                     fp = self.get_meshes_file_path('action_' + armatureid + '_' + aname, compressed=ArmoryExporter.compress_enabled)
                     assets.add(fp)
-                    if not bdata.arm_cached or not os.path.exists(fp):
+                    if (not bdata.arm_cached or not os.path.exists(fp)) and fp not in self.build_cache.exported_action_files:
                         # Store action to use it after autobake was handled
                         original_action = action
 
@@ -1271,6 +1310,7 @@ class ArmoryExporter:
                         # Save action separately
                         action_obj = {'name': aname, 'objects': bones}
                         arm.utils.write_arm(fp, action_obj)
+                        self.build_cache.exported_action_files.add(fp)
 
                 # Use relative bone constraints
                 out_object['relative_bone_constraints'] = bdata.arm_relative_bone_constraints
@@ -1949,7 +1989,7 @@ Make sure the mesh only has tris/quads.""")
             fp = self.get_meshes_file_path('mesh_' + oid, compressed=ArmoryExporter.compress_enabled)
             assets.add(fp)
             # No export necessary
-            if bobject.data.arm_cached and os.path.exists(fp):
+            if bobject.data.arm_cached and os.path.exists(fp) or fp in self.build_cache.exported_mesh_files:
                 return
 
         # Mesh users have different modifier stack
@@ -2045,6 +2085,7 @@ Make sure the mesh only has tris/quads.""")
             out_mesh['dynamic_usage'] = bobject.data.arm_dynamic_usage
 
         self.write_mesh(bobject, fp, out_mesh)
+        self.build_cache.exported_mesh_files.add(fp)
         # print('Mesh exported in ' + str(time.time() - profile_time))
 
         if hasattr(bobject, 'evaluated_get'):
@@ -2054,7 +2095,30 @@ Make sure the mesh only has tris/quads.""")
         """Exports a single light object."""
         rpdat = arm.utils.get_rp()
         light_ref = object_ref[0]
+        light_objects = object_ref[1]["objectTable"]
+        light_object = light_objects[0] if len(light_objects) > 0 else None
         objtype = light_ref.type
+        color = [light_ref.color[0], light_ref.color[1], light_ref.color[2]]
+        if light_ref.use_temperature:
+            temperature_color = light_ref.temperature_color
+            color[0] *= temperature_color[0]
+            color[1] *= temperature_color[1]
+            color[2] *= temperature_color[2]
+
+        strength = light_ref.energy * math.pow(2.0, light_ref.exposure)
+        if not light_ref.normalize:
+            area = 0.0
+            try:
+                if light_object is not None:
+                    area = light_ref.area(matrix_world=light_object.matrix_world)
+                else:
+                    area = light_ref.area()
+            except TypeError:
+                area = light_ref.area()
+
+            if area > 0.0:
+                strength *= area
+
         out_light = {
             'name': object_ref[1]["structName"],
             'type': objtype.lower(),
@@ -2062,8 +2126,8 @@ Make sure the mesh only has tris/quads.""")
             'near_plane': light_ref.arm_clip_start,
             'far_plane': light_ref.arm_clip_end,
             'fov': light_ref.arm_fov,
-            'color': [light_ref.color[0], light_ref.color[1], light_ref.color[2]],
-            'strength': light_ref.energy,
+            'color': color,
+            'strength': strength,
             'shadows_bias': light_ref.arm_shadows_bias * 0.0001
         }
         if rpdat.rp_shadows:
@@ -2075,27 +2139,40 @@ Make sure the mesh only has tris/quads.""")
             out_light['shadowmap_size'] = 0
 
         if objtype == 'SUN':
-            out_light['strength'] *= 0.325
             # Scale bias for ortho light matrix
             out_light['shadows_bias'] *= 20.0
             if out_light['shadowmap_size'] > 1024:
                 # Less bias for bigger maps
                 out_light['shadows_bias'] *= 1 / (out_light['shadowmap_size'] / 1024)
         elif objtype == 'POINT':
-            out_light['strength'] *= 0.01
+            out_light['strength'] *= 1.0 / (4.0 * math.pi)
             out_light['fov'] = 1.5708 # pi/2
             out_light['shadowmap_cube'] = True
             if light_ref.shadow_soft_size > 0.1:
                 out_light['light_size'] = light_ref.shadow_soft_size * 10
         elif objtype == 'SPOT':
-            out_light['strength'] *= 0.01
-            out_light['spot_size'] = math.cos(light_ref.spot_size / 2)
-            # Cycles defaults to 0.15
-            out_light['spot_blend'] = light_ref.spot_blend / 10
+            out_light['strength'] *= 1.0 / (4.0 * math.pi)
+            half_angle = light_ref.spot_size * 0.5
+            outer_cos = math.cos(half_angle)
+            blend = max(0.0, min(1.0, light_ref.spot_blend))
+            inner_angle = math.atan(math.tan(half_angle) * (1.0 - blend))
+            out_light['spot_size'] = outer_cos
+            out_light['spot_blend'] = max(0.0001, math.cos(inner_angle) - outer_cos)
+            if light_ref.shadow_soft_size > 0.0:
+                out_light['light_size'] = light_ref.shadow_soft_size * 10
         elif objtype == 'AREA':
-            out_light['strength'] *= 0.01
+            light_area = light_ref.size * light_ref.size_y
+            if light_ref.shape in ('DISK', 'ELLIPSE'):
+                light_area *= math.pi / 4.0
+
+            if light_area > 0.0:
+                out_light['strength'] *= 1.0 / (light_area * math.pi)
+            else:
+                out_light['strength'] *= 1.0 / (math.pi)
+
             out_light['size'] = light_ref.size
             out_light['size_y'] = light_ref.size_y
+
 
         self.output['light_datas'].append(out_light)
 
@@ -2137,7 +2214,6 @@ Make sure the mesh only has tris/quads.""")
             # outside the collection, then instantiate the full object
             # child tree if the collection gets spawned as a whole
             if bobject.parent is None or bobject.parent.name not in collection.objects:
-                is_local_to_linked_scene = bobject.name in self.scene.objects and bobject.name not in self.scene.collection.children and self.scene.library
                 if bobject.type == 'CAMERA':
                     asset_name = bobject.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
                 else:
@@ -2783,8 +2859,7 @@ Make sure the mesh only has tris/quads.""")
             for collection in bpy.data.collections:
                 if collection.name.startswith(('RigidBodyWorld', 'Trait|')):
                     continue
-
-                if self.scene.user_of_id(collection) or collection.library and not self.scene.library or collection in self.referenced_collections:
+                if self.scene.user_of_id(collection) or collection in self.referenced_collections:
                     if collection not in self.inlined_collections:
                         self.export_collection(collection)
 
@@ -3329,8 +3404,6 @@ Make sure the mesh only has tris/quads.""")
 
                         if trait_prop.type.endswith("Object"):
                             value = arm.utils.asset_name(trait_prop.value_object)
-                        elif trait_prop.type == "TSceneFormat":
-                            value = arm.utils.asset_name(trait_prop.value_scene)
                         else:
                             value = trait_prop.get_value()
 

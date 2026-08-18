@@ -1,3 +1,4 @@
+from __future__ import annotations
 import math
 import os
 from typing import Union
@@ -336,7 +337,7 @@ def parse_tex_sky(node: bpy.types.ShaderNodeTexSky, out_socket: bpy.types.NodeSo
             log.info('Info: Preetham sky model is not supported, using Hosek Wilkie sky model instead')
         return parse_sky_hosekwilkie(node, state)
 
-    elif node.sky_type == 'NISHITA':
+    elif node.sky_type in ('NISHITA', 'SINGLE_SCATTERING', 'MULTIPLE_SCATTERING'):
         return parse_sky_nishita(node, state)
 
     else:
@@ -416,7 +417,9 @@ def parse_sky_nishita(node: bpy.types.ShaderNodeTexSky, state: ParserState) -> v
     planet_radius = 6360e3  # Earth radius used in Blender
     ray_origin_z = planet_radius + node.altitude
 
-    state.world.arm_nishita_density = [node.air_density, node.dust_density, node.ozone_density]
+    # Blender 5.2 renamed 'dust_density' to 'aerosol_density'
+    dust_density = node.aerosol_density if hasattr(node, 'aerosol_density') else node.dust_density
+    state.world.arm_nishita_density = [node.air_density, dust_density, node.ozone_density]
 
     sun = ''
     if node.sun_disc:
@@ -436,7 +439,7 @@ def parse_sky_nishita(node: bpy.types.ShaderNodeTexSky, state: ParserState) -> v
         size = math.cos(theta)
         sun = f'* sun_disk(pos, sunDir, {size}, {node.sun_intensity})'
 
-    return f'nishita_atmosphere(pos, vec3(0, 0, {ray_origin_z}), sunDir, {planet_radius}){sun}'
+    return f'nishita_atmosphere(pos, vec3(0, 0, {ray_origin_z}), sunDir, {planet_radius}){sun} * envmapStrength'
 
 
 def parse_tex_environment(node: bpy.types.ShaderNodeTexEnvironment, out_socket: bpy.types.NodeSocket, state: ParserState) -> vec3str:

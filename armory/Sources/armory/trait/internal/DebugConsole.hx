@@ -839,7 +839,7 @@ class DebugConsole extends Trait {
 								highLightNext(kha.Color.fromFloats(0.447, 0.247, 0.188));
 								ui.text('Not enough space in atlas for ${atlas.rejectedLights.length} light${atlas.rejectedLights.length > 1 ? "s" : ""}:');
 								ui.indent();
-								ui.text(${rejectedLightsNames});
+								ui.text(rejectedLightsNames);
 								ui.unindent(false);
 							}
 

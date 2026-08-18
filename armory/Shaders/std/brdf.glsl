@@ -78,7 +78,7 @@ vec3 orenNayarDiffuseBRDF(const vec3 albedo, const float roughness, const float 
 }
 
 vec3 lambertDiffuseBRDF(const vec3 albedo, const float nl) {
-	return albedo * nl;
+	return albedo * (1.0 / 3.1415926535) * nl;
 }
 
 vec3 surfaceAlbedo(const vec3 baseColor, const float metalness) {

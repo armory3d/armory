@@ -1,4 +1,6 @@
-import bpy, math, os, gpu, bgl, importlib
+import bpy, math, os, gpu, importlib
+if bpy.app.version < (5, 0, 0):
+	import bgl
 import numpy as np
 from . import utility
 from fractions import Fraction
@@ -8,7 +10,7 @@ def splitLogLuvAlphaAtlas(imageIn, outDir, quality):
     pass
 
 def splitLogLuvAlpha(imageIn, outDir, quality):
-    
+
     bpy.app.driver_namespace["logman"].append("Starting LogLuv split for: " + str(imageIn))
 
     cv2 = importlib.util.find_spec("cv2")
@@ -67,7 +69,7 @@ def encodeLogLuvGPU(image, outDir, quality):
         out vec4 fragColor;
 
         uniform sampler2D image;
-        
+
         const mat3 cLogLuvM = mat3( 0.2209, 0.3390, 0.4184, 0.1138, 0.6780, 0.7319, 0.0102, 0.1130, 0.2969 );
         vec4 LinearToLogLuv( in vec4 value )  {
             vec3 Xp_Y_XYZp = cLogLuvM * value.rgb;
@@ -80,7 +82,7 @@ def encodeLogLuvGPU(image, outDir, quality):
             return vResult;
             //return vec4(Xp_Y_XYZp,1);
         }
-        
+
         const mat3 cLogLuvInverseM = mat3( 6.0014, -2.7008, -1.7996, -1.3320, 3.1029, -5.7721, 0.3008, -1.0882, 5.6268 );
         vec4 LogLuvToLinear( in vec4 value ) {
             float Le = value.z * 255.0 + value.w;
@@ -110,8 +112,8 @@ def encodeLogLuvGPU(image, outDir, quality):
     sy = 200
 
     vertices = (
-                (x_screen + off_x, y_screen_flip - off_y), 
-                (x_screen + off_x, y_screen_flip - sy - off_y), 
+                (x_screen + off_x, y_screen_flip - off_y),
+                (x_screen + off_x, y_screen_flip - sy - off_y),
                 (x_screen + off_x + sx, y_screen_flip - sy - off_y),
                 (x_screen + off_x + sx, y_screen_flip - off_x))
 
@@ -145,7 +147,7 @@ def encodeLogLuvGPU(image, outDir, quality):
 
     if image.gl_load():
         raise Exception()
-    
+
     with offscreen.bind():
         bgl.glActiveTexture(bgl.GL_TEXTURE0)
         bgl.glBindTexture(bgl.GL_TEXTURE_2D, image.bindcode)
@@ -153,16 +155,16 @@ def encodeLogLuvGPU(image, outDir, quality):
         shader.bind()
         shader.uniform_int("image", 0)
         batch.draw(shader)
-        
+
         buffer = bgl.Buffer(bgl.GL_BYTE, input_image.size[0] * input_image.size[1] * 4)
         bgl.glReadBuffer(bgl.GL_BACK)
         bgl.glReadPixels(0, 0, input_image.size[0], input_image.size[1], bgl.GL_RGBA, bgl.GL_UNSIGNED_BYTE, buffer)
 
     offscreen.free()
-    
+
     target_image.pixels = [v / 255 for v in buffer]
     input_image = target_image
-    
+
     #Save LogLuv
     if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
         print(input_image.name)
@@ -263,11 +265,11 @@ def encodeImageRGBDGPU(image, maxRange, outDir, quality):
             float D      = max(rgbdMaxRange / maxRGB, 1.);
             D            = clamp(floor(D) / 255.0, 0., 1.);
             vec3 rgb = color.rgb * D;
-            
+
             // Helps with png quantization.
             rgb = toGammaSpace(rgb);
 
-            return vec4(rgb, D); 
+            return vec4(rgb, D);
         }
 
         vec3 fromRGBD(vec4 rgbd) {
@@ -296,8 +298,8 @@ def encodeImageRGBDGPU(image, maxRange, outDir, quality):
     sy = 200
 
     vertices = (
-                (x_screen + off_x, y_screen_flip - off_y), 
-                (x_screen + off_x, y_screen_flip - sy - off_y), 
+                (x_screen + off_x, y_screen_flip - off_y),
+                (x_screen + off_x, y_screen_flip - sy - off_y),
                 (x_screen + off_x + sx, y_screen_flip - sy - off_y),
                 (x_screen + off_x + sx, y_screen_flip - off_x))
 
@@ -331,7 +333,7 @@ def encodeImageRGBDGPU(image, maxRange, outDir, quality):
 
     if image.gl_load():
         raise Exception()
-    
+
     with offscreen.bind():
         bgl.glActiveTexture(bgl.GL_TEXTURE0)
         bgl.glBindTexture(bgl.GL_TEXTURE_2D, image.bindcode)
@@ -339,16 +341,16 @@ def encodeImageRGBDGPU(image, maxRange, outDir, quality):
         shader.bind()
         shader.uniform_int("image", 0)
         batch.draw(shader)
-        
+
         buffer = bgl.Buffer(bgl.GL_BYTE, input_image.size[0] * input_image.size[1] * 4)
         bgl.glReadBuffer(bgl.GL_BACK)
         bgl.glReadPixels(0, 0, input_image.size[0], input_image.size[1], bgl.GL_RGBA, bgl.GL_UNSIGNED_BYTE, buffer)
 
     offscreen.free()
-    
+
     target_image.pixels = [v / 255 for v in buffer]
     input_image = target_image
-    
+
     #Save LogLuv
     if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
         print(input_image.name)
@@ -358,7 +360,7 @@ def encodeImageRGBDGPU(image, maxRange, outDir, quality):
     bpy.context.scene.render.image_settings.quality = quality
     #input_image.save_render(filepath = input_image.filepath_raw, scene = bpy.context.scene)
     input_image.save()
-    
+
     #Todo - Find a way to save
     #bpy.ops.image.save_all_modified()
 
@@ -456,17 +458,17 @@ def encodeImageRGBMGPU(image, maxRange, outDir, quality):
             rgbm.a = clamp(floor(D) / 255.0, 0., 1.);
             rgbm.rgb = color / rgbm.a;
 
-            return 
+            return
 
             float maxRGB = maxEps(max(color.r, max(color.g, color.b)));
             float D      = max(rgbdMaxRange / maxRGB, 1.);
             D            = clamp(floor(D) / 255.0, 0., 1.);
             vec3 rgb = color.rgb * D;
-            
+
             // Helps with png quantization.
             rgb = toGammaSpace(rgb);
 
-            return vec4(rgb, D); 
+            return vec4(rgb, D);
         }
 
         vec3 fromRGBD(vec4 rgbd) {
@@ -495,8 +497,8 @@ def encodeImageRGBMGPU(image, maxRange, outDir, quality):
     sy = 200
 
     vertices = (
-                (x_screen + off_x, y_screen_flip - off_y), 
-                (x_screen + off_x, y_screen_flip - sy - off_y), 
+                (x_screen + off_x, y_screen_flip - off_y),
+                (x_screen + off_x, y_screen_flip - sy - off_y),
                 (x_screen + off_x + sx, y_screen_flip - sy - off_y),
                 (x_screen + off_x + sx, y_screen_flip - off_x))
 
@@ -530,7 +532,7 @@ def encodeImageRGBMGPU(image, maxRange, outDir, quality):
 
     if image.gl_load():
         raise Exception()
-    
+
     with offscreen.bind():
         bgl.glActiveTexture(bgl.GL_TEXTURE0)
         bgl.glBindTexture(bgl.GL_TEXTURE_2D, image.bindcode)
@@ -538,16 +540,16 @@ def encodeImageRGBMGPU(image, maxRange, outDir, quality):
         shader.bind()
         shader.uniform_int("image", 0)
         batch.draw(shader)
-        
+
         buffer = bgl.Buffer(bgl.GL_BYTE, input_image.size[0] * input_image.size[1] * 4)
         bgl.glReadBuffer(bgl.GL_BACK)
         bgl.glReadPixels(0, 0, input_image.size[0], input_image.size[1], bgl.GL_RGBA, bgl.GL_UNSIGNED_BYTE, buffer)
 
     offscreen.free()
-    
+
     target_image.pixels = [v / 255 for v in buffer]
     input_image = target_image
-    
+
     #Save LogLuv
     if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
         print(input_image.name)
@@ -557,7 +559,7 @@ def encodeImageRGBMGPU(image, maxRange, outDir, quality):
     bpy.context.scene.render.image_settings.quality = quality
     #input_image.save_render(filepath = input_image.filepath_raw, scene = bpy.context.scene)
     input_image.save()
-    
+
     #Todo - Find a way to save
     #bpy.ops.image.save_all_modified()
 
@@ -583,7 +585,7 @@ def encodeImageRGBMCPU(image, maxRange, outDir, quality):
                 alpha = True,
                 float_buffer = False
                 )
-    
+
     num_pixels = len(input_image.pixels)
     result_pixel = list(input_image.pixels)
 
@@ -594,10 +596,10 @@ def encodeImageRGBMCPU(image, maxRange, outDir, quality):
         result_pixel[i+3] = math.ceil(result_pixel[i+3] * 255.0) / 255.0
         for j in range(3):
             result_pixel[i+j] /= result_pixel[i+3]
-    
+
     target_image.pixels = result_pixel
     input_image = target_image
-    
+
     #Save RGBM
     if bpy.context.scene.TLM_SceneProperties.tlm_verbose:
         print(input_image.name)
@@ -644,7 +646,7 @@ def encodeImageRGBDCPU(image, maxRange, outDir, quality):
                 alpha = True,
                 float_buffer = False
                 )
-    
+
     num_pixels = len(input_image.pixels)
     result_pixel = list(input_image.pixels)
 
@@ -660,9 +662,9 @@ def encodeImageRGBDCPU(image, maxRange, outDir, quality):
         result_pixel[i+1] = math.pow(result_pixel[i+1] * D, 1/2.2)
         result_pixel[i+2] = math.pow(result_pixel[i+2] * D, 1/2.2)
         result_pixel[i+3] = D
-    
+
     target_image.pixels = result_pixel
-    
+
     input_image = target_image
 
     #Save RGBD

@@ -136,7 +136,6 @@ class RenderPathForward {
 				path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
 				path.loadShader("shader_datas/copy_pass/copy_pass");
 
-				// holds background depth
 				var t = new RenderTargetRaw();
 				t.name = "gbufferD1";
 				t.width = 0;
@@ -152,7 +151,7 @@ class RenderPathForward {
 				t.width = 0;
 				t.height = 0;
 				t.displayp = Inc.getDisplayp();
-				t.format = "RGBA64";
+				t.format = "RGBA32";
 				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
 			}
@@ -491,11 +490,11 @@ class RenderPathForward {
 				if (armory.data.Config.raw.rp_ssrefr != false)
 				{
 					//save depth
+
 					path.setTarget("gbufferD1");
 					path.bindTarget("_main", "tex");
 					path.drawShader("shader_datas/copy_pass/copy_pass");
 
-					//save background color
 					path.setTarget("refr");
 					path.bindTarget("lbuffer0", "tex");
 					path.drawShader("shader_datas/copy_pass/copy_pass");
@@ -521,6 +520,16 @@ class RenderPathForward {
 
 					#if rp_ssrs
 					path.bindTarget("_main", "gbufferD");
+					#end
+
+					#if rp_shadowmap
+					{
+						#if arm_shadowmap_atlas
+						Inc.bindShadowMapAtlas();
+						#else
+						Inc.bindShadowMap();
+						#end
+					}
 					#end
 
 					path.drawMeshes("refraction");

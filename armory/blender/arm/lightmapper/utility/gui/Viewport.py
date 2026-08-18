@@ -1,4 +1,6 @@
-import bpy, blf, bgl, os, gpu
+import bpy, blf, os, gpu
+if bpy.app.version < (5, 0, 0):
+	import bgl
 from gpu_extras.batch import batch_for_shader
 
 class ViewportDraw:
@@ -32,7 +34,7 @@ class ViewportDraw:
             self.shader = gpu.shader.from_builtin('2D_IMAGE')
         else:
             self.shader = gpu.shader.from_builtin('IMAGE')
-            
+
         self.batch = batch_for_shader(
             self.shader, 'TRI_FAN',
             {
@@ -57,7 +59,7 @@ class ViewportDraw:
         blf.draw(font_id, "%s" % (self.text))
 
     def draw_image_callback(self, context):
-        
+
         if self.image:
             bgl.glEnable(bgl.GL_BLEND)
             bgl.glActiveTexture(bgl.GL_TEXTURE0)

@@ -140,7 +140,7 @@ def update_preset(self, context):
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
-        rpdat.rp_voxels = 'Voxel GI'
+        rpdat.rp_voxels = 'Off'
         rpdat.rp_voxelgi_resolution = '64'
         rpdat.arm_voxelgi_size = 0.125
         rpdat.arm_voxelgi_revoxelize = False
