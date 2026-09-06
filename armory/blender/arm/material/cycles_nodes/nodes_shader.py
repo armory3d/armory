@@ -131,7 +131,7 @@ if bpy.app.version >= (3, 0, 0) and bpy.app.version <= (4, 1, 0):
             state.out_ior = c.parse_value_input(node.inputs[16])
             if len(node.inputs) >= 21:
                 state.out_opacity = c.parse_value_input(node.inputs[21])
-if bpy.app.version > (4, 1, 0):
+if bpy.app.version > (4, 1, 0) and bpy.app.version < (5, 0, 0):
     def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: NodeSocket, state: ParserState) -> None:
         if state.parse_surface:
             c.write_normal(node.inputs[5])
@@ -169,6 +169,37 @@ if bpy.app.version > (4, 1, 0):
             #state.out_ior = c.parse_value_input(node.inputs[3])
             #state.out_transmission = c.parse_vector_input(node.inputs[17])
             #state.out_transmission_roughness = state.out_roughness
+        if state.parse_opacity:
+            state.out_ior = c.parse_value_input(node.inputs[3])
+            state.out_opacity = c.parse_value_input(node.inputs[4])
+
+if bpy.app.version >= (5, 0, 0):
+    # Blender 5.0 inserted a new "Thin Wall" socket at index 5, shifting every
+    # socket from Normal onward by +1 compared to the 4.2-4.4 layout above.
+    def parse_bsdfprincipled(node: bpy.types.ShaderNodeBsdfPrincipled, out_socket: NodeSocket, state: ParserState) -> None:
+        if state.parse_surface:
+            c.write_normal(node.inputs[6])
+            state.out_basecol = c.parse_vector_input(node.inputs[0])
+            subsurface = c.parse_value_input(node.inputs[8])
+            subsurface_radius = c.parse_vector_input(node.inputs[10])
+            subsurface_color = c.parse_vector_input(node.inputs[9])
+            state.out_metallic = c.parse_value_input(node.inputs[1])
+            state.out_specular = c.parse_value_input(node.inputs[14])
+            state.out_roughness = c.parse_value_input(node.inputs[2])
+            # Prevent black material when metal = 1.0 and roughness = 0.0
+            try:
+                if float(state.out_roughness) < 0.00101:
+                    state.out_roughness = '0.001'
+            except ValueError:
+                pass
+            if (node.inputs['Emission Strength'].is_linked or node.inputs['Emission Strength'].default_value != 0.0)\
+                    and (node.inputs['Emission Color'].is_linked or not mat_utils.equals_color_socket(node.inputs['Emission Color'], (0.0, 0.0, 0.0), comp_alpha=False)):
+                emission_col = c.parse_vector_input(node.inputs['Emission Color'])
+                emission_strength = c.parse_value_input(node.inputs['Emission Strength'])
+                state.out_emission_col = '({0} * {1})'.format(emission_col, emission_strength)
+                mat_state.emission_type = mat_state.EmissionType.SHADED
+            else:
+                mat_state.emission_type = mat_state.EmissionType.NO_EMISSION
         if state.parse_opacity:
             state.out_ior = c.parse_value_input(node.inputs[3])
             state.out_opacity = c.parse_value_input(node.inputs[4])
