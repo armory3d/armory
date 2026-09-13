@@ -662,6 +662,7 @@ class Gamepad extends VirtualInput {
 	var buttonsDown: Array<Float> = []; // Intensity 0 - 1
 	var buttonsStarted: Array<Bool> = [];
 	var buttonsReleased: Array<Bool> = [];
+	var prevTriggerValue: Array<Float> = []; // For analog trigger started detection
 
 	var buttonsFrame: Array<Int> = [];
 
@@ -671,26 +672,37 @@ class Gamepad extends VirtualInput {
 	public var connected = false;
 	var num = 0;
 
+	// Controller type detection
+	var isXboxStyle = false;
+	var isAndroid = false;
+
 	public function new(i: Int, virtual = false) {
 		for (s in buttons) {
 			buttonsDown.push(0.0);
 			buttonsStarted.push(false);
 			buttonsReleased.push(false);
+			prevTriggerValue.push(0.0);
 		}
 		num = i;
 		reset();
 		virtual ? connected = true : connect();
 	}
 
-	var connects = 0;
 	function connect() {
 		var gamepad = kha.input.Gamepad.get(num);
 		if (gamepad == null) {
-			// if (connects < 10) armory.system.Tween.timer(1, connect);
-			// connects++;
 			return;
 		}
 		connected = true;
+		// Detect controller type from id
+		var gid = gamepad.id != null ? gamepad.id.toLowerCase() : "";
+		isXboxStyle = gid.indexOf("xbox") != -1 || gid.indexOf("xinput") != -1 || gid.indexOf("x360") != -1;
+		isAndroid = gid.indexOf("android") != -1;
+		#if kha_android
+		isAndroid = true;
+		#end
+		if (isXboxStyle) buttons = buttonsXBOX;
+		else buttons = buttonsPS;
 		gamepad.notify(axisListener, buttonListener);
 	}
 
@@ -715,6 +727,7 @@ class Gamepad extends VirtualInput {
 			buttonsDown[i] = 0.0;
 			buttonsStarted[i] = false;
 			buttonsReleased[i] = false;
+			prevTriggerValue[i] = 0.0;
 		}
 		endFrame();
 	}
@@ -741,6 +754,56 @@ class Gamepad extends VirtualInput {
 	}
 
 	function axisListener(axis: Int, value: Float) {
+		// Handle hat switch / d-pad as axes (SDL maps hat to axes 4/5)
+		if (axis == 4) {
+			// Horizontal hat: -1 left, 0 center, 1 right
+			var leftIdx = buttonIndex("left");
+			var rightIdx = buttonIndex("right");
+			if (value < -0.5) {
+				if (buttonsDown[leftIdx] == 0) buttonsStarted[leftIdx] = true;
+				buttonsDown[leftIdx] = 1.0;
+				buttonsFrame.push(leftIdx);
+			} else if (buttonsDown[leftIdx] > 0) {
+				buttonsReleased[leftIdx] = true;
+				buttonsDown[leftIdx] = 0.0;
+				buttonsFrame.push(leftIdx);
+			}
+			if (value > 0.5) {
+				if (buttonsDown[rightIdx] == 0) buttonsStarted[rightIdx] = true;
+				buttonsDown[rightIdx] = 1.0;
+				buttonsFrame.push(rightIdx);
+			} else if (buttonsDown[rightIdx] > 0) {
+				buttonsReleased[rightIdx] = true;
+				buttonsDown[rightIdx] = 0.0;
+				buttonsFrame.push(rightIdx);
+			}
+			return;
+		}
+		if (axis == 5) {
+			// Vertical hat: -1 up, 0 center, 1 down
+			var upIdx = buttonIndex("up");
+			var downIdx = buttonIndex("down");
+			if (value < -0.5) {
+				if (buttonsDown[upIdx] == 0) buttonsStarted[upIdx] = true;
+				buttonsDown[upIdx] = 1.0;
+				buttonsFrame.push(upIdx);
+			} else if (buttonsDown[upIdx] > 0) {
+				buttonsReleased[upIdx] = true;
+				buttonsDown[upIdx] = 0.0;
+				buttonsFrame.push(upIdx);
+			}
+			if (value > 0.5) {
+				if (buttonsDown[downIdx] == 0) buttonsStarted[downIdx] = true;
+				buttonsDown[downIdx] = 1.0;
+				buttonsFrame.push(downIdx);
+			} else if (buttonsDown[downIdx] > 0) {
+				buttonsReleased[downIdx] = true;
+				buttonsDown[downIdx] = 0.0;
+				buttonsFrame.push(downIdx);
+			}
+			return;
+		}
+
 		var stick = axis <= 1 ? leftStick : rightStick;
 
 		if (axis == 0 || axis == 2) { // X
@@ -752,8 +815,10 @@ class Gamepad extends VirtualInput {
 			stick.lastY = stick.y;
 			#if (kha_html5 || kha_debug_html5)
 			stick.y = -value;
+			#elseif kha_android
+			stick.y = -value;
 			#else
-			stick.y = value;
+			stick.y = isAndroid ? -value : value;
 			#end
 			stick.movementY = stick.y - stick.lastY;
 		}
@@ -761,14 +826,32 @@ class Gamepad extends VirtualInput {
 	}
 
 	function buttonListener(button: Int, value: Float) {
+		// Bounds check - some controllers report more buttons than our array
+		if (button < 0 || button >= buttonsDown.length) return;
+
 		buttonsFrame.push(button);
 
-		buttonsDown[button] = value;
-		if (value > 0) buttonsStarted[button] = true; // Will trigger L2/R2 multiple times..
-		else buttonsReleased[button] = true;
+		// Determine if this is an analog trigger (l2 at index 6, r2 at index 7)
+		var isTrigger = (button == 6 || button == 7);
+
+		if (isTrigger) {
+			// Analog trigger: use threshold for started/released
+			var prev = prevTriggerValue[button];
+			buttonsDown[button] = value;
+			if (prev < 0.5 && value >= 0.5) {
+				buttonsStarted[button] = true;
+			} else if (prev >= 0.5 && value < 0.5) {
+				buttonsReleased[button] = true;
+			}
+			prevTriggerValue[button] = value;
+		} else {
+			buttonsDown[button] = value;
+			if (value > 0) buttonsStarted[button] = true;
+			else buttonsReleased[button] = true;
+		}
 
 		if (value == 0.0) upVirtual(buttons[button]);
-		else if (value == 1.0) downVirtual(buttons[button]);
+		else if (value >= 0.5) downVirtual(buttons[button]);
 	}
 }
 
