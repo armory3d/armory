@@ -27,7 +27,7 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 #include "std/math.glsl"
 #include "std/gbuffer.glsl"
 #include "std/imageatomic.glsl"
-#include "std/voxels_constants.glsl"
+#include "std/constants.glsl"
 
 #ifdef _VoxelGI
 uniform layout(rgba8) image3D voxelsB;
