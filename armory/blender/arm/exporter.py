@@ -687,33 +687,24 @@ class ArmoryExporter:
             if variant_suffix == '' and arm.utils.export_morph_targets(bobject):
                 variant_suffix = '_armskey'
 
+            # Objects inside instanced collections are not part of scene.collection.all_objects, process them separately
+            if bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
+                for cobj in bobject.instance_collection.all_objects:
+                    if cobj.type != 'MESH':
+                        continue
+                    cobj_suffix = ''
+                    if arm.utils.export_bone_data(cobj):
+                        cobj_suffix = '_armskin'
+                    elif arm.utils.export_morph_targets(cobj):
+                        cobj_suffix = '_armskey'
+                    if cobj_suffix != '':
+                        ArmoryExporter.create_slot_variants(cobj, cobj_suffix, matvars, matslots)
+
             if variant_suffix == '':
                 continue
 
             # For regular mesh objects, process their material slots
-            for slot in bobject.material_slots:
-                if slot.material is None:
-                    continue
-                # For linked materials, set the flag directly (can't create variants)
-                if slot.material.library is not None:
-                    if variant_suffix == '_armtile':
-                        slot.material.arm_tilesheet_flag = True
-                        slot.material.arm_cached = False
-                    continue
-                if slot.material.name.endswith(variant_suffix):
-                    continue
-
-                matslots.append(slot)
-                mat_name = slot.material.name + variant_suffix
-                mat = bpy.data.materials.get(mat_name)
-                # Create material variant
-                if mat is None:
-                    mat = slot.material.copy()
-                    mat.name = mat_name
-                    if variant_suffix == '_armtile':
-                        mat.arm_tilesheet_flag = True
-                    matvars.append(mat)
-                slot.material = mat
+            ArmoryExporter.create_slot_variants(bobject, variant_suffix, matvars, matslots)
 
             # For collection instances, set tilesheet flag on materials of objects inside the collection
             # ONLY for objects that have arm_tilesheet_enabled set
@@ -761,6 +752,39 @@ class ArmoryExporter:
         return matvars, matslots
 
     @staticmethod
+    def create_slot_variants(bobject: bpy.types.Object, variant_suffix: str, matvars: List[bpy.types.Material], matslots: List[bpy.types.MaterialSlot]):
+        """Creates the variant materials for the slots of the given object and assigns them. Linked slots are read-only, so for those a local
+        variant copy is created without touching the slot - slot_to_material() resolves it by name during export."""
+        for slot in bobject.material_slots:
+            if slot.material is None:
+                continue
+            if slot.material.name.endswith(variant_suffix):
+                continue
+            if slot.material.library is not None:
+                mat_name = arm.utils.asset_name(slot.material) + variant_suffix
+                mat = bpy.data.materials.get(mat_name)
+                if mat is None:
+                    mat = slot.material.copy()  # Local copy of the linked material
+                    mat.name = mat_name
+                    mat.arm_cached = False
+                    if variant_suffix == '_armtile':
+                        mat.arm_tilesheet_flag = True
+                    matvars.append(mat)
+                continue
+
+            matslots.append(slot)
+            mat_name = slot.material.name + variant_suffix
+            mat = bpy.data.materials.get(mat_name)
+            # Create material variant
+            if mat is None:
+                mat = slot.material.copy()
+                mat.name = mat_name
+                if variant_suffix == '_armtile':
+                    mat.arm_tilesheet_flag = True
+                matvars.append(mat)
+            slot.material = mat
+
+    @staticmethod
     def slot_to_material(bobject: bpy.types.Object, slot: bpy.types.MaterialSlot):
         mat = slot.material
         # Pick up backed material if present
@@ -768,6 +792,20 @@ class ArmoryExporter:
             baked_mat = mat.name + '_' + bobject.name + '_baked'
             if baked_mat in bpy.data.materials:
                 mat = bpy.data.materials[baked_mat]
+        # Linked materials cannot be swapped on their read-only slots, so create_material_variants() creates local variant copies instead.
+        # Resolve them by name here so the object is exported with the variant and the original material keeps its non-variant users only.
+        if mat is not None and mat.library is not None:
+            variant_suffix = ''
+            if arm.utils.export_bone_data(bobject):
+                variant_suffix = '_armskin'
+            elif bobject.type == 'MESH' and bobject.arm_tilesheet_enabled:
+                variant_suffix = '_armtile'
+            elif arm.utils.export_morph_targets(bobject):
+                variant_suffix = '_armskey'
+            if variant_suffix != '':
+                variant_mat = bpy.data.materials.get(arm.utils.asset_name(mat) + variant_suffix)
+                if variant_mat is not None:
+                    mat = variant_mat
         return mat
 
     # def ExportMorphWeights(self, node, shapeKeys, scene):
@@ -2513,6 +2551,22 @@ Make sure the mesh only has tris/quads.""")
                 material.export_uvs = uv_export
                 material.export_vcols = vcol_export
                 material.export_tangents = tang_export
+
+                # Variants of linked materials are removed after the export, so store the flags on the original material - meshes are
+                # exported after the materials and read them from there (get_export_uvs and friends)
+                flags = ('_armskin', '_armtile', '_armskey', '_armpart')
+                if material.name.endswith(flags):
+                    current_flag = next((f for f in flags if material.name.endswith(f)), None)
+                    if current_flag is not None:
+                        base_name = material.name.removesuffix(current_flag)
+
+                        if bpy.data.materials.get(base_name) is None:
+                            for base_mat in bpy.data.materials:
+                                if base_mat.library is not None and arm.utils.asset_name(base_mat) == base_name:
+                                    base_mat.export_uvs = uv_export
+                                    base_mat.export_vcols = vcol_export
+                                    base_mat.export_tangents = tang_export
+                                    break
 
                 if material in self.material_to_object_dict:
                     mat_users = self.material_to_object_dict[material]
