@@ -583,6 +583,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_ss_refraction_search_dist: FloatProperty(name="Search", default=5.0, update=assets.invalidate_shader_cache)
     arm_ss_refraction_falloff_exp: FloatProperty(name="Falloff", default=1.0, update=assets.invalidate_shader_cache)
     arm_ss_refraction_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
+    arm_ss_refraction_absorption: FloatProperty(name="Absorption", description="Density of the Beer-Lambert absorption inside refractive media, the material base color is transmitted at one unit of thickness", default=1.0, min=0.0, update=assets.invalidate_shader_cache)
     arm_volumetric_light_air_turbidity: FloatProperty(name="Air Turbidity", default=1.0, update=assets.invalidate_shader_cache)
     arm_volumetric_light_air_color: FloatVectorProperty(name="Air Color", size=3, default=[1.0, 1.0, 1.0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
     arm_volumetric_light_steps: IntProperty(name="Steps", default=20, min=0, update=assets.invalidate_shader_cache)

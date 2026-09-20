@@ -1902,6 +1902,7 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_ss_refraction_search_dist')
         col.prop(rpdat, 'arm_ss_refraction_falloff_exp')
         col.prop(rpdat, 'arm_ss_refraction_jitter')
+        col.prop(rpdat, 'arm_ss_refraction_absorption')
         layout.separator()
 
         col = layout.column()
