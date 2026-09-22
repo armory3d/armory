@@ -123,7 +123,7 @@ uniform vec2 cameraPlane;
 	#ifdef _ShadowMapTransparent
 	//!uniform sampler2D shadowMapSpotTransparent[1];
 	#endif
-	//!uniform mat4 LWVPSpot[1];
+	//!uniform mat4 LWVPSpotArray[1];
 	#else
 	//!uniform samplerCubeShadow shadowMapPoint[1];
 	#ifdef _ShadowMapTransparent

@@ -1165,11 +1165,22 @@ class Uniforms {
 					}
 				}
 				#end
-				#if (arm_clusters && arm_spot)
+				#if arm_spot
 				case "_biasLightWorldViewProjectionMatrixSpotArray": {
+					#if arm_clusters
 					fa = LightObject.updateLWVPMatrixArray(object, "spot");
+					#else
+					// Single spot light path (_SinglePoint), LWVPSpotArray[1] holds one matrix
+					var light = getSpot(0);
+					if (light != null) {
+						helpMat.setFrom(light.VP);
+						helpMat.multmat(biasMat);
+						g.setMatrix(location, helpMat.self);
+					}
+					return;
+					#end
 				}
-				#end // arm_clusters
+				#end
 				#if arm_morph_target
 				case "_morphWeights": {
 					fa = cast(object, MeshObject).morphTarget.morphWeights;

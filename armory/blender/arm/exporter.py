@@ -2152,6 +2152,8 @@ Make sure the mesh only has tris/quads.""")
                 out_light['light_size'] = light_ref.shadow_soft_size * 10
         elif objtype == 'SPOT':
             out_light['strength'] *= 1.0 / (4.0 * math.pi)
+            # The shadow map frustum has to enclose the whole cone
+            out_light['fov'] = light_ref.spot_size
             half_angle = light_ref.spot_size * 0.5
             outer_cos = math.cos(half_angle)
             blend = max(0.0, min(1.0, light_ref.spot_blend))
