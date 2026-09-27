@@ -107,7 +107,7 @@ def compile_shader_pass(res, raw_shaders_path, shader_name, defs, make_variants)
     for ctx in contexts:
         for s in ['vertex_shader', 'fragment_shader', 'geometry_shader', 'tesscontrol_shader', 'tesseval_shader']:
             if s in ctx:
-                shutil.copy(ctx[s], path + '/' + ctx[s].split('/')[-1])
+                arm.utils.copy_file_if_changed(ctx[s], path + '/' + ctx[s].split('/')[-1])
 
 def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
@@ -195,23 +195,7 @@ def export_data(fp, sdk_path):
         print(f'Armory v{wrd.arm_version} ({wrd.arm_commit})')
         print(f'Blender: {bpy.app.version_string}, Target: {state.target}, GAPI: {arm.utils.get_gapi()}')
 
-    # Clean compiled variants if cache is disabled
     build_dir = arm.utils.get_fp_build()
-    if not wrd.arm_cache_build:
-        if os.path.isdir(build_dir + '/debug/html5-resources'):
-            shutil.rmtree(build_dir + '/debug/html5-resources', onerror=remove_readonly)
-        if os.path.isdir(build_dir + '/krom-resources'):
-            shutil.rmtree(build_dir + '/krom-resources', onerror=remove_readonly)
-        if os.path.isdir(build_dir + '/debug/krom-resources'):
-            shutil.rmtree(build_dir + '/debug/krom-resources', onerror=remove_readonly)
-        if os.path.isdir(build_dir + '/windows-resources'):
-            shutil.rmtree(build_dir + '/windows-resources', onerror=remove_readonly)
-        if os.path.isdir(build_dir + '/linux-resources'):
-            shutil.rmtree(build_dir + '/linux-resources', onerror=remove_readonly)
-        if os.path.isdir(build_dir + '/osx-resources'):
-            shutil.rmtree(build_dir + '/osx-resources', onerror=remove_readonly)
-        if os.path.isdir(build_dir + '/compiled/Shaders'):
-            shutil.rmtree(build_dir + '/compiled/Shaders', onerror=remove_readonly)
 
     raw_shaders_path = sdk_path + '/armory/Shaders/'
     assets_path = sdk_path + '/armory/Assets/'
@@ -264,7 +248,13 @@ def export_data(fp, sdk_path):
             assets.reset_shader_cons()
             ext = '.lz4' if ArmoryExporter.compress_enabled else '.arm'
             asset_path = build_dir + '/compiled/Assets/' + arm.utils.safestr(scene.name + "_" + os.path.basename(scene.library.filepath).replace(".blend", "") if scene.library else scene.name) + ext
-            ArmoryExporter.export_scene(bpy.context, asset_path, scene=scene, depsgraph=depsgraph, build_cache=build_cache)
+            # Scenes living in another .blend file can be skipped as long as
+            # no library changed, but then everything the export would have
+            # registered for khafile.js has to be put back
+            if not build_cache.replay_scene(scene, asset_path):
+                contribution_mark = build_cache.mark_contributions()
+                ArmoryExporter.export_scene(bpy.context, asset_path, scene=scene, depsgraph=depsgraph, build_cache=build_cache)
+                build_cache.store_scene(scene, asset_path, contribution_mark)
             if ArmoryExporter.export_physics:
                 physics_found = True
             if ArmoryExporter.export_navigation:
@@ -274,6 +264,10 @@ def export_data(fp, sdk_path):
             if ArmoryExporter.export_network:
                 network_found = True
             assets.add(asset_path)
+
+    # All scenes are exported, the shader data of each material is final now
+    assets.flush_shader_data()
+    build_cache.save_linked_manifest()
 
     if physics_found is False: # Disable physics if no rigid body is exported
         export_physics = False
@@ -324,7 +318,10 @@ def export_data(fp, sdk_path):
     shaders_path = build_dir + '/compiled/Shaders'
     if not os.path.exists(shaders_path):
         os.makedirs(shaders_path)
-    write_data.write_compiledglsl(defs + cdefs, make_variants=has_config)
+    if write_data.write_compiledglsl(defs + cdefs, make_variants=has_config):
+        # The shaders include compiled.inc, which Khamake's shader compiler
+        # doesn't look at, so tell it about the change
+        assets.invalidate_shader_compilation()
 
     # Write referenced shader passes
     if not os.path.isfile(build_dir + '/compiled/Shaders/shader_datas.arm') or state.last_world_defs != wrd.world_defs:
@@ -365,8 +362,9 @@ def export_data(fp, sdk_path):
     for file in assets.shaders_external:
         name = file.split('/')[-1].split('\\')[-1]
         target = build_dir + '/compiled/Shaders/' + name
-        if not os.path.exists(target):
-            shutil.copy(file, target)
+        # Copying only on change also picks up edits to the source file,
+        # which the previous "copy if missing" check never did
+        arm.utils.copy_file_if_changed(file, target)
     state.last_world_defs = wrd.world_defs
 
     # Reset path
@@ -470,9 +468,9 @@ def compile(assets_only=False):
         if (kha_target_name == 'krom' and not state.is_publish) or (kha_target_name == 'html5' and not state.is_publish):
             cmd.append(arm.utils.build_dir() + '/debug')
             # Start compilation server
-            if kha_target_name == 'krom' and arm.utils.get_compilation_server() and not assets_only and wrd.arm_cache_build:
+            if kha_target_name == 'krom' and arm.utils.get_compilation_server() and not assets_only:
                 compilation_server = True
-                arm.lib.server.run_haxe(arm.utils.get_haxe_path())
+                arm.lib.server.run_haxe(arm.utils.get_haxe_path(), arm.utils.get_compilation_server_port())
         else:
             cmd.append(arm.utils.build_dir())
 
@@ -588,7 +586,7 @@ def assets_done():
     if result == 0:
         # Connect to the compilation server
         os.chdir(arm.utils.build_dir() + '/debug/')
-        cmd = [arm.utils.get_haxe_path(), '--connect', '6000', 'project-krom.hxml']
+        cmd = [arm.utils.get_haxe_path(), '--connect', str(arm.utils.get_compilation_server_port()), 'project-krom.hxml']
         state.proc_build = run_proc(cmd, compilation_server_done)
     else:
         state.proc_build = None
@@ -645,8 +643,7 @@ def play():
     build(target=runtime_to_target(), is_play=True)
 
     khajs_path = get_khajs_path(state.target)
-    if not wrd.arm_cache_build or \
-       not os.path.isfile(khajs_path) or \
+    if not os.path.isfile(khajs_path) or \
        assets.khafile_defs_last != assets.khafile_defs or \
        state.last_target != state.target:
         wrd.arm_recompile = True

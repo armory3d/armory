@@ -177,7 +177,7 @@ def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, expo
     # Determine if assets should go to data folder (used for hook assets and later)
     use_data_dir = is_publish and (state.target == 'krom-windows' or state.target == 'krom-linux' or state.target == 'windows-hl' or state.target == 'linux-hl' or state.target == 'html5')
 
-    with open('khafile.js', 'w', encoding="utf-8") as khafile:
+    with arm.utils.open_file_if_changed('khafile.js', encoding="utf-8") as khafile:
         khafile.write(
 """// Auto-generated
 let project = new Project('""" + arm.utils.safesrc(wrd.arm_project_name + '-' + wrd.arm_project_version) + """');
@@ -343,7 +343,7 @@ let project = new Project('""" + arm.utils.safesrc(wrd.arm_project_name + '-' + 
             khafile.write("project.addParameter('" + import_traits[i] + "');\n")
             khafile.write("""project.addParameter("--macro keep('""" + import_traits[i] + """')");\n""")
 
-        noembed = wrd.arm_cache_build and not is_publish and state.target == 'krom'
+        noembed = not is_publish and state.target == 'krom'
         if noembed:
             # Load shaders manually
             assets.add_khafile_def('arm_noembed')
@@ -581,7 +581,7 @@ def write_config(resx, resy):
         'rp_dynres': rpdat.rp_dynres
     }
 
-    with open(os.path.join(p, 'config.arm'), 'w') as configfile:
+    with arm.utils.open_file_if_changed(os.path.join(p, 'config.arm')) as configfile:
         configfile.write(json.dumps(output, sort_keys=True, indent=4))
 
 
@@ -602,7 +602,7 @@ def write_mainhx(scene_name, resx, resy, is_play, is_publish):
     # Get library hooks
     hooks = get_library_hooks()
 
-    with open('Sources/Main.hx', 'w', encoding="utf-8") as f:
+    with arm.utils.open_file_if_changed('Sources/Main.hx', encoding="utf-8") as f:
         f.write(
 """// Auto-generated
 package;
@@ -740,11 +740,12 @@ def write_indexhtml(w, h, is_publish):
 """)
 
 add_compiledglsl = ''
-def write_compiledglsl(defs, make_variants):
+def write_compiledglsl(defs, make_variants) -> bool:
+    """Writes compiled.inc and returns whether its content changed."""
     rpdat = arm.utils.get_rp()
     wrd = bpy.data.worlds['Arm']
     shadowmap_size = arm.utils.get_cascade_size(rpdat) if rpdat.rp_shadows else 0
-    with open(arm.utils.build_dir() + '/compiled/Shaders/compiled.inc', 'w') as f:
+    with arm.utils.open_file_if_changed(arm.utils.build_dir() + '/compiled/Shaders/compiled.inc') as f:
         f.write(
 """#ifndef _COMPILED_GLSL_
 #define _COMPILED_GLSL_
@@ -991,6 +992,8 @@ const float clusterNear = 3.0;
 
         f.write("""#endif // _COMPILED_GLSL_
 """)
+
+    return f.changed
 
 def write_traithx(class_path):
     wrd = bpy.data.worlds['Arm']

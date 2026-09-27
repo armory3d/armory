@@ -211,7 +211,6 @@ def update_preset(self, context):
 def update_renderpath(self, context):
     if not assets.invalidate_enabled:
         return
-    assets.invalidate_shader_cache(self, context)
     bpy.data.worlds['Arm'].arm_recompile = True
 
 def udpate_shadowmap_cascades(self, context):
@@ -219,7 +218,6 @@ def udpate_shadowmap_cascades(self, context):
     update_renderpath(self, context)
 
 def update_material_model(self, context):
-    assets.invalidate_shader_cache(self, context)
     update_renderpath(self, context)
 
 def update_translucency_state(self, context):
@@ -284,7 +282,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
            description="A name for this item",
            default="Desktop")
 
-    rp_driver: StringProperty(name="Driver", default="Armory", update=assets.invalidate_compiled_data)
+    rp_driver: StringProperty(name="Driver", default="Armory")
     rp_renderer: EnumProperty(
         items=[('Forward', 'Forward Clustered', 'Forward'),
                ('Deferred', 'Deferred Clustered', 'Deferred'),
@@ -300,13 +298,13 @@ class ArmRPListItem(bpy.types.PropertyGroup):
              ('Off', 'No Clear', 'Off'),
       ],
       name="Background", description="Background type", default='World', update=update_renderpath)
-    arm_irradiance: BoolProperty(name="Irradiance", description="Generate spherical harmonics", default=True, update=assets.invalidate_shader_cache)
-    arm_radiance: BoolProperty(name="Radiance", description="Generate radiance textures", default=True, update=assets.invalidate_shader_cache)
+    arm_irradiance: BoolProperty(name="Irradiance", description="Generate spherical harmonics", default=True)
+    arm_radiance: BoolProperty(name="Radiance", description="Generate radiance textures", default=True)
     arm_radiance_size: EnumProperty(
         items=[('512', '512', '512'),
                ('1024', '1024', '1024'),
                ('2048', '2048', '2048')],
-        name="Map Size", description="Prefiltered map size", default='1024', update=assets.invalidate_envmap_data)
+        name="Map Size", description="Prefiltered map size", default='1024')
     rp_autoexposure: BoolProperty(name="Auto Exposure", description="Adjust exposure based on luminance", default=False, update=update_renderpath)
     rp_compositornodes: BoolProperty(name="Compositor", description="Draw compositor nodes", default=True, update=update_renderpath)
     rp_shadows: BoolProperty(name="Shadows", description="Enable shadow casting", default=True, update=update_renderpath)
@@ -435,7 +433,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         items=[('Auto', 'Auto', 'Auto'),
                ('Distance', 'Distance', 'Distance'),
                ('Index', 'Index', 'Index')],
-        name='Draw Order', description='Sort objects', default='Auto', update=assets.invalidate_compiled_data)
+        name='Draw Order', description='Sort objects', default='Auto')
     rp_depth_texture: BoolProperty(name="Depth Texture", description="Current render-path state", default=False)
     rp_depth_texture_state: EnumProperty(
         items=[('On', 'On', 'On'),
@@ -445,9 +443,9 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_stereo: BoolProperty(name="VR", description="Stereo rendering", default=False, update=update_renderpath)
     rp_water: BoolProperty(name="Water", description="Enable water surface pass", default=False, update=update_renderpath)
     rp_pp: BoolProperty(name="Realtime Post Process", description="Realtime Post Process", default=False, update=update_renderpath)
-    arm_clouds: BoolProperty(name="Clouds", description="Enable clouds pass", default=False, update=assets.invalidate_shader_cache)
-    arm_ssrs: BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False, update=assets.invalidate_shader_cache)
-    arm_micro_shadowing: BoolProperty(name="Micro Shadowing", description="Use the shaders' occlusion parameter to compute micro shadowing for the scene's sun lamp. This option is not available for render paths using mobile or solid material models", default=False, update=assets.invalidate_shader_cache)
+    arm_clouds: BoolProperty(name="Clouds", description="Enable clouds pass", default=False)
+    arm_ssrs: BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False)
+    arm_micro_shadowing: BoolProperty(name="Micro Shadowing", description="Use the shaders' occlusion parameter to compute micro shadowing for the scene's sun lamp. This option is not available for render paths using mobile or solid material models", default=False)
     arm_texture_filter: EnumProperty(
         items=[('Linear', 'Linear', 'Linear'),
                ('Point', 'Closest', 'Point'),
@@ -465,7 +463,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         items=[('Off', 'Off', 'Off'),
                ('Vertex', 'Vertex', 'Vertex'),
                ('Tessellation', 'Tessellation', 'Tessellation')],
-        name="Displacement", description="Enable material displacement", default='Vertex', update=assets.invalidate_shader_cache)
+        name="Displacement", description="Enable material displacement", default='Vertex')
     arm_tess_mesh_inner: IntProperty(name="Inner", description="Inner tessellation level", default=7)
     arm_tess_mesh_outer: IntProperty(name="Outer", description="Outer tessellation level", default=7)
     arm_tess_shadows_inner: IntProperty(name="Inner", description="Inner tessellation level", default=7)
@@ -480,7 +478,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Point', 'Closest', 'Point')],
         name="Filter", description="Scaling filter", default='Linear')
     rp_dynres: BoolProperty(name="Dynamic Resolution", description="Dynamic resolution scaling for performance", default=False, update=update_renderpath)
-    rp_chromatic_aberration: BoolProperty(name="Chromatic Aberration", description="Add chromatic aberration (scene fringe)", default=False, update=assets.invalidate_shader_cache)
+    rp_chromatic_aberration: BoolProperty(name="Chromatic Aberration", description="Add chromatic aberration (scene fringe)", default=False)
     arm_ssr_half_res: BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
     rp_voxels: EnumProperty(
         items=[('Off', 'Off', 'Off'),
@@ -507,8 +505,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         	   ('1', '1', '1'),
                ('2', '2', '2')],
         name="Bounces", description="Trace multiple light bounces", default='1', update=update_renderpath)
-    arm_voxelgi_clipmap_count: IntProperty(name="Clipmap count", description="Number of clipmaps", default=3, update=assets.invalidate_compiled_data)
-    arm_voxelgi_temporal: BoolProperty(name="Temporal Filter", description="Use temporal filtering to stabilize voxels", default=False, update=assets.invalidate_shader_cache)
+    arm_voxelgi_clipmap_count: IntProperty(name="Clipmap count", description="Number of clipmaps", default=3)
+    arm_voxelgi_temporal: BoolProperty(name="Temporal Filter", description="Use temporal filtering to stabilize voxels", default=False)
     arm_voxelgi_shadows: BoolProperty(name="Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
     arm_samples_per_pixel: EnumProperty(
         items=[('1', '1', '1'),
@@ -524,41 +522,41 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('3', '3', '3'),
                ('1', '1', '1'),
                ],
-        name="Cones", description="Number of cones to trace", default='5', update=assets.invalidate_shader_cache)
-    arm_voxelgi_diff: FloatProperty(name="Diffuse", description="", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_spec: FloatProperty(name="Reflection", description="", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_refr: FloatProperty(name="Refraction", description="", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_shad: FloatProperty(name="Shadows", description="", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_occ: FloatProperty(name="Occlusion", description="", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_size: FloatProperty(name="Size", description="Voxel size", default=0.25, update=assets.invalidate_shader_cache)
-    arm_voxelgi_step: FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_range: FloatProperty(name="Range", description="Maximum range", default=100.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_offset: FloatProperty(name="Offset", description="Multiplicative Offset for dealing with self occlusion", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_aperture: FloatProperty(name="Aperture", description="Cone aperture for shadow trace", default=0.0, update=assets.invalidate_shader_cache)
-    arm_sss_width: FloatProperty(name="Width", description="SSS blur strength", default=1.0, update=assets.invalidate_shader_cache)
-    arm_water_color: FloatVectorProperty(name="Color", size=3, default=[1, 1, 1], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
-    arm_water_level: FloatProperty(name="Level", default=0.0, update=assets.invalidate_shader_cache)
-    arm_water_displace: FloatProperty(name="Displace", default=1.0, update=assets.invalidate_shader_cache)
-    arm_water_speed: FloatProperty(name="Speed", default=1.0, update=assets.invalidate_shader_cache)
-    arm_water_freq: FloatProperty(name="Freq", default=1.0, update=assets.invalidate_shader_cache)
-    arm_water_density: FloatProperty(name="Density", default=1.0, update=assets.invalidate_shader_cache)
-    arm_water_refract: FloatProperty(name="Refract", default=1.0, update=assets.invalidate_shader_cache)
-    arm_water_reflect: FloatProperty(name="Reflect", default=1.0, update=assets.invalidate_shader_cache)
-    arm_ssgi_strength: FloatProperty(name="Strength", default=1.0, update=assets.invalidate_shader_cache)
-    arm_ssgi_radius: FloatProperty(name="Radius", default=1.0, update=assets.invalidate_shader_cache)
-    arm_ssgi_step: FloatProperty(name="Step", default=2.0, update=assets.invalidate_shader_cache)
-    arm_ssgi_max_steps: IntProperty(name="Max Steps", default=8, update=assets.invalidate_shader_cache)
+        name="Cones", description="Number of cones to trace", default='5')
+    arm_voxelgi_diff: FloatProperty(name="Diffuse", description="", default=1.0)
+    arm_voxelgi_spec: FloatProperty(name="Reflection", description="", default=1.0)
+    arm_voxelgi_refr: FloatProperty(name="Refraction", description="", default=1.0)
+    arm_voxelgi_shad: FloatProperty(name="Shadows", description="", default=1.0)
+    arm_voxelgi_occ: FloatProperty(name="Occlusion", description="", default=1.0)
+    arm_voxelgi_size: FloatProperty(name="Size", description="Voxel size", default=0.25)
+    arm_voxelgi_step: FloatProperty(name="Step", description="Step size", default=1.0)
+    arm_voxelgi_range: FloatProperty(name="Range", description="Maximum range", default=100.0)
+    arm_voxelgi_offset: FloatProperty(name="Offset", description="Multiplicative Offset for dealing with self occlusion", default=1.0)
+    arm_voxelgi_aperture: FloatProperty(name="Aperture", description="Cone aperture for shadow trace", default=0.0)
+    arm_sss_width: FloatProperty(name="Width", description="SSS blur strength", default=1.0)
+    arm_water_color: FloatVectorProperty(name="Color", size=3, default=[1, 1, 1], subtype='COLOR', min=0, max=1)
+    arm_water_level: FloatProperty(name="Level", default=0.0)
+    arm_water_displace: FloatProperty(name="Displace", default=1.0)
+    arm_water_speed: FloatProperty(name="Speed", default=1.0)
+    arm_water_freq: FloatProperty(name="Freq", default=1.0)
+    arm_water_density: FloatProperty(name="Density", default=1.0)
+    arm_water_refract: FloatProperty(name="Refract", default=1.0)
+    arm_water_reflect: FloatProperty(name="Reflect", default=1.0)
+    arm_ssgi_strength: FloatProperty(name="Strength", default=1.0)
+    arm_ssgi_radius: FloatProperty(name="Radius", default=1.0)
+    arm_ssgi_step: FloatProperty(name="Step", default=2.0)
+    arm_ssgi_max_steps: IntProperty(name="Max Steps", default=8)
     arm_ssgi_rays: EnumProperty(
         items=[('9', '9', '9'),
                ('5', '5', '5'),
                ],
-        name="Rays", description="Number of rays to trace for RTAO", default='5', update=assets.invalidate_shader_cache)
-    arm_ssgi_half_res: BoolProperty(name="Half Res", description="Trace in half resolution", default=False, update=assets.invalidate_shader_cache)
-    arm_bloom_threshold: FloatProperty(name="Threshold", description="Brightness above which a pixel is contributing to the bloom effect", min=0, default=0.8, update=assets.invalidate_shader_cache)
-    arm_bloom_knee: FloatProperty(name="Knee", description="Smoothen transition around the threshold (higher values = smoother transition)", min=0, max=1, default=0.5, update=assets.invalidate_shader_cache)
-    arm_bloom_strength: FloatProperty(name="Strength", description="Strength of the bloom effect", min=0, default=0.05, update=assets.invalidate_shader_cache)
-    arm_bloom_radius: FloatProperty(name="Radius", description="Glow radius (screen-size independent)", min=0, default=6.5, update=assets.invalidate_shader_cache)
-    arm_bloom_anti_flicker: BoolProperty(name="Anti-Flicker Filter", description="Apply a filter to reduce flickering caused by fireflies (single very bright pixels)", default=True, update=assets.invalidate_shader_cache)
+        name="Rays", description="Number of rays to trace for RTAO", default='5')
+    arm_ssgi_half_res: BoolProperty(name="Half Res", description="Trace in half resolution", default=False)
+    arm_bloom_threshold: FloatProperty(name="Threshold", description="Brightness above which a pixel is contributing to the bloom effect", min=0, default=0.8)
+    arm_bloom_knee: FloatProperty(name="Knee", description="Smoothen transition around the threshold (higher values = smoother transition)", min=0, max=1, default=0.5)
+    arm_bloom_strength: FloatProperty(name="Strength", description="Strength of the bloom effect", min=0, default=0.05)
+    arm_bloom_radius: FloatProperty(name="Radius", description="Glow radius (screen-size independent)", min=0, default=6.5)
+    arm_bloom_anti_flicker: BoolProperty(name="Anti-Flicker Filter", description="Apply a filter to reduce flickering caused by fireflies (single very bright pixels)", default=True)
     arm_bloom_quality: EnumProperty(
         name="Quality",
         description="Resampling quality of the bloom pass",
@@ -567,89 +565,88 @@ class ArmRPListItem(bpy.types.PropertyGroup):
             ("medium", "Medium", "Compromise between quality and performance"),
             ("high", "High", "Best quality, but slowest")
         ],
-        default="medium",
-        update=assets.invalidate_shader_cache
+        default="medium"
     )
-    arm_motion_blur_intensity: FloatProperty(name="Intensity", default=1.0, update=assets.invalidate_shader_cache)
-    arm_ssr_ray_step: FloatProperty(name="Step", default=0.03, update=assets.invalidate_shader_cache)
-    arm_ssr_search_dist: FloatProperty(name="Search", default=5.0, update=assets.invalidate_shader_cache)
-    arm_ssr_falloff_exp: FloatProperty(name="Falloff", default=5.0, update=assets.invalidate_shader_cache)
-    arm_ssr_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
-    arm_ss_refraction_ray_step: FloatProperty(name="Step", default=0.05, update=assets.invalidate_shader_cache)
-    arm_ss_refraction_search_dist: FloatProperty(name="Search", default=5.0, update=assets.invalidate_shader_cache)
-    arm_ss_refraction_falloff_exp: FloatProperty(name="Falloff", default=5.0, update=assets.invalidate_shader_cache)
-    arm_ss_refraction_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
-    arm_volumetric_light_air_turbidity: FloatProperty(name="Air Turbidity", default=1.0, update=assets.invalidate_shader_cache)
-    arm_volumetric_light_air_color: FloatVectorProperty(name="Air Color", size=3, default=[1.0, 1.0, 1.0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
-    arm_volumetric_light_steps: IntProperty(name="Steps", default=20, min=0, update=assets.invalidate_shader_cache)
-    arm_shadowmap_split: FloatProperty(name="Cascade Split", description="Split factor for cascaded shadow maps, higher factor favors detail on close surfaces", default=0.8, update=assets.invalidate_shader_cache)
-    arm_shadowmap_bounds: FloatProperty(name="Cascade Bounds", description="Multiply cascade bounds to capture bigger area", default=1.0, update=assets.invalidate_compiled_data)
-    arm_autoexposure_strength: FloatProperty(name="Auto Exposure Strength", default=1.0, update=assets.invalidate_shader_cache)
-    arm_autoexposure_speed: FloatProperty(name="Auto Exposure Speed", default=1.0, update=assets.invalidate_shader_cache)
-    arm_ssrs_ray_step: FloatProperty(name="Step", default=0.01, update=assets.invalidate_shader_cache)
+    arm_motion_blur_intensity: FloatProperty(name="Intensity", default=1.0)
+    arm_ssr_ray_step: FloatProperty(name="Step", default=0.03)
+    arm_ssr_search_dist: FloatProperty(name="Search", default=5.0)
+    arm_ssr_falloff_exp: FloatProperty(name="Falloff", default=5.0)
+    arm_ssr_jitter: FloatProperty(name="Jitter", default=0.6)
+    arm_ss_refraction_ray_step: FloatProperty(name="Step", default=0.05)
+    arm_ss_refraction_search_dist: FloatProperty(name="Search", default=5.0)
+    arm_ss_refraction_falloff_exp: FloatProperty(name="Falloff", default=5.0)
+    arm_ss_refraction_jitter: FloatProperty(name="Jitter", default=0.6)
+    arm_volumetric_light_air_turbidity: FloatProperty(name="Air Turbidity", default=1.0)
+    arm_volumetric_light_air_color: FloatVectorProperty(name="Air Color", size=3, default=[1.0, 1.0, 1.0], subtype='COLOR', min=0, max=1)
+    arm_volumetric_light_steps: IntProperty(name="Steps", default=20, min=0)
+    arm_shadowmap_split: FloatProperty(name="Cascade Split", description="Split factor for cascaded shadow maps, higher factor favors detail on close surfaces", default=0.8)
+    arm_shadowmap_bounds: FloatProperty(name="Cascade Bounds", description="Multiply cascade bounds to capture bigger area", default=1.0)
+    arm_autoexposure_strength: FloatProperty(name="Auto Exposure Strength", default=1.0)
+    arm_autoexposure_speed: FloatProperty(name="Auto Exposure Speed", default=1.0)
+    arm_ssrs_ray_step: FloatProperty(name="Step", default=0.01)
     arm_chromatic_aberration_type: EnumProperty(
         items=[('Simple', 'Simple', 'Simple'),
                ('Spectral', 'Spectral', 'Spectral'),
                ],
-        name="Aberration type", description="Aberration type", default='Simple', update=assets.invalidate_shader_cache)
-    arm_chromatic_aberration_strength: FloatProperty(name="Strength", default=2.00, update=assets.invalidate_shader_cache)
-    arm_chromatic_aberration_samples: IntProperty(name="Samples", default=32, min=8, update=assets.invalidate_shader_cache)
+        name="Aberration type", description="Aberration type", default='Simple')
+    arm_chromatic_aberration_strength: FloatProperty(name="Strength", default=2.00)
+    arm_chromatic_aberration_samples: IntProperty(name="Samples", default=32, min=8)
     # Compositor
-    arm_letterbox: BoolProperty(name="Letterbox", default=False, update=assets.invalidate_shader_cache)
-    arm_letterbox_color: FloatVectorProperty(name="Color", size=3, default=[0, 0, 0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
-    arm_letterbox_size: FloatProperty(name="Size", default=0.1, update=assets.invalidate_shader_cache)
-    arm_distort: BoolProperty(name="Distort", default=False, update=assets.invalidate_shader_cache)
-    arm_distort_strength: FloatProperty(name="Strength", default=2.0, update=assets.invalidate_shader_cache)
-    arm_grain: BoolProperty(name="Film Grain", default=False, update=assets.invalidate_shader_cache)
-    arm_grain_strength: FloatProperty(name="Strength", default=2.0, update=assets.invalidate_shader_cache)
-    arm_sharpen: BoolProperty(name="Sharpen", default=False, update=assets.invalidate_shader_cache)
-    arm_sharpen_color: FloatVectorProperty(name="Color", size=3, default=[0, 0, 0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
-    arm_sharpen_size: FloatProperty(name="Size", default=2.5, update=assets.invalidate_shader_cache)
-    arm_sharpen_strength: FloatProperty(name="Strength", default=0.25, update=assets.invalidate_shader_cache)
-    arm_fog: BoolProperty(name="Volumetric Fog", default=False, update=assets.invalidate_shader_cache)
-    arm_fog_color: FloatVectorProperty(name="Color", size=3, subtype='COLOR', default=[0.5, 0.6, 0.7], min=0, max=1, update=assets.invalidate_shader_cache)
-    arm_fog_amounta: FloatProperty(name="Amount A", default=0.25, update=assets.invalidate_shader_cache)
-    arm_fog_amountb: FloatProperty(name="Amount B", default=0.5, update=assets.invalidate_shader_cache)
+    arm_letterbox: BoolProperty(name="Letterbox", default=False)
+    arm_letterbox_color: FloatVectorProperty(name="Color", size=3, default=[0, 0, 0], subtype='COLOR', min=0, max=1)
+    arm_letterbox_size: FloatProperty(name="Size", default=0.1)
+    arm_distort: BoolProperty(name="Distort", default=False)
+    arm_distort_strength: FloatProperty(name="Strength", default=2.0)
+    arm_grain: BoolProperty(name="Film Grain", default=False)
+    arm_grain_strength: FloatProperty(name="Strength", default=2.0)
+    arm_sharpen: BoolProperty(name="Sharpen", default=False)
+    arm_sharpen_color: FloatVectorProperty(name="Color", size=3, default=[0, 0, 0], subtype='COLOR', min=0, max=1)
+    arm_sharpen_size: FloatProperty(name="Size", default=2.5)
+    arm_sharpen_strength: FloatProperty(name="Strength", default=0.25)
+    arm_fog: BoolProperty(name="Volumetric Fog", default=False)
+    arm_fog_color: FloatVectorProperty(name="Color", size=3, subtype='COLOR', default=[0.5, 0.6, 0.7], min=0, max=1)
+    arm_fog_amounta: FloatProperty(name="Amount A", default=0.25)
+    arm_fog_amountb: FloatProperty(name="Amount B", default=0.5)
     arm_tonemap: EnumProperty(
         items=[('Off', 'Off', 'Off'),
                ('Filmic', 'Filmic', 'Filmic'),
                ('Filmic2', 'Filmic2', 'Filmic2'),
                ('Reinhard', 'Reinhard', 'Reinhard'),
                ('Uncharted', 'Uncharted', 'Uncharted')],
-        name='Tonemap', description='Tonemapping operator', default='Filmic', update=assets.invalidate_shader_cache)
-    arm_fisheye: BoolProperty(name="Fish Eye", default=False, update=assets.invalidate_shader_cache)
-    arm_vignette: BoolProperty(name="Vignette", default=False, update=assets.invalidate_shader_cache)
-    arm_vignette_strength: FloatProperty(name="Strength", default=0.7, update=assets.invalidate_shader_cache)
-    arm_lensflare: BoolProperty(name="Lens Flare", default=False, update=assets.invalidate_shader_cache)
-    arm_lens: BoolProperty(name="Lens Texture", description="Grime Overlay", default=False, update=assets.invalidate_shader_cache)
-    arm_lens_texture: StringProperty(name="Texture", description="Lens filepath", default="lenstexture.jpg", update=assets.invalidate_shader_cache)
-    arm_lens_texture_masking: BoolProperty(name="Luminance Masking", description="Luminance masking", default=False, update=assets.invalidate_shader_cache)
-    arm_lens_texture_masking_centerMinClip : FloatProperty(name="Center Min Clip", default=0.5, update=assets.invalidate_shader_cache)
-    arm_lens_texture_masking_centerMaxClip : FloatProperty(name="Center Max Clip", default=0.1, update=assets.invalidate_shader_cache)
-    arm_lens_texture_masking_luminanceMax : FloatProperty(name="Luminance Min", default=0.1, update=assets.invalidate_shader_cache)
-    arm_lens_texture_masking_luminanceMin : FloatProperty(name="Luminance Max", default=2.5, update=assets.invalidate_shader_cache)
-    arm_lens_texture_masking_brightnessExp : FloatProperty(name="Brightness Exponent", default=2.0, update=assets.invalidate_shader_cache)
-    arm_lut: BoolProperty(name="LUT Colorgrading", description="Colorgrading", default=False, update=assets.invalidate_shader_cache)
-    arm_lut_texture: StringProperty(name="Texture", description="LUT filepath", default="luttexture.jpg", update=assets.invalidate_shader_cache)
+        name='Tonemap', description='Tonemapping operator', default='Filmic')
+    arm_fisheye: BoolProperty(name="Fish Eye", default=False)
+    arm_vignette: BoolProperty(name="Vignette", default=False)
+    arm_vignette_strength: FloatProperty(name="Strength", default=0.7)
+    arm_lensflare: BoolProperty(name="Lens Flare", default=False)
+    arm_lens: BoolProperty(name="Lens Texture", description="Grime Overlay", default=False)
+    arm_lens_texture: StringProperty(name="Texture", description="Lens filepath", default="lenstexture.jpg")
+    arm_lens_texture_masking: BoolProperty(name="Luminance Masking", description="Luminance masking", default=False)
+    arm_lens_texture_masking_centerMinClip : FloatProperty(name="Center Min Clip", default=0.5)
+    arm_lens_texture_masking_centerMaxClip : FloatProperty(name="Center Max Clip", default=0.1)
+    arm_lens_texture_masking_luminanceMax : FloatProperty(name="Luminance Min", default=0.1)
+    arm_lens_texture_masking_luminanceMin : FloatProperty(name="Luminance Max", default=2.5)
+    arm_lens_texture_masking_brightnessExp : FloatProperty(name="Brightness Exponent", default=2.0)
+    arm_lut: BoolProperty(name="LUT Colorgrading", description="Colorgrading", default=False)
+    arm_lut_texture: StringProperty(name="Texture", description="LUT filepath", default="luttexture.jpg")
     arm_skin: EnumProperty(
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off')],
-        name='Skinning', description='Enable skinning', default='On', update=assets.invalidate_shader_cache)
-    arm_use_armature_deform_only: BoolProperty(name="Only Deform Bones", description="Only write deforming bones (and non-deforming ones when they have deforming children)", default=False, update=assets.invalidate_compiled_data)
-    arm_skin_max_bones_auto: BoolProperty(name="Auto Bones", description="Calculate amount of maximum bones based on armatures", default=True, update=assets.invalidate_compiled_data)
-    arm_skin_max_bones: IntProperty(name="Max Bones", default=50, min=1, max=3000, update=assets.invalidate_shader_cache)
+        name='Skinning', description='Enable skinning', default='On')
+    arm_use_armature_deform_only: BoolProperty(name="Only Deform Bones", description="Only write deforming bones (and non-deforming ones when they have deforming children)", default=False)
+    arm_skin_max_bones_auto: BoolProperty(name="Auto Bones", description="Calculate amount of maximum bones based on armatures", default=True)
+    arm_skin_max_bones: IntProperty(name="Max Bones", default=50, min=1, max=3000)
     arm_morph_target: EnumProperty(
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off')],
-        name='Shape key', description='Enable shape keys', default='On', update=assets.invalidate_shader_cache)
+        name='Shape key', description='Enable shape keys', default='On')
     arm_particles: EnumProperty(
         items=[('GPU', 'GPU', 'GPU'),
                ('CPU', 'CPU', 'CPU'),
                ('Off', 'Off', 'Off')],
-        name='Particles', description='Enable particle simulation', default='GPU', update=assets.invalidate_shader_cache)
+        name='Particles', description='Enable particle simulation', default='GPU')
     # Material override flags
     arm_culling: BoolProperty(name="Culling", default=True)
-    arm_two_sided_area_light: BoolProperty(name="Two-Sided Area Light", description="Emit light from both faces of area plane", default=False, update=assets.invalidate_shader_cache)
+    arm_two_sided_area_light: BoolProperty(name="Two-Sided Area Light", description="Emit light from both faces of area plane", default=False)
 
     @staticmethod
     def get_by_name(name: str) -> Optional['ArmRPListItem']:

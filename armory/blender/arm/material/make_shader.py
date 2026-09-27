@@ -123,7 +123,9 @@ def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armus
             arm.exporter.current_output['shader_datas'] = []
         arm.exporter.current_output['shader_datas'].append(mat_state.data.get()['shader_datas'][0])
     else:
-        arm.utils.write_arm(full_path + '/' + matname + '_data.arm', mat_state.data.get())
+        # Collected instead of written here, the same material is built
+        # once per scene that uses it. See assets.flush_shader_data()
+        assets.pending_shader_data[full_path + '/' + matname + '_data.arm'] = mat_state.data.get()
         shader_data_path = arm.utils.get_fp_build() + '/compiled/Shaders/' + shader_data_name + '.arm'
         assets.add_shader_data(shader_data_path)
 
@@ -160,8 +162,7 @@ def write_shader(rel_path: str, shader: Shader, ext: str, rpass: str, matname: s
     shader_path = arm.utils.get_fp() + '/' + rel_path + '/' + shader_file
     assets.add_shader(shader_path)
     if not os.path.isfile(shader_path) or not keep_cache:
-        with open(shader_path, 'w') as f:
-            f.write(shader.get())
+        arm.utils.write_file_if_changed(shader_path, shader.get())
 
         if shader.noprocessing:
             cwd = os.getcwd()

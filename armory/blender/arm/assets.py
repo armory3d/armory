@@ -24,6 +24,22 @@ shader_datas = []
 shader_passes = []
 shader_passes_assets = {}
 shader_cons = {}
+# Shader data collected during the export, written by flush_shader_data().
+# Item format: filepath -> data
+pending_shader_data = {}
+
+def flush_shader_data():
+    """Writes out the shader data collected during the export.
+
+    A material is built once per scene that uses it, and because all of
+    those builds target the same file, only the last result is kept.
+    Writing on each build would give the file a new modification time
+    even when its final content is unchanged, which makes Khamake and
+    the Haxe compilation server redo work that is already done.
+    """
+    for filepath, data in pending_shader_data.items():
+        arm.utils.write_arm(filepath, data)
+    pending_shader_data.clear()
 
 def reset():
     global assets
@@ -47,6 +63,7 @@ def reset():
     shaders_external = []
     shader_datas = []
     shader_passes = []
+    pending_shader_data.clear()
     shader_cons = {}
     shader_cons['mesh_vert'] = []
     shader_cons['depth_vert'] = []
@@ -130,44 +147,29 @@ def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
     func(path)
 
-def invalidate_shader_cache(self, context):
-    # compiled.inc changed, recompile all shaders next time
-    global invalidate_enabled
-    if invalidate_enabled is False:
+def invalidate_shader_compilation() -> None:
+    """Marks the generated shaders as needing to be compiled again.
+
+    Called during the build when compiled.inc turned out to have changed.
+    The shaders `#include` that file, but Khamake's shader compiler only
+    compares a shader against its own output, so it can't see that a
+    define changed. Touching the sources makes it notice.
+
+    This used to be done by deleting the compiled shaders and every
+    platform's resource directory the moment one of ~127 properties was
+    edited, which also threw away the export cache and could run in the
+    middle of a build.
+    """
+    shaders_path = os.path.join(arm.utils.get_fp_build(), 'compiled', 'Shaders')
+    if not os.path.isdir(shaders_path):
         return
-    fp = arm.utils.get_fp_build()
-    if os.path.isdir(fp + '/compiled/Shaders'):
-        shutil.rmtree(fp + '/compiled/Shaders', onerror=remove_readonly)
-    if os.path.isdir(fp + '/debug/html5-resources'):
-        shutil.rmtree(fp + '/debug/html5-resources', onerror=remove_readonly)
-    if os.path.isdir(fp + '/krom-resources'):
-        shutil.rmtree(fp + '/krom-resources', onerror=remove_readonly)
-    if os.path.isdir(fp + '/debug/krom-resources'):
-        shutil.rmtree(fp + '/debug/krom-resources', onerror=remove_readonly)
-    if os.path.isdir(fp + '/windows-resources'):
-        shutil.rmtree(fp + '/windows-resources', onerror=remove_readonly)
-    if os.path.isdir(fp + '/linux-resources'):
-        shutil.rmtree(fp + '/linux-resources', onerror=remove_readonly)
-    if os.path.isdir(fp + '/osx-resources'):
-        shutil.rmtree(fp + '/osx-resources', onerror=remove_readonly)
 
-def invalidate_compiled_data(self, context):
-    global invalidate_enabled
-    if invalidate_enabled is False:
-        return
-    fp = arm.utils.get_fp_build()
-    if os.path.isdir(fp + '/compiled'):
-        shutil.rmtree(fp + '/compiled', onerror=remove_readonly)
-
-def invalidate_mesh_data(self, context):
-    fp = arm.utils.get_fp_build()
-    if os.path.isdir(fp + '/compiled/Assets/meshes'):
-        shutil.rmtree(fp + '/compiled/Assets/meshes', onerror=remove_readonly)
-
-def invalidate_envmap_data(self, context):
-    fp = arm.utils.get_fp_build()
-    if os.path.isdir(fp + '/compiled/Assets/envmaps'):
-        shutil.rmtree(fp + '/compiled/Assets/envmaps', onerror=remove_readonly)
+    for name in os.listdir(shaders_path):
+        if name.endswith('.glsl'):
+            try:
+                os.utime(os.path.join(shaders_path, name), None)
+            except OSError:
+                pass
 
 def invalidate_unpacked_data(self, context):
     fp = arm.utils.get_fp_build()
