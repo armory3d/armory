@@ -68,19 +68,32 @@ class LZ4:
             ref_pos = int32(0)
             m_offset = 0
             sequence = uint32(
-                i_buf[i_pos] << 8 | i_buf[i_pos + 1] << 16 | i_buf[i_pos + 2] << 24
+                uint32(i_buf[i_pos]) << 8
+                | uint32(i_buf[i_pos + 1]) << 16
+                | uint32(i_buf[i_pos + 2]) << 24
             )
 
             # Match-finding loop
             while i_pos <= last_match_pos:
-                # Conversion to uint32 is mandatory to ensure correct
-                # unsigned right shift (compare with .hx implementation)
+                # Conversion to uint32 is mandatory for both operands: on the
+                # right, to ensure correct unsigned right shift (compare with
+                # .hx implementation), and on the left, because i_buf[i_pos + 3]
+                # is a numpy uint8 scalar and "uint8 << 24" overflows to 0
+                # within the 8-bit type instead of widening first, silently
+                # dropping the new byte out of the rolling 4-byte sequence
+                # used for match hashing.
                 sequence = uint32(
-                    uint32(sequence) >> uint32(8) | i_buf[i_pos + 3] << 24
+                    uint32(sequence) >> uint32(8) | uint32(i_buf[i_pos + 3]) << 24
                 )
-                hash_val = (sequence * 0x9E37 & 0xFFFF) + (
-                    uint32(sequence * 0x79B1) >> uint32(16)
-                ) & 0xFFFF
+                # sequence now takes on real (previously always-zero) values, so
+                # these multiplications routinely overflow uint32. That wraparound
+                # is intentional hash mixing (matching the Haxe Int overflow
+                # semantics of the .hx implementation this is ported from), not a
+                # bug, so the expected overflow warning is suppressed here.
+                with np.errstate(over="ignore"):
+                    hash_val = (sequence * 0x9E37 & 0xFFFF) + (
+                        uint32(sequence * 0x79B1) >> uint32(16)
+                    ) & 0xFFFF
                 ref_pos = LZ4.hash_table[hash_val]
                 LZ4.hash_table[hash_val] = i_pos
                 m_offset = i_pos - ref_pos
