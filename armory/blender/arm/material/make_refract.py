@@ -18,7 +18,17 @@ else:
 
 
 def make(context_id):
-    con_refract = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
+    wrd = bpy.data.worlds['Arm']
+    attachment_format = 'RGBA32' if '_LDR' in wrd.world_defs else 'RGBA64'
+
+    con_refract = mat_state.data.add_context({
+        'name': context_id,
+        'depth_write': True,
+        'compare_mode': 'less',
+        'cull_mode': 'clockwise',
+        # gbuffer0, gbuffer1, gbuffer_refraction
+        'color_attachments': [attachment_format, attachment_format, 'RGBA64']
+    })
 
     make_mesh.make_forward_base(con_refract, parse_opacity=True, transluc_pass=True)
 
@@ -33,8 +43,6 @@ def make(context_id):
     # Remove fragColor = ...;
     frag.main = frag.main[:frag.main.rfind('fragColor')]
     frag.write('\n')
-
-    wrd = bpy.data.worlds['Arm']
 
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')

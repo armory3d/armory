@@ -924,18 +924,9 @@ class Uniforms {
 			}
 
 			if (m == null) {
-				#if arm_spot
-				if (c.link.startsWith("_biasLightWorldViewProjectionMatrixSpot")) {
-					var light = getSpot(c.link.charCodeAt(c.link.length - 1) - "0".code);
-					if (light != null) {
-						object == null ? helpMat.setIdentity() : helpMat.setFrom(object.transform.worldUnpack);
-						helpMat.multmat(light.VP);
-						helpMat.multmat(biasMat);
-						m = helpMat;
-					}
-				}
+				#if (!arm_clusters && arm_spot)
 				if (c.link.startsWith("_biasLightViewProjectionMatrixSpot")) {
-					var light = getSpot(c.link.charCodeAt(c.link.length - 1) - "0".code);
+					var light = getSpot(0);
 					if (light != null) {
 						helpMat.setFrom(light.VP);
 						helpMat.multmat(biasMat);
@@ -1174,11 +1165,22 @@ class Uniforms {
 					}
 				}
 				#end
-				#if (arm_clusters && arm_spot)
+				#if arm_spot
 				case "_biasLightWorldViewProjectionMatrixSpotArray": {
+					#if arm_clusters
 					fa = LightObject.updateLWVPMatrixArray(object, "spot");
+					#else
+					// Single spot light path (_SinglePoint), LWVPSpotArray[1] holds one matrix
+					var light = getSpot(0);
+					if (light != null) {
+						helpMat.setFrom(light.VP);
+						helpMat.multmat(biasMat);
+						g.setMatrix(location, helpMat.self);
+					}
+					return;
+					#end
 				}
-				#end // arm_clusters
+				#end
 				#if arm_morph_target
 				case "_morphWeights": {
 					fa = cast(object, MeshObject).morphTarget.morphWeights;

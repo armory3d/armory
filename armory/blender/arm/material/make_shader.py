@@ -102,6 +102,9 @@ def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armus
         elif rp == 'refraction':
             con = make_refract.make(rp)
 
+        elif rp == 'refraction_backface':
+            con = make_depth.make(rp, rpasses, backface=True)
+
         elif rp == 'overlay':
             con = make_overlay.make(rp)
 
@@ -201,7 +204,7 @@ def make_instancing_and_skinning(mat: Material, mat_users: Dict[Material, List[O
 
             # Instancing
             inst = bo.arm_instanced
-            if inst != 'Off' or mat.arm_particle_flag:
+            if inst != 'Off' or (mat.arm_particle_flag and arm.utils.get_rp().arm_particles == 'GPU'):
                 instancing_usage[0] = True
                 mat_state.uses_instancing = True
 

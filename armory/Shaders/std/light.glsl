@@ -118,9 +118,6 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#ifdef _Spot
 		, const bool isSpot, const float spotSize, float spotBlend, vec3 spotDir, vec2 scale, vec3 right
 	#endif
-	#ifdef _VoxelShadow
-		, sampler3D voxels, sampler3D voxelsSDF, float clipmaps[10 * voxelgiClipmapCount], vec2 velocity, vec2 texCoord
-	#endif
 	#ifdef _MicroShadowing
 		, float occ
 	#endif
@@ -144,9 +141,10 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		vec3(1.0, 0.0, t.y),
 		vec3(0.0, t.z, 0.0),
 		vec3(t.w, 0.0, t.x));
-	float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lightArea0, lightArea1, lightArea2, lightArea3);
+	const float PI = 3.1415926535;
+	float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lightArea0, lightArea1, lightArea2, lightArea3) / PI;
 	ltcspec *= textureLod(sltcMag, tuv, 0.0).a;
-	float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lightArea0, lightArea1, lightArea2, lightArea3);
+	float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lightArea0, lightArea1, lightArea2, lightArea3) / PI;
 	vec3 direct = albedo * ltcdiff + ltcspec * spec * 0.05;
 	#else
 	vec3 direct = lambertDiffuseBRDF(albedo, dotNL) +
@@ -455,9 +453,8 @@ vec3 sampleLightVoxels(const vec3 p, const vec3 n, const vec3 v, const float dot
 	vec3 direct = albedo * ltcdiff + ltcspec * spec * 0.05;
 	#else
 	vec3 direct = lambertDiffuseBRDF(albedo, dotNL) +
-				  specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) * spec;
+	specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) * spec;
 	#endif
-
 	direct *= attenuate(distance(p, lp));
 	direct *= lightCol;
 

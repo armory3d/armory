@@ -11,7 +11,7 @@ class Animation {
 
 	public var isSkinned: Bool;
 	public var isSampled: Bool;
-	public var action = "";
+	@:isVar public var action(get, default) = "";
 	#if arm_skin
 	public var armature: iron.data.Armature; // Bone
 	#end
@@ -51,6 +51,10 @@ class Animation {
 			frameTime = Scene.active.raw.frame_time;
 		}
 		play();
+	}
+
+	function get_action(): String {
+		return action;
 	}
 
 	public function play(action = "", onComplete: Void->Void = null, blendTime = 0.0, speed = 1.0, loop = true) {

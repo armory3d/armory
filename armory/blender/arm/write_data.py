@@ -848,6 +848,7 @@ const float ssrJitter = """ + str(round(rpdat.arm_ssr_jitter * 100) / 100) + """
 const float ss_refractionSearchDist = """ + str(round(rpdat.arm_ss_refraction_search_dist * 100) / 100) + """;
 const float ss_refractionFalloffExp = """ + str(round(rpdat.arm_ss_refraction_falloff_exp * 100) / 100) + """;
 const float ss_refractionJitter = """ + str(round(rpdat.arm_ss_refraction_jitter * 100) / 100) + """;
+const float ss_refractionAbsorption = """ + str(round(rpdat.arm_ss_refraction_absorption * 100) / 100) + """;
 """)
 
 
