@@ -560,7 +560,17 @@ def build(target, is_play=False, is_publish=False, is_export=False):
                 f.write(text.as_string())
 
     # Export data
-    export_data(fp, sdk_path)
+    # Disable shader cache invalidation while exporting: the exporter sets
+    # render path properties (e.g. arm_skin_max_bones via auto-bones) whose
+    # update callbacks would otherwise wipe compiled/Shaders mid-build,
+    # deleting freshly generated shaders such as the world shaders. The UI
+    # operators already guard this, but headless/direct build() callers don't.
+    prev_invalidate_enabled = assets.invalidate_enabled
+    assets.invalidate_enabled = False
+    try:
+        export_data(fp, sdk_path)
+    finally:
+        assets.invalidate_enabled = prev_invalidate_enabled
 
     if state.target == 'html5':
         w, h = arm.utils.get_render_resolution(arm.utils.get_active_scene())
