@@ -22,6 +22,7 @@ from arm.exporter import BuildExportCache
 from arm.exporter import ArmoryExporter
 import arm.lib.make_datas
 import arm.lib.server
+import arm.linked_utils as linked_utils
 import arm.live_patch as live_patch
 import arm.log as log
 import arm.make_logic as make_logic
@@ -263,7 +264,7 @@ def export_data(fp, sdk_path):
             # Reset shader comparison arrays to prevent cross-scene shader merging
             assets.reset_shader_cons()
             ext = '.lz4' if ArmoryExporter.compress_enabled else '.arm'
-            asset_path = build_dir + '/compiled/Assets/' + arm.utils.safestr(scene.name + "_" + os.path.basename(scene.library.filepath).replace(".blend", "") if scene.library else scene.name) + ext
+            asset_path = build_dir + '/compiled/Assets/' + linked_utils.get_scene_name(scene) + ext
             ArmoryExporter.export_scene(bpy.context, asset_path, scene=scene, depsgraph=depsgraph, build_cache=build_cache)
             if ArmoryExporter.export_physics:
                 physics_found = True
