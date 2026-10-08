@@ -2849,7 +2849,7 @@ Make sure the mesh only has tris/quads.""")
 
         self.process_skinned_meshes()
 
-        self.output['name'] = arm.utils.safestr(self.scene.name + "_" + os.path.basename(self.scene.library.filepath).replace(".blend", "") if self.scene.library else self.scene.name)
+        self.output['name'] = linked_utils.get_scene_name(self.scene)
         if self.filepath.endswith('.lz4'):
             self.output['name'] += '.lz4'
         elif not bpy.data.worlds['Arm'].arm_minimize:
