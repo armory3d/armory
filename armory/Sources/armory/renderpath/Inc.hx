@@ -575,7 +575,11 @@ class Inc {
 		}
 		else {
 			if (t.name == "voxelsSDF" || t.name == "voxelsSDFtmp") {
-				t.format = "R8";
+				// Must match "layout(r16f) image3D SDF" in voxel_temporal /
+				// voxel_sdf_jumpflood. The SDF holds a world-space distance
+				// (voxelSize * 2 * res), which an 8-bit normalized format
+				// cannot represent.
+				t.format = "L8";
 				t.width = res;
 				t.height = res * Main.voxelgiClipmapCount;
 				t.depth = res;
@@ -588,7 +592,7 @@ class Inc {
 						t.width = res * (6 + 16);
 						t.height = res * Main.voxelgiClipmapCount;
 						t.depth = res;
-						t.format = "R8";
+						t.format = "R16";
 						t.mipmaps = false;
 					}
 					else {
@@ -602,7 +606,7 @@ class Inc {
 				#else
 				{
 					if (t.name == "voxelsOut" || t.name == "voxelsOutB") {
-						t.format = "RGBA32";
+						t.format = "RGBA64";
 						t.width = res * (6 + 16);
 						t.height = res * Main.voxelgiClipmapCount;
 						t.depth = res;
