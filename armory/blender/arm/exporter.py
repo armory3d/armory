@@ -13,6 +13,7 @@ https://creativecommons.org/licenses/by-sa/3.0/deed.en_US
 """
 import copy
 from enum import Enum, unique
+import json
 import math
 import os
 import time
@@ -112,6 +113,173 @@ class BuildExportCache:
         self.exported_mesh_files: set = set()
         self.exported_action_files: set = set()
         self.processed_mesh_names: set = set()
+
+        # Records what was exported out of linked .blend files, see
+        # is_linked_data_cached() and replay_scene()
+        self.linked_manifest: Dict[str, str] = {}
+        self.scene_manifest: Dict[str, Any] = {}
+        self.linked_manifest_path = os.path.join(arm.utils.get_fp_build(), 'compiled', 'linked_export_cache.json')
+        self.load_linked_manifest()
+
+    def load_linked_manifest(self) -> None:
+        try:
+            with open(self.linked_manifest_path, encoding='utf-8') as f:
+                data = json.load(f)
+            if isinstance(data, dict):
+                self.linked_manifest = data.get('data', {})
+                self.scene_manifest = data.get('scenes', {})
+        except (OSError, ValueError):
+            # No manifest yet or it is unreadable, everything counts as
+            # not exported and will simply be exported again
+            self.linked_manifest = {}
+            self.scene_manifest = {}
+
+    def save_linked_manifest(self) -> None:
+        try:
+            os.makedirs(os.path.dirname(self.linked_manifest_path), exist_ok=True)
+            arm.utils.write_file_if_changed(
+                self.linked_manifest_path,
+                json.dumps({'data': self.linked_manifest, 'scenes': self.scene_manifest}, sort_keys=True, indent=1),
+                encoding='utf-8')
+        except OSError as err:
+            log.warn(f'Could not write the linked data export cache: {err}')
+
+    @staticmethod
+    def get_linked_stamp(bdata) -> Optional[str]:
+        """Describes the state that a piece of linked data was exported
+        from: the library file it lives in, plus the export settings that
+        change how it is written. Returns `None` for local data.
+
+        Data linked from another .blend file is loaded again on every
+        export, so the `arm_cached` flag on it is always lost. This stamp
+        is stored on disk instead, which also survives Blender restarts.
+        """
+        library = getattr(bdata, 'library', None)
+        if library is None:
+            return None
+
+        try:
+            stat = os.stat(arm.utils.to_absolute_path(library.filepath))
+        except OSError:
+            # Library file is missing, don't claim anything about it
+            return None
+
+        wrd = bpy.data.worlds['Arm']
+        return ':'.join(str(part) for part in (
+            stat.st_size, int(stat.st_mtime),
+            ArmoryExporter.compress_enabled,
+            ArmoryExporter.optimize_enabled,
+            wrd.arm_minimize,
+        ))
+
+    def is_linked_data_cached(self, bdata, filepath: str) -> bool:
+        """Whether the given linked data was already exported to
+        `filepath` from the library file in its current state."""
+        stamp = self.get_linked_stamp(bdata)
+        if stamp is None or not os.path.exists(filepath):
+            return False
+        return self.linked_manifest.get(os.path.basename(filepath)) == stamp
+
+    def store_linked_data(self, bdata, filepath: str) -> None:
+        """Remembers that the given linked data was exported, so that the
+        next build can skip it. Does nothing for local data."""
+        stamp = self.get_linked_stamp(bdata)
+        if stamp is not None:
+            self.linked_manifest[os.path.basename(filepath)] = stamp
+
+    # Everything a scene export contributes to the state that khafile.js is
+    # written from. Skipping a scene has to put all of it back, see
+    # take_contributions() and replay_scene()
+    CONTRIBUTION_FLAGS = ('export_physics', 'export_navigation', 'export_ui', 'export_network')
+
+    @staticmethod
+    def mark_contributions() -> Dict[str, Any]:
+        """Remembers the current size of everything a scene export appends
+        to, so that its own additions can be taken out afterwards."""
+        return {
+            'assets': len(assets.assets),
+            'shader_datas': len(assets.shader_datas),
+            'khafile_defs': len(assets.khafile_defs),
+            'khafile_params': len(assets.khafile_params),
+            'import_traits': len(ArmoryExporter.import_traits),
+            # Only export_physics exists before preprocess() has run
+            'flags': {name: getattr(ArmoryExporter, name, False) for name in BuildExportCache.CONTRIBUTION_FLAGS},
+        }
+
+    @staticmethod
+    def take_contributions(mark: Dict[str, Any]) -> Dict[str, Any]:
+        """Returns what was added since `mark`, ready to be stored and
+        replayed when the scene is skipped on a later build."""
+        return {
+            'assets': assets.assets[mark['assets']:],
+            'shader_datas': assets.shader_datas[mark['shader_datas']:],
+            'khafile_defs': assets.khafile_defs[mark['khafile_defs']:],
+            'khafile_params': assets.khafile_params[mark['khafile_params']:],
+            'import_traits': ArmoryExporter.import_traits[mark['import_traits']:],
+            'flags': [name for name in BuildExportCache.CONTRIBUTION_FLAGS
+                      if getattr(ArmoryExporter, name, False) and not mark['flags'][name]],
+        }
+
+    @staticmethod
+    def replay_contributions(contributions: Dict[str, Any]) -> None:
+        assets.assets.extend(contributions.get('assets', []))
+        assets.shader_datas.extend(contributions.get('shader_datas', []))
+        assets.khafile_defs.extend(contributions.get('khafile_defs', []))
+        assets.khafile_params.extend(contributions.get('khafile_params', []))
+        ArmoryExporter.import_traits.extend(contributions.get('import_traits', []))
+        for name in contributions.get('flags', []):
+            setattr(ArmoryExporter, name, True)
+
+    def get_scene_stamp(self, scene) -> Optional[str]:
+        """Describes everything the export of a scene depends on. Returns
+        `None` for scenes of the current file, which is written on every
+        build and can therefore never be considered unchanged.
+
+        Every loaded library counts, not just the one holding the scene,
+        because a scene reaches data across all of them.
+        """
+        if scene.library is None:
+            return None
+
+        parts = []
+        for library in sorted(bpy.data.libraries, key=lambda lib: lib.filepath):
+            try:
+                stat = os.stat(arm.utils.to_absolute_path(library.filepath))
+                parts.append(f'{library.filepath}={stat.st_size}:{int(stat.st_mtime)}')
+            except OSError:
+                # Broken library links stay broken, so note that rather than
+                # refusing to cache. The stamp still changes if the file
+                # ever does turn up
+                parts.append(f'{library.filepath}=missing')
+
+        wrd = bpy.data.worlds['Arm']
+        parts.append(f'defs={wrd.world_defs}:{wrd.compo_defs}')
+        parts.append(f'settings={ArmoryExporter.compress_enabled}:{ArmoryExporter.optimize_enabled}:{wrd.arm_minimize}')
+        return '|'.join(parts)
+
+    def replay_scene(self, scene, filepath: str) -> bool:
+        """Puts back what a scene contributed the last time it was
+        exported, if nothing it depends on has changed since. Returns
+        whether the scene export can be skipped."""
+        stamp = self.get_scene_stamp(scene)
+        if stamp is None or not os.path.exists(filepath):
+            return False
+
+        record = self.scene_manifest.get(os.path.basename(filepath))
+        if record is None or record.get('stamp') != stamp:
+            return False
+
+        self.replay_contributions(record.get('contributions', {}))
+        return True
+
+    def store_scene(self, scene, filepath: str, mark: Dict[str, Any]) -> None:
+        stamp = self.get_scene_stamp(scene)
+        if stamp is None:
+            return
+        self.scene_manifest[os.path.basename(filepath)] = {
+            'stamp': stamp,
+            'contributions': self.take_contributions(mark),
+        }
 
 
 class ArmoryExporter:
@@ -1302,6 +1470,11 @@ class ArmoryExporter:
                     skelobj.animation_data.action = action
                     fp = self.get_meshes_file_path('action_' + armatureid + '_' + aname, compressed=ArmoryExporter.compress_enabled)
                     assets.add(fp)
+                    if self.build_cache.is_linked_data_cached(bdata, fp):
+                        # Linked armatures are reloaded on every export and
+                        # lose arm_cached, baking them again every time is
+                        # by far the most expensive part of such an export
+                        continue
                     if (not bdata.arm_cached or not os.path.exists(fp)) and fp not in self.build_cache.exported_action_files:
                         # Store action to use it after autobake was handled
                         original_action = action
@@ -1364,6 +1537,10 @@ class ArmoryExporter:
 
                 # TODO: cache per action
                 bdata.arm_cached = True
+                for action in export_actions:
+                    aname = arm.utils.safestr(arm.utils.asset_name(action))
+                    self.build_cache.store_linked_data(
+                        bdata, self.get_meshes_file_path('action_' + armatureid + '_' + aname, compressed=ArmoryExporter.compress_enabled))
 
             if out_parent is None:
                 self.output['objects'].append(out_object)
@@ -1657,6 +1834,7 @@ class ArmoryExporter:
             mesh_obj = {'mesh_datas': [out_mesh]}
             arm.utils.write_arm(fp, mesh_obj)
             bobject.data.arm_cached = True
+            self.build_cache.store_linked_data(bobject.data, fp)
 
     @staticmethod
     def calc_aabb(bobject):
@@ -2028,6 +2206,10 @@ Make sure the mesh only has tris/quads.""")
             assets.add(fp)
             # No export necessary
             if bobject.data.arm_cached and os.path.exists(fp) or fp in self.build_cache.exported_mesh_files:
+                return
+            # Linked data loses its arm_cached flag on every export, so it
+            # is tracked by the state of its library file instead
+            if self.build_cache.is_linked_data_cached(bobject.data, fp):
                 return
 
         # Mesh users have different modifier stack
@@ -2447,8 +2629,11 @@ Make sure the mesh only has tris/quads.""")
             if material.use_fake_user and material not in self.material_array:
                 self.material_array.append(material)
 
-        # Ensure the same order for merging materials
-        self.material_array.sort(key=lambda x: x.name)
+        # Ensure the same order for merging materials. The order decides
+        # which material owns a shader that several of them share, so it
+        # has to be stable. Linked materials from different libraries can
+        # have the same name, hence the library path as a tie breaker
+        self.material_array.sort(key=lambda x: (x.name, x.library.filepath if x.library is not None else ''))
 
         if wrd.arm_batch_materials:
             mat_users = self.material_to_object_dict
@@ -2752,6 +2937,12 @@ Make sure the mesh only has tris/quads.""")
                     result[name] = list(value)
                 elif hasattr(value, "bl_rna") and depth < max_depth:
                     result[name] = self.extract_props(value, depth + 1, max_depth)
+                elif hasattr(value, "bl_rna"):
+                    # Blender data reached beyond max_depth. Its str() holds a
+                    # memory address, which differs on every export and would
+                    # make this data, and everything built from it, look
+                    # changed on each build. Use its name instead
+                    result[name] = getattr(value, 'name', '')
                 else:
                     result[name] = str(value)
 

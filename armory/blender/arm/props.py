@@ -286,19 +286,18 @@ def init_properties():
     )
     bpy.types.World.arm_texture_quality = FloatProperty(name="Texture Quality", default=1.0, min=0.0, max=1.0, subtype='FACTOR', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_sound_quality = FloatProperty(name="Sound Quality", default=0.9, min=0.0, max=1.0, subtype='FACTOR', update=assets.invalidate_compiler_cache)
-    bpy.types.World.arm_copy_override = BoolProperty(name="Copy Override", description="Overrides any existing files when copying", default=False, update=assets.invalidate_compiled_data)
-    bpy.types.World.arm_minimize = BoolProperty(name="Binary Scene Data", description="Export scene data in binary", default=True, update=assets.invalidate_compiled_data)
+    bpy.types.World.arm_copy_override = BoolProperty(name="Copy Override", description="Overrides any existing files when copying", default=False)
+    bpy.types.World.arm_minimize = BoolProperty(name="Binary Scene Data", description="Export scene data in binary", default=True)
     bpy.types.World.arm_minify_js = BoolProperty(name="Minify JS", description="Minimize JavaScript output when publishing", default=True)
     bpy.types.World.arm_no_traces = BoolProperty(name="No Traces", description="Don't compile trace calls in the program when publishing", default=False)
-    bpy.types.World.arm_optimize_data = BoolProperty(name="Optimize Data", description="Export more efficient geometry and shader data when publishing, prolongs build times", default=True, update=assets.invalidate_compiled_data)
+    bpy.types.World.arm_optimize_data = BoolProperty(name="Optimize Data", description="Export more efficient geometry and shader data when publishing, prolongs build times", default=True)
     bpy.types.World.arm_deinterleaved_buffers = BoolProperty(name="Deinterleaved Buffers", description="Use deinterleaved vertex buffers", default=False, update=assets.invalidate_compiler_cache)
-    bpy.types.World.arm_export_tangents = BoolProperty(name="Precompute Tangents", description="Precompute tangents for normal mapping, otherwise computed in shader", default=True, update=assets.invalidate_compiled_data)
+    bpy.types.World.arm_export_tangents = BoolProperty(name="Precompute Tangents", description="Precompute tangents for normal mapping, otherwise computed in shader", default=True)
     bpy.types.World.arm_batch_meshes = BoolProperty(name="Batch Meshes", description="Group meshes by materials to speed up rendering", default=False, update=assets.invalidate_compiler_cache)
-    bpy.types.World.arm_batch_materials = BoolProperty(name="Batch Materials", description="Marge similar materials into single pipeline state", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_batch_materials = BoolProperty(name="Batch Materials", description="Marge similar materials into single pipeline state", default=False)
     bpy.types.World.arm_stream_scene = BoolProperty(name="Stream Scene", description="Stream scene content", default=False, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_lod_gen_levels = IntProperty(name="Levels", description="Number of levels to generate", default=3, min=1)
     bpy.types.World.arm_lod_gen_ratio = FloatProperty(name="Decimate Ratio", description="Decimate ratio", default=0.8)
-    bpy.types.World.arm_cache_build = BoolProperty(name="Cache Build", description="Cache build files to speed up compilation", default=True)
     bpy.types.World.arm_assert_level = EnumProperty(
         items=[
             ('Warning', 'Warning', 'Warning level, warnings don\'t throw an ArmAssertException'),
@@ -316,20 +315,20 @@ def init_properties():
     bpy.types.World.arm_play_scene = PointerProperty(name="Scene", description="Scene to launch", update=assets.invalidate_compiler_cache, type=bpy.types.Scene)
     bpy.types.World.arm_play_renderpath = StringProperty(name="Render Path", description="Default renderpath for debugging", update=assets.invalidate_compiler_cache)
     # Debug Console
-    bpy.types.World.arm_debug_console = BoolProperty(name="Enable", description="Show inspector in player and enable debug draw.\nRequires that Zui is not disabled", default=arm.utils.get_debug_console_auto(), update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_debug_console = BoolProperty(name="Enable", description="Show inspector in player and enable debug draw.\nRequires that Zui is not disabled", default=arm.utils.get_debug_console_auto())
     bpy.types.World.arm_debug_console_position = EnumProperty(
         items=[('Left', 'Left', 'Left'),
                ('Center', 'Center', 'Center'),
                ('Right', 'Right', 'Right')],
-        name="Position", description="Position Debug Console", default='Right', update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_debug_console_scale = FloatProperty(name="Scale Console", description="Scale Debug Console", default=1.0, min=0.3, max=10.0, subtype='FACTOR', update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_debug_console_visible = BoolProperty(name="Visible", description="Setting the console visibility at application start", default=True, update=assets.invalidate_shader_cache)
+        name="Position", description="Position Debug Console", default='Right')
+    bpy.types.World.arm_debug_console_scale = FloatProperty(name="Scale Console", description="Scale Debug Console", default=1.0, min=0.3, max=10.0, subtype='FACTOR')
+    bpy.types.World.arm_debug_console_visible = BoolProperty(name="Visible", description="Setting the console visibility at application start", default=True)
     bpy.types.World.arm_debug_console_trace_pos = BoolProperty(name="Print With Position", description="Whether to prepend the position of print/trace statements to the printed text", default=True)
     bpy.types.World.arm_verbose_output = BoolProperty(name="Verbose Output", description="Print additional information to the console during compilation", default=False)
     bpy.types.World.arm_runtime = EnumProperty(
         items=[('Krom', 'Krom', 'Krom'),
                ('Browser', 'Browser', 'Browser')],
-        name="Runtime", description="Runtime to use when launching the game", default='Krom', update=assets.invalidate_shader_cache)
+        name="Runtime", description="Runtime to use when launching the game", default='Krom')
     bpy.types.World.arm_loadscreen = BoolProperty(name="Loading Screen", description="Show asset loading progress on published builds", default=True)
     bpy.types.World.arm_vsync = BoolProperty(name="VSync", description="Vertical Synchronization", default=True, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_dce = BoolProperty(name="DCE", description="Enable dead code elimination for publish builds", default=True, update=assets.invalidate_compiler_cache)
@@ -446,7 +445,7 @@ def init_properties():
                ('counter_clockwise', 'Back', 'Counter-Clockwise')],
         name="Cull Mode", default='clockwise', description="Draw geometry faces")
     bpy.types.Material.arm_next_pass = StringProperty(
-        name="Next Pass", default='', description="Next pass for the material", update=assets.invalidate_shader_cache)
+        name="Next Pass", default='', description="Next pass for the material")
     bpy.types.Material.arm_discard = BoolProperty(name="Alpha Test", default=False, description="Do not render fragments below specified opacity threshold")
     bpy.types.Material.arm_discard_opacity = FloatProperty(name="Mesh Opacity", default=0.2, min=0, max=1)
     bpy.types.Material.arm_discard_opacity_shadows = FloatProperty(name="Shadows Opacity", default=0.1, min=0, max=1)
@@ -455,7 +454,7 @@ def init_properties():
         items=[('off', 'Off', 'Off'),
                ('spherical', 'Spherical', 'Spherical'),
                ('cylindrical', 'Cylindrical', 'Cylindrical')],
-        name="Billboard", default='off', description="Track camera", update=assets.invalidate_shader_cache)
+        name="Billboard", default='off', description="Track camera")
     bpy.types.Material.arm_tilesheet_flag = BoolProperty(name="Tilesheet Flag", description="This material is used for tilesheet", default=False)
     bpy.types.Material.arm_particle_flag = BoolProperty(name="Particle Flag", description="This material is used for particles", default=False)
     bpy.types.Material.arm_particle_fade = BoolProperty(name="Particle Fade", description="Fade particles in and out", default=False)
@@ -471,7 +470,7 @@ def init_properties():
                ('destination_color', 'Destination Color', 'Destination Color'),
                ('inverse_source_color', 'Inverse Source Color', 'Inverse Source Color'),
                ('inverse_destination_color', 'Inverse Destination Color', 'Inverse Destination Color')],
-        name='Source', default='blend_one', description='Blending factor', update=assets.invalidate_shader_cache)
+        name='Source', default='blend_one', description='Blending factor')
     bpy.types.Material.arm_blending_destination = EnumProperty(
         items=[('blend_one', 'One', 'One'),
                ('blend_zero', 'Zero', 'Zero'),
@@ -483,14 +482,14 @@ def init_properties():
                ('destination_color', 'Destination Color', 'Destination Color'),
                ('inverse_source_color', 'Inverse Source Color', 'Inverse Source Color'),
                ('inverse_destination_color', 'Inverse Destination Color', 'Inverse Destination Color')],
-        name='Destination', default='blend_one', description='Blending factor', update=assets.invalidate_shader_cache)
+        name='Destination', default='blend_one', description='Blending factor')
     bpy.types.Material.arm_blending_operation = EnumProperty(
         items=[('add', 'Add', 'Add'),
                ('subtract', 'Subtract', 'Subtract'),
                ('reverse_subtract', 'Reverse Subtract', 'Reverse Subtract'),
                ('min', 'Min', 'Min'),
                ('max', 'Max', 'Max')],
-        name='Operation', default='add', description='Blending operation', update=assets.invalidate_shader_cache)
+        name='Operation', default='add', description='Blending operation')
     bpy.types.Material.arm_blending_source_alpha = EnumProperty(
         items=[('blend_one', 'One', 'One'),
                ('blend_zero', 'Zero', 'Zero'),
@@ -502,7 +501,7 @@ def init_properties():
                ('destination_color', 'Destination Color', 'Destination Color'),
                ('inverse_source_color', 'Inverse Source Color', 'Inverse Source Color'),
                ('inverse_destination_color', 'Inverse Destination Color', 'Inverse Destination Color')],
-        name='Source (Alpha)', default='blend_one', description='Blending factor', update=assets.invalidate_shader_cache)
+        name='Source (Alpha)', default='blend_one', description='Blending factor')
     bpy.types.Material.arm_blending_destination_alpha = EnumProperty(
         items=[('blend_one', 'One', 'One'),
                ('blend_zero', 'Zero', 'Zero'),
@@ -514,14 +513,14 @@ def init_properties():
                ('destination_color', 'Destination Color', 'Destination Color'),
                ('inverse_source_color', 'Inverse Source Color', 'Inverse Source Color'),
                ('inverse_destination_color', 'Inverse Destination Color', 'Inverse Destination Color')],
-        name='Destination (Alpha)', default='blend_one', description='Blending factor', update=assets.invalidate_shader_cache)
+        name='Destination (Alpha)', default='blend_one', description='Blending factor')
     bpy.types.Material.arm_blending_operation_alpha = EnumProperty(
         items=[('add', 'Add', 'Add'),
                ('subtract', 'Subtract', 'Subtract'),
                ('reverse_subtract', 'Reverse Subtract', 'Reverse Subtract'),
                ('min', 'Min', 'Min'),
                ('max', 'Max', 'Max')],
-        name='Operation (Alpha)', default='add', description='Blending operation', update=assets.invalidate_shader_cache)
+        name='Operation (Alpha)', default='add', description='Blending operation')
     # For scene
     bpy.types.Scene.arm_export = BoolProperty(name="Export", description="Export scene data", default=True)
     bpy.types.Scene.arm_terrain_textures = StringProperty(name="Textures", description="Set root folder for terrain assets", default="//Bundled/", subtype="DIR_PATH")
@@ -547,17 +546,17 @@ def init_properties():
     bpy.types.World.world_defs = StringProperty(name="World Shader Defs", default='')
     bpy.types.World.compo_defs = StringProperty(name="Compositor Shader Defs", default='')
 
-    bpy.types.World.arm_use_clouds = BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_use_clouds = BoolProperty(name="Clouds", default=False)
     bpy.types.World.arm_darken_clouds = BoolProperty(
         name="Darken Clouds at Night",
         description="Darkens the clouds when the sun is low. This setting is for artistic purposes and is not physically correct",
-        default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_clouds_lower = FloatProperty(name="Lower", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_clouds_upper = FloatProperty(name="Upper", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_clouds_wind = FloatVectorProperty(name="Wind", default=[1.0, 0.0], size=2, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_clouds_secondary = FloatProperty(name="Secondary", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_clouds_precipitation = FloatProperty(name="Precipitation", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_clouds_steps = IntProperty(name="Steps", default=24, min=1, max=240, update=assets.invalidate_shader_cache)
+        default=False)
+    bpy.types.World.arm_clouds_lower = FloatProperty(name="Lower", default=1.0, min=0.1, max=10.0)
+    bpy.types.World.arm_clouds_upper = FloatProperty(name="Upper", default=1.0, min=0.1, max=10.0)
+    bpy.types.World.arm_clouds_wind = FloatVectorProperty(name="Wind", default=[1.0, 0.0], size=2)
+    bpy.types.World.arm_clouds_secondary = FloatProperty(name="Secondary", default=1.0, min=0.1, max=10.0)
+    bpy.types.World.arm_clouds_precipitation = FloatProperty(name="Precipitation", default=1.0, min=0.1, max=10.0)
+    bpy.types.World.arm_clouds_steps = IntProperty(name="Steps", default=24, min=1, max=240)
 
     bpy.types.Material.export_uvs = BoolProperty(name="Export UVs", default=False)
     bpy.types.Material.export_vcols = BoolProperty(name="Export VCols", default=False)

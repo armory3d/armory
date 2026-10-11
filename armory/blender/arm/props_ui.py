@@ -1104,7 +1104,6 @@ class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
 
         col = layout.column(heading='Debug', align=True)
         col.prop(wrd, 'arm_verbose_output')
-        col.prop(wrd, 'arm_cache_build')
         col.prop(wrd, 'arm_clear_on_compile')
         col.prop(wrd, 'arm_assert_level')
         col.prop(wrd, 'arm_assert_quit')
@@ -1309,7 +1308,6 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
             if wrd.arm_rplist[i].name == item.arm_project_rp:
                 wrd.arm_rplist_index = i
                 break
-        assets.invalidate_shader_cache(None, None)
         assets.invalidate_enabled = False
         if wrd.arm_clear_on_compile:
             os.system("cls")
