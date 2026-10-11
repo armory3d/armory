@@ -323,6 +323,11 @@ class ARM_PT_ScenePropsPanel(bpy.types.Panel):
         column = row.column()
         row.prop(scene, 'arm_export')
 
+        # FPS limit setting (fixes #3018)
+        col = layout.column()
+        col.prop(scene.render, 'fps', text='Frame Rate Limit')
+        col.label(text='Set max FPS for the game (0 = unlimited)', icon='INFO')
+
 class InvalidateCacheButton(bpy.types.Operator):
     """Delete cached mesh data"""
     bl_idname = "arm.invalidate_cache"
