@@ -1437,6 +1437,7 @@ def draw_view3d_object_menu(self, context):
     self.layout.separator()
     self.layout.operator_context = 'INVOKE_DEFAULT'
     self.layout.operator('arm.copy_traits_to_active')
+    self.layout.operator('arm.copy_armory_props_to_selected')
 
 class ARM_PT_TopbarPanel(bpy.types.Panel):
     bl_label = "Armory Player"
