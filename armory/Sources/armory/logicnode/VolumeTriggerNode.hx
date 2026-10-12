@@ -1,4 +1,4 @@
-package armory.logicnode;
+﻿package armory.logicnode;
 
 import iron.object.Object;
 using armory.object.TransformExtension;
@@ -21,7 +21,9 @@ class VolumeTriggerNode extends LogicNode {
 
 		var t1 = object.transform;
 		var t2 = volume.transform;
-		var overlap = t1.overlap(t2);
+
+		// Use OBB-aware overlap to account for rotation and scale
+		var overlap = TransformExtension.overlap_obb(t1, t2);
 
 		var b = false;
 		switch (property0) {

@@ -1,7 +1,8 @@
-package armory.logicnode;
+﻿package armory.logicnode;
 
 import iron.object.Object;
 import iron.math.Vec4;
+using armory.object.TransformExtension;
 
 class OnVolumeTriggerNode extends LogicNode {
 
@@ -31,9 +32,8 @@ class OnVolumeTriggerNode extends LogicNode {
 		var d1 = t1.dim;
 		var d2 = t2.dim;
 
-		var overlap = l1.x + d1.x / 2 > l2.x - d2.x / 2 && l1.x - d1.x / 2 < l2.x + d2.x / 2 &&
-				  	  l1.y + d1.y / 2 > l2.y - d2.y / 2 && l1.y - d1.y / 2 < l2.y + d2.y / 2 &&
-				  	  l1.z + d1.z / 2 > l2.z - d2.z / 2 && l1.z - d1.z / 2 < l2.z + d2.z / 2;
+		// Use OBB-aware overlap to account for rotation and scale
+		var overlap = TransformExtension.overlap_obb(t1, t2);
 
 		var b = false;
 		switch (property0) {
