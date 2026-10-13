@@ -37,7 +37,7 @@ write_material_attribs: Optional[Callable[[dict[str, Any], shader.Shader], bool]
 write_material_attribs_post: Optional[Callable[[dict[str, Any], shader.Shader], None]] = None
 write_vertex_attribs: Optional[Callable[[shader.Shader], bool]] = None
 
-def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
+def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False, backface=False):
 
     is_disp = mat_utils.disp_linked(mat_state.output_node)
 
@@ -45,7 +45,31 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
     if is_disp or shadowmap_transparent:
         vs.append({'name': 'nor', 'data': 'short2norm'})
 
-    if shadowmap_transparent:
+    if backface:
+        # Closest backface depth of the refractive meshes, stored as 1 - z and
+        # resolved with max blending, so that neither an additional depth buffer
+        # nor a non black clear is needed
+        con_depth = mat_state.data.add_context({
+            'name': context_id,
+            'vertex_elements': vs,
+            'depth_write': False,
+            'depth_read': False,
+            'compare_mode': 'always',
+            'cull_mode': 'counter_clockwise',
+            'blend_source': 'blend_one',
+            'blend_destination': 'blend_one',
+            'blend_operation': 'max',
+            'alpha_blend_source': 'blend_one',
+            'alpha_blend_destination': 'blend_one',
+            'alpha_blend_operation': 'max',
+            'color_attachments': ['R32'],
+            'color_writes_red': [True],
+            'color_writes_green': [True],
+            'color_writes_blue': [True],
+            'color_writes_alpha': [True]
+        })
+
+    elif shadowmap_transparent:
         con_depth = mat_state.data.add_context({
             'name': context_id,
             'vertex_elements': vs,
@@ -274,7 +298,15 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False):
         frag.write('color *= 1.0 - opacity;')
         frag.write('fragColor = vec4(color, depth);')
 
-    if parse_opacity and not shadowmap_transparent:
+    if backface:
+        # Unlike the depth passes, transparent fragments must be kept here,
+        # only alpha clipped ones are dropped
+        if parse_opacity and mat_state.material.arm_discard:
+            frag.write('if (opacity < {0}) discard;'.format(mat_state.material.arm_discard_opacity))
+        frag.add_out('vec4 fragColor')
+        frag.write('fragColor = vec4(1.0 - gl_FragCoord.z);')
+
+    elif parse_opacity and not shadowmap_transparent:
         if mat_state.material.arm_discard:
             opac = mat_state.material.arm_discard_opacity_shadows
         else:

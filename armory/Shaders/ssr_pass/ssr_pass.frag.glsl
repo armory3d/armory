@@ -29,7 +29,6 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 vec3 hitCoord;
-float depth;
 
 const int numBinarySearchSteps = 7;
 const int maxSteps = int(ceil(1.0 / ssrRayStep) * ssrSearchDist);
@@ -44,37 +43,45 @@ vec2 getProjectedCoord(const vec3 hit) {
 	return projectedCoord.xy;
 }
 
-float getDeltaDepth(const vec3 hit) {
-	depth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
-	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
-	return viewPos.z - hit.z;
+// > 0.0 once the ray passed behind the surface stored in the depth buffer
+float getDeltaDepth(const vec3 hit, const vec2 coord) {
+	float d = textureLod(gbufferD, coord, 0.0).r;
+	return getPosView(viewRay, d, cameraProj).z - hit.z;
 }
 
-vec4 binarySearch(vec3 dir) {
+vec4 binarySearch(vec3 dir, const float thickness) {
 	float ddepth;
 	for (int i = 0; i < numBinarySearchSteps; i++) {
 		dir *= 0.5;
 		hitCoord -= dir;
-		ddepth = getDeltaDepth(hitCoord);
+		ddepth = getDeltaDepth(hitCoord, getProjectedCoord(hitCoord));
 		if (ddepth < 0.0) hitCoord += dir;
 	}
-	// Ugly discard of hits too far away
-	#ifdef _CPostprocess
-		if (abs(ddepth) > PPComp9.z / 500) return vec4(0.0);
-	#else
-		if (abs(ddepth) > ssrSearchDist / 500) return vec4(0.0);
-	#endif
+	// The refinement did not settle on the surface
+	if (abs(ddepth) > thickness) return vec4(0.0);
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
-vec4 rayCast(vec3 dir) {
+vec4 rayCast(const vec3 dir) {
+	#ifdef _CPostprocess
+	vec3 rayStep = dir * PPComp9.x;
+	#else
+	vec3 rayStep = dir * ssrRayStep;
+	#endif
+
+	// Depth buffer surfaces have no thickness, so a crossing found further than
+	// one step behind one means the ray passed behind the geometry, not into it
+	float thickness = length(rayStep);
+
 	for (int i = 0; i < maxSteps; i++) {
-		#ifdef _CPostprocess
-			hitCoord += dir * PPComp9.x;
-		#else
-			hitCoord += dir * ssrRayStep;
-		#endif
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		hitCoord += rayStep;
+
+		vec2 coord = getProjectedCoord(hitCoord);
+		// The ray left the screen, there is nothing left to sample
+		if (coord.x < 0.0 || coord.x > 1.0 || coord.y < 0.0 || coord.y > 1.0) return vec4(0.0);
+
+		float ddepth = getDeltaDepth(hitCoord, coord);
+		if (ddepth > 0.0 && ddepth < thickness) return binarySearch(rayStep, thickness);
 	}
 	return vec4(0.0);
 }
@@ -90,8 +97,8 @@ void main() {
 	float spec = fract(textureLod(gbuffer1, texCoord, 0.0).a);
 	if (spec == 0.0) { fragColor.rgb = vec3(0.0); return; }
 
-	float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
-	if (d == 1.0) { fragColor.rgb = vec3(0.0); return; }
+	float d = textureLod(gbufferD, texCoord, 0.0).r;
+	if (d >= 1.0) { fragColor.rgb = vec3(0.0); return; }
 
 	vec2 enc = g0.rg;
 	vec3 n;
@@ -100,8 +107,9 @@ void main() {
 	n = normalize(n);
 
 	vec3 viewNormal = V3 * n;
-	vec3 viewPos = getPosView(normalize(viewRay), d, cameraProj);
-	vec3 reflected = reflect(viewPos, viewNormal);
+	vec3 viewPos = getPosView(viewRay, d, cameraProj);
+	vec3 viewDir = normalize(viewPos);
+	vec3 reflected = reflect(viewDir, viewNormal);
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess
@@ -112,10 +120,10 @@ void main() {
 
 	vec4 g1 = textureLod(gbuffer1, texCoord, 0.0); // Basecolor.rgb, spec/occ
 	vec3 f0 = surfaceF0(g1.rgb, metallic);
-	float dotNV = max(dot(viewNormal, viewPos), 0.0);
+	float dotNV = max(dot(viewNormal, -viewDir), 0.0);
 
 	#ifdef _Brdf
-	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
+	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(clamp(vec2(dotNV, 1.0 - roughness) * 256.0, 0.0, 255.0)), 0).xy;
 	vec3 F = f0 * envBRDF.x + envBRDF.y;
 	#else
 	vec3 F = f0;

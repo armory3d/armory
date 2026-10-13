@@ -1437,6 +1437,7 @@ def draw_view3d_object_menu(self, context):
     self.layout.separator()
     self.layout.operator_context = 'INVOKE_DEFAULT'
     self.layout.operator('arm.copy_traits_to_active')
+    self.layout.operator('arm.copy_armory_props_to_selected')
 
 class ARM_PT_TopbarPanel(bpy.types.Panel):
     bl_label = "Armory Player"
@@ -1778,7 +1779,7 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col2.prop(rpdat, 'arm_voxelgi_diff')
         col2.prop(rpdat, 'arm_voxelgi_spec')
         col2.prop(rpdat, 'arm_voxelgi_refr')
-        col.prop(rpdat, 'arm_voxelgi_shad')
+        #col.prop(rpdat, 'arm_voxelgi_shad')
         #col.prop(rpdat, 'arm_voxelgi_env')
         col.prop(rpdat, 'arm_voxelgi_occ')
         col.label(text="Ray")
@@ -1902,6 +1903,7 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_ss_refraction_search_dist')
         col.prop(rpdat, 'arm_ss_refraction_falloff_exp')
         col.prop(rpdat, 'arm_ss_refraction_jitter')
+        col.prop(rpdat, 'arm_ss_refraction_absorption')
         layout.separator()
 
         col = layout.column()

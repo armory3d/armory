@@ -65,9 +65,6 @@ class RenderPathDeferred {
 			#if (rp_voxels == "Voxel GI" || arm_voxelgi_shadows)
 			Inc.initGI("voxelsSDF");
 			Inc.initGI("voxelsSDFtmp");
-			#if arm_voxelgi_shadows
-			Inc.initGI("voxels_shadows");
-			#end
 			#end
 			#if (rp_voxels == "Voxel GI")
 			Inc.initGI("voxels_diffuse");
@@ -205,6 +202,7 @@ class RenderPathDeferred {
 		#elseif (rp_ssgi == "SSGI")
 		{
 			path.loadShader("shader_datas/ssgi_pass/ssgi_pass");
+			path.loadShader("shader_datas/copy_pass/copy_pass");
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 		}
@@ -218,7 +216,7 @@ class RenderPathDeferred {
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			#if (rp_ssgi == "SSGI")
-			t.format = "RGBA32";
+			t.format = "RGBA64";
 			#else
 			t.format = "R8";
 			#end
@@ -234,7 +232,7 @@ class RenderPathDeferred {
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			#if (rp_ssgi == "SSGI")
-			t.format = "RGBA32";
+			t.format = "RGBA64";
 			#else
 			t.format = "R8";
 			#end
@@ -243,6 +241,21 @@ class RenderPathDeferred {
 			t.scale *= 0.5;
 			#end
 			path.createRenderTarget(t);
+
+			#if (rp_ssgi == "SSGI")
+			// Lit image of the previous frame, gathered by the SSGI pass
+			var t = new RenderTargetRaw();
+			t.name = "ssgi_prev";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = Inc.getHdrFormat();
+			t.scale = Inc.getSuperSampling();
+			#if rp_ssgi_half
+			t.scale *= 0.5;
+			#end
+			path.createRenderTarget(t);
+			#end
 		}
 		#end
 
@@ -445,6 +458,16 @@ class RenderPathDeferred {
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 
+			// holds the closest backface depth of the refractive meshes
+			var t = new RenderTargetRaw();
+			t.name = "gbufferD2";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R32";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+
 			// holds background color
 			var t = new RenderTargetRaw();
 			t.name = "refr";
@@ -511,6 +534,19 @@ class RenderPathDeferred {
 			b.set(0, 255);
 			rt.image = kha.Image.fromBytes(b, t.width, t.height, kha.graphics4.TextureFormat.L8);
 			path.renderTargets.set(t.name, rt);
+
+			#if (rp_ssgi == "SSGI")
+			var t = new RenderTargetRaw();
+			t.name = "empty_black";
+			t.width = 1;
+			t.height = 1;
+			t.format = "R8";
+			var rt = new RenderTarget(t);
+			var b = haxe.io.Bytes.alloc(1);
+			b.set(0, 0);
+			rt.image = kha.Image.fromBytes(b, t.width, t.height, kha.graphics4.TextureFormat.L8);
+			path.renderTargets.set(t.name, rt);
+			#end
 		}
 		#end
 
@@ -628,12 +664,9 @@ class RenderPathDeferred {
 				path.setTarget("singlea");
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbuffer0", "gbuffer0");
-				path.bindTarget("gbuffer1", "gbuffer1");
-				#if rp_gbuffer2
+				path.bindTarget("ssgi_prev", "prevLit");
+				#if (rp_gbuffer2 && arm_veloc)
 				path.bindTarget("gbuffer2", "sveloc");
-				#end
-				#if rp_gbuffer_emission
-				path.bindTarget("gbuffer_emission", "gbufferEmission");
 				#end
 				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
 				path.setTarget("singleb");
@@ -662,7 +695,7 @@ class RenderPathDeferred {
 				path.clearImage("voxels", 0x00000000);
 				path.clearImage("voxelsOut", 0x00000000);
 				path.clearImage("voxelsOutB", 0x00000000);
-				#if (arm_voxelgi_shadows || (rp_voxels == "Voxel GI"))
+				#if (rp_voxels == "Voxel GI")
 				path.clearImage("voxelsSDF", 0x00000000);
 				path.clearImage("voxelsSDFtmp", 0x00000000);
 				#end
@@ -705,9 +738,6 @@ class RenderPathDeferred {
 				#else
 				path.clearImage("voxels_ao", 0x00000000);
 				#end
-				#if arm_voxelgi_shadows
-				path.clearImage("voxels_shadows", 0x00000000);
-				#end
 			}
 		}
 		#end
@@ -741,7 +771,11 @@ class RenderPathDeferred {
 				path.bindTarget("singlea", "ssaotex");
 			}
 			else {
+				#if (rp_ssgi == "SSGI")
+				path.bindTarget("empty_black", "ssaotex");
+				#else
 				path.bindTarget("empty_white", "ssaotex");
+				#end
 			}
 		}
 		#end
@@ -761,10 +795,6 @@ class RenderPathDeferred {
 			Inc.resolveSpecular();
 			path.bindTarget("voxels_diffuse", "voxels_diffuse");
 			path.bindTarget("voxels_specular", "voxels_specular");
-			#end
-			#if arm_voxelgi_shadows
-			Inc.resolveShadows();
-			path.bindTarget("voxels_shadows", "voxels_shadows");
 			#end
 		}
 		#end
@@ -808,6 +838,16 @@ class RenderPathDeferred {
 					path.drawVolume(p, "shader_datas/probe_cubemap/probe_cubemap");
 				}
 			}
+		}
+		#end
+
+		#if (rp_ssgi == "SSGI")
+		if (armory.data.Config.raw.rp_ssgi != false) {
+			// Keep the lit image for the SSGI pass of the next frame,
+			// before the sky and transparent surfaces are drawn
+			path.setTarget("ssgi_prev");
+			path.bindTarget("tex", "tex");
+			path.drawShader("shader_datas/copy_pass/copy_pass");
 		}
 		#end
 
@@ -919,6 +959,12 @@ class RenderPathDeferred {
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 
+				// Closest backface depth of the refractive meshes, used to
+				// find where the refracted ray leaves the medium
+				path.setTarget("gbufferD2");
+				path.clearTarget(0x00000000);
+				path.drawMeshes("refraction_backface");
+
 				path.setTarget("gbuffer0", ["gbuffer1", "gbuffer_refraction"]);
 
 				#if (rp_voxels != "Off")
@@ -941,6 +987,7 @@ class RenderPathDeferred {
 				path.setTarget("tex");
 				path.bindTarget("refr", "tex");
 				path.bindTarget("gbufferD1", "gbufferD1");
+				path.bindTarget("gbufferD2", "gbufferD2");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer1", "tex1");
 				path.bindTarget("_main", "gbufferD");
