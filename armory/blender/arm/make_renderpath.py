@@ -307,6 +307,7 @@ def build():
                 wrd.world_defs += '_SSGI'
                 assets.add_shader_pass('ssgi_pass')
                 assets.add_shader_pass('blur_edge_pass')
+                assets.add_shader_pass('copy_pass')
             else:
                 assets.add_shader_pass('ssgi_pass')
                 assets.add_shader_pass('blur_edge_pass')

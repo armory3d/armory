@@ -159,7 +159,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 
 	#ifdef _SSRS
-	direct *= traceShadowSS(l, p, gbufferD, invVP, eye);
+	direct *= traceShadowSS(l, p, n, length(ld), gbufferD, invVP, eye);
 	#endif
 
 	#ifdef _VoxelShadow

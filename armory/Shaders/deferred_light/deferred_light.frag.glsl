@@ -258,7 +258,7 @@ void main() {
 #endif
 
 #ifdef _Brdf
-	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
+	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(clamp(vec2(dotNV, 1.0 - roughness) * 256.0, 0.0, 255.0)), 0).xy;
 	vec3 F = f0 * envBRDF.x + envBRDF.y;
 #else
 	vec3 F = f0;
@@ -349,7 +349,8 @@ void main() {
 	// #endif
 #else
 #ifdef _SSGI
-	fragColor.rgb += textureLod(ssaotex, texCoord, 0.0).rgb;
+	// Gathered irradiance, reflected by the diffuse albedo
+	fragColor.rgb += albedo * textureLod(ssaotex, texCoord, 0.0).rgb;
 #endif
 #endif
 
@@ -447,7 +448,7 @@ void main() {
 	// vec2 coords = getProjectedCoord(hitCoord);
 	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	// float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
-	svisibility *= traceShadowSS(sunDir, p, gbufferD, invVP, eye);
+	svisibility *= traceShadowSS(sunDir, p, n, ssrsSearchDist, gbufferD, invVP, eye);
 	#endif
 
 	#ifdef _LightClouds

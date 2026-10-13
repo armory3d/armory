@@ -671,7 +671,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     if '_Brdf' in wrd.world_defs:
         frag.add_uniform('sampler2D senvmapBrdf', link='$brdf.png')
-        frag.write('vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;')
+        frag.write('vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(clamp(vec2(dotNV, 1.0 - roughness) * 256.0, 0.0, 255.0)), 0).xy;')
         frag.write('vec3 F = f0 * envBRDF.x + envBRDF.y;')
     else:
         frag.write('vec3 F = f0;')
@@ -829,6 +829,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.add_uniform('sampler2D gbuffer0')
             frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
             frag.add_uniform('vec3 eye', '_cameraPosition')
+            frag.add_uniform('mat4 VP', '_viewProjectionMatrix', included=True)
+            frag.add_uniform('int frame', '_frame', included=True)
             frag.write(', gbufferD, invVP, eye')
         frag.write(');')
 

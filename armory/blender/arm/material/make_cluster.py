@@ -111,6 +111,8 @@ def write(vert: shader.Shader, frag: shader.Shader):
         frag.add_uniform('sampler2D gbuffer0')
         frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
         frag.add_uniform('vec3 eye', '_cameraPosition')
+        frag.add_uniform('mat4 VP', '_viewProjectionMatrix', included=True)
+        frag.add_uniform('int frame', '_frame', included=True)
         frag.write(', gbufferD, invVP, eye')
     frag.write(');')
 
