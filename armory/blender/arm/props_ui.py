@@ -1038,6 +1038,14 @@ class ARM_PT_ArmoryExporterWindowsSettingsPanel(ExporterTargetSettingsMixin, bpy
     bl_label = "Windows Settings"
     arm_target = 'windows-hl'  # See ExporterTargetSettingsMixin
 
+    @classmethod
+    def poll(cls, context):
+        wrd = bpy.data.worlds['Arm']
+        if (len(wrd.arm_exporterlist) > 0) and (wrd.arm_exporterlist_index >= 0):
+            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+            return item.arm_project_target in ('windows-hl', 'windows')
+        return False
+
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
