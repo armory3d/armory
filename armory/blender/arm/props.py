@@ -371,6 +371,7 @@ def init_properties():
     bpy.types.Object.arm_rb_angular_factor = FloatVectorProperty(name="Angular Factor", size=3, description="Set to 0 to lock axis", default=[1,1,1])
     bpy.types.Object.arm_rb_angular_friction = FloatProperty(name="Angular Friction", description="Angular Friction", default=0.1)
     bpy.types.Object.arm_rb_trigger = BoolProperty(name="Trigger", description="Disable contact response", default=False)
+    bpy.types.Object.arm_rb_kinematic_character = BoolProperty(name="Kinematic Character", description="Export a kinematic character controller instead of a rigid body", default=False)
     bpy.types.Object.arm_rb_deactivation_time = FloatProperty(name="Deactivation Time", description="Delay putting rigid body into sleep", default=0.0)
     bpy.types.Object.arm_rb_ccd = BoolProperty(name="Continuous Collision Detection", description="Improve collision for fast moving objects", default=False)
     bpy.types.Object.arm_rb_interpolate = BoolProperty(name="Interpolation", description="Smooths out the object's transform on physics steps", default=False)
