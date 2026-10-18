@@ -175,7 +175,7 @@ def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, expo
     do_relpath_sdk = rel_path and on_same_drive(sdk_path, project_path)
 
     # Determine if assets should go to data folder (used for hook assets and later)
-    use_data_dir = is_publish and (state.target == 'krom-windows' or state.target == 'krom-linux' or state.target == 'windows-hl' or state.target == 'linux-hl' or state.target == 'html5')
+    use_data_dir = is_publish and (state.target == 'krom-windows' or state.target == 'krom-linux' or state.target == 'windows-hl' or state.target == 'windows' or state.target == 'linux-hl' or state.target == 'html5')
 
     with open('khafile.js', 'w', encoding="utf-8") as khafile:
         khafile.write(
