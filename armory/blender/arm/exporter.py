@@ -3129,6 +3129,43 @@ Make sure the mesh only has tris/quads.""")
     def rigid_body_static(rb):
         return (not rb.enabled and not rb.kinematic) or (rb.type == 'PASSIVE' and not rb.kinematic)
 
+    def add_kinematic_character(self, bobject: bpy.types.Object, o, phys_pkg: str):
+        ArmoryExporter.export_physics = True
+        rb = bobject.rigid_body
+
+        # ControllerShape: Box, Sphere, ConvexHull, Cone, Cylinder, Capsule
+        shape = 1  # SPHERE (cheapest fallback for MESH/COMPOUND)
+        if rb.collision_shape == 'BOX':
+            shape = 0
+        elif rb.collision_shape == 'CONVEX_HULL':
+            shape = 2
+        elif rb.collision_shape == 'CONE':
+            shape = 3
+        elif rb.collision_shape == 'CYLINDER':
+            shape = 4
+        elif rb.collision_shape == 'CAPSULE':
+            shape = 5
+
+        collision_margin = rb.collision_margin if rb.use_margin else 0.0
+        animated = 'true' if rb.kinematic else 'false'
+
+        col_group = ''
+        for b in rb.collision_collections:
+            col_group = ('1' if b else '0') + col_group
+        col_mask = ''
+        for b in bobject.arm_rb_collision_filter_mask:
+            col_mask = ('1' if b else '0') + col_mask
+
+        trait = {}
+        trait['type'] = 'Script'
+        trait['class_name'] = 'armory.trait.physics.' + phys_pkg + '.KinematicCharacterController'
+        # Constructor: mass, shape, jumpSpeed, friction, restitution, collisionMargin, animated, group, mask
+        trait['parameters'] = [
+            str(rb.mass), str(shape), '8.0', str(rb.friction), str(rb.restitution),
+            str(collision_margin), animated, str(int(col_group, 2)), str(int(col_mask, 2))
+        ]
+        o['traits'].append(trait)
+
     def post_export_object(self, bobject: bpy.types.Object, o, type):
         # Export traits
         self.export_traits(bobject, o)
@@ -3137,8 +3174,11 @@ Make sure the mesh only has tris/quads.""")
         phys_enabled = wrd.arm_physics != 'Disabled'
         phys_pkg = 'bullet' if wrd.arm_physics_engine == 'Bullet' else 'oimo'
 
+        # Kinematic character controller trait
+        if bobject.rigid_body is not None and phys_enabled and bobject.arm_rb_kinematic_character:
+            self.add_kinematic_character(bobject, o, phys_pkg)
         # Rigid body trait
-        if bobject.rigid_body is not None and phys_enabled:
+        elif bobject.rigid_body is not None and phys_enabled:
             # Skip children of compound parents - their shapes are baked into the parent
             is_compound_child = (bobject.parent is not None and
                                  bobject.parent.rigid_body is not None and
