@@ -231,6 +231,7 @@ class ARM_PT_PhysicsPropsPanel(bpy.types.Panel):
             layout.prop(obj, 'arm_rb_linear_factor')
             layout.prop(obj, 'arm_rb_angular_factor')
             layout.prop(obj, 'arm_rb_angular_friction')
+            layout.prop(obj, 'arm_rb_kinematic_character')
             layout.prop(obj, 'arm_rb_trigger')
             layout.prop(obj, 'arm_rb_ccd')
             layout.prop(obj, 'arm_rb_interpolate')
@@ -1037,6 +1038,14 @@ class ARM_PT_ArmoryExporterHTML5SettingsPanel(ExporterTargetSettingsMixin, bpy.t
 class ARM_PT_ArmoryExporterWindowsSettingsPanel(ExporterTargetSettingsMixin, bpy.types.Panel):
     bl_label = "Windows Settings"
     arm_target = 'windows-hl'  # See ExporterTargetSettingsMixin
+
+    @classmethod
+    def poll(cls, context):
+        wrd = bpy.data.worlds['Arm']
+        if (len(wrd.arm_exporterlist) > 0) and (wrd.arm_exporterlist_index >= 0):
+            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+            return item.arm_project_target in ('windows-hl', 'windows')
+        return False
 
     def draw(self, context):
         layout = self.layout

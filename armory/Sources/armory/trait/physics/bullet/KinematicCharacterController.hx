@@ -23,6 +23,7 @@ class KinematicCharacterController extends Trait {
 	public var collisionMargin: Float;
 	public var animated: Bool;
 	public var group = 1;
+	public var mask = 1;
 	var bodyScaleX: Float; // Transform scale at creation time
 	var bodyScaleY: Float;
 	var bodyScaleZ: Float;
@@ -34,7 +35,6 @@ class KinematicCharacterController extends Trait {
 	public var body: bullet.Bt.PairCachingGhostObject = null;
 	public var character: bullet.Bt.KinematicCharacterController = null;
 	public var ready = false;
-	static var nextId = 0;
 	public var id = 0;
 	public var onReady: Void->Void = null;
 
@@ -47,7 +47,7 @@ class KinematicCharacterController extends Trait {
 	static inline var CF_CHARACTER_OBJECT = 16;
 
 	public function new(mass = 1.0, shape = ControllerShape.Capsule, jumpSpeed = 8.0, friction = 0.5, restitution = 0.0,
-						collisionMargin = 0.0, animated = false, group = 1) {
+						collisionMargin = 0.0, animated = false, group = 1, mask = 1) {
 		super();
 
 		if (nullvec) {
@@ -65,6 +65,7 @@ class KinematicCharacterController extends Trait {
 		this.collisionMargin = collisionMargin;
 		this.animated = animated;
 		this.group = group;
+		this.mask = mask;
 
 		notifyOnAdd(init);
 		notifyOnLateUpdate(lateUpdate);
@@ -160,17 +161,16 @@ class KinematicCharacterController extends Trait {
 		bodyScaleY = currentScaleY = transform.scale.y;
 		bodyScaleZ = currentScaleZ = transform.scale.z;
 
-		id = nextId;
-		nextId++;
+		id = PhysicsWorld.nextId++;
 
 		#if js
 		untyped body.userIndex = id;
+		untyped bullet.Bt.Ammo.wrapPointer(untyped body.cw, bullet.Bt.Ammo.btCollisionObject).userIndex = id;
 		#elseif cpp
 		body.setUserIndex(id);
 		#end
 
-		// physics.addKinematicCharacterController(this);
-
+		physics.addKinematicCharacterController(this);
 		if (onReady != null) onReady();
 	}
 
@@ -248,7 +248,23 @@ class KinematicCharacterController extends Trait {
 	#end
 
 	public function removeFromWorld() {
-		// if (physics != null) physics.removeKinematicCharacterController(this);
+		if (physics != null) physics.removeKinematicCharacterController(this);
+	}
+
+	public function setGroup(group: Int) {
+		if (this.group == group) return;
+		this.group = group;
+		physics.updateKinematicCharacterController(this);
+	}
+
+	public function setMask(mask: Int) {
+		if (this.mask == mask) return;
+		this.mask = mask;
+		physics.updateKinematicCharacterController(this);
+	}
+
+	public function getOverlappingBodies(): Array<RigidBody> {
+		return physics.getOverlappingBodies(this);
 	}
 
 	public function activate() {

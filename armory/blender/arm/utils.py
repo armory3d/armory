@@ -1081,7 +1081,7 @@ def target_to_gapi(arm_project_target: str) -> str:
         return 'arm_gapi_' + arm.utils.get_os()
     elif arm_project_target == 'krom-windows':
         return 'arm_gapi_win'
-    elif arm_project_target == 'windows-hl':
+    elif arm_project_target in ('windows-hl', 'windows'):
         return 'arm_gapi_win'
     elif arm_project_target == 'krom-linux':
         return 'arm_gapi_linux'

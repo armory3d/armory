@@ -74,6 +74,7 @@ class ArmExporterListItem(bpy.types.PropertyGroup):
     arm_project_target: EnumProperty(
         items = [('html5', 'HTML5 (JS)', 'html5'),
                  ('windows-hl', 'Windows (C)', 'windows-hl'),
+                 ('windows', 'Windows (C++)', 'windows'),
                  ('krom-windows', 'Windows (Krom)', 'krom-windows'),
                  ('macos-hl', 'macOS (C)', 'macos-hl'),
                  ('krom-macos', 'macOS (Krom)', 'krom-macos'),
@@ -421,8 +422,8 @@ class ARM_OT_ExporterOpenVS(bpy.types.Operator):
             cls.poll_message_set('No export configuration exists')
             return False
 
-        if wrd.arm_exporterlist[wrd.arm_exporterlist_index].arm_project_target != 'windows-hl':
-            cls.poll_message_set('This operator only works with the Windows (C) target')
+        if wrd.arm_exporterlist[wrd.arm_exporterlist_index].arm_project_target not in ('windows-hl', 'windows'):
+            cls.poll_message_set('This operator only works with the Windows (C) and Windows (C++) targets')
             return False
 
         return True
@@ -431,7 +432,7 @@ class ARM_OT_ExporterOpenVS(bpy.types.Operator):
         version_major, version_min_full, err = arm.utils_vs.fetch_project_version()
         if err is not None:
             if err == 'err_file_not_found':
-                self.report({'ERROR'}, 'Publish project using Windows (C) target first')
+                self.report({'ERROR'}, 'Publish project using a Windows (C/C++) target first')
             elif err.startswith('err_invalid_version'):
                 self.report({'ERROR'}, 'Could not parse Visual Studio version, check console for details')
             return {'CANCELLED'}
