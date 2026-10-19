@@ -875,6 +875,7 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_optimize_data')
         col.prop(wrd, 'arm_asset_compression')
         col.prop(wrd, 'arm_single_data_file')
+        col.prop(wrd, 'arm_snapshot')
 
 class ExporterTargetSettingsMixin:
     """Mixin for common exporter setting subpanel functionality.
