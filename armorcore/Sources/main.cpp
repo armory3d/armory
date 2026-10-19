@@ -1,5 +1,8 @@
+#include <algorithm>
 #include <map>
+#include <stdio.h>
 #include <string>
+#include <utility>
 #include <vector>
 #include <kinc/log.h>
 #include <kinc/io/filereader.h>
@@ -33,6 +36,10 @@
 #include <kinc/graphics4/compute.h>
 #endif
 #include <kinc/io/lz4/lz4.h>
+#ifndef KINC_WINDOWS
+#include <dirent.h>
+#include <sys/stat.h>
+#endif
 #define STB_IMAGE_IMPLEMENTATION
 #include <kinc/libs/stb_image.h>
 #ifdef KINC_DIRECT3D11
@@ -1035,14 +1042,53 @@ namespace {
 		return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 	}
 
-	bool load_image(kinc_file_reader_t &reader, const char *filename, unsigned char *&output, int &width, int &height, kinc_image_format_t &format) {
+	std::string normalize_embedded_key(const char *path) {
+		std::string normalized;
+		if (path == nullptr) return normalized;
+
+		size_t length = strlen(path);
+		size_t i = 0;
+		while (i < length) {
+			while (i < length && (path[i] == '/' || path[i] == '\\')) i++;
+			if (i >= length) break;
+
+			size_t start = i;
+			while (i < length && path[i] != '/' && path[i] != '\\') i++;
+			if (i - start == 1 && path[start] == '.') continue;
+
+			if (!normalized.empty()) normalized += '/';
+			while (start < i) {
+				char c = path[start++];
+				if (c >= 'A' && c <= 'Z') c = c - 'A' + 'a';
+				normalized += c;
+			}
+		}
+
+		return normalized;
+	}
+
+	MaybeLocal<ArrayBuffer> get_embedded_data(Isolate *isolate, const char *path) {
+		Local<Context> context = isolate->GetCurrentContext();
+		if (context.IsEmpty()) return MaybeLocal<ArrayBuffer>();
+
+		std::string key = normalize_embedded_key(path);
+		if (key.empty()) return MaybeLocal<ArrayBuffer>();
+
+		Local<String> name;
+		if (!String::NewFromUtf8(isolate, key.c_str()).ToLocal(&name)) return MaybeLocal<ArrayBuffer>();
+
+		Local<Value> value;
+		if (!context->Global()->Get(context, name).ToLocal(&value) || !value->IsArrayBuffer()) {
+			return MaybeLocal<ArrayBuffer>();
+		}
+
+		return value.As<ArrayBuffer>();
+	}
+
+	bool load_image(unsigned char *data, int size, const char *filename, unsigned char *&output, int &width, int &height, kinc_image_format_t &format) {
 		format = KINC_IMAGE_FORMAT_RGBA32;
-		int size = (int)kinc_file_reader_size(&reader);
 		int comp;
 		bool success = true;
-		unsigned char *data = (unsigned char *)malloc(size);
-		kinc_file_reader_read(&reader, data, size);
-		kinc_file_reader_close(&reader);
 
 		if (ends_with(filename, "k")) {
 			width = kinc_read_s32le(data);
@@ -1097,7 +1143,6 @@ namespace {
 				}
 			}
 		}
-		free(data);
 		return success;
 	}
 
@@ -1109,33 +1154,49 @@ namespace {
 
 		kinc_image_t *image = (kinc_image_t *)malloc(sizeof(kinc_image_t));
 
-		// if (armorcore) {
-			kinc_file_reader_t reader;
-			if (kinc_file_reader_open(&reader, *utf8_value, KINC_FILE_TYPE_ASSET)) {
-				unsigned char *image_data;
-				int image_width;
-				int image_height;
-				kinc_image_format_t image_format;
-				success = load_image(reader, *utf8_value, image_data, image_width, image_height, image_format);
-				if (success) {
-					kinc_image_init(image, image_data, image_width, image_height, image_format);
-				}
+		unsigned char *source_data = nullptr;
+		int source_size = 0;
+		bool source_owned = false;
+
+		Local<ArrayBuffer> embedded_buffer;
+		std::shared_ptr<BackingStore> embedded_content;
+
+		kinc_file_reader_t reader;
+		if (kinc_file_reader_open(&reader, *utf8_value, KINC_FILE_TYPE_ASSET)) {
+			source_size = (int)kinc_file_reader_size(&reader);
+			source_data = (unsigned char *)malloc(source_size);
+			kinc_file_reader_read(&reader, source_data, source_size);
+			kinc_file_reader_close(&reader);
+			source_owned = true;
+		}
+		else {
+			// File not found on disk, try data embedded in the startup snapshot
+			MaybeLocal<ArrayBuffer> embedded = get_embedded_data(isolate, *utf8_value);
+			if (!embedded.IsEmpty()) {
+				embedded_buffer = embedded.ToLocalChecked();
+				embedded_content = embedded_buffer->GetBackingStore();
+				source_data = (unsigned char *)embedded_content->Data();
+				source_size = (int)embedded_content->ByteLength();
 			}
 			else {
 				success = false;
 			}
-		// }
-		// else {
-		// 	// TODO: make kinc_image load faster
-		// 	size_t byte_size = kinc_image_size_from_file(*utf8_value);
-		// 	if (byte_size == 0) {
-		// 		success = false;
-		// 	}
-		// 	else {
-		// 		void *memory = malloc(byte_size);
-		// 		kinc_image_init_from_file(image, memory, *utf8_value);
-		// 	}
-		// }
+		}
+
+		if (success) {
+			unsigned char *image_data;
+			int image_width;
+			int image_height;
+			kinc_image_format_t image_format;
+			success = load_image(source_data, source_size, *utf8_value, image_data, image_width, image_height, image_format);
+			if (success) {
+				kinc_image_init(image, image_data, image_width, image_height, image_format);
+			}
+		}
+
+		if (source_owned) {
+			free(source_data);
+		}
 
 		if (!success) {
 			free(image);
@@ -1203,6 +1264,29 @@ namespace {
 		HandleScope scope(args.GetIsolate());
 		String::Utf8Value utf8_value(isolate, args[0]);
 		kinc_a1_sound_t *sound = kinc_a1_sound_create(*utf8_value);
+
+		if (sound == nullptr) {
+			// File not found on disk, try data embedded in the startup snapshot
+			MaybeLocal<ArrayBuffer> embedded = get_embedded_data(isolate, *utf8_value);
+			if (!embedded.IsEmpty()) {
+				kinc_a1_audioformat_t format = KINC_A1_AUDIOFORMAT_OGG;
+				bool known_format = false;
+				if (ends_with(*utf8_value, ".ogg")) {
+					format = KINC_A1_AUDIOFORMAT_OGG;
+					known_format = true;
+				}
+				else if (ends_with(*utf8_value, ".wav")) {
+					format = KINC_A1_AUDIOFORMAT_WAV;
+					known_format = true;
+				}
+
+				if (known_format) {
+					Local<ArrayBuffer> buffer = embedded.ToLocalChecked();
+					std::shared_ptr<BackingStore> content = buffer->GetBackingStore();
+					sound = kinc_a1_sound_create_from_buffer((uint8_t *)content->Data(), (uint32_t)content->ByteLength(), format);
+				}
+			}
+		}
 
 		if (sound == nullptr) {
 			return;
@@ -1327,15 +1411,24 @@ namespace {
 		String::Utf8Value utf8_value(isolate, args[0]);
 
 		kinc_file_reader_t reader;
-		if (!kinc_file_reader_open(&reader, *utf8_value, KINC_FILE_TYPE_ASSET)) return;
-		uint32_t reader_size = (uint32_t)kinc_file_reader_size(&reader);
+		if (kinc_file_reader_open(&reader, *utf8_value, KINC_FILE_TYPE_ASSET)) {
+			uint32_t reader_size = (uint32_t)kinc_file_reader_size(&reader);
 
-		Local<ArrayBuffer> buffer = ArrayBuffer::New(isolate, reader_size);
-		std::shared_ptr<BackingStore> content = buffer->GetBackingStore();
-		kinc_file_reader_read(&reader, content->Data(), reader_size);
-		kinc_file_reader_close(&reader);
+			Local<ArrayBuffer> buffer = ArrayBuffer::New(isolate, reader_size);
+			std::shared_ptr<BackingStore> content = buffer->GetBackingStore();
+			kinc_file_reader_read(&reader, content->Data(), reader_size);
+			kinc_file_reader_close(&reader);
 
-		args.GetReturnValue().Set(buffer);
+			args.GetReturnValue().Set(buffer);
+			return;
+		}
+
+		// File not found on disk, try data embedded in the startup snapshot.
+		// The returned buffer aliases the snapshot data and is treated as read-only.
+		MaybeLocal<ArrayBuffer> embedded = get_embedded_data(isolate, *utf8_value);
+		if (!embedded.IsEmpty()) {
+			args.GetReturnValue().Set(embedded.ToLocalChecked());
+		}
 	}
 
 	void krom_load_url(const FunctionCallbackInfo<Value> &args) {
@@ -3295,6 +3388,101 @@ namespace {
 			handle_exception(&try_catch);
 		}
 	}
+
+	#ifdef KINC_WINDOWS
+	std::string utf8_from_wide(const wchar_t *text) {
+		int size = WideCharToMultiByte(CP_UTF8, 0, text, -1, nullptr, 0, nullptr, nullptr);
+		if (size <= 1) return std::string();
+
+		std::string utf8(size, '\0');
+		WideCharToMultiByte(CP_UTF8, 0, text, -1, &utf8[0], size, nullptr, nullptr);
+		utf8.pop_back();
+		return utf8;
+	}
+
+	std::wstring wide_from_utf8(const std::string &text) {
+		int size = MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, nullptr, 0);
+		if (size <= 1) return std::wstring();
+
+		std::wstring wide(size, L'\0');
+		MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, &wide[0], size);
+		wide.pop_back();
+		return wide;
+	}
+
+	FILE *open_snapshot_file(const std::string &path) {
+		std::wstring wide_path = wide_from_utf8(path);
+		return _wfopen(wide_path.c_str(), L"wb");
+	}
+
+	void remove_snapshot_file(const std::string &path) {
+		std::wstring wide_path = wide_from_utf8(path);
+		_wremove(wide_path.c_str());
+	}
+	#else
+	FILE *open_snapshot_file(const std::string &path) {
+		return fopen(path.c_str(), "wb");
+	}
+
+	void remove_snapshot_file(const std::string &path) {
+		remove(path.c_str());
+	}
+	#endif
+
+	void collect_embedded_files(const std::string &dir, const std::string &prefix, std::vector<std::string> &files) {
+		#ifdef KINC_WINDOWS
+		WIN32_FIND_DATAW find_data;
+		std::wstring search = wide_from_utf8(dir + "\\*");
+		HANDLE find_handle = FindFirstFileW(search.c_str(), &find_data);
+		if (find_handle == INVALID_HANDLE_VALUE) {
+			kinc_log(KINC_LOG_LEVEL_WARNING, "Could not open directory %s.", dir.c_str());
+			return;
+		}
+
+		do {
+			std::string name = utf8_from_wide(find_data.cFileName);
+			if (name.empty() || name == "." || name == "..") continue;
+			// Skip links and junctions: they can point outside data/ or create cycles.
+			if (find_data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) continue;
+
+			if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+				collect_embedded_files(dir + "\\" + name, prefix + name + "/", files);
+			}
+			else {
+				files.push_back(prefix + name);
+			}
+		} while (FindNextFileW(find_handle, &find_data));
+
+		FindClose(find_handle);
+		#else
+		DIR *directory = opendir(dir.c_str());
+		if (directory == nullptr) {
+			kinc_log(KINC_LOG_LEVEL_WARNING, "Could not open directory %s.", dir.c_str());
+			return;
+		}
+
+		struct dirent *entry;
+		while ((entry = readdir(directory)) != nullptr) {
+			std::string name = entry->d_name;
+			if (name == "." || name == "..") continue;
+
+			std::string path = dir + "/" + name;
+			struct stat info;
+			if (lstat(path.c_str(), &info) != 0) continue;
+			// Skip links: they can point outside data/ or create cycles.
+			if (S_ISLNK(info.st_mode)) continue;
+
+			if (S_ISDIR(info.st_mode)) {
+				collect_embedded_files(path, prefix + name + "/", files);
+			}
+			else {
+				files.push_back(prefix + name);
+			}
+		}
+
+		closedir(directory);
+		#endif
+	}
 }
 
 int kickstart(int argc, char **argv) {
@@ -3315,6 +3503,7 @@ int kickstart(int argc, char **argv) {
 	bindir = bindir.substr(0, bindir.find_last_of("/"));
 #endif
 	assetsdir = argc > 1 ? argv[1] : bindir;
+	if (assetsdir.empty()) assetsdir = ".";
 
 	// Opening a file
 	int l = (int)assetsdir.length();
@@ -3362,7 +3551,7 @@ int kickstart(int argc, char **argv) {
 
 	bool snapshot_found = true;
 	kinc_file_reader_t reader;
-	if (snapshot || !kinc_file_reader_open(&reader, "krom.bin", KINC_FILE_TYPE_ASSET)) {
+	if (snapshot || !kinc_file_reader_open(&reader, "data.bin", KINC_FILE_TYPE_ASSET)) {
 		if (!kinc_file_reader_open(&reader, "krom.js", KINC_FILE_TYPE_ASSET)) {
 			kinc_log(KINC_LOG_LEVEL_ERROR, "Could not load krom.js, aborting.");
 			exit(1);
@@ -3414,26 +3603,47 @@ int kickstart(int argc, char **argv) {
 				Local<Context> context = Context::New(isolate_cold);
 				Context::Scope context_scope(context);
 
-				const size_t line_size = 512;
-				char line[line_size];
-				strcpy(line, assetsdir.c_str());
-				strcat(line, "/data/embed.txt");
-				FILE *fp = fopen (line, "r");
-				if (fp != NULL) {
-					while (fgets(line, line_size, fp) != NULL)  {
-						line[strlen(line) - 1] = 0; // Trim \n
-						kinc_file_reader_t reader;
-						if (!kinc_file_reader_open(&reader, line, KINC_FILE_TYPE_ASSET)) continue;
-						int reader_size = (int)kinc_file_reader_size(&reader);
+				// Collect files to embed by recursively scanning the data/ folder.
+				std::vector<std::string> embedded_files;
+				std::string datadir = assetsdir;
+				if (!datadir.empty() && (datadir.back() == '/' || datadir.back() == '\\')) datadir.pop_back();
+				datadir += "/data";
+				#ifdef KINC_WINDOWS
+				for (size_t i = 0; i < datadir.size(); ++i) {
+					if (datadir[i] == '/') datadir[i] = '\\';
+				}
+				#endif
+				collect_embedded_files(datadir, "data/", embedded_files);
+				if (embedded_files.empty()) {
+					kinc_log(KINC_LOG_LEVEL_WARNING, "No files found under %s; the snapshot will not contain assets.", datadir.c_str());
+				}
 
-						Local<ArrayBuffer> buffer = ArrayBuffer::New(isolate_cold, reader_size);
-						std::shared_ptr<BackingStore> content = buffer->GetBackingStore();
-						kinc_file_reader_read(&reader, content->Data(), reader_size);
-						kinc_file_reader_close(&reader);
-
-						(void) context->Global()->Set(context, String::NewFromUtf8(isolate_cold, line).ToLocalChecked(), buffer);
+				std::sort(embedded_files.begin(), embedded_files.end());
+				std::map<std::string, std::string> embedded;
+				for (size_t i = 0; i < embedded_files.size(); ++i) {
+					std::string key = normalize_embedded_key(embedded_files[i].c_str());
+					if (key.empty()) continue;
+					std::pair<std::map<std::string, std::string>::iterator, bool> inserted = embedded.insert(std::make_pair(key, embedded_files[i]));
+					if (!inserted.second) {
+						kinc_log(KINC_LOG_LEVEL_WARNING, "Duplicate embedded key %s; skipping %s (already embedded %s).",
+						         key.c_str(), embedded_files[i].c_str(), inserted.first->second.c_str());
 					}
-					fclose (fp);
+				}
+
+				for (std::map<std::string, std::string>::const_iterator it = embedded.begin(); it != embedded.end(); ++it) {
+					kinc_file_reader_t embedded_reader;
+					if (!kinc_file_reader_open(&embedded_reader, it->second.c_str(), KINC_FILE_TYPE_ASSET)) {
+						kinc_log(KINC_LOG_LEVEL_WARNING, "Could not read %s.", it->second.c_str());
+						continue;
+					}
+					int embedded_size = (int)kinc_file_reader_size(&embedded_reader);
+
+					Local<ArrayBuffer> buffer = ArrayBuffer::New(isolate_cold, embedded_size);
+					std::shared_ptr<BackingStore> content = buffer->GetBackingStore();
+					kinc_file_reader_read(&embedded_reader, content->Data(), embedded_size);
+					kinc_file_reader_close(&embedded_reader);
+
+					(void) context->Global()->Set(context, String::NewFromUtf8(isolate_cold, it->first.c_str()).ToLocalChecked(), buffer);
 				}
 
 				ScriptOrigin origin(isolate_cache, String::NewFromUtf8(isolate_cold, "krom_cold").ToLocalChecked());
@@ -3471,13 +3681,26 @@ int kickstart(int argc, char **argv) {
 		// }
 		// StartupData warmData = creator_warm.CreateBlob(SnapshotCreator::FunctionCodeHandling::kKeep);
 
-		std::string krombin = assetsdir + "/krom.bin";
-		FILE *file = fopen(&krombin[0u], "wb");
-		if (file != nullptr) {
-			// fwrite(warmData.data, 1, warmData.raw_size, file);
-			fwrite(coldData.data, 1, coldData.raw_size, file);
-			fclose(file);
+		if (coldData.data == nullptr || coldData.raw_size <= 0) {
+			kinc_log(KINC_LOG_LEVEL_ERROR, "Snapshot data is empty.");
+			exit(1);
 		}
+
+		const std::string databin = assetsdir + "/data.bin";
+		FILE *file = open_snapshot_file(databin);
+		if (file == nullptr) {
+			kinc_log(KINC_LOG_LEVEL_ERROR, "Could not create %s.", databin.c_str());
+			exit(1);
+		}
+
+		size_t written = fwrite(coldData.data, 1, coldData.raw_size, file);
+		int closed = fclose(file);
+		if (written != (size_t)coldData.raw_size || closed != 0) {
+			kinc_log(KINC_LOG_LEVEL_ERROR, "Could not write %s.", databin.c_str());
+			remove_snapshot_file(databin);
+			exit(1);
+		}
+
 		exit(0);
 	}
 
