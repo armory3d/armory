@@ -790,6 +790,10 @@ def build_success():
                 shutil.copy(krom_location, files_path + '/Krom.exe')
                 krom_exe = arm.utils.safestr(wrd.arm_project_name) + '.exe'
                 os.rename(files_path + '/Krom.exe', files_path + '/' + krom_exe)
+                if wrd.arm_snapshot:
+                    subprocess.run([files_path + '/' + krom_exe, files_path, '--snapshot'])
+                    shutil.rmtree(files_path + '/data')
+                    os.remove(files_path + '/krom.js')
             elif state.target == 'krom-linux':
                 krom_location = sdk_path + '/Krom/Krom'
                 shutil.copy(krom_location, files_path)
