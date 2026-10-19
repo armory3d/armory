@@ -3377,6 +3377,10 @@ int kickstart(int argc, char **argv) {
 	kinc_file_reader_close(&reader);
 
 	if (snapshot) {
+		std::string wrapped = "function kickstart() {\n";
+		wrapped += code;
+		wrapped += "\n}\n";
+
 		plat = platform::NewDefaultPlatform();
 		V8::InitializePlatform(plat.get());
 
@@ -3395,7 +3399,7 @@ int kickstart(int argc, char **argv) {
 				Context::Scope context_scope(context);
 
 				ScriptOrigin origin(isolate_cache, String::NewFromUtf8(isolate_cache, "krom_cache").ToLocalChecked());
-				ScriptCompiler::Source source(String::NewFromUtf8(isolate_cache, code).ToLocalChecked(), origin);
+				ScriptCompiler::Source source(String::NewFromUtf8(isolate_cache, wrapped.c_str()).ToLocalChecked(), origin);
 
 				Local<Script> compiled_script = ScriptCompiler::Compile(context, &source, ScriptCompiler::kEagerCompile).ToLocalChecked();
 				cache = ScriptCompiler::CreateCodeCache(compiled_script->GetUnboundScript());
@@ -3433,7 +3437,7 @@ int kickstart(int argc, char **argv) {
 				}
 
 				ScriptOrigin origin(isolate_cache, String::NewFromUtf8(isolate_cold, "krom_cold").ToLocalChecked());
-				ScriptCompiler::Source source(String::NewFromUtf8(isolate_cold, code).ToLocalChecked(), origin, cache);
+				ScriptCompiler::Source source(String::NewFromUtf8(isolate_cold, wrapped.c_str()).ToLocalChecked(), origin, cache);
 
 				Local<Script> compiled_script = ScriptCompiler::Compile(context, &source, ScriptCompiler::kConsumeCodeCache).ToLocalChecked();
 				(void) compiled_script->Run(context);
