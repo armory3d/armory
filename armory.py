@@ -86,10 +86,11 @@ def detect_sdk_path():
     if match:
         addon_prefs.sdk_path = os.path.dirname(match[-1])
 
-def get_link_web_server(self):
-    return self.get('link_web_server', 'http://localhost/')
-
-def set_link_web_server(self, value):
+def link_web_server_update(self, context):
+    # Blender 5.x no longer supports IDProperty-backed get/set on
+    # AddonPreferences, so validation happens in this update callback
+    if self.skip_update:
+        return
     regex = re.compile(
         r'^(?:http|ftp)s?://' # http:// or https://
         r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
@@ -97,8 +98,9 @@ def set_link_web_server(self, value):
         r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
         r'(?::\d+)?' # optional port
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-    if re.match(regex, value) is not None:
-        self['link_web_server'] = value
+    if re.match(regex, self.link_web_server) is None:
+        self.skip_update = True
+        self.link_web_server = 'http://localhost/'
 
 
 class ArmoryAddonPreferences(AddonPreferences):
@@ -174,6 +176,7 @@ class ArmoryAddonPreferences(AddonPreferences):
     khamake_threads: IntProperty(name='Khamake Processes', description='Allow Khamake to spawn multiple processes for faster builds', default=4, min=1)
     khamake_threads_use_auto: BoolProperty(name='Auto', description='Let Khamake choose the number of processes automatically', default=False)
     compilation_server: BoolProperty(name='Compilation Server', description='Allow Haxe to create a local compilation server for faster builds', default=True)
+    compilation_server_port: IntProperty(name='Compilation Server Port', description='Local port for the Haxe compilation server. Change it if another application already uses this port', default=6000, min=1024, max=65535)
     renderdoc_path: StringProperty(name="RenderDoc Path", description="Binary path", subtype="FILE_PATH", update=renderdoc_path_update, default="")
     ffmpeg_path: StringProperty(name="FFMPEG Path", description="Binary path", subtype="FILE_PATH", update=ffmpeg_path_update, default="")
     save_on_build: BoolProperty(name="Save on Build", description="Save .blend", default=False)
@@ -283,7 +286,7 @@ class ArmoryAddonPreferences(AddonPreferences):
     android_apk_copy_open_directory: BoolProperty(name="Open Directory After Copy", description="Open the directory after copy the APK file", default=False)
     # HTML5 Settings
     html5_copy_path: StringProperty(name="HTML5 Copy Path", description="Path to copy project after successfully publish", default="", subtype="FILE_PATH", update=html5_copy_path_update)
-    link_web_server: StringProperty(name="Url To Web Server", description="Url to the web server that runs the local server", default="http://localhost/", set=set_link_web_server, get=get_link_web_server)
+    link_web_server: StringProperty(name="Url To Web Server", description="Url to the web server that runs the local server", default="http://localhost/", update=link_web_server_update)
     html5_server_port: IntProperty(name="Web Server Port", description="The port number of the local web server", default=8040, min=1024, max=65535)
     html5_server_log: BoolProperty(name="Enable Http Log", description="Enable logging of http requests to local web server", default=True)
 
@@ -311,7 +314,7 @@ class ArmoryAddonPreferences(AddonPreferences):
         layout.label(text="Welcome to Armory!")
 
         # Compare version Blender and Armory (major, minor)
-        if bpy.app.version[:2] not in [(4, 5), (4, 2), (3, 6), (3, 3)]:
+        if bpy.app.version[:2] not in [(5, 2), (4, 5), (4, 2), (3, 6), (3, 3)]:
             box = layout.box().column()
             box.label(text="Warning: For Armory to work correctly use a Blender LTS version.")
 
@@ -401,7 +404,11 @@ class ArmoryAddonPreferences(AddonPreferences):
                 _col.enabled = not self.khamake_threads_use_auto
                 _col.prop(self, "khamake_threads")
                 row.prop(self, "khamake_threads_use_auto", toggle=True)
-                box.prop(self, "compilation_server")
+                row = box.row()
+                row.prop(self, "compilation_server")
+                _col = row.column()
+                _col.enabled = self.compilation_server
+                _col.prop(self, "compilation_server_port", text="Port")
                 box.prop(self, "open_build_directory")
                 box.prop(self, "save_on_build")
 

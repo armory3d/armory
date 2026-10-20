@@ -1,5 +1,7 @@
+import contextlib
 from enum import Enum, unique
 import glob
+import io
 import itertools
 import json
 import locale
@@ -52,23 +54,88 @@ class WorkingDir:
     def __exit__(self, exc_type, exc_val, exc_tb):
         os.chdir(self.prev_cwd)
 
+
+def write_file_if_changed(filepath: str, content: Union[str, bytes], encoding: Optional[str] = None) -> bool:
+    """Writes the content to the given file, unless that file already
+    contains exactly this content. Returns whether it was written.
+
+    Rewriting a file with unchanged content gives it a new modification
+    time, and the tools further down the build pipeline (krafix, Khamake
+    and the Haxe compilation server) use modification times to decide
+    what they can reuse. Writing only real changes lets them keep their
+    caches, no matter how often the data is regenerated here.
+    """
+    binary = isinstance(content, (bytes, bytearray))
+
+    try:
+        with open(filepath, 'rb' if binary else 'r', encoding=None if binary else encoding) as f:
+            if f.read() == content:
+                return False
+    except (OSError, UnicodeDecodeError):
+        # The file doesn't exist yet or can't be compared, write it below
+        pass
+
+    with open(filepath, 'wb' if binary else 'w', encoding=None if binary else encoding) as f:
+        f.write(content)
+
+    return True
+
+
+def copy_file_if_changed(src: str, dst: str) -> bool:
+    """Like `shutil.copy()`, but leaves the destination file untouched
+    if it already has the same content as the source file. Returns
+    whether the file was copied. See `write_file_if_changed()`.
+    """
+    try:
+        if os.path.getsize(src) == os.path.getsize(dst):
+            with open(src, 'rb') as f_src, open(dst, 'rb') as f_dst:
+                if f_src.read() == f_dst.read():
+                    return False
+    except OSError:
+        # The destination doesn't exist yet or can't be compared
+        pass
+
+    shutil.copy(src, dst)
+    return True
+
+
+class ChangeReportingBuffer(io.StringIO):
+    """Text buffer that knows afterwards whether its content was actually
+    written to the file, see `open_file_if_changed()`."""
+    changed = False
+
+
+@contextlib.contextmanager
+def open_file_if_changed(filepath: str, encoding: Optional[str] = None):
+    """Context manager that yields a writable text buffer and stores its
+    content in the given file afterwards, unless that file already
+    contains exactly this content. See `write_file_if_changed()`.
+
+    Once the block is left, the buffer's `changed` attribute tells whether
+    the file was written, which lets callers react to a real change.
+
+    Nothing is written if the enclosed block raises an exception, so a
+    failed build can't leave a half-written file behind.
+    """
+    buffer = ChangeReportingBuffer()
+    yield buffer
+    buffer.changed = write_file_if_changed(filepath, buffer.getvalue(), encoding=encoding)
+
+
 def write_arm(filepath, output):
     if filepath.endswith('.lz4'):
-        with open(filepath, 'wb') as f:
-            packed = arm.lib.armpack.packb(output)
-            # Prepend packed data size for decoding. Haxe can't unpack
-            # an unsigned int64 so we use a signed int64 here
-            f.write(np.int64(LZ4.encode_bound(len(packed))).tobytes())
-
-            f.write(LZ4.encode(packed))
+        packed = arm.lib.armpack.packb(output)
+        # Prepend packed data size for decoding. Haxe can't unpack
+        # an unsigned int64 so we use a signed int64 here
+        content = bytearray(np.int64(LZ4.encode_bound(len(packed))).tobytes())
+        content += LZ4.encode(packed)
+        write_file_if_changed(filepath, bytes(content))
     else:
         if bpy.data.worlds['Arm'].arm_minimize:
-            with open(filepath, 'wb') as f:
-                f.write(arm.lib.armpack.packb(output))
+            write_file_if_changed(filepath, bytes(arm.lib.armpack.packb(output)))
         else:
             filepath_json = filepath.split('.arm')[0] + '.json'
-            with open(filepath_json, 'w') as f:
-                f.write(json.dumps(output, sort_keys=True, indent=4, cls=NumpyEncoder))
+            write_file_if_changed(filepath_json, json.dumps(output, sort_keys=True, indent=4, cls=NumpyEncoder))
 
 def unpack_image(image, path, file_format='JPEG'):
     print('Armory Info: Unpacking to ' + path)
@@ -281,6 +348,10 @@ def get_khamake_threads() -> int:
 def get_compilation_server():
     addon_prefs = get_arm_preferences()
     return False if not hasattr(addon_prefs, 'compilation_server') else addon_prefs.compilation_server
+
+def get_compilation_server_port() -> int:
+    addon_prefs = get_arm_preferences()
+    return 6000 if not hasattr(addon_prefs, 'compilation_server_port') else addon_prefs.compilation_server_port
 
 def get_save_on_build():
     addon_prefs = get_arm_preferences()
