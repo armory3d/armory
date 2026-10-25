@@ -62,7 +62,11 @@ def get_scene_name(scene) -> str:
     wrd = bpy.data.worlds['Arm']
     lib_path = os.path.normpath(bpy.path.abspath(scene.library.filepath))
     root = os.path.normpath(bpy.path.abspath(wrd.arm_external_blends_path.strip()))
-    rel_dir = os.path.relpath(os.path.dirname(lib_path), root)
+    try:
+        rel_dir = os.path.relpath(os.path.dirname(lib_path), root)
+    except ValueError:
+        # On another drive than the external blends path: no relative path
+        rel_dir = os.curdir
     subdirs = [] if rel_dir == os.curdir else rel_dir.split(os.sep)
 
     blend_name = os.path.splitext(os.path.basename(lib_path))[0]
