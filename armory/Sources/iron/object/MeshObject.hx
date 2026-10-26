@@ -418,19 +418,11 @@ class MeshObject extends Object {
 			if (nextPassName == null || nextPassName == "") continue;
 
 			var nextMaterial: MaterialData = null;
+			// Linked materials export their next pass with the library suffix
 			for (mat in materials) {
-				// First try exact match
 				if (mat.name == nextPassName) {
 					nextMaterial = mat;
 					break;
-				}
-				// If no exact match, try to match base name for linked materials
-				if (mat.name.indexOf("_") > 0 && mat.name.substr(mat.name.length - 6) == ".blend") {
-					var baseName = mat.name.substring(0, mat.name.indexOf("_"));
-					if (baseName == nextPassName) {
-						nextMaterial = mat;
-						break;
-					}
 				}
 			}
 

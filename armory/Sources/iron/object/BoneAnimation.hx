@@ -70,7 +70,7 @@ class BoneAnimation extends Animation {
 		var an: String = action; // an -> action name
 		if (an != "" && object != null && object.filename != "") {
 			var sufix = "_" + object.filename;
-			if (an.indexOf(sufix) != -1) an = StringTools.replace(an, sufix, "");
+			if (StringTools.endsWith(an, sufix)) an = an.substr(0, an.length - sufix.length);
 		}
 		return an;
 	}
@@ -122,7 +122,7 @@ class BoneAnimation extends Animation {
 		var fn: String = n; // fn -> final name
 		if (fn != "" && object != null && object.filename != "") {
 			var sufix = "_" + object.filename;
-			if (fn.indexOf(sufix) == -1) fn += sufix;
+			if (!StringTools.endsWith(fn, sufix)) fn += sufix;
 		}
 		return fn;
 	}

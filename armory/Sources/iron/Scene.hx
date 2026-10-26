@@ -500,7 +500,6 @@ class Scene {
 		spawnObjectTree(obj, parent, null, done);
 	}
 
-	// TODO: solve name referencing for linked objects
 	public function parseObject(sceneName: String, objectName: String, parent: Object, done: Object->Void) {
 		Data.getSceneRaw(sceneName, function(format: TSceneFormat) {
 			var o: TObj = getRawObjectByName(format, objectName);
@@ -810,7 +809,6 @@ class Scene {
 		#end
 	}
 
-	// TODO: solve name referencing for linked objects
 	public function returnMeshObject(object_file: String, data_ref: String, sceneName: String, armature: #if arm_skin Armature #else Null<Int> #end, materials: Vector<MaterialData>, parent: Object, parentObject: TObj, o: TObj, done: Object->Void) {
 		Data.getMesh(object_file, data_ref, function(mesh: MeshData) {
 			#if arm_skin
