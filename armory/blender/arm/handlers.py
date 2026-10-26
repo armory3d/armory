@@ -85,6 +85,7 @@ def on_operator_post(operator_id: str) -> None:
             target_obj.arm_rb_angular_factor = source_obj.arm_rb_angular_factor
             target_obj.arm_rb_angular_friction = source_obj.arm_rb_angular_friction
             target_obj.arm_rb_trigger = source_obj.arm_rb_trigger
+            target_obj.arm_rb_kinematic_character = source_obj.arm_rb_kinematic_character
             target_obj.arm_rb_deactivation_time = source_obj.arm_rb_deactivation_time
             target_obj.arm_rb_ccd = source_obj.arm_rb_ccd
             target_obj.arm_rb_interpolate = source_obj.arm_rb_interpolate

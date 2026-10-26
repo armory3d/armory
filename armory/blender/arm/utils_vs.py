@@ -263,7 +263,15 @@ def version_full_to_ints(version_full: str) -> tuple[int, ...]:
 
 
 def get_project_path() -> str:
-    return os.path.join(arm.utils.get_fp_build(), 'windows-hl-build')
+    target = 'windows-hl'
+    wrd = bpy.data.worlds['Arm']
+    if len(wrd.arm_exporterlist) > 0 and wrd.arm_exporterlist_index >= 0:
+        item_target = wrd.arm_exporterlist[wrd.arm_exporterlist_index].arm_project_target
+        if item_target in ('windows', 'windows-hl'):
+            target = item_target
+    elif state.target in ('windows', 'windows-hl'):
+        target = state.target
+    return os.path.join(arm.utils.get_fp_build(), target + '-build')
 
 
 def get_project_name():
