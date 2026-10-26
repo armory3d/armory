@@ -393,7 +393,7 @@ class ParticleSystemCPU {
 			if (physics.hasScaleRamp && physics.rampPositions.length > 1) {
 				var normalizedAge: FastFloat = physics.age / physics.lifetime;
 				var scaleMultiplier: FastFloat = interpolateRampValue(normalizedAge, physics.rampPositions, physics.rampColors);
-				var finalScale: FastFloat = scale * (particleScale * (1 - physics.scaleRampSizeFactor) + scaleMultiplier * physics.scaleRampSizeFactor);
+				var finalScale: FastFloat = 1 + (scaleMultiplier - 1) * physics.scaleRampSizeFactor;
 				particle.transform.scale.setFrom(physics.baseScale.clone().mult(finalScale));
 			}
 

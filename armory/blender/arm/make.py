@@ -18,9 +18,11 @@ import webbrowser
 import bpy
 
 from arm import assets
+from arm.exporter import BuildExportCache
 from arm.exporter import ArmoryExporter
 import arm.lib.make_datas
 import arm.lib.server
+import arm.linked_utils as linked_utils
 import arm.live_patch as live_patch
 import arm.log as log
 import arm.make_logic as make_logic
@@ -179,6 +181,14 @@ def clear_external_scenes():
     linked_scenes = []
     linked_blend_paths = []
 
+def is_project_scene(scene) -> bool:
+    """Whether a scene belongs to the project: a local scene, or one linked
+    from the external blends path by load_external_blends(). Add-ons can bring
+    in other library scenes, which must not be exported.
+    """
+    return scene.library is None or scene in linked_scenes
+
+
 def export_data(fp, sdk_path):
     # Reload all libraries to retrieve updated data without needing to restart Blender
     for lib in bpy.data.libraries:
@@ -246,23 +256,24 @@ def export_data(fp, sdk_path):
     bpy.context.scene.collection.children.link(export_coll)
     export_coll_names = set(export_coll.all_objects.keys())
     for scene in bpy.data.scenes:
-        if scene == bpy.context.scene:
+        if scene == bpy.context.scene or not is_project_scene(scene):
             continue
         for o in scene.collection.all_objects:
             if o.type in ('MESH', 'EMPTY'):
-                if o.name not in export_coll_names:
+                if o.name not in export_coll_names or o.library:
                     export_coll.objects.link(o)
                     export_coll_names.add(o.name)
     depsgraph = bpy.context.evaluated_depsgraph_get()
     bpy.data.collections.remove(export_coll)  # Destroy the "zoo" collection
+    build_cache = BuildExportCache()
 
     for scene in bpy.data.scenes:
-        if scene.arm_export:
+        if scene.arm_export and is_project_scene(scene):
             # Reset shader comparison arrays to prevent cross-scene shader merging
             assets.reset_shader_cons()
             ext = '.lz4' if ArmoryExporter.compress_enabled else '.arm'
-            asset_path = build_dir + '/compiled/Assets/' + arm.utils.safestr(scene.name + "_" + os.path.basename(scene.library.filepath).replace(".blend", "") if scene.library else scene.name) + ext
-            ArmoryExporter.export_scene(bpy.context, asset_path, scene=scene, depsgraph=depsgraph)
+            asset_path = build_dir + '/compiled/Assets/' + linked_utils.get_scene_name(scene) + ext
+            ArmoryExporter.export_scene(bpy.context, asset_path, scene=scene, depsgraph=depsgraph, build_cache=build_cache)
             if ArmoryExporter.export_physics:
                 physics_found = True
             if ArmoryExporter.export_navigation:
@@ -558,7 +569,17 @@ def build(target, is_play=False, is_publish=False, is_export=False):
                 f.write(text.as_string())
 
     # Export data
-    export_data(fp, sdk_path)
+    # Disable shader cache invalidation while exporting: the exporter sets
+    # render path properties (e.g. arm_skin_max_bones via auto-bones) whose
+    # update callbacks would otherwise wipe compiled/Shaders mid-build,
+    # deleting freshly generated shaders such as the world shaders. The UI
+    # operators already guard this, but headless/direct build() callers don't.
+    prev_invalidate_enabled = assets.invalidate_enabled
+    assets.invalidate_enabled = False
+    try:
+        export_data(fp, sdk_path)
+    finally:
+        assets.invalidate_enabled = prev_invalidate_enabled
 
     if state.target == 'html5':
         w, h = arm.utils.get_render_resolution(arm.utils.get_active_scene())

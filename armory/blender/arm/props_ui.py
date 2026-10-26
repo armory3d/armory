@@ -231,6 +231,7 @@ class ARM_PT_PhysicsPropsPanel(bpy.types.Panel):
             layout.prop(obj, 'arm_rb_linear_factor')
             layout.prop(obj, 'arm_rb_angular_factor')
             layout.prop(obj, 'arm_rb_angular_friction')
+            layout.prop(obj, 'arm_rb_kinematic_character')
             layout.prop(obj, 'arm_rb_trigger')
             layout.prop(obj, 'arm_rb_ccd')
             layout.prop(obj, 'arm_rb_interpolate')
@@ -1038,6 +1039,14 @@ class ARM_PT_ArmoryExporterWindowsSettingsPanel(ExporterTargetSettingsMixin, bpy
     bl_label = "Windows Settings"
     arm_target = 'windows-hl'  # See ExporterTargetSettingsMixin
 
+    @classmethod
+    def poll(cls, context):
+        wrd = bpy.data.worlds['Arm']
+        if (len(wrd.arm_exporterlist) > 0) and (wrd.arm_exporterlist_index >= 0):
+            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+            return item.arm_project_target in ('windows-hl', 'windows')
+        return False
+
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -1437,6 +1446,7 @@ def draw_view3d_object_menu(self, context):
     self.layout.separator()
     self.layout.operator_context = 'INVOKE_DEFAULT'
     self.layout.operator('arm.copy_traits_to_active')
+    self.layout.operator('arm.copy_armory_props_to_selected')
 
 class ARM_PT_TopbarPanel(bpy.types.Panel):
     bl_label = "Armory Player"
@@ -1778,7 +1788,7 @@ class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
         col2.prop(rpdat, 'arm_voxelgi_diff')
         col2.prop(rpdat, 'arm_voxelgi_spec')
         col2.prop(rpdat, 'arm_voxelgi_refr')
-        col.prop(rpdat, 'arm_voxelgi_shad')
+        #col.prop(rpdat, 'arm_voxelgi_shad')
         #col.prop(rpdat, 'arm_voxelgi_env')
         col.prop(rpdat, 'arm_voxelgi_occ')
         col.label(text="Ray")
@@ -1902,6 +1912,7 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_ss_refraction_search_dist')
         col.prop(rpdat, 'arm_ss_refraction_falloff_exp')
         col.prop(rpdat, 'arm_ss_refraction_jitter')
+        col.prop(rpdat, 'arm_ss_refraction_absorption')
         layout.separator()
 
         col = layout.column()

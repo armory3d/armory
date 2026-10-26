@@ -175,7 +175,7 @@ def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, expo
     do_relpath_sdk = rel_path and on_same_drive(sdk_path, project_path)
 
     # Determine if assets should go to data folder (used for hook assets and later)
-    use_data_dir = is_publish and (state.target == 'krom-windows' or state.target == 'krom-linux' or state.target == 'windows-hl' or state.target == 'linux-hl' or state.target == 'html5')
+    use_data_dir = is_publish and (state.target == 'krom-windows' or state.target == 'krom-linux' or state.target == 'windows-hl' or state.target == 'windows' or state.target == 'linux-hl' or state.target == 'html5')
 
     with open('khafile.js', 'w', encoding="utf-8") as khafile:
         khafile.write(
@@ -848,15 +848,16 @@ const float ssrJitter = """ + str(round(rpdat.arm_ssr_jitter * 100) / 100) + """
 const float ss_refractionSearchDist = """ + str(round(rpdat.arm_ss_refraction_search_dist * 100) / 100) + """;
 const float ss_refractionFalloffExp = """ + str(round(rpdat.arm_ss_refraction_falloff_exp * 100) / 100) + """;
 const float ss_refractionJitter = """ + str(round(rpdat.arm_ss_refraction_jitter * 100) / 100) + """;
+const float ss_refractionAbsorption = """ + str(round(rpdat.arm_ss_refraction_absorption * 100) / 100) + """;
 """)
 
 
         if rpdat.arm_ssrs:
             f.write(
-"""const float ssrsSamples = """ + str(round(rpdat.arm_ssrs_samples * 100) / 100) + """;
-const float ssrsRayStep = """ + str(round(rpdat.arm_ssrs_ray_step * 100) / 100) + """;
-const float ssrsSearchDist = """ + str(round(rpdat.arm_ssrs_search_dist * 100) / 100) + """;
-const float ssrsThickness = """ + str(round(rpdat.arm_ssrs_thickness * 100) / 100) + """;
+"""const int ssrsSamples = """ + str(max(1, rpdat.arm_ssrs_samples)) + """;
+const float ssrsRayStep = """ + str(max(0.0001, round(rpdat.arm_ssrs_ray_step, 4))) + """;
+const float ssrsSearchDist = """ + str(round(rpdat.arm_ssrs_search_dist, 4)) + """;
+const float ssrsThickness = """ + str(round(rpdat.arm_ssrs_thickness, 4)) + """;
 """)
 
         if rpdat.rp_volumetriclight:

@@ -620,7 +620,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     sh.add_out('vec3 eyeDir')
     sh.add_uniform('vec3 eye', '_cameraPosition')
     sh.write('eyeDir = eye - wposition;')
-    if '_VoxelGI' in wrd.world_defs or '_VoxelShadow' in wrd.world_defs or '_SSRS' in wrd.world_defs:
+
+    if '_VoxelGI' in wrd.world_defs in wrd.world_defs or '_SSRS' in wrd.world_defs:
         if '_gbuffer2' in wrd.world_defs:
             if '_Veloc' in wrd.world_defs:
                 if tese is None:
@@ -670,7 +671,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     if '_Brdf' in wrd.world_defs:
         frag.add_uniform('sampler2D senvmapBrdf', link='$brdf.png')
-        frag.write('vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;')
+        frag.write('vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(clamp(vec2(dotNV, 1.0 - roughness) * 256.0, 0.0, 255.0)), 0).xy;')
         frag.write('vec3 F = f0 * envBRDF.x + envBRDF.y;')
     else:
         frag.write('vec3 F = f0;')
@@ -788,13 +789,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                         frag.write(', false')
                 frag.write(');')
             frag.write('}') # receiveShadow
-        if '_VoxelShadow' in wrd.world_defs:
-            if '_VoxelGI' in wrd.world_defs:
-                frag.write('svisibility *= traceShadow(wposition, n, voxels, voxelsSDF, sunDir, clipmaps, gl_FragCoord.xy, velocity).rgb * voxelgiShad;')
-            else:
-                frag.write('svisibility *= (1.0 - traceShadow(wposition, n, voxels, voxelsSDF, sunDir, clipmaps, gl_FragCoord.xy, velocity).r) * voxelgiShad;')
-            frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular) * sunCol * svisibility;')
-        # sun
+        frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular) * sunCol * svisibility;')
+
 
     if '_SinglePoint' in wrd.world_defs:
         frag.add_uniform('vec3 pointPos', link='_pointPosition')
@@ -826,8 +822,6 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write(', 0, pointBias, receiveShadow')
         if '_Spot' in wrd.world_defs:
             frag.write(', true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight')
-        if '_VoxelShadow' in wrd.world_defs:
-            frag.write(', voxels, voxelsSDF, clipmaps, velocity, posa')
         if '_MicroShadowing' in wrd.world_defs:
             frag.write(', occlusion')
         if '_SSRS' in wrd.world_defs:
@@ -835,6 +829,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.add_uniform('sampler2D gbuffer0')
             frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
             frag.add_uniform('vec3 eye', '_cameraPosition')
+            frag.add_uniform('mat4 VP', '_viewProjectionMatrix', included=True)
+            frag.add_uniform('int frame', '_frame', included=True)
             frag.write(', gbufferD, invVP, eye')
         frag.write(');')
 

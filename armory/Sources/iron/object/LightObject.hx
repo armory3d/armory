@@ -366,8 +366,6 @@ class LightObject extends Object {
 	}
 	#end // arm_csm
 
-	#if arm_clusters
-
 	// Centralize discarding conditions when iterating over lights
 	// Important to avoid issues later with "misaligned" data in uniforms (lightsArray, clusterData, LWVPSpotArray)
 	public inline static function discardLight(light: LightObject) {
@@ -377,7 +375,8 @@ class LightObject extends Object {
 	public inline static function discardLightCulled(light: LightObject) {
 		return #if arm_shadowmap_atlas light.culledLight || #end discardLight(light);
 	}
-
+	
+	#if arm_clusters
 	#if (arm_shadowmap_atlas && arm_shadowmap_atlas_lod)
 	// Arbitrary function to map from [0-16] to [1.0-0.0]
 	public inline static function zToShadowMapScale(z: Int, max: Int): Float {
@@ -418,7 +417,8 @@ class LightObject extends Object {
 
 		#if arm_spot // Point lamps first
 		lights.sort(function(a, b): Int {
-			return a.data.raw.type >= b.data.raw.type ? 1 : -1;
+			if (a.data.raw.type == b.data.raw.type) return 0;
+			return a.data.raw.type > b.data.raw.type ? 1 : -1;
 		});
 		#end
 
@@ -490,6 +490,13 @@ class LightObject extends Object {
 				continue;
 			}
 			#end
+			if (minX < 0) minX = 0;
+			if (maxX >= slicesX) maxX = slicesX - 1;
+			if (minY < 0) minY = 0;
+			if (maxY >= slicesY) maxY = slicesY - 1;
+			if (minZ < 0) minZ = 0;
+			if (maxZ >= slicesZ) maxZ = slicesZ - 1;
+
 			// Mark affected clusters
 			for (z in minZ...maxZ + 1) {
 				for (y in minY...maxY + 1) {

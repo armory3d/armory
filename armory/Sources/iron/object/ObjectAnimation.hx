@@ -22,13 +22,23 @@ class ObjectAnimation extends Animation {
 		super();
 	}
 
+	override function get_action(): String {
+		var an: String = action; // an -> action name
+		if (an != "" && object != null && object.filename != "") {
+			var sufix = "_" + object.filename;
+			if (an.indexOf(sufix) != -1) an = StringTools.replace(an, sufix, "");
+		}
+		return an;
+	}
+
 	function getAction(action: String): TObj {
 		for (a in oactions) if (a != null && a.objects[0].name == action) return a.objects[0];
 		return null;
 	}
 
 	override public function play(action = "", onComplete: Void->Void = null, blendTime = 0.0, speed = 1.0, loop = true) {
-		super.play(action, onComplete, blendTime, speed, loop);
+		var actionName: String = object != null && object.filename != "" ? action + "_" + object.filename : action;
+		super.play(actionName, onComplete, blendTime, speed, loop);
 		if (this.action == "" && oactions[0] != null) this.action = oactions[0].objects[0].name;
 		oaction = getAction(this.action);
 		if (oaction != null) {

@@ -32,7 +32,8 @@ supported_versions = [
     ('14', '2015', 'Visual Studio 2015 (version 14)'),
     ('15', '2017', 'Visual Studio 2017 (version 15)'),
     ('16', '2019', 'Visual Studio 2019 (version 16)'),
-    ('17', '2022', 'Visual Studio 2022 (version 17)')
+    ('17', '2022', 'Visual Studio 2022 (version 17)'),
+    ('18', '2026', 'Visual Studio 2022 (version 18)')
 ]
 
 # version_major to --visualstudio parameter
@@ -44,6 +45,7 @@ version_to_khamake_id = {
     '15': 'vs2017',
     '16': 'vs2019',
     '17': 'vs2022',
+    '18': 'vs2026',
 }
 
 # VS versions found with fetch_installed_vs()
@@ -261,7 +263,15 @@ def version_full_to_ints(version_full: str) -> tuple[int, ...]:
 
 
 def get_project_path() -> str:
-    return os.path.join(arm.utils.get_fp_build(), 'windows-hl-build')
+    target = 'windows-hl'
+    wrd = bpy.data.worlds['Arm']
+    if len(wrd.arm_exporterlist) > 0 and wrd.arm_exporterlist_index >= 0:
+        item_target = wrd.arm_exporterlist[wrd.arm_exporterlist_index].arm_project_target
+        if item_target in ('windows', 'windows-hl'):
+            target = item_target
+    elif state.target in ('windows', 'windows-hl'):
+        target = state.target
+    return os.path.join(arm.utils.get_fp_build(), target + '-build')
 
 
 def get_project_name():
@@ -294,7 +304,9 @@ def fetch_project_version() -> tuple[Optional[str], Optional[str], Optional[str]
                 line = line.strip()
 
                 if linenum == 1:
-                    if line == '# Visual Studio Version 17':
+                    if line == '# Visual Studio Version 18':
+                        version_major = 18
+                    elif line == '# Visual Studio Version 17':
                         version_major = 17
                     elif line == '# Visual Studio Version 16':
                         version_major = 16

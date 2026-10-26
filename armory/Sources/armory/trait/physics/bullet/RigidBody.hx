@@ -50,7 +50,6 @@ class RigidBody extends iron.Trait {
 	public var motionState: bullet.Bt.MotionState;
 	public var btshape: bullet.Bt.CollisionShape;
 	public var ready = false;
-	static var nextId = 0;
 	public var id = 0;
 	public var onReady: Void->Void = null;
 	public var onContact: Array<RigidBody->Void> = null;
@@ -335,12 +334,11 @@ class RigidBody extends iron.Trait {
 		bodyScaleY = currentScaleY = transform.scale.y;
 		bodyScaleZ = currentScaleZ = transform.scale.z;
 
-		id = nextId;
-		nextId++;
+		id = PhysicsWorld.nextId++;
 
 		#if js
-		//body.setUserIndex(nextId);
 		untyped body.userIndex = id;
+		untyped bullet.Bt.Ammo.wrapPointer(untyped body.cw, bullet.Bt.Ammo.btCollisionObject).userIndex = id;
 		#else
 		bodyColl.setUserIndex(id);
 		#end
