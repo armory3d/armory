@@ -299,36 +299,32 @@ class Scene {
 		return root.children.length > 0 ? root.children[0].getTrait(c) : null;
 	}
 
-	// TODO: solve name referencing for linked objects
+	static function getByName<T: Object>(objects: Array<T>, name: String): T {
+		for (o in objects) if (o.name == name) return o;
+		for (o in objects) if (o.filename != "" && o.name == name + "_" + o.filename) return o;
+		return null;
+	}
+
 	public function getMesh(name: String): MeshObject {
-		for (m in meshes) if (m.name == name) return m;
-		return null;
+		return getByName(meshes, name);
 	}
 
-	// TODO: solve name referencing for linked objects
 	public function getLight(name: String): LightObject {
-		for (l in lights) if (l.name == name) return l;
-		return null;
+		return getByName(lights, name);
 	}
 
-	// TODO: solve name referencing for linked objects
 	public function getCamera(name: String): CameraObject {
-		for (c in cameras) if (c.name == name) return c;
-		return null;
+		return getByName(cameras, name);
 	}
 
-	// TODO: solve name referencing for linked objects
 	#if arm_audio
 	public function getSpeaker(name: String): SpeakerObject {
-		for (s in speakers) if (s.name == name) return s;
-		return null;
+		return getByName(speakers, name);
 	}
 	#end
 
-	// TODO: solve name referencing for linked objects
 	public function getEmpty(name: String): Object {
-		for (e in empties) if (e.name == name) return e;
-		return null;
+		return getByName(empties, name);
 	}
 
 	// TODO: solve name referencing for linked objects
