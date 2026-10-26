@@ -197,6 +197,26 @@ def check_library_suffixes() -> bool:
     return unique
 
 
+def check_scene_names() -> bool:
+    """Scenes are exported with the name of linked_utils.get_scene_name(),
+    so no two exported scenes may share one.
+    """
+    def describe(scene) -> str:
+        return f'"{scene.name}" ({bpy.path.abspath(scene.library.filepath) if scene.library else "local"})'
+
+    scenes = {}
+    unique = True
+    for scene in bpy.data.scenes:
+        if not scene.arm_export or not is_project_scene(scene):
+            continue
+        name = linked_utils.get_scene_name(scene)
+        other = scenes.setdefault(name, scene)
+        if other is not scene:
+            log.error(f'Scenes {describe(other)} and {describe(scene)} both export with the name "{name}", rename one of them')
+            unique = False
+    return unique
+
+
 def is_project_scene(scene) -> bool:
     """Whether a scene belongs to the project: a local scene, or one linked
     from the external blends path by load_external_blends(). Add-ons can bring
@@ -213,7 +233,10 @@ def export_data(fp, sdk_path):
 
     load_external_blends()
 
-    if not check_library_suffixes():
+    # Check both to report all name collisions at once
+    unique_libraries = check_library_suffixes()
+    unique_scenes = check_scene_names()
+    if not unique_libraries or not unique_scenes:
         clear_external_scenes()
         return False
 
