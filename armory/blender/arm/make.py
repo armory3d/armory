@@ -181,6 +181,14 @@ def clear_external_scenes():
     linked_scenes = []
     linked_blend_paths = []
 
+def is_project_scene(scene) -> bool:
+    """Whether a scene belongs to the project: a local scene, or one linked
+    from the external blends path by load_external_blends(). Add-ons can bring
+    in other library scenes, which must not be exported.
+    """
+    return scene.library is None or scene in linked_scenes
+
+
 def export_data(fp, sdk_path):
     # Reload all libraries to retrieve updated data without needing to restart Blender
     for lib in bpy.data.libraries:
@@ -248,7 +256,7 @@ def export_data(fp, sdk_path):
     bpy.context.scene.collection.children.link(export_coll)
     export_coll_names = set(export_coll.all_objects.keys())
     for scene in bpy.data.scenes:
-        if scene == bpy.context.scene:
+        if scene == bpy.context.scene or not is_project_scene(scene):
             continue
         for o in scene.collection.all_objects:
             if o.type in ('MESH', 'EMPTY'):
@@ -260,7 +268,7 @@ def export_data(fp, sdk_path):
     build_cache = BuildExportCache()
 
     for scene in bpy.data.scenes:
-        if scene.arm_export:
+        if scene.arm_export and is_project_scene(scene):
             # Reset shader comparison arrays to prevent cross-scene shader merging
             assets.reset_shader_cons()
             ext = '.lz4' if ArmoryExporter.compress_enabled else '.arm'
