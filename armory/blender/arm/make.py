@@ -181,6 +181,30 @@ def clear_external_scenes():
     linked_scenes = []
     linked_blend_paths = []
 
+def check_particle_instance_objects() -> bool:
+    """GPU particles render their instance object with particle material
+    variants, while CPU particles spawn copies of it with its original
+    materials, so an instance object can't be used by both particle types.
+    """
+    if not ArmoryExporter.particles_enabled():
+        return True
+
+    users = {'GPU': {}, 'CPU': {}}
+    for psettings in bpy.data.particles:
+        obj = psettings.instance_object
+        if psettings.users == 0 or psettings.render_type != 'OBJECT' or obj is None or not obj.arm_export:
+            continue
+        users[psettings.arm_particle_type].setdefault(obj, psettings)
+
+    valid = True
+    for obj, gpu_psettings in users['GPU'].items():
+        cpu_psettings = users['CPU'].get(obj)
+        if cpu_psettings is not None:
+            log.error(f'Particle settings "{gpu_psettings.name}" (GPU) and "{cpu_psettings.name}" (CPU) both use the instance object'
+                      f' "{obj.name}", use the same particle type or a different instance object')
+            valid = False
+    return valid
+
 def is_project_scene(scene) -> bool:
     """Whether a scene belongs to the project: a local scene, or one linked
     from the external blends path by load_external_blends(). Add-ons can bring
@@ -196,6 +220,10 @@ def export_data(fp, sdk_path):
         log.info(f"Reloaded: {lib.filepath}")
 
     load_external_blends()
+
+    if not check_particle_instance_objects():
+        clear_external_scenes()
+        return False
 
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
@@ -243,6 +271,7 @@ def export_data(fp, sdk_path):
     navigation_found = False
     ui_found = False
     network_found = False
+    particles_found = False
     ArmoryExporter.compress_enabled = state.is_publish and wrd.arm_asset_compression
     ArmoryExporter.optimize_enabled = state.is_publish and wrd.arm_optimize_data
     if not os.path.exists(build_dir + '/compiled/Assets'):
@@ -282,6 +311,8 @@ def export_data(fp, sdk_path):
                 ui_found = True
             if ArmoryExporter.export_network:
                 network_found = True
+            if ArmoryExporter.export_particles:
+                particles_found = True
             assets.add(asset_path)
 
     if physics_found is False: # Disable physics if no rigid body is exported
@@ -395,7 +426,9 @@ def export_data(fp, sdk_path):
         wrd.arm_project_version = arm.utils.change_version_project(wrd.arm_project_version)
 
     # Write khafile.js
-    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, export_network, state.is_publish, ArmoryExporter.import_traits)
+    export_particles = wrd.arm_particles == 'Enabled' or (wrd.arm_particles == 'Auto' and particles_found)
+
+    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, export_network, export_particles, state.is_publish, ArmoryExporter.import_traits)
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     scene_name = arm.utils.get_project_scene_name()
@@ -407,6 +440,7 @@ def export_data(fp, sdk_path):
         state.last_scene = scene_name
 
     clear_external_scenes()
+    return True
 
 def compile(assets_only=False):
     wrd = bpy.data.worlds['Arm']
@@ -569,7 +603,9 @@ def build(target, is_play=False, is_publish=False, is_export=False):
                 f.write(text.as_string())
 
     # Export data
-    export_data(fp, sdk_path)
+    if not export_data(fp, sdk_path):
+        log.error('Build failed, check errors above')
+        return False
 
     if state.target == 'html5':
         w, h = arm.utils.get_render_resolution(arm.utils.get_active_scene())
@@ -579,6 +615,7 @@ def build(target, is_play=False, is_publish=False, is_export=False):
             dest  = '/html5/' if is_publish else '/debug/html5/'
             for fn in glob.iglob(os.path.join('include', '**'), recursive=False):
                 shutil.copy(fn, arm.utils.build_dir() + dest + os.path.basename(fn))
+    return True
 
 def play_done():
     """Called if the player was stopped/terminated."""
@@ -651,7 +688,8 @@ def play():
     global scripts_mtime
     wrd = bpy.data.worlds['Arm']
 
-    build(target=runtime_to_target(), is_play=True)
+    if not build(target=runtime_to_target(), is_play=True):
+        return
 
     khajs_path = get_khajs_path(state.target)
     if not wrd.arm_cache_build or \

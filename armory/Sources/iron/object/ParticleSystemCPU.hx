@@ -1,6 +1,6 @@
 package iron.object;
 
-#if arm_cpu_particles
+#if arm_particles
 import iron.Scene;
 import iron.data.Data;
 import iron.data.ParticleData;

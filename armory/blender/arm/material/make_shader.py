@@ -198,7 +198,7 @@ def make_instancing_and_skinning(mat: Material, mat_users: Dict[Material, List[O
 
             # Instancing
             inst = bo.arm_instanced
-            if inst != 'Off' or (mat.arm_particle_flag and arm.utils.get_rp().arm_particles == 'GPU'):
+            if inst != 'Off' or mat.arm_particle_flag:
                 instancing_usage[0] = True
                 mat_state.uses_instancing = True
 

@@ -158,8 +158,8 @@ def remove_readonly(func, path, excinfo):
     func(path)
 
 
-def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, export_ui: bool, export_network: bool, is_publish: bool,
-                    import_traits: List[str]) -> None:
+def write_khafilejs(is_play, export_physics: bool, export_navigation: bool, export_ui: bool, export_network: bool,
+                    export_particles: bool, is_publish: bool, import_traits: List[str]) -> None:
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
 
@@ -459,12 +459,10 @@ let project = new Project('""" + arm.utils.safesrc(wrd.arm_project_name + '-' + 
         if rpdat.arm_morph_target != 'Off':
             assets.add_khafile_def('arm_morph_target')
 
-        if rpdat.arm_particles != 'Off':
+        if export_particles:
             assets.add_khafile_def('arm_particles')
-            if rpdat.arm_particles == 'GPU':
-                assets.add_khafile_def('arm_gpu_particles')
-            elif rpdat.arm_particles == 'CPU':
-                assets.add_khafile_def('arm_cpu_particles')
+            # TODO: remove once the particle logic nodes use arm_particles
+            assets.add_khafile_def('arm_gpu_particles')
 
         if rpdat.rp_draw_order == 'Index':
             assets.add_khafile_def('arm_draworder_index')

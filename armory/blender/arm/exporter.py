@@ -128,6 +128,8 @@ class ArmoryExporter:
     export_all_flag = True
     # Indicates whether rigid body is exported
     export_physics = False
+    # Indicates whether a particle system is exported
+    export_particles = False
     optimize_enabled = False
     option_mesh_only = False
 
@@ -210,6 +212,11 @@ class ArmoryExporter:
         cls.export_network = False
         if wrd.arm_network == 'Enabled':
             cls.export_network = True
+        cls.export_particles = False
+
+    @staticmethod
+    def particles_enabled() -> bool:
+        return bpy.data.worlds['Arm'].arm_particles != 'Disabled'
 
     @staticmethod
     def write_matrix(matrix):
@@ -560,8 +567,10 @@ class ArmoryExporter:
             self.default_material_objects.append(bobject)
 
     def use_default_material_part(self):
-        """Select the particle material variant for all particle system
-        instance objects that use the armdefault material.
+        """Export all particle system instance objects, so particle systems
+        spawned from another scene find them in the active one, and select
+        the particle material variant for GPU particle instance objects that
+        use the armdefault material.
         """
         for ps in bpy.data.particles:
             if ps.render_type != 'OBJECT' or ps.instance_object is None or not ps.instance_object.arm_export:
@@ -571,6 +580,9 @@ class ArmoryExporter:
             if po not in self.object_to_arm_object_dict:
                 self.process_bobject(po)
                 self.export_object(po)
+            # CPU particles are regular objects
+            if ps.arm_particle_type != 'GPU':
+                continue
             o = self.object_to_arm_object_dict[po]
 
             # Check if the instance object uses the armdefault material
@@ -587,6 +599,8 @@ class ArmoryExporter:
         o['material_refs'].append(arm.utils.asset_name(material))
 
     def export_particle_system_ref(self, psys: bpy.types.ParticleSystem, out_object):
+        if not ArmoryExporter.particles_enabled():
+            return
         if psys.settings.instance_object is None or psys.settings.render_type != 'OBJECT' or not psys.settings.instance_object.arm_export:
            return
 
@@ -602,7 +616,8 @@ class ArmoryExporter:
         pref = {
             'name': psys.name,
             'seed': psys.seed,
-            'particle': psys.settings.name
+            'particle': psys.settings.name,
+            'type': psys.settings.arm_particle_type
         }
         out_object['particle_refs'].append(pref)
 
@@ -667,6 +682,11 @@ class ArmoryExporter:
         matvars: List[bpy.types.Material] = []
         matslots: List[bpy.types.MaterialSlot] = []
 
+        # The particle flag marks GPU particle materials of this export only (set below),
+        # clear stale flags, e.g. saved on old variant copies used by CPU particles
+        for mat in bpy.data.materials:
+            mat.arm_particle_flag = False
+
         bobject: bpy.types.Object
         for bobject in scene.collection.all_objects.values():
             variant_suffix = ''
@@ -723,20 +743,23 @@ class ArmoryExporter:
                             slot.material.arm_tilesheet_flag = True
                             slot.material.arm_cached = False
 
-        # Particle and non-particle objects can not share material
+        # GPU particle and non-particle objects can not share material,
+        # CPU particles are regular objects and use the original materials
         particle_sys: bpy.types.ParticleSettings
         for particle_sys in bpy.data.particles:
+            if not ArmoryExporter.particles_enabled():
+                break
             bobject = particle_sys.instance_object
             if bobject is None or particle_sys.render_type != 'OBJECT' or not bobject.arm_export:
+                continue
+            if particle_sys.arm_particle_type != 'GPU':
                 continue
 
             for slot in bobject.material_slots:
                 if slot.material is None:
                     continue
-                if slot.material.library is not None:
+                if slot.material.library is not None or slot.material.name.endswith('_armpart'):
                     slot.material.arm_particle_flag = True
-                    continue
-                if slot.material.name.endswith('_armpart'):
                     continue
 
                 matslots.append(slot)
@@ -745,8 +768,8 @@ class ArmoryExporter:
                 if mat is None:
                     mat = slot.material.copy()
                     mat.name = mat_name
-                    mat.arm_particle_flag = True
                     matvars.append(mat)
+                mat.arm_particle_flag = True
                 slot.material = mat
 
         return matvars, matslots
@@ -2714,7 +2737,10 @@ Make sure the mesh only has tris/quads.""")
                 # in a different scene outside of every (non-scene) collection
                 self.process_bobject(psettings.instance_object)
                 self.export_object(psettings.instance_object)
-            self.object_to_arm_object_dict[psettings.instance_object]['is_particle'] = True
+            if psettings.arm_particle_type == 'GPU':
+                # Only rendered through its GPU particle system, CPU particles spawn copies of it
+                self.object_to_arm_object_dict[psettings.instance_object]['is_particle'] = True
+            ArmoryExporter.export_particles = True
 
             self.output['particle_datas'].append(out_particlesys)
 
@@ -2926,13 +2952,14 @@ Make sure the mesh only has tris/quads.""")
 
             self.output['material_datas'] = []
 
+            # Exports the particle instance objects, which may need the default materials below
+            if len(bpy.data.particles) > 0 and ArmoryExporter.particles_enabled():
+                self.use_default_material_part()
             # Object with no material assigned in the scene
             if len(self.default_material_objects) > 0:
                 self.make_default_mat('armdefault', self.default_material_objects)
             if len(self.default_skin_material_objects) > 0:
                 self.make_default_mat('armdefaultskin', self.default_skin_material_objects)
-            if len(bpy.data.particles) > 0:
-                self.use_default_material_part()
             if len(self.default_part_material_objects) > 0:
                 self.make_default_mat('armdefaultpart', self.default_part_material_objects, is_particle=True)
 
