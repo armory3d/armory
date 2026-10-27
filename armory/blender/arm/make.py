@@ -116,10 +116,13 @@ def remove_readonly(func, path, excinfo):
 
 linked_blend_paths = []
 linked_scenes = []
+# Library names before load_external_blends() linked anything (None: nothing linked)
+libraries_before_external = None
 
 def load_external_blends():
     global linked_scenes
     global linked_blend_paths
+    global libraries_before_external
 
     wrd = bpy.data.worlds['Arm']
     if not hasattr(wrd, 'arm_external_blends_path'):
@@ -132,6 +135,9 @@ def load_external_blends():
     abs_path = bpy.path.abspath(external_path.strip())
     if not os.path.exists(abs_path):
         return
+
+    if libraries_before_external is None:
+        libraries_before_external = {lib.name for lib in bpy.data.libraries}
 
     # Walk recursively through all subdirs
     for root, dirs, files in os.walk(abs_path):
@@ -156,8 +162,9 @@ def load_external_blends():
 def clear_external_scenes():
     global linked_blend_paths
     global linked_scenes
+    global libraries_before_external
 
-    if not linked_scenes and not linked_blend_paths:
+    if not linked_scenes and not linked_blend_paths and libraries_before_external is None:
         return
 
     for scn in linked_scenes:
@@ -166,9 +173,12 @@ def clear_external_scenes():
         except Exception as e:
             log.error(f"Failed to remove scene {scn.name}: {e}")
 
+    # The libraries linking the external blends brought in: the blends and the
+    # ones they link (left behind empty, they'd be saved in the .blend)
+    added = set() if libraries_before_external is None else         {lib.name for lib in bpy.data.libraries} - libraries_before_external
     for lib in list(bpy.data.libraries):
         try:
-            if lib.users == 0 or lib.filepath in linked_blend_paths:
+            if lib.users == 0 or lib.filepath in linked_blend_paths or lib.name in added:
                 bpy.data.libraries.remove(lib)
         except Exception as e:
             log.error(f"Failed to remove library {lib.name}: {e}")
@@ -180,6 +190,7 @@ def clear_external_scenes():
 
     linked_scenes = []
     linked_blend_paths = []
+    libraries_before_external = None
 
 def is_project_scene(scene) -> bool:
     """Whether a scene belongs to the project: a local scene, or one linked
@@ -190,8 +201,12 @@ def is_project_scene(scene) -> bool:
 
 
 def export_data(fp, sdk_path):
-    # Reload all libraries to retrieve updated data without needing to restart Blender
-    for lib in bpy.data.libraries:
+    # Reload all libraries to retrieve updated data without needing to restart Blender.
+    # Looked up by name each time: reloading one can remove another
+    for name in [lib.name for lib in bpy.data.libraries]:
+        lib = bpy.data.libraries.get(name)
+        if lib is None:
+            continue
         lib.reload()
         log.info(f"Reloaded: {lib.filepath}")
 
