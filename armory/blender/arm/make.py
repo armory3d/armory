@@ -181,6 +181,42 @@ def clear_external_scenes():
     linked_scenes = []
     linked_blend_paths = []
 
+def check_library_suffixes() -> bool:
+    """Linked data is exported with the name suffix of its library
+    (see linked_utils.library_suffix()), so no two libraries may share one.
+    """
+    libraries = {}
+    unique = True
+    for lib in bpy.data.libraries:
+        suffix = linked_utils.library_suffix(lib)
+        other = libraries.setdefault(suffix, lib)
+        if other is not lib:
+            log.error(f'Linked blend files "{bpy.path.abspath(other.filepath)}" and "{bpy.path.abspath(lib.filepath)}"'
+                      f' both export with the name suffix "{suffix}", rename one of them or its folder')
+            unique = False
+    return unique
+
+
+def check_scene_names() -> bool:
+    """Scenes are exported with the name of linked_utils.get_scene_name(),
+    so no two exported scenes may share one.
+    """
+    def describe(scene) -> str:
+        return f'"{scene.name}" ({bpy.path.abspath(scene.library.filepath) if scene.library else "local"})'
+
+    scenes = {}
+    unique = True
+    for scene in bpy.data.scenes:
+        if not scene.arm_export or not is_project_scene(scene):
+            continue
+        name = linked_utils.get_scene_name(scene)
+        other = scenes.setdefault(name, scene)
+        if other is not scene:
+            log.error(f'Scenes {describe(other)} and {describe(scene)} both export with the name "{name}", rename one of them')
+            unique = False
+    return unique
+
+
 def is_project_scene(scene) -> bool:
     """Whether a scene belongs to the project: a local scene, or one linked
     from the external blends path by load_external_blends(). Add-ons can bring
@@ -196,6 +232,13 @@ def export_data(fp, sdk_path):
         log.info(f"Reloaded: {lib.filepath}")
 
     load_external_blends()
+
+    # Check both to report all name collisions at once
+    unique_libraries = check_library_suffixes()
+    unique_scenes = check_scene_names()
+    if not unique_libraries or not unique_scenes:
+        clear_external_scenes()
+        return False
 
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
@@ -407,6 +450,7 @@ def export_data(fp, sdk_path):
         state.last_scene = scene_name
 
     clear_external_scenes()
+    return True
 
 def compile(assets_only=False):
     wrd = bpy.data.worlds['Arm']
@@ -569,7 +613,9 @@ def build(target, is_play=False, is_publish=False, is_export=False):
                 f.write(text.as_string())
 
     # Export data
-    export_data(fp, sdk_path)
+    if not export_data(fp, sdk_path):
+        log.error('Build failed, check errors above')
+        return False
 
     if state.target == 'html5':
         w, h = arm.utils.get_render_resolution(arm.utils.get_active_scene())
@@ -579,6 +625,7 @@ def build(target, is_play=False, is_publish=False, is_export=False):
             dest  = '/html5/' if is_publish else '/debug/html5/'
             for fn in glob.iglob(os.path.join('include', '**'), recursive=False):
                 shutil.copy(fn, arm.utils.build_dir() + dest + os.path.basename(fn))
+    return True
 
 def play_done():
     """Called if the player was stopped/terminated."""
@@ -651,7 +698,8 @@ def play():
     global scripts_mtime
     wrd = bpy.data.worlds['Arm']
 
-    build(target=runtime_to_target(), is_play=True)
+    if not build(target=runtime_to_target(), is_play=True):
+        return
 
     khajs_path = get_khajs_path(state.target)
     if not wrd.arm_cache_build or \

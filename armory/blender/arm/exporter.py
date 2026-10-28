@@ -490,14 +490,9 @@ class ArmoryExporter:
             if btype is not NodeType.MESH and ArmoryExporter.option_mesh_only:
                 return
 
-            if bobject.type == 'CAMERA' and bobject.library:
-                struct_name = bobject.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
-            else:
-                struct_name = linked_utils.asset_name(bobject)
-
             self.bobject_array[bobject] = {
                 "objectType": btype,
-                "structName": struct_name
+                "structName": linked_utils.asset_name(bobject)
             }
 
             if bobject.type == "ARMATURE":
@@ -923,8 +918,7 @@ class ArmoryExporter:
                         if child.parent is not None and child.parent.name in collection.objects:
                             continue
                         if child.type == 'CAMERA':
-                            asset_name = child.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
-                            self.output['camera_ref'] = asset_name
+                            self.output['camera_ref'] = arm.utils.asset_name(child)
                             self.has_spawning_camera = True
                         self.process_bobject(child)
                         self.export_object(child, out_parent)
@@ -1005,7 +999,7 @@ class ArmoryExporter:
             if lib is None and bobject.override_library:
                 lib = bobject.override_library.library
             if lib is not None:
-                out_object['filename'] = lib.name
+                out_object['filename'] = linked_utils.library_suffix(lib)
 
             if bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
                 out_object['group_ref'] = bobject.instance_collection.name
@@ -1031,8 +1025,12 @@ class ArmoryExporter:
                     }
                     # Mesh swap reference (for later implementation)
                     if action.mesh_prop != '':
-                        # Look up the actual mesh to get proper name with library suffix if linked
-                        mesh_data = bpy.data.meshes.get(action.mesh_prop)
+                        # Look up the actual mesh to get proper name with library suffix if linked,
+                        # preferring the mesh from the same blend as the object's mesh
+                        mesh_lib = bobject.data.library if bobject.data else None
+                        mesh_data = bpy.data.meshes.get((action.mesh_prop, mesh_lib.filepath if mesh_lib else None))
+                        if mesh_data is None:
+                            mesh_data = bpy.data.meshes.get(action.mesh_prop)
                         if mesh_data is not None:
                             action_data['mesh'] = arm.utils.safestr(arm.utils.asset_name(mesh_data))
                         else:
@@ -2252,10 +2250,7 @@ Make sure the mesh only has tris/quads.""")
             # outside the collection, then instantiate the full object
             # child tree if the collection gets spawned as a whole
             if bobject.parent is None or bobject.parent.name not in collection.objects:
-                if bobject.type == 'CAMERA':
-                    asset_name = bobject.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
-                else:
-                    asset_name = arm.utils.asset_name(bobject)
+                asset_name = arm.utils.asset_name(bobject)
 
                 if collection.library and not collection.name in self.scene.collection.children:
                     # Add external linked objects
@@ -2765,7 +2760,7 @@ Make sure the mesh only has tris/quads.""")
         world = self.scene.world
 
         if world is not None:
-            world_name = arm.utils.safestr(arm.utils.asset_name(world) if world.library else world.name)
+            world_name = arm.utils.safestr(arm.utils.asset_name(world))
 
             if world_name not in self.world_array:
                 self.world_array.append(world_name)
@@ -2918,9 +2913,11 @@ Make sure the mesh only has tris/quads.""")
                         self.export_collection(collection)
 
         if not ArmoryExporter.option_mesh_only:
-            if self.scene.camera is not None:
-                self.output['camera_ref'] = arm.utils.asset_name(self.scene.camera) if self.scene.library else self.scene.camera.name + "_" + self.scene.name if self.scene.camera.library else self.scene.camera.name
-            else:
+            # The scene camera may not be exported, e.g. a leftover camera in a linked scene that
+            # spawns its camera from a collection instance, keep the exported camera in that case
+            if self.scene.camera is not None and self.scene.camera in self.bobject_array:
+                self.output['camera_ref'] = arm.utils.asset_name(self.scene.camera)
+            elif 'camera_ref' not in self.output:
                 if self.scene.name == arm.utils.get_project_scene_name():
                     log.warn(f'Scene "{self.scene.name}" is missing a camera')
 
@@ -2942,7 +2939,7 @@ Make sure the mesh only has tris/quads.""")
             self.export_world()
 
             if self.scene.world is not None:
-                self.output['world_ref'] = arm.utils.safestr(arm.utils.asset_name(self.scene.world) if self.scene.world.library else self.scene.world.name)
+                self.output['world_ref'] = arm.utils.safestr(arm.utils.asset_name(self.scene.world))
 
             if self.scene.use_gravity:
                 self.output['gravity'] = [self.scene.gravity[0], self.scene.gravity[1], self.scene.gravity[2]]
@@ -3815,7 +3812,7 @@ Make sure the mesh only has tris/quads.""")
         if mobile_mat or '_EnvCol' in world.world_defs:
             arm_radiance = False
 
-        out_probe = {'name': arm.utils.asset_name(world) if world.library else world.name}
+        out_probe = {'name': arm.utils.asset_name(world)}
         if arm_irradiance:
             ext = '' if wrd.arm_minimize else '.json'
             out_probe['irradiance'] = irrsharmonics + '_irradiance' + ext
