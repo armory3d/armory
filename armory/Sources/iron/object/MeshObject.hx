@@ -16,13 +16,13 @@ class MeshObject extends Object {
 	public var materialIndex = 0;
 	public var depthRead(default, null) = false;
 	#if arm_particles
-	public var particleSystems: Array<ParticleSystem> = null; // Particle owner
 	public var render_emitter = true;
-	#if arm_gpu_particles
-	public var particleOwner: MeshObject = null; // Particle object
+	public var particleSystems: Array<ParticleSystemGPU> = null; // GPU particle owner
+	public var particleSystemsCPU: Array<ParticleSystemCPU> = null; // CPU particle owner
+	public var particleOwner: MeshObject = null; // GPU particle object
 	public var particleChildren: Array<MeshObject> = null;
 	public var particleIndex = -1;
-	#end #end
+	#end
 	public var cameraDistance: Float;
 	public var cameraList: Array<String> = null;
 	public var screenSize = 0.0;
@@ -71,19 +71,21 @@ class MeshObject extends Object {
 		#if arm_batch
 		Scene.active.meshBatch.removeMesh(this);
 		#end
-		#if arm_gpu_particles
+		#if arm_particles
 		if (particleChildren != null) {
 			for (c in particleChildren) c.remove();
 			particleChildren = null;
 		}
-		#end
-		#if arm_particles
 		if (particleSystems != null) {
-			for (psys in particleSystems) {
-				#if arm_cpu_particles psys.stop(); #end
+			for (psys in particleSystems) psys.remove();
+			particleSystems = null;
+		}
+		if (particleSystemsCPU != null) {
+			for (psys in particleSystemsCPU) {
+				psys.stop();
 				psys.remove();
 			}
-			particleSystems = null;
+			particleSystemsCPU = null;
 		}
 		#end
 		if (tilesheet != null) tilesheet.remove();
@@ -115,9 +117,18 @@ class MeshObject extends Object {
 
 	#if arm_particles
 	public function setupParticleSystem(sceneName: String, pref: TParticleReference) {
-		if (particleSystems == null) particleSystems = [];
-		var psys = new ParticleSystem(sceneName, pref, this);
-		particleSystems.push(psys);
+		if (pref.type == "CPU") {
+			if (particleSystemsCPU == null) particleSystemsCPU = [];
+			particleSystemsCPU.push(new ParticleSystemCPU(sceneName, pref, this));
+		}
+		else { // References without a type are added by the GPU particle logic nodes
+			if (particleSystems == null) particleSystems = [];
+			particleSystems.push(new ParticleSystemGPU(sceneName, pref, this));
+		}
+	}
+
+	inline function hasParticleSystems(): Bool {
+		return (particleSystems != null && particleSystems.length > 0) || (particleSystemsCPU != null && particleSystemsCPU.length > 0);
 	}
 	#end
 
@@ -166,7 +177,7 @@ class MeshObject extends Object {
 			// Scale radius for skinned mesh and particle system
 			// TODO: define skin & particle bounds
 			var radiusScale = data.isSkinned ? 2.0 : 1.0;
-			#if arm_gpu_particles
+			#if arm_particles
 			// particleSystems for update, particleOwner for render
 			if (particleSystems != null || particleOwner != null) radiusScale *= 1000;
 			#end
@@ -230,7 +241,7 @@ class MeshObject extends Object {
 
 		if (cameraList != null && cameraList.indexOf(Scene.active.camera.name) < 0) return;
 
-		#if arm_gpu_particles
+		#if arm_particles
 		if (raw != null && raw.is_particle && particleOwner == null) return; // Instancing not yet set-up by particle system owner
 		if (particleSystems != null && meshContext) {
 			if (particleChildren == null) {
@@ -252,10 +263,9 @@ class MeshObject extends Object {
 				particleSystems[i].update(particleChildren[i]);
 			}
 		}
-		#end
-		#if arm_particles
-		if (particleSystems != null && particleSystems.length > 0 && !render_emitter) return;
-        if (particleSystems == null && cullMaterial(context)) return;
+		var emitter = hasParticleSystems();
+		if (emitter && !render_emitter) return;
+		if (!emitter && cullMaterial(context)) return;
 		#else
         if (cullMaterial(context)) return;
 		#end
@@ -418,19 +428,11 @@ class MeshObject extends Object {
 			if (nextPassName == null || nextPassName == "") continue;
 
 			var nextMaterial: MaterialData = null;
+			// Linked materials export their next pass with the library suffix
 			for (mat in materials) {
-				// First try exact match
 				if (mat.name == nextPassName) {
 					nextMaterial = mat;
 					break;
-				}
-				// If no exact match, try to match base name for linked materials
-				if (mat.name.indexOf("_") > 0 && mat.name.substr(mat.name.length - 6) == ".blend") {
-					var baseName = mat.name.substring(0, mat.name.indexOf("_"));
-					if (baseName == nextPassName) {
-						nextMaterial = mat;
-						break;
-					}
 				}
 			}
 

@@ -247,7 +247,8 @@ def parse_objectinfo(node: bpy.types.ShaderNodeObjectInfo, out_socket: bpy.types
 
 
 def parse_particleinfo(node: bpy.types.ShaderNodeParticleInfo, out_socket: bpy.types.NodeSocket, state: ParserState) -> Union[floatstr, vec3str]:
-    particles_on = arm.utils.get_rp().arm_particles == 'GPU'
+    # Particle data only exists for GPU particles, CPU particles are regular objects
+    particles_on = mat_state.material is not None and mat_state.material.arm_particle_flag
 
     # Index
     if out_socket == node.outputs[0]:
