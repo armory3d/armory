@@ -455,6 +455,7 @@ typedef TParticleReference = {
 	public var name: String;
 	public var particle: String;
 	public var seed: Int;
+	@:optional public var type: String; // "CPU" or "GPU"
 }
 
 #if js

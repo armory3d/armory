@@ -228,6 +228,30 @@ def check_scene_names() -> bool:
     return unique
 
 
+def check_particle_instance_objects() -> bool:
+    """GPU particles render their instance object with particle material
+    variants, while CPU particles spawn copies of it with its original
+    materials, so an instance object can't be used by both particle types.
+    """
+    if not ArmoryExporter.particles_enabled():
+        return True
+
+    users = {'GPU': {}, 'CPU': {}}
+    for psettings in bpy.data.particles:
+        obj = psettings.instance_object
+        if psettings.users == 0 or psettings.render_type != 'OBJECT' or obj is None or not obj.arm_export:
+            continue
+        users[psettings.arm_particle_type].setdefault(obj, psettings)
+
+    valid = True
+    for obj, gpu_psettings in users['GPU'].items():
+        cpu_psettings = users['CPU'].get(obj)
+        if cpu_psettings is not None:
+            log.error(f'Particle settings "{gpu_psettings.name}" (GPU) and "{cpu_psettings.name}" (CPU) both use the instance object'
+                      f' "{obj.name}", use the same particle type or a different instance object')
+            valid = False
+    return valid
+
 def is_project_scene(scene) -> bool:
     """Whether a scene belongs to the project: a local scene, or one linked
     from the external blends path by load_external_blends(). Add-ons can bring
@@ -248,10 +272,11 @@ def export_data(fp, sdk_path):
 
     load_external_blends()
 
-    # Check both to report all name collisions at once
+    # Check all to report every problem at once
     unique_libraries = check_library_suffixes()
     unique_scenes = check_scene_names()
-    if not unique_libraries or not unique_scenes:
+    valid_particles = check_particle_instance_objects()
+    if not unique_libraries or not unique_scenes or not valid_particles:
         clear_external_scenes()
         return False
 
@@ -301,6 +326,7 @@ def export_data(fp, sdk_path):
     navigation_found = False
     ui_found = False
     network_found = False
+    particles_found = False
     ArmoryExporter.compress_enabled = state.is_publish and wrd.arm_asset_compression
     ArmoryExporter.optimize_enabled = state.is_publish and wrd.arm_optimize_data
     if not os.path.exists(build_dir + '/compiled/Assets'):
@@ -340,6 +366,8 @@ def export_data(fp, sdk_path):
                 ui_found = True
             if ArmoryExporter.export_network:
                 network_found = True
+            if ArmoryExporter.export_particles:
+                particles_found = True
             assets.add(asset_path)
 
     if physics_found is False: # Disable physics if no rigid body is exported
@@ -453,7 +481,9 @@ def export_data(fp, sdk_path):
         wrd.arm_project_version = arm.utils.change_version_project(wrd.arm_project_version)
 
     # Write khafile.js
-    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, export_network, state.is_publish, ArmoryExporter.import_traits)
+    export_particles = wrd.arm_particles == 'Enabled' or (wrd.arm_particles == 'Auto' and particles_found)
+
+    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, export_network, export_particles, state.is_publish, ArmoryExporter.import_traits)
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     scene_name = arm.utils.get_project_scene_name()
