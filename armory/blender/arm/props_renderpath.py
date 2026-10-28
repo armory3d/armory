@@ -639,11 +639,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off')],
         name='Shape key', description='Enable shape keys', default='On')
-    arm_particles: EnumProperty(
-        items=[('GPU', 'GPU', 'GPU'),
-               ('CPU', 'CPU', 'CPU'),
-               ('Off', 'Off', 'Off')],
-        name='Particles', description='Enable particle simulation', default='GPU')
     # Material override flags
     arm_culling: BoolProperty(name="Culling", default=True)
     arm_two_sided_area_light: BoolProperty(name="Two-Sided Area Light", description="Emit light from both faces of area plane", default=False)

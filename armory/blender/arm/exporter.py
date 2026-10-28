@@ -296,6 +296,8 @@ class ArmoryExporter:
     export_all_flag = True
     # Indicates whether rigid body is exported
     export_physics = False
+    # Indicates whether a particle system is exported
+    export_particles = False
     optimize_enabled = False
     option_mesh_only = False
 
@@ -378,6 +380,11 @@ class ArmoryExporter:
         cls.export_network = False
         if wrd.arm_network == 'Enabled':
             cls.export_network = True
+        cls.export_particles = False
+
+    @staticmethod
+    def particles_enabled() -> bool:
+        return bpy.data.worlds['Arm'].arm_particles != 'Disabled'
 
     @staticmethod
     def write_matrix(matrix):
@@ -658,14 +665,9 @@ class ArmoryExporter:
             if btype is not NodeType.MESH and ArmoryExporter.option_mesh_only:
                 return
 
-            if bobject.type == 'CAMERA' and bobject.library:
-                struct_name = bobject.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
-            else:
-                struct_name = linked_utils.asset_name(bobject)
-
             self.bobject_array[bobject] = {
                 "objectType": btype,
-                "structName": struct_name
+                "structName": linked_utils.asset_name(bobject)
             }
 
             if bobject.type == "ARMATURE":
@@ -728,8 +730,10 @@ class ArmoryExporter:
             self.default_material_objects.append(bobject)
 
     def use_default_material_part(self):
-        """Select the particle material variant for all particle system
-        instance objects that use the armdefault material.
+        """Export all particle system instance objects, so particle systems
+        spawned from another scene find them in the active one, and select
+        the particle material variant for GPU particle instance objects that
+        use the armdefault material.
         """
         for ps in bpy.data.particles:
             if ps.render_type != 'OBJECT' or ps.instance_object is None or not ps.instance_object.arm_export:
@@ -739,6 +743,9 @@ class ArmoryExporter:
             if po not in self.object_to_arm_object_dict:
                 self.process_bobject(po)
                 self.export_object(po)
+            # CPU particles are regular objects
+            if ps.arm_particle_type != 'GPU':
+                continue
             o = self.object_to_arm_object_dict[po]
 
             # Check if the instance object uses the armdefault material
@@ -755,6 +762,8 @@ class ArmoryExporter:
         o['material_refs'].append(arm.utils.asset_name(material))
 
     def export_particle_system_ref(self, psys: bpy.types.ParticleSystem, out_object):
+        if not ArmoryExporter.particles_enabled():
+            return
         if psys.settings.instance_object is None or psys.settings.render_type != 'OBJECT' or not psys.settings.instance_object.arm_export:
            return
 
@@ -770,7 +779,8 @@ class ArmoryExporter:
         pref = {
             'name': psys.name,
             'seed': psys.seed,
-            'particle': psys.settings.name
+            'particle': psys.settings.name,
+            'type': psys.settings.arm_particle_type
         }
         out_object['particle_refs'].append(pref)
 
@@ -835,6 +845,11 @@ class ArmoryExporter:
         matvars: List[bpy.types.Material] = []
         matslots: List[bpy.types.MaterialSlot] = []
 
+        # The particle flag marks GPU particle materials of this export only (set below),
+        # clear stale flags, e.g. saved on old variant copies used by CPU particles
+        for mat in bpy.data.materials:
+            mat.arm_particle_flag = False
+
         bobject: bpy.types.Object
         for bobject in scene.collection.all_objects.values():
             variant_suffix = ''
@@ -891,20 +906,23 @@ class ArmoryExporter:
                             slot.material.arm_tilesheet_flag = True
                             slot.material.arm_cached = False
 
-        # Particle and non-particle objects can not share material
+        # GPU particle and non-particle objects can not share material,
+        # CPU particles are regular objects and use the original materials
         particle_sys: bpy.types.ParticleSettings
         for particle_sys in bpy.data.particles:
+            if not ArmoryExporter.particles_enabled():
+                break
             bobject = particle_sys.instance_object
             if bobject is None or particle_sys.render_type != 'OBJECT' or not bobject.arm_export:
+                continue
+            if particle_sys.arm_particle_type != 'GPU':
                 continue
 
             for slot in bobject.material_slots:
                 if slot.material is None:
                     continue
-                if slot.material.library is not None:
+                if slot.material.library is not None or slot.material.name.endswith('_armpart'):
                     slot.material.arm_particle_flag = True
-                    continue
-                if slot.material.name.endswith('_armpart'):
                     continue
 
                 matslots.append(slot)
@@ -913,8 +931,8 @@ class ArmoryExporter:
                 if mat is None:
                     mat = slot.material.copy()
                     mat.name = mat_name
-                    mat.arm_particle_flag = True
                     matvars.append(mat)
+                mat.arm_particle_flag = True
                 slot.material = mat
 
         return matvars, matslots
@@ -1091,8 +1109,7 @@ class ArmoryExporter:
                         if child.parent is not None and child.parent.name in collection.objects:
                             continue
                         if child.type == 'CAMERA':
-                            asset_name = child.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
-                            self.output['camera_ref'] = asset_name
+                            self.output['camera_ref'] = arm.utils.asset_name(child)
                             self.has_spawning_camera = True
                         self.process_bobject(child)
                         self.export_object(child, out_parent)
@@ -1173,7 +1190,7 @@ class ArmoryExporter:
             if lib is None and bobject.override_library:
                 lib = bobject.override_library.library
             if lib is not None:
-                out_object['filename'] = lib.name
+                out_object['filename'] = linked_utils.library_suffix(lib)
 
             if bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
                 out_object['group_ref'] = bobject.instance_collection.name
@@ -1199,8 +1216,12 @@ class ArmoryExporter:
                     }
                     # Mesh swap reference (for later implementation)
                     if action.mesh_prop != '':
-                        # Look up the actual mesh to get proper name with library suffix if linked
-                        mesh_data = bpy.data.meshes.get(action.mesh_prop)
+                        # Look up the actual mesh to get proper name with library suffix if linked,
+                        # preferring the mesh from the same blend as the object's mesh
+                        mesh_lib = bobject.data.library if bobject.data else None
+                        mesh_data = bpy.data.meshes.get((action.mesh_prop, mesh_lib.filepath if mesh_lib else None))
+                        if mesh_data is None:
+                            mesh_data = bpy.data.meshes.get(action.mesh_prop)
                         if mesh_data is not None:
                             action_data['mesh'] = arm.utils.safestr(arm.utils.asset_name(mesh_data))
                         else:
@@ -2434,10 +2455,7 @@ Make sure the mesh only has tris/quads.""")
             # outside the collection, then instantiate the full object
             # child tree if the collection gets spawned as a whole
             if bobject.parent is None or bobject.parent.name not in collection.objects:
-                if bobject.type == 'CAMERA':
-                    asset_name = bobject.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
-                else:
-                    asset_name = arm.utils.asset_name(bobject)
+                asset_name = arm.utils.asset_name(bobject)
 
                 if collection.library and not collection.name in self.scene.collection.children:
                     # Add external linked objects
@@ -2899,7 +2917,10 @@ Make sure the mesh only has tris/quads.""")
                 # in a different scene outside of every (non-scene) collection
                 self.process_bobject(psettings.instance_object)
                 self.export_object(psettings.instance_object)
-            self.object_to_arm_object_dict[psettings.instance_object]['is_particle'] = True
+            if psettings.arm_particle_type == 'GPU':
+                # Only rendered through its GPU particle system, CPU particles spawn copies of it
+                self.object_to_arm_object_dict[psettings.instance_object]['is_particle'] = True
+            ArmoryExporter.export_particles = True
 
             self.output['particle_datas'].append(out_particlesys)
 
@@ -2956,7 +2977,7 @@ Make sure the mesh only has tris/quads.""")
         world = self.scene.world
 
         if world is not None:
-            world_name = arm.utils.safestr(arm.utils.asset_name(world) if world.library else world.name)
+            world_name = arm.utils.safestr(arm.utils.asset_name(world))
 
             if world_name not in self.world_array:
                 self.world_array.append(world_name)
@@ -3109,21 +3130,24 @@ Make sure the mesh only has tris/quads.""")
                         self.export_collection(collection)
 
         if not ArmoryExporter.option_mesh_only:
-            if self.scene.camera is not None:
-                self.output['camera_ref'] = arm.utils.asset_name(self.scene.camera) if self.scene.library else self.scene.camera.name + "_" + self.scene.name if self.scene.camera.library else self.scene.camera.name
-            else:
+            # The scene camera may not be exported, e.g. a leftover camera in a linked scene that
+            # spawns its camera from a collection instance, keep the exported camera in that case
+            if self.scene.camera is not None and self.scene.camera in self.bobject_array:
+                self.output['camera_ref'] = arm.utils.asset_name(self.scene.camera)
+            elif 'camera_ref' not in self.output:
                 if self.scene.name == arm.utils.get_project_scene_name():
                     log.warn(f'Scene "{self.scene.name}" is missing a camera')
 
             self.output['material_datas'] = []
 
+            # Exports the particle instance objects, which may need the default materials below
+            if len(bpy.data.particles) > 0 and ArmoryExporter.particles_enabled():
+                self.use_default_material_part()
             # Object with no material assigned in the scene
             if len(self.default_material_objects) > 0:
                 self.make_default_mat('armdefault', self.default_material_objects)
             if len(self.default_skin_material_objects) > 0:
                 self.make_default_mat('armdefaultskin', self.default_skin_material_objects)
-            if len(bpy.data.particles) > 0:
-                self.use_default_material_part()
             if len(self.default_part_material_objects) > 0:
                 self.make_default_mat('armdefaultpart', self.default_part_material_objects, is_particle=True)
 
@@ -3133,7 +3157,7 @@ Make sure the mesh only has tris/quads.""")
             self.export_world()
 
             if self.scene.world is not None:
-                self.output['world_ref'] = arm.utils.safestr(arm.utils.asset_name(self.scene.world) if self.scene.world.library else self.scene.world.name)
+                self.output['world_ref'] = arm.utils.safestr(arm.utils.asset_name(self.scene.world))
 
             if self.scene.use_gravity:
                 self.output['gravity'] = [self.scene.gravity[0], self.scene.gravity[1], self.scene.gravity[2]]
@@ -4006,7 +4030,7 @@ Make sure the mesh only has tris/quads.""")
         if mobile_mat or '_EnvCol' in world.world_defs:
             arm_radiance = False
 
-        out_probe = {'name': arm.utils.asset_name(world) if world.library else world.name}
+        out_probe = {'name': arm.utils.asset_name(world)}
         if arm_irradiance:
             ext = '' if wrd.arm_minimize else '.json'
             out_probe['irradiance'] = irrsharmonics + '_irradiance' + ext

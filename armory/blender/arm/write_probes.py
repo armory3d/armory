@@ -118,7 +118,7 @@ def render_envmap(target_dir: str, world: bpy.types.World) -> str:
     scene = bpy.data.scenes['_arm_envmap_render']
     scene.world = world
 
-    world_name = arm.utils.asset_name(world) if world.library else world.name
+    world_name = arm.utils.asset_name(world)
     image_name = f'env_{arm.utils.safesrc(world_name)}.{ENVMAP_EXT}'
     render_path = os.path.join(target_dir, image_name)
     scene.render.filepath = render_path

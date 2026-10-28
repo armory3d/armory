@@ -195,6 +195,7 @@ class ARM_PT_ParticlesPropsPanel(bpy.types.Panel):
         if obj == None:
             return
 
+        layout.prop(obj.settings, 'arm_particle_type')
         layout.prop(obj.settings, 'arm_auto_start')
         layout.prop(obj.settings, 'arm_is_unique')
         layout.prop(obj.settings, 'arm_local_coords')
@@ -1208,6 +1209,7 @@ class ARM_PT_ProjectModulesPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_navigation')
         if wrd.arm_navigation != 'Disabled':
             layout.prop(wrd, 'arm_navigation_engine')
+        layout.prop(wrd, 'arm_particles')
         layout.prop(wrd, 'arm_ui')
         layout.prop(wrd, 'arm_network')
 
@@ -1320,8 +1322,8 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
         assets.invalidate_enabled = False
         if wrd.arm_clear_on_compile:
             os.system("cls")
-        make.build(item.arm_project_target, is_export=True)
-        make.compile()
+        if make.build(item.arm_project_target, is_export=True):
+            make.compile()
         wrd.arm_rplist_index = rplist_index
         assets.invalidate_enabled = True
         return{'FINISHED'}
@@ -1368,8 +1370,8 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
         assets.invalidate_enabled = False
         if wrd.arm_clear_on_compile:
             os.system("cls")
-        make.build(item.arm_project_target, is_publish=True, is_export=True)
-        make.compile()
+        if make.build(item.arm_project_target, is_publish=True, is_export=True):
+            make.compile()
         wrd.arm_rplist_index = rplist_index
         assets.invalidate_enabled = True
         return{'FINISHED'}
@@ -1564,7 +1566,6 @@ class ARM_PT_RenderPathRendererPanel(bpy.types.Panel):
             layout.prop(rpdat, 'arm_tess_shadows_inner')
             layout.prop(rpdat, 'arm_tess_shadows_outer')
 
-        layout.prop(rpdat, 'arm_particles')
         layout.separator(factor=0.1)
 
         col = layout.column()
