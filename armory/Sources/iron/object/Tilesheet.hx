@@ -126,7 +126,7 @@ class Tilesheet {
 		return true;
 	}
 
-	/** Find mesh by base name pattern (handles linked objects with different suffixes). */
+	/** Find mesh by base name pattern. Linked meshes are exported with their full name, so they match exactly before getting here. */
 	function findMatchingMesh(actionMeshName: String): MeshObject {
 		var baseName = actionMeshName;
 
@@ -134,10 +134,6 @@ class Tilesheet {
 		if (StringTools.startsWith(baseName, "Mesh")) {
 			baseName = baseName.substr(4);
 		}
-
-		// Strip suffix after underscore (e.g., "_character.blend")
-		var idx = baseName.indexOf("_");
-		if (idx > 0) baseName = baseName.substr(0, idx);
 
 		for (meshName in meshCache.keys()) {
 			if (meshName.indexOf(baseName) != -1) {
