@@ -116,10 +116,13 @@ def remove_readonly(func, path, excinfo):
 
 linked_blend_paths = []
 linked_scenes = []
+# Library names before load_external_blends() linked anything (None: nothing linked)
+libraries_before_external = None
 
 def load_external_blends():
     global linked_scenes
     global linked_blend_paths
+    global libraries_before_external
 
     wrd = bpy.data.worlds['Arm']
     if not hasattr(wrd, 'arm_external_blends_path'):
@@ -132,6 +135,9 @@ def load_external_blends():
     abs_path = bpy.path.abspath(external_path.strip())
     if not os.path.exists(abs_path):
         return
+
+    if libraries_before_external is None:
+        libraries_before_external = {lib.name for lib in bpy.data.libraries}
 
     # Walk recursively through all subdirs
     for root, dirs, files in os.walk(abs_path):
@@ -156,8 +162,9 @@ def load_external_blends():
 def clear_external_scenes():
     global linked_blend_paths
     global linked_scenes
+    global libraries_before_external
 
-    if not linked_scenes and not linked_blend_paths:
+    if not linked_scenes and not linked_blend_paths and libraries_before_external is None:
         return
 
     for scn in linked_scenes:
@@ -166,9 +173,12 @@ def clear_external_scenes():
         except Exception as e:
             log.error(f"Failed to remove scene {scn.name}: {e}")
 
+    # The libraries linking the external blends brought in: the blends and the
+    # ones they link (left behind empty, they'd be saved in the .blend)
+    added = set() if libraries_before_external is None else         {lib.name for lib in bpy.data.libraries} - libraries_before_external
     for lib in list(bpy.data.libraries):
         try:
-            if lib.users == 0 or lib.filepath in linked_blend_paths:
+            if lib.users == 0 or lib.filepath in linked_blend_paths or lib.name in added:
                 bpy.data.libraries.remove(lib)
         except Exception as e:
             log.error(f"Failed to remove library {lib.name}: {e}")
@@ -180,6 +190,67 @@ def clear_external_scenes():
 
     linked_scenes = []
     linked_blend_paths = []
+    libraries_before_external = None
+
+def check_library_suffixes() -> bool:
+    """Linked data is exported with the name suffix of its library
+    (see linked_utils.library_suffix()), so no two libraries may share one.
+    """
+    libraries = {}
+    unique = True
+    for lib in bpy.data.libraries:
+        suffix = linked_utils.library_suffix(lib)
+        other = libraries.setdefault(suffix, lib)
+        if other is not lib:
+            log.error(f'Linked blend files "{bpy.path.abspath(other.filepath)}" and "{bpy.path.abspath(lib.filepath)}"'
+                      f' both export with the name suffix "{suffix}", rename one of them or its folder')
+            unique = False
+    return unique
+
+
+def check_scene_names() -> bool:
+    """Scenes are exported with the name of linked_utils.get_scene_name(),
+    so no two exported scenes may share one.
+    """
+    def describe(scene) -> str:
+        return f'"{scene.name}" ({bpy.path.abspath(scene.library.filepath) if scene.library else "local"})'
+
+    scenes = {}
+    unique = True
+    for scene in bpy.data.scenes:
+        if not scene.arm_export or not is_project_scene(scene):
+            continue
+        name = linked_utils.get_scene_name(scene)
+        other = scenes.setdefault(name, scene)
+        if other is not scene:
+            log.error(f'Scenes {describe(other)} and {describe(scene)} both export with the name "{name}", rename one of them')
+            unique = False
+    return unique
+
+
+def check_particle_instance_objects() -> bool:
+    """GPU particles render their instance object with particle material
+    variants, while CPU particles spawn copies of it with its original
+    materials, so an instance object can't be used by both particle types.
+    """
+    if not ArmoryExporter.particles_enabled():
+        return True
+
+    users = {'GPU': {}, 'CPU': {}}
+    for psettings in bpy.data.particles:
+        obj = psettings.instance_object
+        if psettings.users == 0 or psettings.render_type != 'OBJECT' or obj is None or not obj.arm_export:
+            continue
+        users[psettings.arm_particle_type].setdefault(obj, psettings)
+
+    valid = True
+    for obj, gpu_psettings in users['GPU'].items():
+        cpu_psettings = users['CPU'].get(obj)
+        if cpu_psettings is not None:
+            log.error(f'Particle settings "{gpu_psettings.name}" (GPU) and "{cpu_psettings.name}" (CPU) both use the instance object'
+                      f' "{obj.name}", use the same particle type or a different instance object')
+            valid = False
+    return valid
 
 def is_project_scene(scene) -> bool:
     """Whether a scene belongs to the project: a local scene, or one linked
@@ -190,12 +261,24 @@ def is_project_scene(scene) -> bool:
 
 
 def export_data(fp, sdk_path):
-    # Reload all libraries to retrieve updated data without needing to restart Blender
-    for lib in bpy.data.libraries:
+    # Reload all libraries to retrieve updated data without needing to restart Blender.
+    # Looked up by name each time: reloading one can remove another
+    for name in [lib.name for lib in bpy.data.libraries]:
+        lib = bpy.data.libraries.get(name)
+        if lib is None:
+            continue
         lib.reload()
         log.info(f"Reloaded: {lib.filepath}")
 
     load_external_blends()
+
+    # Check all to report every problem at once
+    unique_libraries = check_library_suffixes()
+    unique_scenes = check_scene_names()
+    valid_particles = check_particle_instance_objects()
+    if not unique_libraries or not unique_scenes or not valid_particles:
+        clear_external_scenes()
+        return False
 
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
@@ -243,6 +326,7 @@ def export_data(fp, sdk_path):
     navigation_found = False
     ui_found = False
     network_found = False
+    particles_found = False
     ArmoryExporter.compress_enabled = state.is_publish and wrd.arm_asset_compression
     ArmoryExporter.optimize_enabled = state.is_publish and wrd.arm_optimize_data
     if not os.path.exists(build_dir + '/compiled/Assets'):
@@ -282,6 +366,8 @@ def export_data(fp, sdk_path):
                 ui_found = True
             if ArmoryExporter.export_network:
                 network_found = True
+            if ArmoryExporter.export_particles:
+                particles_found = True
             assets.add(asset_path)
 
     if physics_found is False: # Disable physics if no rigid body is exported
@@ -395,7 +481,9 @@ def export_data(fp, sdk_path):
         wrd.arm_project_version = arm.utils.change_version_project(wrd.arm_project_version)
 
     # Write khafile.js
-    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, export_network, state.is_publish, ArmoryExporter.import_traits)
+    export_particles = wrd.arm_particles == 'Enabled' or (wrd.arm_particles == 'Auto' and particles_found)
+
+    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, export_network, export_particles, state.is_publish, ArmoryExporter.import_traits)
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     scene_name = arm.utils.get_project_scene_name()
@@ -407,6 +495,7 @@ def export_data(fp, sdk_path):
         state.last_scene = scene_name
 
     clear_external_scenes()
+    return True
 
 def compile(assets_only=False):
     wrd = bpy.data.worlds['Arm']
@@ -569,7 +658,9 @@ def build(target, is_play=False, is_publish=False, is_export=False):
                 f.write(text.as_string())
 
     # Export data
-    export_data(fp, sdk_path)
+    if not export_data(fp, sdk_path):
+        log.error('Build failed, check errors above')
+        return False
 
     if state.target == 'html5':
         w, h = arm.utils.get_render_resolution(arm.utils.get_active_scene())
@@ -579,6 +670,7 @@ def build(target, is_play=False, is_publish=False, is_export=False):
             dest  = '/html5/' if is_publish else '/debug/html5/'
             for fn in glob.iglob(os.path.join('include', '**'), recursive=False):
                 shutil.copy(fn, arm.utils.build_dir() + dest + os.path.basename(fn))
+    return True
 
 def play_done():
     """Called if the player was stopped/terminated."""
@@ -651,7 +743,8 @@ def play():
     global scripts_mtime
     wrd = bpy.data.worlds['Arm']
 
-    build(target=runtime_to_target(), is_play=True)
+    if not build(target=runtime_to_target(), is_play=True):
+        return
 
     khajs_path = get_khajs_path(state.target)
     if not wrd.arm_cache_build or \
