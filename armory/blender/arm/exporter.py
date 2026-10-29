@@ -607,11 +607,11 @@ class ArmoryExporter:
                             if not mod.show_render:
                                 return
 
-        self.particle_system_array[psys.settings] = {"structName": psys.settings.name}
+        self.particle_system_array[psys.settings] = {"structName": arm.utils.asset_name(psys.settings)}
         pref = {
             'name': psys.name,
             'seed': psys.seed,
-            'particle': psys.settings.name,
+            'particle': arm.utils.asset_name(psys.settings),
             'type': psys.settings.arm_particle_type
         }
         out_object['particle_refs'].append(pref)
@@ -2631,7 +2631,7 @@ Make sure the mesh only has tris/quads.""")
             for obj in bpy.data.objects:
                 for mod in obj.modifiers:
                     if mod.type == 'PARTICLE_SYSTEM':
-                        if mod.particle_system.settings.name == particleRef[1]["structName"]:
+                        if mod.particle_system.settings == particleRef[0]:
                             if mod.show_render:
                                 padd = True
 
