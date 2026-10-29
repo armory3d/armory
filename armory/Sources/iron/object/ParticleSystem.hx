@@ -4,11 +4,6 @@ package iron.object;
 import kha.FastFloat;
 import iron.data.ParticleData;
 
-/**
-	A particle system of a `MeshObject`, simulated on the CPU
-	(`ParticleSystemCPU`) or the GPU (`ParticleSystemGPU`) as set per
-	particle system in Blender.
-**/
 interface ParticleSystem {
 	var data: ParticleData;
 	var speed: FastFloat;
