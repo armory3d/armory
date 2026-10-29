@@ -16,7 +16,7 @@ import kha.FastFloat;
 import kha.arrays.Int16Array;
 import kha.arrays.Uint32Array;
 
-class ParticleSystemCPU {
+class ParticleSystemCPU implements ParticleSystem {
     public var data: ParticleData;
 	public var speed: FastFloat = 1.0; // Not used yet. Added to go in hand with `ParticleSystemGPU`
     var r: TParticleData;

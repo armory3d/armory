@@ -906,7 +906,7 @@ class Uniforms {
 				case "_particleData": {
 					var mo = cast(object, MeshObject);
 					if (mo.particleOwner != null && mo.particleOwner.particleSystems != null) {
-						m = mo.particleOwner.particleSystems[mo.particleIndex].getData();
+						m = (cast mo.particleOwner.particleSystems[mo.particleIndex]: ParticleSystemGPU).getData();
 					}
 				}
 				#end
@@ -1113,19 +1113,19 @@ class Uniforms {
 				case "_particleSizeRandom": {
 					var mo = cast(object, MeshObject);
 					if (mo.particleOwner != null && mo.particleOwner.particleSystems != null) {
-						f = mo.particleOwner.particleSystems[mo.particleIndex].getSizeRandom();
+						f = (cast mo.particleOwner.particleSystems[mo.particleIndex]: ParticleSystemGPU).getSizeRandom();
 					}
 				}
 				case "_particleRandom": {
 					var mo = cast(object, MeshObject);
 					if (mo.particleOwner != null && mo.particleOwner.particleSystems != null) {
-						f = mo.particleOwner.particleSystems[mo.particleIndex].getRandom();
+						f = (cast mo.particleOwner.particleSystems[mo.particleIndex]: ParticleSystemGPU).getRandom();
 					}
 				}
 				case "_particleSize": {
 					var mo = cast(object, MeshObject);
 					if (mo.particleOwner != null && mo.particleOwner.particleSystems != null) {
-						f = mo.particleOwner.particleSystems[mo.particleIndex].getSize();
+						f = (cast mo.particleOwner.particleSystems[mo.particleIndex]: ParticleSystemGPU).getSize();
 					}
 				}
 				#end
