@@ -3159,10 +3159,11 @@ Make sure the mesh only has tris/quads.""")
         trait = {}
         trait['type'] = 'Script'
         trait['class_name'] = 'armory.trait.physics.' + phys_pkg + '.KinematicCharacterController'
-        # Constructor: mass, shape, jumpSpeed, friction, restitution, collisionMargin, animated, group, mask
+        interpolate = 'true' if bobject.arm_rb_interpolate else 'false'
+        # Constructor: mass, shape, jumpSpeed, friction, restitution, collisionMargin, animated, group, mask, interpolate
         trait['parameters'] = [
             str(rb.mass), str(shape), '8.0', str(rb.friction), str(rb.restitution),
-            str(collision_margin), animated, str(int(col_group, 2)), str(int(col_mask, 2))
+            str(collision_margin), animated, str(int(col_group, 2)), str(int(col_mask, 2)), interpolate
         ]
         o['traits'].append(trait)
 
