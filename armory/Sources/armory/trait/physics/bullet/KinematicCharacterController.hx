@@ -46,8 +46,9 @@ class KinematicCharacterController extends Trait {
 
 	static inline var CF_CHARACTER_OBJECT = 16;
 
+	// `interpolate` is exported for Oimo's controller; accepted here so Bullet builds don't break, not implemented.
 	public function new(mass = 1.0, shape = ControllerShape.Capsule, jumpSpeed = 8.0, friction = 0.5, restitution = 0.0,
-						collisionMargin = 0.0, animated = false, group = 1, mask = 1) {
+						collisionMargin = 0.0, animated = false, group = 1, mask = 1, interpolate = false) {
 		super();
 
 		if (nullvec) {
