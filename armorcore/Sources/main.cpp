@@ -95,6 +95,7 @@ namespace {
 	Isolate *isolate;
 	std::unique_ptr<Platform> plat;
 	Global<Context> global_context;
+	Global<Object> embedded_files; // Files embedded in the startup snapshot, by normalized path
 	Global<Function> update_func;
 	Global<Function> drop_files_func;
 	Global<Function> cut_func;
@@ -1070,6 +1071,7 @@ namespace {
 	}
 
 	MaybeLocal<ArrayBuffer> get_embedded_data(Isolate *isolate, const char *path) {
+		if (embedded_files.IsEmpty()) return MaybeLocal<ArrayBuffer>();
 		Local<Context> context = isolate->GetCurrentContext();
 		if (context.IsEmpty()) return MaybeLocal<ArrayBuffer>();
 
@@ -1080,7 +1082,7 @@ namespace {
 		if (!String::NewFromUtf8(isolate, key.c_str()).ToLocal(&name)) return MaybeLocal<ArrayBuffer>();
 
 		Local<Value> value;
-		if (!context->Global()->Get(context, name).ToLocal(&value) || !value->IsArrayBuffer()) {
+		if (!embedded_files.Get(isolate)->Get(context, name).ToLocal(&value) || !value->IsArrayBuffer()) {
 			return MaybeLocal<ArrayBuffer>();
 		}
 
@@ -2855,6 +2857,12 @@ namespace {
 
 		Local<Context> context = Context::New(isolate, NULL, global);
 		global_context.Reset(isolate, context);
+
+		// V8 hands the snapshot data out only once, so it's kept here
+		Local<Object> files;
+		if (krom_bin_size > 0 && context->GetDataFromSnapshotOnce<Object>(0).ToLocal(&files)) {
+			embedded_files.Reset(isolate, files);
+		}
 	}
 
 	void start_krom(char *scriptfile) {
@@ -3679,6 +3687,8 @@ int kickstart(int argc, char **argv) {
 					}
 				}
 
+				// The files go in one object stored privately in the snapshot, out of the game's global scope
+				Local<Object> files = Object::New(isolate_cold);
 				for (std::map<std::string, std::string>::const_iterator it = embedded.begin(); it != embedded.end(); ++it) {
 					kinc_file_reader_t embedded_reader;
 					if (!kinc_file_reader_open(&embedded_reader, it->second.c_str(), KINC_FILE_TYPE_ASSET)) {
@@ -3692,7 +3702,7 @@ int kickstart(int argc, char **argv) {
 					kinc_file_reader_read(&embedded_reader, content->Data(), embedded_size);
 					kinc_file_reader_close(&embedded_reader);
 
-					(void) context->Global()->Set(context, String::NewFromUtf8(isolate_cold, it->first.c_str()).ToLocalChecked(), buffer);
+					(void) files->Set(context, String::NewFromUtf8(isolate_cold, it->first.c_str()).ToLocalChecked(), buffer);
 				}
 
 				// Line offset -1: the kickstart() line comes first, so errors and stack traces give krom.js's own line numbers
@@ -3704,6 +3714,8 @@ int kickstart(int argc, char **argv) {
 				(void) compiled_script->Run(context);
 
 				creator_cold.SetDefaultContext(context);
+				// The context's first snapshot data, read back at startup in start_v8
+				creator_cold.AddData(context, files);
 			}
 		}
 		StartupData coldData = creator_cold.CreateBlob(SnapshotCreator::FunctionCodeHandling::kKeep);
