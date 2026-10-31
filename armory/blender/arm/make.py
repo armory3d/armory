@@ -777,6 +777,25 @@ def play():
 
     compile(assets_only=(not wrd.arm_recompile))
 
+def make_snapshot(files_path: str, krom_exe: str):
+    """Packs krom.js and data/ into data.bin. The originals are only removed once data.bin is written,
+    so a failed snapshot still leaves a working build."""
+    data_bin = os.path.join(files_path, 'data.bin')
+    if os.path.exists(data_bin):
+        os.remove(data_bin)
+
+    proc = subprocess.run([os.path.join(files_path, krom_exe), files_path, '--snapshot'],
+                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors='replace')
+    if proc.returncode != 0 or not os.path.isfile(data_bin):
+        log.error(f'Snapshot failed (exit code {proc.returncode}), the build keeps krom.js and data/ instead of data.bin')
+        if proc.stdout:
+            print(proc.stdout)
+        return
+
+    shutil.rmtree(os.path.join(files_path, 'data'))
+    os.remove(os.path.join(files_path, 'krom.js'))
+    log.info(f'Snapshot: data.bin ({os.path.getsize(data_bin) / (1024 * 1024):.1f} MB)')
+
 def build_success():
     log.clear()
     wrd = bpy.data.worlds['Arm']
@@ -891,6 +910,8 @@ def build_success():
                 shutil.copy(krom_location, files_path + '/Krom.exe')
                 krom_exe = arm.utils.safestr(wrd.arm_project_name) + '.exe'
                 os.rename(files_path + '/Krom.exe', files_path + '/' + krom_exe)
+                if wrd.arm_snapshot:
+                    make_snapshot(files_path, krom_exe)
             elif state.target == 'krom-linux':
                 krom_location = sdk_path + '/Krom/Krom'
                 shutil.copy(krom_location, files_path)
