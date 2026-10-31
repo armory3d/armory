@@ -1087,6 +1087,37 @@ namespace {
 		return value.As<ArrayBuffer>();
 	}
 
+	// The bytes of an asset, read from disk or, when not found there, embedded in the startup snapshot
+	struct AssetData {
+		unsigned char *data = nullptr;
+		int size = 0;
+		bool owned = false; // Read from disk into memory that is freed with this
+		std::shared_ptr<BackingStore> embedded; // Keeps the embedded data alive while it's used
+
+		~AssetData() {
+			if (owned) free(data);
+		}
+	};
+
+	bool read_asset(const char *path, AssetData &asset) {
+		kinc_file_reader_t reader;
+		if (kinc_file_reader_open(&reader, path, KINC_FILE_TYPE_ASSET)) {
+			asset.size = (int)kinc_file_reader_size(&reader);
+			asset.data = (unsigned char *)malloc(asset.size);
+			asset.owned = true;
+			kinc_file_reader_read(&reader, asset.data, asset.size);
+			kinc_file_reader_close(&reader);
+			return true;
+		}
+
+		MaybeLocal<ArrayBuffer> embedded = get_embedded_data(isolate, path);
+		if (embedded.IsEmpty()) return false;
+		asset.embedded = embedded.ToLocalChecked()->GetBackingStore();
+		asset.data = (unsigned char *)asset.embedded->Data();
+		asset.size = (int)asset.embedded->ByteLength();
+		return true;
+	}
+
 	bool load_image(unsigned char *data, int size, const char *filename, unsigned char *&output, int &width, int &height, kinc_image_format_t &format) {
 		format = KINC_IMAGE_FORMAT_RGBA32;
 		int comp;
@@ -1152,52 +1183,22 @@ namespace {
 		HandleScope scope(args.GetIsolate());
 		String::Utf8Value utf8_value(isolate, args[0]);
 		bool readable = args[1]->ToInt32(isolate->GetCurrentContext()).ToLocalChecked()->Value();
-		bool success = true;
 
 		kinc_image_t *image = (kinc_image_t *)malloc(sizeof(kinc_image_t));
 
-		unsigned char *source_data = nullptr;
-		int source_size = 0;
-		bool source_owned = false;
-
-		Local<ArrayBuffer> embedded_buffer;
-		std::shared_ptr<BackingStore> embedded_content;
-
-		kinc_file_reader_t reader;
-		if (kinc_file_reader_open(&reader, *utf8_value, KINC_FILE_TYPE_ASSET)) {
-			source_size = (int)kinc_file_reader_size(&reader);
-			source_data = (unsigned char *)malloc(source_size);
-			kinc_file_reader_read(&reader, source_data, source_size);
-			kinc_file_reader_close(&reader);
-			source_owned = true;
-		}
-		else {
-			// File not found on disk, try data embedded in the startup snapshot
-			MaybeLocal<ArrayBuffer> embedded = get_embedded_data(isolate, *utf8_value);
-			if (!embedded.IsEmpty()) {
-				embedded_buffer = embedded.ToLocalChecked();
-				embedded_content = embedded_buffer->GetBackingStore();
-				source_data = (unsigned char *)embedded_content->Data();
-				source_size = (int)embedded_content->ByteLength();
+		bool success = false;
+		{
+			AssetData asset;
+			if (read_asset(*utf8_value, asset)) {
+				unsigned char *image_data;
+				int image_width;
+				int image_height;
+				kinc_image_format_t image_format;
+				success = load_image(asset.data, asset.size, *utf8_value, image_data, image_width, image_height, image_format);
+				if (success) {
+					kinc_image_init(image, image_data, image_width, image_height, image_format);
+				}
 			}
-			else {
-				success = false;
-			}
-		}
-
-		if (success) {
-			unsigned char *image_data;
-			int image_width;
-			int image_height;
-			kinc_image_format_t image_format;
-			success = load_image(source_data, source_size, *utf8_value, image_data, image_width, image_height, image_format);
-			if (success) {
-				kinc_image_init(image, image_data, image_width, image_height, image_format);
-			}
-		}
-
-		if (source_owned) {
-			free(source_data);
 		}
 
 		if (!success) {
@@ -1265,31 +1266,19 @@ namespace {
 	void krom_load_sound(const FunctionCallbackInfo<Value> &args) {
 		HandleScope scope(args.GetIsolate());
 		String::Utf8Value utf8_value(isolate, args[0]);
-		kinc_a1_sound_t *sound = kinc_a1_sound_create(*utf8_value);
 
-		if (sound == nullptr) {
-			// File not found on disk, try data embedded in the startup snapshot
-			MaybeLocal<ArrayBuffer> embedded = get_embedded_data(isolate, *utf8_value);
-			if (!embedded.IsEmpty()) {
-				kinc_a1_audioformat_t format = KINC_A1_AUDIOFORMAT_OGG;
-				bool known_format = false;
-				if (ends_with(*utf8_value, ".ogg")) {
-					format = KINC_A1_AUDIOFORMAT_OGG;
-					known_format = true;
-				}
-				else if (ends_with(*utf8_value, ".wav")) {
-					format = KINC_A1_AUDIOFORMAT_WAV;
-					known_format = true;
-				}
+		kinc_a1_audioformat_t format;
+		if (ends_with(*utf8_value, ".ogg")) format = KINC_A1_AUDIOFORMAT_OGG;
+		else if (ends_with(*utf8_value, ".wav")) format = KINC_A1_AUDIOFORMAT_WAV;
+		else return;
 
-				if (known_format) {
-					Local<ArrayBuffer> buffer = embedded.ToLocalChecked();
-					std::shared_ptr<BackingStore> content = buffer->GetBackingStore();
-					sound = kinc_a1_sound_create_from_buffer((uint8_t *)content->Data(), (uint32_t)content->ByteLength(), format);
-				}
-			}
+		kinc_a1_sound_t *sound;
+		{
+			AssetData asset;
+			if (!read_asset(*utf8_value, asset)) return;
+			// Decodes into memory of its own
+			sound = kinc_a1_sound_create_from_buffer(asset.data, (uint32_t)asset.size, format);
 		}
-
 		if (sound == nullptr) {
 			return;
 		}
@@ -3552,8 +3541,7 @@ namespace {
 		if (!ScriptCompiler::Compile(context, source, options).ToLocal(&script)) {
 			String::Utf8Value message(isolate, try_catch.Exception());
 			int line = try_catch.Message().IsEmpty() ? 0 : try_catch.Message()->GetLineNumber(context).FromMaybe(0);
-			// The script is wrapped in kickstart(), one line above krom.js
-			snapshot_log(KINC_LOG_LEVEL_ERROR, "Could not compile krom.js (line %i): %s", line - 1, *message == nullptr ? "unknown error" : *message);
+			snapshot_log(KINC_LOG_LEVEL_ERROR, "Could not compile krom.js (line %i): %s", line, *message == nullptr ? "unknown error" : *message);
 			exit(1);
 		}
 		return script;
@@ -3651,31 +3639,10 @@ int kickstart(int argc, char **argv) {
 		plat = platform::NewDefaultPlatform();
 		V8::InitializePlatform(plat.get());
 
+		// Compile every function now, so the snapshot keeps them compiled
 		std::string flags = "--nolazy";
 		V8::SetFlagsFromString(flags.c_str(), (int)flags.size());
 		V8::Initialize();
-
-		// Compile once to get a code cache, in an isolate that is only needed for that
-		ScriptCompiler::CachedData *cache;
-		Isolate::CreateParams create_params;
-		create_params.array_buffer_allocator = ArrayBuffer::Allocator::NewDefaultAllocator();
-		Isolate *isolate_cache = Isolate::New(create_params);
-		{
-			Isolate::Scope isolate_scope(isolate_cache);
-			HandleScope handle_scope(isolate_cache);
-			{
-				Local<Context> context = Context::New(isolate_cache);
-				Context::Scope context_scope(context);
-
-				ScriptOrigin origin(isolate_cache, String::NewFromUtf8(isolate_cache, "krom_cache").ToLocalChecked());
-				ScriptCompiler::Source source(String::NewFromUtf8(isolate_cache, wrapped.c_str()).ToLocalChecked(), origin);
-
-				Local<Script> compiled_script = compile_or_exit(isolate_cache, context, &source, ScriptCompiler::kEagerCompile);
-				cache = ScriptCompiler::CreateCodeCache(compiled_script->GetUnboundScript());
-			}
-		}
-		isolate_cache->Dispose();
-		delete create_params.array_buffer_allocator;
 
 		SnapshotCreator creator_cold;
 		Isolate *isolate_cold = creator_cold.GetIsolate();
@@ -3728,11 +3695,11 @@ int kickstart(int argc, char **argv) {
 					(void) context->Global()->Set(context, String::NewFromUtf8(isolate_cold, it->first.c_str()).ToLocalChecked(), buffer);
 				}
 
-				// The source takes ownership of the code cache
-				ScriptOrigin origin(isolate_cold, String::NewFromUtf8(isolate_cold, "krom_cold").ToLocalChecked());
-				ScriptCompiler::Source source(String::NewFromUtf8(isolate_cold, wrapped.c_str()).ToLocalChecked(), origin, cache);
+				// Line offset -1: the kickstart() line comes first, so errors and stack traces give krom.js's own line numbers
+				ScriptOrigin origin(isolate_cold, String::NewFromUtf8(isolate_cold, "krom.js").ToLocalChecked(), -1);
+				ScriptCompiler::Source source(String::NewFromUtf8(isolate_cold, wrapped.c_str()).ToLocalChecked(), origin);
 
-				Local<Script> compiled_script = compile_or_exit(isolate_cold, context, &source, ScriptCompiler::kConsumeCodeCache);
+				Local<Script> compiled_script = compile_or_exit(isolate_cold, context, &source, ScriptCompiler::kEagerCompile);
 				// Only defines kickstart(); the game starts when Krom calls it at launch
 				(void) compiled_script->Run(context);
 
@@ -3740,30 +3707,6 @@ int kickstart(int argc, char **argv) {
 			}
 		}
 		StartupData coldData = creator_cold.CreateBlob(SnapshotCreator::FunctionCodeHandling::kKeep);
-
-		// SnapshotCreator creator_warm(nullptr, &coldData);
-		// Isolate *isolate_warm = creator_warm.GetIsolate();
-		// {
-		// 	HandleScope handle_scope(isolate_warm);
-		// 	{
-		// 		Local<Context> context = Context::New(isolate_warm);
-		// 		Context::Scope context_scope(context);
-
-		// 		// std::string code_warm("Main.main();");
-		// 		ScriptOrigin origin(String::NewFromUtf8(isolate_warm, "krom_warm").ToLocalChecked());
-		// 		ScriptCompiler::Source source(String::NewFromUtf8(isolate_warm, code).ToLocalChecked(), origin);
-
-		// 		Local<Script> compiled_script = ScriptCompiler::Compile(context, &source, ScriptCompiler::kEagerCompile).ToLocalChecked();
-		// 		compiled_script->Run(context);
-		// 	}
-		// }
-		// {
-		//   HandleScope handle_scope(isolate_warm);
-		//   isolate_warm->ContextDisposedNotification(false);
-		//   Local<Context> context = Context::New(isolate_warm);
-		//   creator_warm.SetDefaultContext(context);
-		// }
-		// StartupData warmData = creator_warm.CreateBlob(SnapshotCreator::FunctionCodeHandling::kKeep);
 
 		if (coldData.data == nullptr || coldData.raw_size <= 0) {
 			snapshot_log(KINC_LOG_LEVEL_ERROR, "Snapshot data is empty.");
