@@ -11,12 +11,11 @@ import iron.math.Vec4;
 import iron.object.MeshObject;
 import iron.object.Object;
 import iron.system.Time;
-import iron.system.Tween;
 import kha.FastFloat;
 import kha.arrays.Int16Array;
 import kha.arrays.Uint32Array;
 
-class ParticleSystemCPU {
+class ParticleSystemCPU implements ParticleSystem {
     public var data: ParticleData;
 	public var speed: FastFloat = 1.0; // Not used yet. Added to go in hand with `ParticleSystemGPU`
     var r: TParticleData;
@@ -71,8 +70,9 @@ class ParticleSystemCPU {
 	var spawnFactor: Int = 1;
     var spawnedParticles: Int = 0;
 	var particleScale: FastFloat = 1.0;
-	var loopAnim: TAnim;
 	var spawnTime: FastFloat = 0;
+	var emitting = false; // Spawning new particles, spawned ones keep updating until their lifetime ends
+	var updating = false;
 
 	var randQuat: Quat;
 	var phaseQuat: Quat;
@@ -145,24 +145,6 @@ class ParticleSystemCPU {
 
 			switch (type) {
 				case 0: // Emission
-					loopAnim = {
-						tick: function () {
-							spawnTime += Time.delta * Time.scale;
-							var expected: Int = Math.floor(spawnTime / spawnRate);
-							while (spawnedParticles < expected && spawnedParticles < count) {
-								spawnParticle();
-								spawnedParticles++;
-							}
-							updateParticles();
-						},
-						target: null,
-						props: null,
-						duration: loop ? lifetimeSeconds : lifetimeSeconds * 2,
-						done: function () {
-							if (loop) start();
-						}
-					}
-
 					Scene.active.notifyOnInit(function () {
 						if (autoStart) start();
 					});
@@ -179,7 +161,11 @@ class ParticleSystemCPU {
 		if (type != 0) return;
 		spawnTime = 0;
 		spawnedParticles = 0;
-		Tween.to(loopAnim);
+		emitting = true;
+		if (!updating) {
+			updating = true;
+			iron.App.notifyOnUpdate(update);
+		}
     }
 
 	// TODO
@@ -192,15 +178,38 @@ class ParticleSystemCPU {
 
 	}
 
+	/** Stops spawning particles, the spawned ones finish their lifetime. **/
     public function stop() {
 		if (type != 0) return;
 		spawnTime = 0;
         spawnedParticles = 0;
-		Tween.stop(loopAnim);
-
-		for (particle => physics in particlePhysics) releaseParticle(particle);
-		particlePhysics.clear();
+		emitting = false;
     }
+
+	function update() {
+		if (emitting) {
+			spawnTime += Time.delta * Time.scale;
+			var expected: Int = Math.floor(spawnTime / spawnRate);
+			while (spawnedParticles < expected && spawnedParticles < count) {
+				spawnParticle();
+				spawnedParticles++;
+			}
+			// A looping system restarts spawning every lifetime, otherwise it emits once
+			if (spawnTime >= (loop ? lifetimeSeconds : lifetimeSeconds * 2)) {
+				if (loop) {
+					spawnTime = 0;
+					spawnedParticles = 0;
+				}
+				else emitting = false;
+			}
+		}
+		updateParticles();
+
+		if (!emitting && !particlePhysics.iterator().hasNext()) {
+			updating = false;
+			iron.App.removeUpdate(update);
+		}
+	}
 
 	function addToPool() {
 		Scene.active.spawnObject(instanceObject, localCoords ? owner : null, function (o: Object) {
@@ -504,6 +513,12 @@ class ParticleSystemCPU {
 	}
 
 	public function remove() {
+		if (updating) {
+			updating = false;
+			iron.App.removeUpdate(update);
+		}
+		emitting = false;
+		particlePhysics.clear();
 		for (particle in particlePool) particle.remove();
 	}
 

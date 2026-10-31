@@ -13,9 +13,9 @@ import iron.math.Quat;
 import iron.math.Vec3;
 import iron.math.Vec4;
 
-class ParticleSystemGPU {
+class ParticleSystemGPU implements ParticleSystem {
 	public var data: ParticleData;
-	public var speed = 1.0;
+	public var speed: FastFloat = 1.0;
 	var currentSpeed = 0.0;
 	var particles: Array<Particle>;
 	var ready: Bool;
