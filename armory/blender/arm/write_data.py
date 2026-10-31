@@ -461,8 +461,6 @@ let project = new Project('""" + arm.utils.safesrc(wrd.arm_project_name + '-' + 
 
         if export_particles:
             assets.add_khafile_def('arm_particles')
-            # TODO: remove once the particle logic nodes use arm_particles
-            assets.add_khafile_def('arm_gpu_particles')
 
         if rpdat.rp_draw_order == 'Index':
             assets.add_khafile_def('arm_draworder_index')

@@ -17,11 +17,11 @@ class MeshObject extends Object {
 	public var depthRead(default, null) = false;
 	#if arm_particles
 	public var render_emitter = true;
-	public var particleSystems: Array<ParticleSystemGPU> = null; // GPU particle owner
-	public var particleSystemsCPU: Array<ParticleSystemCPU> = null; // CPU particle owner
+	public var particleSystems: Array<ParticleSystem> = null; // Particle owner, in Blender's order
 	public var particleOwner: MeshObject = null; // GPU particle object
-	public var particleChildren: Array<MeshObject> = null;
+	public var particleChildren: Array<MeshObject> = null; // GPU particle objects, by particle system index
 	public var particleIndex = -1;
+	var hasGPUParticles = false;
 	#end
 	public var cameraDistance: Float;
 	public var cameraList: Array<String> = null;
@@ -73,19 +73,15 @@ class MeshObject extends Object {
 		#end
 		#if arm_particles
 		if (particleChildren != null) {
-			for (c in particleChildren) c.remove();
+			for (c in particleChildren) if (c != null) c.remove();
 			particleChildren = null;
 		}
 		if (particleSystems != null) {
-			for (psys in particleSystems) psys.remove();
-			particleSystems = null;
-		}
-		if (particleSystemsCPU != null) {
-			for (psys in particleSystemsCPU) {
+			for (psys in particleSystems) {
 				psys.stop();
 				psys.remove();
 			}
-			particleSystemsCPU = null;
+			particleSystems = null;
 		}
 		#end
 		if (tilesheet != null) tilesheet.remove();
@@ -117,18 +113,16 @@ class MeshObject extends Object {
 
 	#if arm_particles
 	public function setupParticleSystem(sceneName: String, pref: TParticleReference) {
-		if (pref.type == "CPU") {
-			if (particleSystemsCPU == null) particleSystemsCPU = [];
-			particleSystemsCPU.push(new ParticleSystemCPU(sceneName, pref, this));
-		}
-		else { // References without a type are added by the GPU particle logic nodes
-			if (particleSystems == null) particleSystems = [];
+		if (particleSystems == null) particleSystems = [];
+		if (pref.type == "GPU") {
 			particleSystems.push(new ParticleSystemGPU(sceneName, pref, this));
+			hasGPUParticles = true;
 		}
+		else particleSystems.push(new ParticleSystemCPU(sceneName, pref, this));
 	}
 
 	inline function hasParticleSystems(): Bool {
-		return (particleSystems != null && particleSystems.length > 0) || (particleSystemsCPU != null && particleSystemsCPU.length > 0);
+		return particleSystems != null && particleSystems.length > 0;
 	}
 	#end
 
@@ -179,7 +173,7 @@ class MeshObject extends Object {
 			var radiusScale = data.isSkinned ? 2.0 : 1.0;
 			#if arm_particles
 			// particleSystems for update, particleOwner for render
-			if (particleSystems != null || particleOwner != null) radiusScale *= 1000;
+			if (hasGPUParticles || particleOwner != null) radiusScale *= 1000;
 			#end
 			if (context == "voxel") radiusScale *= 100;
 			if (data.geom.instanced) radiusScale *= 100;
@@ -243,24 +237,26 @@ class MeshObject extends Object {
 
 		#if arm_particles
 		if (raw != null && raw.is_particle && particleOwner == null) return; // Instancing not yet set-up by particle system owner
-		if (particleSystems != null && meshContext) {
+		if (hasGPUParticles && meshContext) {
 			if (particleChildren == null) {
-				particleChildren = [];
-				for (psys in particleSystems) {
-					// var c: MeshObject = cast Scene.active.getChild(psys.data.raw.instance_object);
+				particleChildren = [for (_ in particleSystems) null];
+				for (i in 0...particleSystems.length) {
+					var psys = Std.downcast(particleSystems[i], ParticleSystemGPU);
+					if (psys == null) continue;
 					Scene.active.spawnObject(psys.data.raw.instance_object, null, function(o: Object) {
 						if (o != null) {
 							var c: MeshObject = cast o;
 							c.cameraList = this.cameraList;
-							particleChildren.push(c);
+							particleChildren[i] = c;
 							c.particleOwner = this;
-							c.particleIndex = particleChildren.length - 1;
+							c.particleIndex = i;
 						}
 					});
 				}
 			}
 			for (i in 0...particleSystems.length) {
-				particleSystems[i].update(particleChildren[i]);
+				var c = particleChildren[i];
+				if (c != null) (cast particleSystems[i]: ParticleSystemGPU).update(c);
 			}
 		}
 		var emitter = hasParticleSystems();
