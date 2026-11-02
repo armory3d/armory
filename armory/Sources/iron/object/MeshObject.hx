@@ -16,13 +16,13 @@ class MeshObject extends Object {
 	public var materialIndex = 0;
 	public var depthRead(default, null) = false;
 	#if arm_particles
-	public var particleSystems: Array<ParticleSystem> = null; // Particle owner
 	public var render_emitter = true;
-	#if arm_gpu_particles
-	public var particleOwner: MeshObject = null; // Particle object
-	public var particleChildren: Array<MeshObject> = null;
+	public var particleSystems: Array<ParticleSystem> = null; // Particle owner, in Blender's order
+	public var particleOwner: MeshObject = null; // GPU particle object
+	public var particleChildren: Array<MeshObject> = null; // GPU particle objects, by particle system index
 	public var particleIndex = -1;
-	#end #end
+	var hasGPUParticles = false;
+	#end
 	public var cameraDistance: Float;
 	public var cameraList: Array<String> = null;
 	public var screenSize = 0.0;
@@ -71,16 +71,14 @@ class MeshObject extends Object {
 		#if arm_batch
 		Scene.active.meshBatch.removeMesh(this);
 		#end
-		#if arm_gpu_particles
+		#if arm_particles
 		if (particleChildren != null) {
-			for (c in particleChildren) c.remove();
+			for (c in particleChildren) if (c != null) c.remove();
 			particleChildren = null;
 		}
-		#end
-		#if arm_particles
 		if (particleSystems != null) {
 			for (psys in particleSystems) {
-				#if arm_cpu_particles psys.stop(); #end
+				psys.stop();
 				psys.remove();
 			}
 			particleSystems = null;
@@ -116,8 +114,15 @@ class MeshObject extends Object {
 	#if arm_particles
 	public function setupParticleSystem(sceneName: String, pref: TParticleReference) {
 		if (particleSystems == null) particleSystems = [];
-		var psys = new ParticleSystem(sceneName, pref, this);
-		particleSystems.push(psys);
+		if (pref.type == "GPU") {
+			particleSystems.push(new ParticleSystemGPU(sceneName, pref, this));
+			hasGPUParticles = true;
+		}
+		else particleSystems.push(new ParticleSystemCPU(sceneName, pref, this));
+	}
+
+	inline function hasParticleSystems(): Bool {
+		return particleSystems != null && particleSystems.length > 0;
 	}
 	#end
 
@@ -166,9 +171,9 @@ class MeshObject extends Object {
 			// Scale radius for skinned mesh and particle system
 			// TODO: define skin & particle bounds
 			var radiusScale = data.isSkinned ? 2.0 : 1.0;
-			#if arm_gpu_particles
+			#if arm_particles
 			// particleSystems for update, particleOwner for render
-			if (particleSystems != null || particleOwner != null) radiusScale *= 1000;
+			if (hasGPUParticles || particleOwner != null) radiusScale *= 1000;
 			#end
 			if (context == "voxel") radiusScale *= 100;
 			if (data.geom.instanced) radiusScale *= 100;
@@ -230,32 +235,33 @@ class MeshObject extends Object {
 
 		if (cameraList != null && cameraList.indexOf(Scene.active.camera.name) < 0) return;
 
-		#if arm_gpu_particles
+		#if arm_particles
 		if (raw != null && raw.is_particle && particleOwner == null) return; // Instancing not yet set-up by particle system owner
-		if (particleSystems != null && meshContext) {
+		if (hasGPUParticles && meshContext) {
 			if (particleChildren == null) {
-				particleChildren = [];
-				for (psys in particleSystems) {
-					// var c: MeshObject = cast Scene.active.getChild(psys.data.raw.instance_object);
+				particleChildren = [for (_ in particleSystems) null];
+				for (i in 0...particleSystems.length) {
+					var psys = Std.downcast(particleSystems[i], ParticleSystemGPU);
+					if (psys == null) continue;
 					Scene.active.spawnObject(psys.data.raw.instance_object, null, function(o: Object) {
 						if (o != null) {
 							var c: MeshObject = cast o;
 							c.cameraList = this.cameraList;
-							particleChildren.push(c);
+							particleChildren[i] = c;
 							c.particleOwner = this;
-							c.particleIndex = particleChildren.length - 1;
+							c.particleIndex = i;
 						}
 					});
 				}
 			}
 			for (i in 0...particleSystems.length) {
-				particleSystems[i].update(particleChildren[i]);
+				var c = particleChildren[i];
+				if (c != null) (cast particleSystems[i]: ParticleSystemGPU).update(c);
 			}
 		}
-		#end
-		#if arm_particles
-		if (particleSystems != null && particleSystems.length > 0 && !render_emitter) return;
-        if (particleSystems == null && cullMaterial(context)) return;
+		var emitter = hasParticleSystems();
+		if (emitter && !render_emitter) return;
+		if (!emitter && cullMaterial(context)) return;
 		#else
         if (cullMaterial(context)) return;
 		#end
@@ -418,19 +424,11 @@ class MeshObject extends Object {
 			if (nextPassName == null || nextPassName == "") continue;
 
 			var nextMaterial: MaterialData = null;
+			// Linked materials export their next pass with the library suffix
 			for (mat in materials) {
-				// First try exact match
 				if (mat.name == nextPassName) {
 					nextMaterial = mat;
 					break;
-				}
-				// If no exact match, try to match base name for linked materials
-				if (mat.name.indexOf("_") > 0 && mat.name.substr(mat.name.length - 6) == ".blend") {
-					var baseName = mat.name.substring(0, mat.name.indexOf("_"));
-					if (baseName == nextPassName) {
-						nextMaterial = mat;
-						break;
-					}
 				}
 			}
 

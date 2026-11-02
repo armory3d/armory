@@ -24,8 +24,19 @@ class ShaderData:
         self.data = {'shader_datas': [self.sd]}
         self.matname = arm.utils.safesrc(arm.utils.asset_name(material))
         self.sd['name'] = self.matname + '_data'
-        self.sd['next_pass'] = material.arm_next_pass
+        self.sd['next_pass'] = self.get_next_pass_name(material)
         self.sd['contexts'] = []
+
+    @staticmethod
+    def get_next_pass_name(material) -> str:
+        """Get the exported name of the next pass material, which is
+        taken from the same blend file if the material is linked."""
+        next_pass = material.arm_next_pass
+        if next_pass != '' and material.library is not None:
+            next_mat = bpy.data.materials.get((next_pass, material.library.filepath))
+            if next_mat is not None:
+                return arm.utils.asset_name(next_mat)
+        return next_pass
 
     def add_context(self, props) -> 'ShaderContext':
         con = ShaderContext(self.material, self.sd, props)

@@ -742,7 +742,8 @@ def asset_name(bdata):
     """Get the qualified asset name, with library suffix for linked data.
 
     For local assets, returns just the name.
-    For linked assets, returns 'name_libraryname' to ensure uniqueness.
+    For linked assets, returns 'name_librarysuffix' to ensure uniqueness,
+    see linked_utils.library_suffix().
     """
     import arm.linked_utils as linked_utils
     return linked_utils.asset_name(bdata)
