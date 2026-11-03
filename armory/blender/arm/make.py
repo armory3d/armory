@@ -418,38 +418,39 @@ def export_data(fp, sdk_path):
         # doesn't look at, so tell it about the change
         assets.invalidate_shader_compilation()
 
-    # Write referenced shader passes
-    if not os.path.isfile(build_dir + '/compiled/Shaders/shader_datas.arm') or state.last_world_defs != wrd.world_defs:
-        res = {'shader_datas': []}
+    # Write referenced shader passes, every build: unchanged files are left
+    # untouched, and edits to the SDK's shader passes are picked up without
+    # restarting Blender
+    res = {'shader_datas': []}
 
-        for ref in assets.shader_passes:
-            # Ensure shader pass source exists
-            if not os.path.exists(raw_shaders_path + '/' + ref):
-                continue
-            assets.shader_passes_assets[ref] = []
-            compile_shader_pass(res, raw_shaders_path, ref, defs + cdefs, make_variants=has_config)
+    for ref in assets.shader_passes:
+        # Ensure shader pass source exists
+        if not os.path.exists(raw_shaders_path + '/' + ref):
+            continue
+        assets.shader_passes_assets[ref] = []
+        compile_shader_pass(res, raw_shaders_path, ref, defs + cdefs, make_variants=has_config)
 
-        # Workaround to also export non-material world shaders
-        res['shader_datas'] += make_world.shader_datas
+    # Workaround to also export non-material world shaders
+    res['shader_datas'] += make_world.shader_datas
 
-        if rpdat.arm_lens or rpdat.arm_lut:
-            for shader_pass in res["shader_datas"]:
-                for context in shader_pass["contexts"]:
-                    for texture_unit in context["texture_units"]:
-                        # Lens Texture
-                        if rpdat.arm_lens_texture != '' and rpdat.arm_lens_texture != 'lenstexture.jpg' and "link" in texture_unit and texture_unit["link"] == "$lenstexture.jpg":
-                            texture_unit["link"] = f"${rpdat.arm_lens_texture}"
-                        # LUT Colorgrading
-                        if rpdat.arm_lut_texture != '' and rpdat.arm_lut_texture != 'luttexture.jpg' and "link" in texture_unit and texture_unit["link"] == "$luttexture.jpg":
-                            texture_unit["link"] = f"${rpdat.arm_lut_texture}"
+    if rpdat.arm_lens or rpdat.arm_lut:
+        for shader_pass in res["shader_datas"]:
+            for context in shader_pass["contexts"]:
+                for texture_unit in context["texture_units"]:
+                    # Lens Texture
+                    if rpdat.arm_lens_texture != '' and rpdat.arm_lens_texture != 'lenstexture.jpg' and "link" in texture_unit and texture_unit["link"] == "$lenstexture.jpg":
+                        texture_unit["link"] = f"${rpdat.arm_lens_texture}"
+                    # LUT Colorgrading
+                    if rpdat.arm_lut_texture != '' and rpdat.arm_lut_texture != 'luttexture.jpg' and "link" in texture_unit and texture_unit["link"] == "$luttexture.jpg":
+                        texture_unit["link"] = f"${rpdat.arm_lut_texture}"
 
-        arm.utils.write_arm(shaders_path + '/shader_datas.arm', res)
+    arm.utils.write_arm(shaders_path + '/shader_datas.arm', res)
 
     if wrd.arm_debug_console and rpdat.rp_renderer == 'Deferred':
         # Copy deferred shader so that it can include compiled.inc
         line_deferred_src = os.path.join(sdk_path, 'armory', 'Shaders', 'debug_draw', 'line_deferred.frag.glsl')
         line_deferred_dst = os.path.join(shaders_path, 'line_deferred.frag.glsl')
-        shutil.copyfile(line_deferred_src, line_deferred_dst)
+        arm.utils.copy_file_if_changed(line_deferred_src, line_deferred_dst)
 
     for ref in assets.shader_passes:
         for s in assets.shader_passes_assets[ref]:
@@ -460,14 +461,21 @@ def export_data(fp, sdk_path):
         # Copying only on change also picks up edits to the source file,
         # which the previous "copy if missing" check never did
         arm.utils.copy_file_if_changed(file, target)
-    state.last_world_defs = wrd.world_defs
 
     # Reset path
     os.chdir(fp)
 
-    # Copy std shaders
-    if not os.path.isdir(build_dir + '/compiled/Shaders/std'):
-        shutil.copytree(raw_shaders_path + 'std', build_dir + '/compiled/Shaders/std')
+    # Copy std shaders. They are only #included, which Khamake's shader
+    # compiler doesn't follow, so a changed one has to be passed on
+    std_changed = False
+    std_src = raw_shaders_path + 'std'
+    for root, _, files in os.walk(std_src):
+        target_dir = os.path.join(build_dir, 'compiled', 'Shaders', 'std', os.path.relpath(root, std_src))
+        os.makedirs(target_dir, exist_ok=True)
+        for name in files:
+            std_changed |= arm.utils.copy_file_if_changed(os.path.join(root, name), os.path.join(target_dir, name))
+    if std_changed:
+        assets.invalidate_shader_compilation()
 
     # Write config.arm
     resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())

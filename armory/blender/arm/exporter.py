@@ -13,6 +13,7 @@ https://creativecommons.org/licenses/by-sa/3.0/deed.en_US
 """
 import copy
 from enum import Enum, unique
+import hashlib
 import json
 import math
 import os
@@ -120,6 +121,7 @@ class BuildExportCache:
         self.scene_manifest: Dict[str, Any] = {}
         self.linked_manifest_path = os.path.join(arm.utils.get_fp_build(), 'compiled', 'linked_export_cache.json')
         self.load_linked_manifest()
+        self.environment_stamp: Optional[str] = None
 
     def load_linked_manifest(self) -> None:
         try:
@@ -144,8 +146,54 @@ class BuildExportCache:
         except OSError as err:
             log.warn(f'Could not write the linked data export cache: {err}')
 
-    @staticmethod
-    def get_linked_stamp(bdata) -> Optional[str]:
+    # Settings of the Arm world that change around a build without changing
+    # what is exported (play and publish set them)
+    VOLATILE_SETTINGS = ('arm_recompile', 'arm_project_version')
+
+    def get_environment_stamp(self) -> str:
+        """Describes everything besides the library files that the export
+        of linked data depends on: the Blender version, the Armory SDK
+        (its exporter and shader code), the project settings of the Arm
+        world and the settings of the active render path.
+
+        Computed once per build: the export itself changes some of these
+        values (materials add '_SSS' to world_defs), and a scene's stamp
+        must not differ before and after its export.
+        """
+        if self.environment_stamp is None:
+            digest = hashlib.sha1(bpy.app.version_string.encode())
+
+            sdk_path = os.path.join(arm.utils.get_sdk_path(), 'armory')
+            for folder in ('blender', 'Shaders'):
+                for root, dirs, files in os.walk(os.path.join(sdk_path, folder)):
+                    # Python writes bytecode on import, which isn't an edit
+                    dirs[:] = sorted(d for d in dirs if d != '__pycache__')
+                    for name in sorted(files):
+                        path = os.path.join(root, name)
+                        stat = os.stat(path)
+                        digest.update(f'{os.path.relpath(path, sdk_path)}={stat.st_size}:{stat.st_mtime_ns}\n'.encode())
+
+            wrd = bpy.data.worlds['Arm']
+            settings = [(wrd, name) for name in ('world_defs', 'compo_defs')]
+            settings += [(wrd, prop.identifier) for prop in wrd.bl_rna.properties
+                         if prop.identifier.startswith('arm_') and prop.identifier not in BuildExportCache.VOLATILE_SETTINGS]
+            rpdat = arm.utils.get_rp()
+            settings += [(rpdat, prop.identifier) for prop in rpdat.bl_rna.properties if prop.identifier != 'rna_type']
+            for owner, name in settings:
+                prop = owner.bl_rna.properties[name]
+                if prop.type in ('POINTER', 'COLLECTION'):
+                    continue
+                value = getattr(owner, name)
+                if isinstance(value, set):
+                    value = tuple(sorted(value))  # enum flags: sets don't keep an order
+                elif prop.type != 'STRING' and getattr(prop, 'is_array', False):
+                    value = tuple(value)
+                digest.update(f'{name}={value!r}\n'.encode())
+
+            self.environment_stamp = digest.hexdigest()
+        return self.environment_stamp
+
+    def get_linked_stamp(self, bdata) -> Optional[str]:
         """Describes the state that a piece of linked data was exported
         from: the library file it lives in, plus the export settings that
         change how it is written. Returns `None` for local data.
@@ -170,6 +218,7 @@ class BuildExportCache:
             ArmoryExporter.compress_enabled,
             ArmoryExporter.optimize_enabled,
             wrd.arm_minimize,
+            self.get_environment_stamp(),
         ))
 
     def is_linked_data_cached(self, bdata, filepath: str) -> bool:
@@ -190,45 +239,54 @@ class BuildExportCache:
     # Everything a scene export contributes to the state that khafile.js is
     # written from. Skipping a scene has to put all of it back, see
     # take_contributions() and replay_scene()
-    CONTRIBUTION_FLAGS = ('export_physics', 'export_navigation', 'export_ui', 'export_network')
+    CONTRIBUTION_FLAGS = ('export_physics', 'export_navigation', 'export_ui', 'export_network', 'export_particles')
+
+    @staticmethod
+    def contribution_lists() -> Tuple[Tuple[Any, str], ...]:
+        """The lists a scene export appends to: (owner, attribute)."""
+        return ((assets, 'assets'), (assets, 'shader_datas'), (assets, 'khafile_defs'),
+                (assets, 'khafile_params'), (ArmoryExporter, 'import_traits'))
 
     @staticmethod
     def mark_contributions() -> Dict[str, Any]:
-        """Remembers the current size of everything a scene export appends
-        to, so that its own additions can be taken out afterwards."""
-        return {
-            'assets': len(assets.assets),
-            'shader_datas': len(assets.shader_datas),
-            'khafile_defs': len(assets.khafile_defs),
-            'khafile_params': len(assets.khafile_params),
-            'import_traits': len(ArmoryExporter.import_traits),
-            # Only export_physics exists before preprocess() has run
-            'flags': {name: getattr(ArmoryExporter, name, False) for name in BuildExportCache.CONTRIBUTION_FLAGS},
-        }
+        """Starts recording a scene export: the lists it appends to are
+        swapped for empty ones until take_contributions(). The lists skip
+        duplicates, so recording into the build's own lists would miss what
+        an earlier scene already added, and a skipped scene must put back
+        everything it uses."""
+        mark = {}
+        for owner, name in BuildExportCache.contribution_lists():
+            mark[name] = getattr(owner, name)
+            setattr(owner, name, [])
+        return mark
 
     @staticmethod
     def take_contributions(mark: Dict[str, Any]) -> Dict[str, Any]:
-        """Returns what was added since `mark`, ready to be stored and
-        replayed when the scene is skipped on a later build."""
-        return {
-            'assets': assets.assets[mark['assets']:],
-            'shader_datas': assets.shader_datas[mark['shader_datas']:],
-            'khafile_defs': assets.khafile_defs[mark['khafile_defs']:],
-            'khafile_params': assets.khafile_params[mark['khafile_params']:],
-            'import_traits': ArmoryExporter.import_traits[mark['import_traits']:],
-            'flags': [name for name in BuildExportCache.CONTRIBUTION_FLAGS
-                      if getattr(ArmoryExporter, name, False) and not mark['flags'][name]],
-        }
+        """Ends the recording started by mark_contributions(): returns what
+        the scene export added, ready to be stored and replayed when the
+        scene is skipped on a later build, and adds it to the build's lists."""
+        contributions = {name: getattr(owner, name) for owner, name in BuildExportCache.contribution_lists()}
+        # Flags are per scene: preprocess() sets them again for every export
+        contributions['flags'] = [name for name in BuildExportCache.CONTRIBUTION_FLAGS if getattr(ArmoryExporter, name)]
+        for owner, name in BuildExportCache.contribution_lists():
+            setattr(owner, name, mark[name])
+        BuildExportCache.replay_contributions(contributions)
+        return contributions
 
     @staticmethod
     def replay_contributions(contributions: Dict[str, Any]) -> None:
-        assets.assets.extend(contributions.get('assets', []))
-        assets.shader_datas.extend(contributions.get('shader_datas', []))
-        assets.khafile_defs.extend(contributions.get('khafile_defs', []))
-        assets.khafile_params.extend(contributions.get('khafile_params', []))
+        for asset in contributions.get('assets', []):
+            assets.add(asset)
+        for shader_data in contributions.get('shader_datas', []):
+            assets.add_shader_data(shader_data)
+        for define in contributions.get('khafile_defs', []):
+            assets.add_khafile_def(define)
+        for param in contributions.get('khafile_params', []):
+            assets.add_khafile_param(param)
         ArmoryExporter.import_traits.extend(contributions.get('import_traits', []))
-        for name in contributions.get('flags', []):
-            setattr(ArmoryExporter, name, True)
+        # As the export left them, read by make.export_data() after each scene
+        for name in BuildExportCache.CONTRIBUTION_FLAGS:
+            setattr(ArmoryExporter, name, name in contributions.get('flags', []))
 
     def get_scene_stamp(self, scene) -> Optional[str]:
         """Describes everything the export of a scene depends on. Returns
@@ -253,8 +311,8 @@ class BuildExportCache:
                 parts.append(f'{library.filepath}=missing')
 
         wrd = bpy.data.worlds['Arm']
-        parts.append(f'defs={wrd.world_defs}:{wrd.compo_defs}')
         parts.append(f'settings={ArmoryExporter.compress_enabled}:{ArmoryExporter.optimize_enabled}:{wrd.arm_minimize}')
+        parts.append(f'environment={self.get_environment_stamp()}')
         return '|'.join(parts)
 
     def replay_scene(self, scene, filepath: str) -> bool:
@@ -273,12 +331,16 @@ class BuildExportCache:
         return True
 
     def store_scene(self, scene, filepath: str, mark: Dict[str, Any]) -> None:
+        """Ends the recording of a scene export (every scene, see
+        mark_contributions()) and remembers it if the scene can be skipped
+        on a later build."""
+        contributions = self.take_contributions(mark)
         stamp = self.get_scene_stamp(scene)
         if stamp is None:
             return
         self.scene_manifest[os.path.basename(filepath)] = {
             'stamp': stamp,
-            'contributions': self.take_contributions(mark),
+            'contributions': contributions,
         }
 
 
@@ -298,6 +360,10 @@ class ArmoryExporter:
     export_physics = False
     # Indicates whether a particle system is exported
     export_particles = False
+    # Modules the last exported scene needs (set by preprocess() and the export)
+    export_navigation = False
+    export_ui = False
+    export_network = False
     optimize_enabled = False
     option_mesh_only = False
 
