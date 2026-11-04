@@ -29,11 +29,12 @@ import bmesh
 import arm.utils
 import arm.profiler
 import arm.linked_utils as linked_utils
-from arm import assets, exporter_opt, log, make_renderpath
+from arm import assets, export_cache, exporter_opt, log, make_renderpath
 from arm.material import cycles, make as make_material, mat_batch
 
 if arm.is_reload(__name__):
     assets = arm.reload_module(assets)
+    export_cache = arm.reload_module(export_cache)
     exporter_opt = arm.reload_module(exporter_opt)
     log = arm.reload_module(log)
     make_renderpath = arm.reload_module(make_renderpath)
@@ -104,14 +105,98 @@ FCURVE_TARGET_NAMES = {
 
 current_output = None
 
+# Properties every datablock has, except its name (see extract_props())
+ID_BOOKKEEPING = frozenset(prop.identifier for prop in bpy.types.ID.bl_rna.properties) - {'name'}
 
-class BuildExportCache:
-    """Shared cache across all scene exports in a single build.
-    Created once in make.py, passed to each ArmoryExporter instance."""
-    def __init__(self):
-        self.exported_mesh_files: set = set()
-        self.exported_action_files: set = set()
-        self.processed_mesh_names: set = set()
+
+def inverted_safe(matrices: np.ndarray) -> np.ndarray:
+    """Inverts a stack of 4x4 matrices; singular ones (a bone scaled to
+    zero) like mathutils' Matrix.inverted_safe()."""
+    try:
+        return np.linalg.inv(matrices)
+    except np.linalg.LinAlgError:
+        return np.array([np.array(Matrix(m.tolist()).inverted_safe()) for m in matrices])
+
+
+class ArmatureSampler:
+    """Evaluates an armature's pose frame by frame, one action at a time,
+    the way Armory plays it: the action on its own, with the NLA off, and
+    every channel the action doesn't key at rest. So an action's samples
+    depend on nothing but the action and the armature.
+
+    The armature is evaluated in a scene of its own, several times faster
+    per frame than the current scene with everything in it, unless its
+    pose depends on other objects (drivers, constraint targets): then it is
+    evaluated in the current scene, with them. A linked armature is sampled
+    through a local copy; a local one gets its action, pose and NLA setting
+    back by close().
+    """
+
+    # Pose bone channels and their rest values
+    POSE_CHANNELS = (('location', (0.0, 0.0, 0.0)), ('rotation_quaternion', (1.0, 0.0, 0.0, 0.0)),
+                     ('rotation_euler', (0.0, 0.0, 0.0)), ('rotation_axis_angle', (0.0, 0.0, 1.0, 0.0)),
+                     ('scale', (1.0, 1.0, 1.0)))
+
+    def __init__(self, bobject: bpy.types.Object):
+        self.is_copy = bobject.library is not None
+        self.object = bobject.copy() if self.is_copy else bobject
+        animation_data = self.object.animation_data
+        self.saved_action = animation_data.action
+        self.saved_use_nla = animation_data.use_nla
+        bones = self.object.pose.bones
+        self.saved_pose = {}
+        for name, rest in self.POSE_CHANNELS:
+            values = [0.0] * (len(rest) * len(bones))
+            bones.foreach_get(name, values)
+            self.saved_pose[name] = values
+        animation_data.use_nla = False
+        self.parent_indices = np.array([bones.find(b.parent.name) if b.parent is not None else -1 for b in bones])
+        self.buffer = np.empty(len(bones) * 16, dtype=np.float32)
+
+        self.temp_scene = None
+        self.linked_to = None
+        if export_cache.depends_on_other_objects(bobject):
+            self.scene = bpy.context.scene
+            self.view_layer = bpy.context.view_layer
+            if self.object.name not in self.scene.objects:
+                self.linked_to = self.scene.collection
+                self.linked_to.objects.link(self.object)
+        else:
+            self.temp_scene = bpy.data.scenes.new('arm_armature_sampling')
+            self.temp_scene.collection.objects.link(self.object)
+            self.scene = self.temp_scene
+            self.view_layer = self.temp_scene.view_layers[0]
+
+    def set_action(self, action: bpy.types.Action):
+        self.object.animation_data.action = action
+        bones = self.object.pose.bones
+        for name, rest in self.POSE_CHANNELS:
+            bones.foreach_set(name, rest * len(bones))
+
+    def frame_matrices(self, frame: int) -> np.ndarray:
+        """The evaluated matrix of every pose bone at `frame`, armature
+        space, as an array of row-major 4x4 matrices."""
+        self.scene.frame_set(frame)
+        pose_bones = self.object.evaluated_get(self.view_layer.depsgraph).pose.bones
+        pose_bones.foreach_get('matrix', self.buffer)
+        # Blender stores matrices by columns
+        return self.buffer.reshape(-1, 4, 4).transpose(0, 2, 1).astype(np.float64)
+
+    def close(self):
+        if self.is_copy:
+            if self.temp_scene is not None:
+                bpy.data.scenes.remove(self.temp_scene)
+            bpy.data.objects.remove(self.object, do_unlink=True)
+            return
+        animation_data = self.object.animation_data
+        animation_data.action = self.saved_action
+        animation_data.use_nla = self.saved_use_nla
+        for name, values in self.saved_pose.items():
+            self.object.pose.bones.foreach_set(name, values)
+        if self.temp_scene is not None:
+            bpy.data.scenes.remove(self.temp_scene)
+        if self.linked_to is not None:
+            self.linked_to.objects.unlink(self.object)
 
 
 class ArmoryExporter:
@@ -130,6 +215,10 @@ class ArmoryExporter:
     export_physics = False
     # Indicates whether a particle system is exported
     export_particles = False
+    # Modules the last exported scene needs (set by preprocess() and the export)
+    export_navigation = False
+    export_ui = False
+    export_network = False
     optimize_enabled = False
     option_mesh_only = False
 
@@ -139,7 +228,7 @@ class ArmoryExporter:
     def __init__(self, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene = None, depsgraph: bpy.types.Depsgraph = None, build_cache=None):
         global current_output
 
-        self.build_cache = build_cache or BuildExportCache()
+        self.build_cache = build_cache or export_cache.BuildExportCache()
 
         self.filepath = filepath
         self.scene = context.scene if scene is None else scene
@@ -298,7 +387,7 @@ class ArmoryExporter:
 
         return []
 
-    def export_bone(self, armature, bone: bpy.types.Bone, o, action: bpy.types.Action):
+    def export_bone(self, armature, bone: bpy.types.Bone, o, frame_range: Tuple[int, int], all_bones=False):
         rpdat = arm.utils.get_rp()
         bobject_ref = self.bobject_bone_array.get(bone)
 
@@ -309,12 +398,12 @@ class ArmoryExporter:
         if bobject_ref:
             o['type'] = STRUCT_IDENTIFIER[bobject_ref["objectType"].value]
             o['name'] = bobject_ref["structName"]
-            self.export_bone_transform(armature, bone, o, action)
+            self.export_bone_transform(armature, bone, o, frame_range, all_bones)
 
         o['children'] = []
         for sub_bobject in bone.children:
             so = {}
-            self.export_bone(armature, sub_bobject, so, action)
+            self.export_bone(armature, sub_bobject, so, frame_range, all_bones)
             o['children'].append(so)
 
     @staticmethod
@@ -417,6 +506,12 @@ class ArmoryExporter:
                     o['object_actions'] = []
                 o['object_actions'].append('action_' + action_name + ext)
 
+                if fp in self.build_cache.exported_action_files:
+                    return
+                stamp = self.build_cache.object_action_stamp(action)
+                if self.build_cache.is_cached(fp, stamp):
+                    return
+
                 frame_range = self.calculate_anim_frame_range(action)
                 out_anim = {
                     'begin': frame_range[0],
@@ -461,19 +556,19 @@ class ArmoryExporter:
                         warning += '\n  To see the list of unresolved data paths please recompile with Armory Project > Verbose Output enabled.'
                     log.warn(warning)
 
-                if True:  # not action.arm_cached or not os.path.exists(fp):
-                    if wrd.arm_verbose_output:
-                        print('Exporting object action ' + action_name)
+                if wrd.arm_verbose_output:
+                    print('Exporting object action ' + action_name)
 
-                    out_object_action = {
-                        'name': action_name,
-                        'anim': out_anim,
-                        'type': 'object',
-                        'data_ref': '',
-                        'transform': None
-                    }
-                    action_file = {'objects': [out_object_action]}
-                    arm.utils.write_arm(fp, action_file)
+                out_object_action = {
+                    'name': action_name,
+                    'anim': out_anim,
+                    'type': 'object',
+                    'data_ref': '',
+                    'transform': None
+                }
+                arm.utils.write_arm(fp, {'objects': [out_object_action]})
+                self.build_cache.store(fp, stamp)
+                self.build_cache.exported_action_files.add(fp)
 
     def process_bone(self, bone: bpy.types.Bone) -> None:
         if ArmoryExporter.export_all_flag or bone.select:
@@ -527,23 +622,19 @@ class ArmoryExporter:
                             # force its type to be a bone
                             bone_ref[1]["objectType"] = NodeType.BONE
 
-    def export_bone_transform(self, armature: bpy.types.Object, bone: bpy.types.Bone, o, action: bpy.types.Action):
-        pose_bone = armature.pose.bones.get(bone.name)
-        # if pose_bone is not None:
-        #     transform = pose_bone.matrix.copy()
-        #     if pose_bone.parent is not None:
-        #         transform = pose_bone.parent.matrix.inverted_safe() * transform
-        # else:
+    def export_bone_transform(self, armature: bpy.types.Object, bone: bpy.types.Bone, o, frame_range: Tuple[int, int], all_bones=False):
+        """Writes the bone's rest transform and, if it is animated (keyed
+        in the action, or `all_bones`), registers a track that
+        write_bone_matrices() fills from the evaluated pose."""
+        pose_index = armature.pose.bones.find(bone.name)
         transform = bone.matrix_local.copy()
         if bone.parent is not None:
             transform = (bone.parent.matrix_local.inverted_safe() @ transform)
 
         o['transform'] = {'values': ArmoryExporter.write_matrix(transform)}
 
-        fcurve_list = self.collect_bone_animation(armature, bone.name)
-
-        if fcurve_list and pose_bone:
-            begin_frame, end_frame = self.calculate_anim_frame_range(action)
+        if pose_index >= 0 and (all_bones or self.collect_bone_animation(armature, bone.name)):
+            begin_frame, end_frame = frame_range
 
             out_track = {'target': "transform", 'frames': [], 'values': []}
             o['anim'] = {'tracks': [out_track]}
@@ -551,7 +642,7 @@ class ArmoryExporter:
             for i in range(begin_frame, end_frame + 1):
                 out_track['frames'].append(i - begin_frame)
 
-            self.bone_tracks.append((out_track['values'], pose_bone))
+            self.bone_tracks.append((out_track['values'], pose_index))
 
     def use_default_material(self, bobject: bpy.types.Object, o):
         if arm.utils.export_bone_data(bobject):
@@ -645,20 +736,25 @@ class ArmoryExporter:
                 return space.region_3d.window_matrix, space.region_3d.is_perspective
         return None, False
 
-    def write_bone_matrices(self, scene, action):
-        # profile_time = time.time()
-        begin_frame, end_frame = self.calculate_anim_frame_range(action)
-        if len(self.bone_tracks) > 0:
-            for i in range(begin_frame, end_frame + 1):
-                scene.frame_set(i)
-                for track in self.bone_tracks:
-                    values, pose_bone = track[0], track[1]
-                    parent = pose_bone.parent
-                    if parent:
-                        values += ArmoryExporter.write_matrix((parent.matrix.inverted_safe() @ pose_bone.matrix))
-                    else:
-                        values += ArmoryExporter.write_matrix(pose_bone.matrix)
-        # print('Bone matrices exported in ' + str(time.time() - profile_time))
+    def write_bone_matrices(self, sampler: 'ArmatureSampler', frame_range: Tuple[int, int]):
+        """Fills the tracks registered by export_bone_transform(), frame by
+        frame, with each bone's evaluated matrix relative to its parent
+        (row by row, see write_matrix())."""
+        if len(self.bone_tracks) == 0:
+            return
+        begin_frame, end_frame = frame_range
+        tracked = np.array([index for _, index in self.bone_tracks])
+        parents = sampler.parent_indices[tracked]
+        has_parent = parents >= 0
+        samples = np.empty((end_frame - begin_frame + 1, len(tracked), 4, 4))
+        for i, frame in enumerate(range(begin_frame, end_frame + 1)):
+            matrices = sampler.frame_matrices(frame)
+            relative = matrices[tracked]
+            if has_parent.any():
+                relative[has_parent] = inverted_safe(matrices[parents[has_parent]]) @ relative[has_parent]
+            samples[i] = relative
+        for t, (values, _) in enumerate(self.bone_tracks):
+            values.extend(samples[:, t].reshape(-1).tolist())
 
     @staticmethod
     def has_baked_material(bobject, materials):
@@ -1305,86 +1401,10 @@ class ArmoryExporter:
                     aname = arm.utils.safestr(arm.utils.asset_name(action))
                     out_object['bone_actions'].append('action_' + armatureid + '_' + aname + ext)
 
-                clear_op = set()
-                skelobj = bobject
-                baked_actions = []
-                orig_action = bobject.animation_data.action
-                if bdata.arm_autobake and bobject.name not in bpy.context.collection.all_objects:
-                    clear_op.add('unlink')
-                    # Clone bobject and put it in the current scene so
-                    # the bake operator can run
-                    if bobject.library is not None:
-                        skelobj = bobject.copy()
-                        clear_op.add('rem')
-                    bpy.context.collection.objects.link(skelobj)
-
-                for action in export_actions:
-                    aname = arm.utils.safestr(arm.utils.asset_name(action))
-                    skelobj.animation_data.action = action
-                    fp = self.get_meshes_file_path('action_' + armatureid + '_' + aname, compressed=ArmoryExporter.compress_enabled)
-                    assets.add(fp)
-                    if (not bdata.arm_cached or not os.path.exists(fp)) and fp not in self.build_cache.exported_action_files:
-                        # Store action to use it after autobake was handled
-                        original_action = action
-
-                        # Handle autobake
-                        if bdata.arm_autobake:
-                            sel = bpy.context.selected_objects[:]
-                            for _o in sel:
-                                _o.select_set(False)
-                            skelobj.select_set(True)
-
-                            start, end = self.calculate_anim_frame_range(action)
-                            bake_result = bpy.ops.nla.bake(
-                                frame_start=start,
-                                frame_end=end,
-                                step=1,
-                                only_selected=False,
-                                visual_keying=True
-                            )
-                            action = skelobj.animation_data.action
-
-                            skelobj.select_set(False)
-                            for _o in sel:
-                                _o.select_set(True)
-
-                            # Baking creates a new action, but only if it
-                            # was successful
-                            if 'FINISHED' in bake_result:
-                                baked_actions.append(action)
-
-                        wrd = bpy.data.worlds['Arm']
-                        if wrd.arm_verbose_output:
-                            print('Exporting armature action ' + aname)
-                        bones = []
-                        self.bone_tracks = []
-                        for bone in bdata.bones:
-                            if not bone.parent:
-                                boneo = {}
-                                self.export_bone(skelobj, bone, boneo, action)
-                                bones.append(boneo)
-                        self.write_bone_matrices(bpy.context.scene, action)
-                        if len(bones) > 0 and 'anim' in bones[0]:
-                            self.export_pose_markers(bones[0]['anim'], original_action)
-                        # Save action separately
-                        action_obj = {'name': aname, 'objects': bones}
-                        arm.utils.write_arm(fp, action_obj)
-                        self.build_cache.exported_action_files.add(fp)
+                self.export_armature_actions(bobject, export_actions, armatureid)
 
                 # Use relative bone constraints
                 out_object['relative_bone_constraints'] = bdata.arm_relative_bone_constraints
-
-                # Restore settings
-                skelobj.animation_data.action = orig_action
-                for a in baked_actions:
-                    bpy.data.actions.remove(a, do_unlink=True)
-                if 'unlink' in clear_op:
-                    bpy.context.collection.objects.unlink(skelobj)
-                if 'rem' in clear_op:
-                    bpy.data.objects.remove(skelobj, do_unlink=True)
-
-                # TODO: cache per action
-                bdata.arm_cached = True
 
             if out_parent is None:
                 self.output['objects'].append(out_object)
@@ -1399,6 +1419,49 @@ class ArmoryExporter:
         if bobject.arm_instanced == 'Off':
             for subbobject in bobject.children:
                 self.export_object(subbobject, out_object)
+
+    def export_armature_actions(self, bobject: bpy.types.Object, export_actions: List[bpy.types.Action], armatureid: str):
+        """Writes one file per action of the armature object, unless the
+        file is already up to date (see export_cache.action_stamp()). The
+        actions are sampled by an ArmatureSampler."""
+        bdata = bobject.data
+        sampler = None
+        try:
+            for action in export_actions:
+                aname = arm.utils.safestr(arm.utils.asset_name(action))
+                fp = self.get_meshes_file_path('action_' + armatureid + '_' + aname, compressed=ArmoryExporter.compress_enabled)
+                assets.add(fp)
+                if fp in self.build_cache.exported_action_files:
+                    continue
+                stamp = self.build_cache.action_stamp(bobject, action)
+                if self.build_cache.is_cached(fp, stamp):
+                    continue
+
+                if sampler is None:
+                    sampler = ArmatureSampler(bobject)
+                if bpy.data.worlds['Arm'].arm_verbose_output:
+                    print('Exporting armature action ' + aname)
+                sampler.set_action(action)
+                frame_range = self.calculate_anim_frame_range(action)
+                bones = []
+                self.bone_tracks = []
+                for bone in bdata.bones:
+                    if not bone.parent:
+                        boneo = {}
+                        # Auto Bake: every bone gets a track, so bones moved
+                        # only by constraints are animated too
+                        self.export_bone(sampler.object, bone, boneo, frame_range, all_bones=bdata.arm_autobake)
+                        bones.append(boneo)
+                self.write_bone_matrices(sampler, frame_range)
+                if len(bones) > 0 and 'anim' in bones[0]:
+                    self.export_pose_markers(bones[0]['anim'], action)
+                # Save action separately
+                arm.utils.write_arm(fp, {'name': aname, 'objects': bones})
+                self.build_cache.store(fp, stamp)
+                self.build_cache.exported_action_files.add(fp)
+        finally:
+            if sampler is not None:
+                sampler.close()
 
     def export_skin(self, bobject: bpy.types.Object, armature, export_mesh: bpy.types.Mesh, out_mesh):
         """This function exports all skinning data, which includes the
@@ -1669,7 +1732,7 @@ class ArmoryExporter:
         bm.to_mesh(obj.data)
         bm.free()
 
-    def write_mesh(self, bobject: bpy.types.Object, fp, out_mesh):
+    def write_mesh(self, bobject: bpy.types.Object, fp, out_mesh, stamp: Optional[str] = None):
         if bpy.data.worlds['Arm'].arm_single_data_file:
             self.output['mesh_datas'].append(out_mesh)
 
@@ -1678,6 +1741,7 @@ class ArmoryExporter:
             mesh_obj = {'mesh_datas': [out_mesh]}
             arm.utils.write_arm(fp, mesh_obj)
             bobject.data.arm_cached = True
+            self.build_cache.store(fp, stamp)
 
     @staticmethod
     def calc_aabb(bobject):
@@ -2042,6 +2106,7 @@ Make sure the mesh only has tris/quads.""")
         oid = arm.utils.safestr(object_ref[1]["structName"])
 
         wrd = bpy.data.worlds['Arm']
+        stamp = None
         if wrd.arm_single_data_file:
             fp = None
         else:
@@ -2049,6 +2114,16 @@ Make sure the mesh only has tris/quads.""")
             assets.add(fp)
             # No export necessary
             if bobject.data.arm_cached and os.path.exists(fp) or fp in self.build_cache.exported_mesh_files:
+                return
+            # Linked data loses its arm_cached flag on every export, so it
+            # is tracked by its stamp instead
+            rpdat = arm.utils.get_rp()
+            mesh = bobject.data
+            layout = (self.get_export_uvs(mesh), self.get_export_vcols(mesh), self.get_export_tangents(mesh),
+                      self.has_baked_material(bobject, mesh.materials), rpdat.arm_skin_max_bones,
+                      rpdat.arm_morph_target, rpdat.arm_use_armature_deform_only)
+            stamp = self.build_cache.mesh_stamp(bobject, layout)
+            if self.build_cache.is_cached(fp, stamp):
                 return
 
         # Mesh users have different modifier stack
@@ -2143,7 +2218,7 @@ Make sure the mesh only has tris/quads.""")
         if bobject.data.arm_dynamic_usage:
             out_mesh['dynamic_usage'] = bobject.data.arm_dynamic_usage
 
-        self.write_mesh(bobject, fp, out_mesh)
+        self.write_mesh(bobject, fp, out_mesh, stamp)
         self.build_cache.exported_mesh_files.add(fp)
         # print('Mesh exported in ' + str(time.time() - profile_time))
 
@@ -2465,8 +2540,11 @@ Make sure the mesh only has tris/quads.""")
             if material.use_fake_user and material not in self.material_array:
                 self.material_array.append(material)
 
-        # Ensure the same order for merging materials
-        self.material_array.sort(key=lambda x: x.name)
+        # Ensure the same order for merging materials. The order decides
+        # which material owns a shader that several of them share, so it
+        # has to be stable. Linked materials from different libraries can
+        # have the same name, hence the library path as a tie breaker
+        self.material_array.sort(key=lambda x: (x.name, x.library.filepath if x.library is not None else ''))
 
         if wrd.arm_batch_materials:
             mat_users = self.material_to_object_dict
@@ -2741,10 +2819,14 @@ Make sure the mesh only has tris/quads.""")
 
     # For CPU particles
     def extract_props(self, bpy_struct, depth=0, max_depth=2):
+        # Datablock bookkeeping (library, users, session id...) depends on how
+        # the file was loaded, not on the data: it would make the output
+        # differ between builds and Blender sessions
+        skipped = ID_BOOKKEEPING if isinstance(bpy_struct, bpy.types.ID) else ()
         result = {}
         for prop in bpy_struct.bl_rna.properties:
             name = prop.identifier
-            if name == "rna_type":
+            if name == "rna_type" or name in skipped:
                 continue
             try:
                 value = getattr(bpy_struct, name)
@@ -2773,6 +2855,12 @@ Make sure the mesh only has tris/quads.""")
                     result[name] = list(value)
                 elif hasattr(value, "bl_rna") and depth < max_depth:
                     result[name] = self.extract_props(value, depth + 1, max_depth)
+                elif hasattr(value, "bl_rna"):
+                    # Blender data reached beyond max_depth. Its str() holds a
+                    # memory address, which differs on every export and would
+                    # make this data, and everything built from it, look
+                    # changed on each build. Use its name instead
+                    result[name] = getattr(value, 'name', '')
                 else:
                     result[name] = str(value)
 

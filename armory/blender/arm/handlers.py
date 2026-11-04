@@ -52,8 +52,6 @@ def on_depsgraph_update_post(self):
                 bpy.data.curves[uid.name].arm_cached = False
             elif isinstance(uid, bpy.types.MetaBall) and uid.name in bpy.data.metaballs:
                 bpy.data.metaballs[uid.name].arm_cached = False
-            elif isinstance(uid, bpy.types.Armature) and uid.name in bpy.data.armatures:
-                bpy.data.armatures[uid.name].arm_cached = False
             elif isinstance(uid, bpy.types.NodeTree) and uid.name in bpy.data.node_groups:
                 bpy.data.node_groups[uid.name].arm_cached = False
             elif isinstance(uid, bpy.types.Material) and uid.name in bpy.data.materials:
