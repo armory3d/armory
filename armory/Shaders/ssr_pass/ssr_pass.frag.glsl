@@ -3,6 +3,7 @@
 #include "compiled.inc"
 #include "std/math.glsl"
 #include "std/gbuffer.glsl"
+#include "std/ssrs.glsl"
 
 uniform sampler2D tex;
 uniform sampler2D gbufferD;
@@ -60,12 +61,13 @@ vec4 binarySearch(vec3 dir) {
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
-vec4 rayCast(vec3 dir) {
+vec4 rayCast(vec3 dir, float rayJitter) {
 	#ifdef _CPostprocess
 		dir *= PPComp9.x;
 	#else
 		dir *= ssrRayStep;
 	#endif
+	hitCoord += dir * rayJitter;
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
 		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
@@ -96,13 +98,15 @@ void main() {
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess
-		vec3 dir = reflected * (1.0 - rand(texCoord) * PPComp10.y * roughness) * 2.0;
+		vec3 dir = ssrGetStochasticDir(reflected, texCoord, roughness, PPComp10.y);
+		float rayJitter = clamp(rand(texCoord) * PPComp10.y, 0.0, 1.0);
 	#else
-		vec3 dir = reflected * (1.0 - rand(texCoord) * ssrJitter * roughness) * 2.0;
+		vec3 dir = ssrGetStochasticDir(reflected, texCoord, roughness, ssrJitter);
+		float rayJitter = clamp(rand(texCoord) * ssrJitter, 0.0, 1.0);
 	#endif
 
 	// * max(ssrMinRayStep, -viewPos.z)
-	vec4 coords = rayCast(dir);
+	vec4 coords = rayCast(dir, rayJitter);
 
 	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
