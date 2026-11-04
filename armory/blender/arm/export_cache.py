@@ -11,8 +11,7 @@ builds and Blender sessions alike:
 - Meshes whose object and data both come from other .blend files: their
   libraries, the exporter code and the settings that change mesh files.
 - Animations (actions), linked or local: their own keyframes, the
-  armature, the NLA stack that is evaluated together with them, the
-  exporter code and the settings that change action files.
+  armature, the exporter code and the settings that change action files.
 
 Code counts by content, not by modification time: touching a file or
 switching to a branch with the same code doesn't make anything stale.
@@ -53,12 +52,8 @@ VOLATILE_SETTINGS = ('arm_recompile', 'arm_project_version')
 # take_contributions() and replay_scene()
 CONTRIBUTION_FLAGS = ('export_physics', 'export_navigation', 'export_ui', 'export_network', 'export_particles')
 
-# Properties of animation data and the NLA that decide the evaluated pose
-ANIMDATA_SETTINGS = ('action_blend_type', 'action_extrapolation', 'action_influence', 'use_nla', 'use_tweak_mode')
-NLA_TRACK_SETTINGS = ('mute', 'is_solo')
-NLA_STRIP_SETTINGS = ('frame_start', 'frame_end', 'action_frame_start', 'action_frame_end', 'blend_type',
-                      'blend_in', 'blend_out', 'use_auto_blend', 'extrapolation', 'influence', 'use_animated_influence',
-                      'mute', 'repeat', 'scale', 'use_reverse', 'use_sync_length', 'use_animated_time')
+# Properties of animation data that can decide how the active action is evaluated
+ANIMDATA_SETTINGS = ('action_blend_type', 'action_extrapolation', 'action_influence')
 BONE_SETTINGS = ('use_deform', 'use_connect', 'inherit_scale', 'use_inherit_rotation', 'use_local_location',
                  'use_relative_parent')
 # Keyframe properties that decide an F-curve's values, read in bulk: (name,
@@ -91,6 +86,53 @@ def rna_values(struct, names: Iterable[str] = None) -> str:
             value = tuple(tuple(v) if hasattr(v, '__len__') else v for v in value)
         out.append(f'{name}={value!r}')
     return '|'.join(out)
+
+
+def depends_on_other_objects(armature_object) -> bool:
+    """Whether the armature's pose depends on other data than its action:
+    drivers, or bone constraints targeting other objects. Such armatures are
+    sampled in the current scene, with their targets, and never cached."""
+    animation_data = armature_object.animation_data
+    armature = armature_object.data
+    if (animation_data is not None and len(animation_data.drivers) > 0) or \
+       (armature.animation_data is not None and len(armature.animation_data.drivers) > 0):
+        return True
+    for pose_bone in armature_object.pose.bones:
+        for constraint in pose_bone.constraints:
+            targets = [getattr(constraint, 'target', None), getattr(constraint, 'pole_target', None)]
+            targets += [t.target for t in getattr(constraint, 'targets', [])]
+            if any(t is not None and t != armature_object for t in targets):
+                return True
+    return False
+
+
+def modifier_libraries(bobject) -> set:
+    """The libraries of the data the object's modifiers read (Boolean
+    cutters, Shrinkwrap targets, Geometry Nodes groups and object inputs...).
+    Linked data can only reference library data, so for a linked object
+    these libraries cover everything its evaluated mesh depends on."""
+    referenced = []
+    for modifier in bobject.modifiers:
+        for prop in modifier.bl_rna.properties:
+            if prop.type == 'POINTER':
+                referenced.append(getattr(modifier, prop.identifier))
+        # Geometry Nodes inputs are custom properties of the modifier
+        try:
+            referenced += modifier.values()
+        except TypeError:
+            pass  # a modifier type without custom properties
+    libraries = set()
+    for data in referenced:
+        if not isinstance(data, bpy.types.ID):
+            continue
+        if isinstance(data, bpy.types.Collection):
+            items = list(data.all_objects)
+        else:
+            items = [data]
+        for item in items:
+            libraries.update(lib for lib in (item.library, getattr(getattr(item, 'data', None), 'library', None))
+                             if lib is not None)
+    return libraries
 
 
 def library_stamp(library) -> str:
@@ -239,6 +281,7 @@ class BuildExportCache:
         armature = bobject.find_armature()
         if armature is not None:
             libraries.update(lib for lib in (armature.library, armature.data.library) if lib is not None)
+        libraries.update(modifier_libraries(bobject))
         parts = sorted(library_stamp(lib) for lib in libraries)
         parts += [self.data_stamp(), repr(layout)]
         return hashlib.sha1('\n'.join(parts).encode()).hexdigest()
@@ -283,10 +326,11 @@ class BuildExportCache:
 
     def action_stamp(self, armature_object, action) -> Optional[str]:
         """Stamp of an armature action file. Actions are sampled from the
-        evaluated pose, so besides the action itself the stamp covers the
-        armature's bones and constraints and the NLA stack evaluated with
-        it. Returns `None` (export every time) when drivers or constraints
-        targeting other objects make the pose depend on other data."""
+        evaluated pose, on their own: NLA off, bones the action doesn't key
+        at rest (see ArmoryExporter.export_armature_actions()). So besides
+        the action itself the stamp covers the armature's bones and
+        constraints. Returns `None` (export every time) when the pose
+        depends on other objects (see depends_on_other_objects())."""
         armature = self.armature_stamp(armature_object)
         if armature is None:
             return None
@@ -302,12 +346,10 @@ class BuildExportCache:
         return self._armature_stamps[key]
 
     def _armature_stamp(self, armature_object) -> Optional[str]:
+        if depends_on_other_objects(armature_object):
+            return None
         animation_data = armature_object.animation_data
         armature = armature_object.data
-        if (animation_data is not None and len(animation_data.drivers) > 0) or \
-           (armature.animation_data is not None and len(armature.animation_data.drivers) > 0):
-            return None
-
         parts = [f'autobake={armature.arm_autobake}|deform_only={arm.utils.get_rp().arm_use_armature_deform_only}'
                  f'|pose_position={armature.pose_position}']
         for bone in armature.bones:
@@ -316,21 +358,9 @@ class BuildExportCache:
         for pose_bone in armature_object.pose.bones:
             parts.append(f'P{pose_bone.name}|{pose_bone.rotation_mode}')
             for constraint in pose_bone.constraints:
-                targets = [getattr(constraint, 'target', None), getattr(constraint, 'pole_target', None)]
-                targets += [t.target for t in getattr(constraint, 'targets', [])]
-                if any(t is not None and t != armature_object for t in targets):
-                    return None
                 parts.append(f'C{constraint.type}|{rna_values(constraint)}')
-
         if animation_data is not None:
             parts.append(rna_values(animation_data, ANIMDATA_SETTINGS))
-            if animation_data.use_nla:
-                # Channels the action doesn't key come from the NLA stack
-                for track in animation_data.nla_tracks:
-                    parts.append(f'T{track.name}|{rna_values(track, NLA_TRACK_SETTINGS)}')
-                    for strip in track.strips:
-                        strip_action = self.action_hash(strip.action) if strip.action is not None else ''
-                        parts.append(f'S{strip.name}|{strip_action}|{rna_values(strip, NLA_STRIP_SETTINGS)}')
         return '\n'.join(parts)
 
     def object_action_stamp(self, action) -> str:
