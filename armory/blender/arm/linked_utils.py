@@ -1,7 +1,7 @@
 """Utilities for handling linked blend files in Armory exports."""
 from contextlib import contextmanager
 import os
-from typing import Optional
+from typing import Dict, Optional, Tuple
 
 import bpy
 
@@ -11,6 +11,10 @@ if arm.is_reload(__name__):
     pass
 else:
     arm.enable_reload(__name__)
+
+
+# (library path, project path) -> suffix, see library_suffix()
+_library_suffixes: Dict[Tuple[str, str], str] = {}
 
 
 def library_suffix(lib: bpy.types.Library) -> str:
@@ -24,16 +28,24 @@ def library_suffix(lib: bpy.types.Library) -> str:
     """
     import arm.utils
 
+    # Asked for every linked name the export writes, with only a few libraries
+    key = (lib.filepath, arm.utils.get_fp())
+    suffix = _library_suffixes.get(key)
+    if suffix is not None:
+        return suffix
+
     lib_path = os.path.normpath(bpy.path.abspath(lib.filepath))
     try:
-        rel_path = os.path.relpath(lib_path, arm.utils.get_fp())
+        rel_path = os.path.relpath(lib_path, key[1])
     except ValueError:
         # On another drive than the project
         rel_path = os.path.basename(lib_path)
     if rel_path.startswith(os.pardir):
         rel_path = os.path.basename(lib_path)
 
-    return arm.utils.safestr(os.path.splitext(rel_path)[0].replace(os.sep, '_'))
+    suffix = arm.utils.safestr(os.path.splitext(rel_path)[0].replace(os.sep, '_'))
+    _library_suffixes[key] = suffix
+    return suffix
 
 
 def asset_name(bdata) -> Optional[str]:
@@ -74,8 +86,18 @@ def get_scene_name(scene) -> str:
     return arm.utils.safestr('_'.join([scene.name, *subdirs, blend_name]))
 
 
+def is_evaluated_in(bobject: bpy.types.Object, depsgraph: bpy.types.Depsgraph) -> bool:
+    """Whether the depsgraph holds an evaluated copy of the object, i.e. the
+    object is in a scene it evaluates. Objects that are not (linked objects
+    of other scenes) have to be added to the current scene to be evaluated."""
+    return bobject.evaluated_get(depsgraph).is_evaluated
+
+
 class TransformEvaluator:
-    """Context manager for evaluating linked object transforms (Blender 4.2+ workaround)."""
+    """Context manager for evaluating object transforms (Blender 4.2+): an
+    object the depsgraph doesn't evaluate (one of another scene) is put in a
+    temporary collection of the current scene while it is read, so that its
+    matrix is evaluated rather than whatever was last stored on it."""
 
     def __init__(self, bobject: bpy.types.Object, scene: bpy.types.Scene,
                  depsgraph: bpy.types.Depsgraph):
@@ -84,12 +106,12 @@ class TransformEvaluator:
         self.depsgraph = depsgraph
         self._temp_collection: Optional[bpy.types.Collection] = None
         self._evaluated_obj: Optional[bpy.types.Object] = None
-        self._is_linked = False
+        self._needs_temp = False
 
     def __enter__(self) -> 'TransformEvaluator':
         if bpy.app.version >= (4, 2, 0):
-            self._is_linked = self.bobject.name not in self.scene.collection.children
-            if self._is_linked:
+            self._needs_temp = not is_evaluated_in(self.bobject, self.depsgraph)
+            if self._needs_temp:
                 self._temp_collection = bpy.data.collections.new("_armory_temp_eval")
                 bpy.context.scene.collection.children.link(self._temp_collection)
                 self._temp_collection.objects.link(self.bobject)
@@ -102,7 +124,7 @@ class TransformEvaluator:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self._is_linked and self._temp_collection is not None:
+        if self._needs_temp and self._temp_collection is not None:
             try:
                 self._temp_collection.objects.unlink(self.bobject)
                 bpy.context.scene.collection.children.unlink(self._temp_collection)
@@ -126,13 +148,15 @@ class TransformEvaluator:
 @contextmanager
 def evaluated_mesh(bobject: bpy.types.Object, scene: bpy.types.Scene,
                    depsgraph: bpy.types.Depsgraph, apply_modifiers: bool = True):
-    """Context manager for mesh export with Blender 4.2+ linked object workaround."""
+    """Context manager for mesh export (Blender 4.2+): an object the current
+    depsgraph doesn't evaluate is put in a temporary collection of the
+    current scene while its mesh is read."""
     temp_collection = None
     is_linked = False
 
     try:
         if apply_modifiers and bpy.app.version >= (4, 2, 0):
-            is_linked = bobject.name not in scene.collection.children
+            is_linked = not is_evaluated_in(bobject, bpy.context.evaluated_depsgraph_get())
             if is_linked:
                 temp_collection = bpy.data.collections.new("_armory_temp_mesh_eval")
                 bpy.context.scene.collection.children.link(temp_collection)

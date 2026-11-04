@@ -402,8 +402,7 @@ def init_properties():
     bpy.types.MetaBall.arm_aabb = FloatVectorProperty(name="AABB", size=3, default=[0,0,0])
     bpy.types.MetaBall.arm_dynamic_usage = BoolProperty(name="Dynamic Data Usage", description="Metaball data can change at runtime", default=False)
     # For armature
-    bpy.types.Armature.arm_cached = BoolProperty(name="Armature Cached", description="No need to reexport armature data", default=False)
-    bpy.types.Armature.arm_autobake = BoolProperty(name="Auto Bake", description="Bake constraints automatically", default=True)
+    bpy.types.Armature.arm_autobake = BoolProperty(name="Auto Bake", description="Export every bone's evaluated pose, so bones moved by constraints or the NLA are animated too. Off: only bones keyed in the action are animated", default=True)
     bpy.types.Armature.arm_relative_bone_constraints = BoolProperty(name="Relative Bone Constraints", description="Constraint are applied relative to Armature's parent", default=False)
     # For camera
     bpy.types.Camera.arm_frustum_culling = BoolProperty(name="Frustum Culling", description="Perform frustum culling for this camera", default=True)

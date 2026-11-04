@@ -12,13 +12,14 @@ import subprocess
 import threading
 import time
 import traceback
-from typing import Callable
+from contextlib import contextmanager
+from typing import Callable, List, Optional, Tuple
 import webbrowser
 
 import bpy
 
 from arm import assets
-from arm.exporter import BuildExportCache
+import arm.export_cache as export_cache
 from arm.exporter import ArmoryExporter
 import arm.lib.make_datas
 import arm.lib.server
@@ -35,6 +36,7 @@ import arm.write_data as write_data
 
 if arm.is_reload(__name__):
     assets = arm.reload_module(assets)
+    export_cache = arm.reload_module(export_cache)
     arm.exporter = arm.reload_module(arm.exporter)
     from arm.exporter import ArmoryExporter
     arm.lib.make_datas = arm.reload_module(arm.lib.make_datas)
@@ -53,6 +55,42 @@ else:
 
 scripts_mtime = 0 # Monitor source changes
 profile_time = 0
+
+# The steps of the current build and their duration in seconds, printed with
+# Verbose Output when the build is done (see log_build_steps())
+build_steps: List[Tuple[str, float]] = []
+# The external process running for the current build: (step, start time)
+process_step: Optional[Tuple[str, float]] = None
+
+
+@contextmanager
+def build_step(name: str):
+    start = time.time()
+    try:
+        yield
+    finally:
+        build_steps.append((name, time.time() - start))
+
+
+def start_process_step(name: str):
+    global process_step
+    process_step = (name, time.time())
+
+
+def end_process_step():
+    global process_step
+    if process_step is not None:
+        build_steps.append((process_step[0], time.time() - process_step[1]))
+        process_step = None
+
+
+def log_build_steps():
+    if not bpy.data.worlds['Arm'].arm_verbose_output or not build_steps:
+        return
+    width = max(len(name) for name, _ in build_steps)
+    print('Build steps:')
+    for name, seconds in build_steps:
+        print(f'  {name:<{width}}  {seconds:6.2f}s')
 
 # Queue of threads and their done callbacks. Item format: [thread, done]
 thread_callback_queue = Queue(maxsize=0)
@@ -263,14 +301,15 @@ def is_project_scene(scene) -> bool:
 def export_data(fp, sdk_path):
     # Reload all libraries to retrieve updated data without needing to restart Blender.
     # Looked up by name each time: reloading one can remove another
-    for name in [lib.name for lib in bpy.data.libraries]:
-        lib = bpy.data.libraries.get(name)
-        if lib is None:
-            continue
-        lib.reload()
-        log.info(f"Reloaded: {lib.filepath}")
+    with build_step('Reload libraries'):
+        for name in [lib.name for lib in bpy.data.libraries]:
+            lib = bpy.data.libraries.get(name)
+            if lib is None:
+                continue
+            lib.reload()
+            log.info(f"Reloaded: {lib.filepath}")
 
-    load_external_blends()
+        load_external_blends()
 
     # Check all to report every problem at once
     unique_libraries = check_library_suffixes()
@@ -300,9 +339,12 @@ def export_data(fp, sdk_path):
 
     # Build node trees
     ArmoryExporter.import_traits = []
-    make_logic.build()
-    make_world.build()
-    make_renderpath.build()
+    with build_step('Logic node trees'):
+        make_logic.build()
+    with build_step('World'):
+        make_world.build()
+    with build_step('Render path'):
+        make_renderpath.build()
 
     # Export scene data
     assets.embedded_data = sorted(list(set(assets.embedded_data)))
@@ -320,6 +362,7 @@ def export_data(fp, sdk_path):
     # this to the exporter further below) with a temporary "zoo" collection
     # in the current scene. We do this to ensure that (among other things)
     # modifiers are applied to all exported objects.
+    depsgraph_start = time.time()
     export_coll = bpy.data.collections.new("export_coll")
     bpy.context.scene.collection.children.link(export_coll)
     export_coll_names = set(export_coll.all_objects.keys())
@@ -333,7 +376,8 @@ def export_data(fp, sdk_path):
                     export_coll_names.add(o.name)
     depsgraph = bpy.context.evaluated_depsgraph_get()
     bpy.data.collections.remove(export_coll)  # Destroy the "zoo" collection
-    build_cache = BuildExportCache()
+    build_steps.append(('Evaluate objects', time.time() - depsgraph_start))
+    build_cache = export_cache.BuildExportCache()
 
     for scene in bpy.data.scenes:
         if scene.arm_export and is_project_scene(scene):
@@ -344,10 +388,14 @@ def export_data(fp, sdk_path):
             # Scenes living in another .blend file can be skipped as long as
             # no library changed, but then everything the export would have
             # registered for khafile.js has to be put back
-            if not build_cache.replay_scene(scene, asset_path):
+            scene_start = time.time()
+            if build_cache.replay_scene(scene, asset_path):
+                build_steps.append((f'Scene {scene.name} (unchanged)', time.time() - scene_start))
+            else:
                 contribution_mark = build_cache.mark_contributions()
                 ArmoryExporter.export_scene(bpy.context, asset_path, scene=scene, depsgraph=depsgraph, build_cache=build_cache)
                 build_cache.store_scene(scene, asset_path, contribution_mark)
+                build_steps.append((f'Scene {scene.name}', time.time() - scene_start))
             if ArmoryExporter.export_physics:
                 physics_found = True
             if ArmoryExporter.export_navigation:
@@ -361,8 +409,9 @@ def export_data(fp, sdk_path):
             assets.add(asset_path)
 
     # All scenes are exported, the shader data of each material is final now
+    files_start = time.time()
     assets.flush_shader_data()
-    build_cache.save_linked_manifest()
+    build_cache.save()
 
     if physics_found is False: # Disable physics if no rigid body is exported
         export_physics = False
@@ -501,6 +550,7 @@ def export_data(fp, sdk_path):
         state.last_scene = scene_name
 
     clear_external_scenes()
+    build_steps.append(('Shaders and project files', time.time() - files_start))
     return True
 
 def compile(assets_only=False):
@@ -519,6 +569,7 @@ def compile(assets_only=False):
             if item.arm_project_target == 'custom' and item.arm_project_khamake != '':
                 for s in item.arm_project_khamake.split(' '):
                     cmd.append(s)
+        start_process_step('khamake')
         state.proc_build = run_proc(cmd, build_done)
     else:
         target_name = state.target
@@ -586,11 +637,15 @@ def compile(assets_only=False):
         #Project needs to be compiled at least once
         #before compilation server can work
         if not os.path.exists(arm.utils.build_dir() + '/debug/krom/krom.js') and not state.is_publish:
+            start_process_step('khamake (assets and Haxe)')
             state.proc_build = run_proc(cmd, build_done)
         else:
             if assets_only or compilation_server:
                 cmd.append('--nohaxe')
                 cmd.append('--noproject')
+                start_process_step('khamake (assets)')
+            else:
+                start_process_step('khamake (assets and Haxe)')
             if len(wrd.arm_exporterlist) > 0:
                 item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
                 if item.arm_project_khamake != "":
@@ -606,6 +661,7 @@ def compile(assets_only=False):
 def build(target, is_play=False, is_publish=False, is_export=False):
     global profile_time
     profile_time = time.time()
+    build_steps.clear()
 
     state.target = target
     state.is_play = is_play
@@ -692,10 +748,12 @@ def assets_done():
     if state.proc_build == None:
         return
     result = state.proc_build.poll()
+    end_process_step()
     if result == 0:
         # Connect to the compilation server
         os.chdir(arm.utils.build_dir() + '/debug/')
         cmd = [arm.utils.get_haxe_path(), '--connect', str(arm.utils.get_compilation_server_port()), 'project-krom.hxml']
+        start_process_step('Haxe (compilation server)')
         state.proc_build = run_proc(cmd, compilation_server_done)
     else:
         state.proc_build = None
@@ -719,6 +777,8 @@ def compilation_server_done():
 
 def build_done():
     wrd = bpy.data.worlds['Arm']
+    end_process_step()
+    log_build_steps()
     log.info('Finished in {:0.3f}s'.format(time.time() - profile_time))
     if log.num_warnings > 0:
         log.print_warn(f'{log.num_warnings} warning{"s" if log.num_warnings > 1 else ""} occurred during compilation')
