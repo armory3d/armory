@@ -159,7 +159,7 @@ class ParticleSystemCPU implements ParticleSystem {
 
     public function start() {
 		if (type != 0) return;
-		spawnTime = 0;
+		spawnTime = emitting ? Math.min(spawnTime - spawnedParticles * spawnRate, spawnRate) : 0;
 		spawnedParticles = 0;
 		emitting = true;
 		if (!updating) {
