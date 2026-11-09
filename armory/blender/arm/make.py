@@ -624,8 +624,9 @@ def compile(assets_only=False):
         cmd.append('--to')
         if (kha_target_name == 'krom' and not state.is_publish) or (kha_target_name == 'html5' and not state.is_publish):
             cmd.append(arm.utils.build_dir() + '/debug')
-            # Start compilation server
-            if kha_target_name == 'krom' and arm.utils.get_compilation_server() and not assets_only:
+            # Start compilation server (Krom and browser debug builds): Haxe then
+            # reuses its work between builds instead of compiling everything again
+            if arm.utils.get_compilation_server() and not assets_only:
                 compilation_server = True
                 arm.lib.server.run_haxe(arm.utils.get_haxe_path(), arm.utils.get_compilation_server_port())
         else:
@@ -636,11 +637,16 @@ def compile(assets_only=False):
 
         #Project needs to be compiled at least once
         #before compilation server can work
-        if not os.path.exists(arm.utils.build_dir() + '/debug/krom/krom.js') and not state.is_publish:
+        if not os.path.exists(get_khajs_path(kha_target_name)) and not state.is_publish:
             start_process_step('khamake (assets and Haxe)')
             state.proc_build = run_proc(cmd, build_done)
         else:
-            if assets_only or compilation_server:
+            if compilation_server:
+                # The project file (project-<target>.hxml) is still written, so a changed
+                # define or library reaches the server's compile
+                cmd.append('--nohaxe')
+                start_process_step('khamake (assets)')
+            elif assets_only:
                 cmd.append('--nohaxe')
                 cmd.append('--noproject')
                 start_process_step('khamake (assets)')
@@ -752,7 +758,8 @@ def assets_done():
     if result == 0:
         # Connect to the compilation server
         os.chdir(arm.utils.build_dir() + '/debug/')
-        cmd = [arm.utils.get_haxe_path(), '--connect', str(arm.utils.get_compilation_server_port()), 'project-krom.hxml']
+        hxml = 'project-%s.hxml' % arm.utils.get_kha_target(state.target)
+        cmd = [arm.utils.get_haxe_path(), '--connect', str(arm.utils.get_compilation_server_port()), hxml]
         start_process_step('Haxe (compilation server)')
         state.proc_build = run_proc(cmd, compilation_server_done)
     else:
