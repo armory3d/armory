@@ -408,6 +408,7 @@ def init_properties():
     bpy.types.Armature.arm_relative_bone_constraints = BoolProperty(name="Relative Bone Constraints", description="Constraint are applied relative to Armature's parent", default=False)
     # For camera
     bpy.types.Camera.arm_frustum_culling = BoolProperty(name="Frustum Culling", description="Perform frustum culling for this camera", default=True)
+    bpy.types.Camera.arm_overlay_camera = BoolProperty(name="Overlay Camera", description="Render this camera as an overlay pass on top of the main camera's final output with a cleared depth buffer. Only meshes listing this camera in their Camera Render Filter are rendered", default=False)
 
     # Render path generator
     bpy.types.World.rp_preset = EnumProperty(
