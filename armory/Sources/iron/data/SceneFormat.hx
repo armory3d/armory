@@ -148,6 +148,7 @@ typedef TCameraData = {
 	@:optional public var aspect: Null<FastFloat>;
 	@:optional public var frustum_culling: Null<Bool>;
 	@:optional public var ortho: Float32Array; // Indicates ortho camera, left, right, bottom, top
+	@:optional public var overlay: Null<Bool>;
 }
 
 #if js

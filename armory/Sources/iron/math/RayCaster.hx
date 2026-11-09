@@ -17,6 +17,16 @@ class RayCaster {
 	static var nor = new Vec4();
 	static var m = Mat4.identity();
 
+	// Scratch data for oriented bounding box / exact mesh ray tests
+	static var invWorld = Mat4.identity();
+	static var localOrigin = new Vec4();
+
+	/**
+		World space hit location of the last `closestObbIntersectObject()` call,
+		or `null` if nothing was hit.
+	**/
+	public static var lastHit: Vec4 = null;
+
 	public static function getRay(inputX: FastFloat, inputY: FastFloat, camera: CameraObject): Ray {
 		var start = new Vec4();
 		var end = new Vec4();
@@ -117,6 +127,233 @@ class RayCaster {
 		}
 
 		return closest;
+	}
+
+	/**
+		Cast a ray from the given screen coordinates and test it against the
+		oriented bounding box (OBB) of the object. The ray is transformed into
+		the object's local space, so rotation and (parent) scale are respected.
+		@param	exactMesh If `true` and the object is a non-skinned `MeshObject`,
+				the triangles of the mesh are tested after the OBB broad-phase
+				check passes. Skinned (and morphed) meshes fall back to the OBB.
+		@return	The world space hit location, or `null` if there is no hit.
+	**/
+	public static function obbIntersectObject(o: Object, inputX: FastFloat, inputY: FastFloat, camera: CameraObject, exactMesh = false): Vec4 {
+		if (o == null || camera == null) return null;
+
+		var ray = getRay(inputX, inputY, camera);
+		var dist = rayObjectDistance(ray, o, exactMesh);
+		return dist < 0 ? null : ray.at(dist);
+	}
+
+	/**
+		Like `obbIntersectObject()`, but returns the object with the nearest
+		hit along the ray. The hit location is stored in `RayCaster.lastHit`.
+		@return	The closest hit object, or `null` if no object was hit.
+	**/
+	public static function closestObbIntersectObject(objects: Array<Object>, inputX: FastFloat, inputY: FastFloat, camera: CameraObject, exactMesh = false): Object {
+		lastHit = null;
+		if (objects == null || camera == null) return null;
+
+		var ray = getRay(inputX, inputY, camera);
+		var closest: Object = null;
+		var minDist = Math.POSITIVE_INFINITY;
+
+		for (o in objects) {
+			if (o == null) continue;
+			var dist = rayObjectDistance(ray, o, exactMesh);
+			if (dist >= 0 && dist < minDist) {
+				minDist = dist;
+				closest = o;
+			}
+		}
+
+		if (closest != null) lastHit = ray.at(minDist);
+		return closest;
+	}
+
+	/**
+		Test a world space ray against an object's oriented bounding box and,
+		optionally, against its mesh triangles.
+		@return	The ray parameter `t` of the hit (world hit = `ray.at(t)`),
+				or `-1` if there is no hit.
+	**/
+	public static function rayObjectDistance(ray: Ray, o: Object, exactMesh = false): Float {
+		if (ray == null || o == null) return -1;
+
+		var tr = o.transform;
+		var sx: Float = tr.scale.x;
+		var sy: Float = tr.scale.y;
+		var sz: Float = tr.scale.z;
+		if (sx == 0 || sy == 0 || sz == 0) return -1;
+
+		// World -> local space. Affine mapping, so the ray parameter `t` is preserved
+		invWorld.getInverse(tr.world);
+		localOrigin.setFrom(ray.origin);
+		localOrigin.applymat(invWorld);
+		var ox: Float = localOrigin.x;
+		var oy: Float = localOrigin.y;
+		var oz: Float = localOrigin.z;
+
+		// Direction: rotation / scale only, no translation
+		var wd = ray.direction;
+		var iw = invWorld;
+		var dx: Float = iw._00 * wd.x + iw._10 * wd.y + iw._20 * wd.z;
+		var dy: Float = iw._01 * wd.x + iw._11 * wd.y + iw._21 * wd.z;
+		var dz: Float = iw._02 * wd.x + iw._12 * wd.y + iw._22 * wd.z;
+
+		// Local bounding box, centered at the origin (see exporter calc_aabb)
+		var hx: Float = Math.abs(tr.dim.x / sx) * 0.5;
+		var hy: Float = Math.abs(tr.dim.y / sy) * 0.5;
+		var hz: Float = Math.abs(tr.dim.z / sz) * 0.5;
+
+		// Broad phase
+		var boxDist = rayLocalBox(ox, oy, oz, dx, dy, dz, hx, hy, hz);
+		if (boxDist < 0 || !exactMesh) return boxDist;
+
+		// Narrow phase, fall back to the OBB result when triangles are unusable
+		if (!Std.isOfType(o, MeshObject)) return boxDist;
+		var mo: MeshObject = cast o;
+		if (mo.data == null || mo.data.geom == null || mo.data.isSkinned) return boxDist;
+		#if arm_morph_target
+		if (mo.morphTarget != null) return boxDist;
+		#end
+		var geom = mo.data.geom;
+		if (geom.positions == null || geom.positions.values == null || geom.indices == null) return boxDist;
+
+		return rayPackedMesh(mo, ox, oy, oz, dx, dy, dz);
+	}
+
+	/**
+		Slab test of a local space ray against a box centered at the origin.
+		@return	Distance parameter of the entry point (or of the exit point if
+				the ray starts inside the box), `-1` on miss.
+	**/
+	static function rayLocalBox(ox: Float, oy: Float, oz: Float, dx: Float, dy: Float, dz: Float, hx: Float, hy: Float, hz: Float): Float {
+		var tmin = Math.NEGATIVE_INFINITY;
+		var tmax = Math.POSITIVE_INFINITY;
+
+		// X slab
+		if (dx == 0) {
+			if (ox < -hx || ox > hx) return -1;
+		}
+		else {
+			var inv = 1.0 / dx;
+			var t1 = (-hx - ox) * inv;
+			var t2 = (hx - ox) * inv;
+			if (t1 > t2) { var tmp = t1; t1 = t2; t2 = tmp; }
+			if (t1 > tmin) tmin = t1;
+			if (t2 < tmax) tmax = t2;
+			if (tmin > tmax) return -1;
+		}
+
+		// Y slab
+		if (dy == 0) {
+			if (oy < -hy || oy > hy) return -1;
+		}
+		else {
+			var inv = 1.0 / dy;
+			var t1 = (-hy - oy) * inv;
+			var t2 = (hy - oy) * inv;
+			if (t1 > t2) { var tmp = t1; t1 = t2; t2 = tmp; }
+			if (t1 > tmin) tmin = t1;
+			if (t2 < tmax) tmax = t2;
+			if (tmin > tmax) return -1;
+		}
+
+		// Z slab
+		if (dz == 0) {
+			if (oz < -hz || oz > hz) return -1;
+		}
+		else {
+			var inv = 1.0 / dz;
+			var t1 = (-hz - oz) * inv;
+			var t2 = (hz - oz) * inv;
+			if (t1 > t2) { var tmp = t1; t1 = t2; t2 = tmp; }
+			if (t1 > tmin) tmin = t1;
+			if (t2 < tmax) tmax = t2;
+			if (tmin > tmax) return -1;
+		}
+
+		// Box is behind the ray
+		if (tmax < 0) return -1;
+
+		return tmin >= 0 ? tmin : tmax;
+	}
+
+	/**
+		Möller–Trumbore test of a local space ray against all triangles of a
+		mesh. Positions are tested in their packed int16 form; the ray is
+		scaled into that space instead, which leaves `t` unchanged.
+		Back faces are not culled.
+		@return	Distance parameter of the nearest hit, `-1` on miss.
+	**/
+	static function rayPackedMesh(mo: MeshObject, ox: Float, oy: Float, oz: Float, dx: Float, dy: Float, dz: Float): Float {
+		var geom = mo.data.geom;
+		var pos = geom.positions.values;
+		var size: Null<Int> = geom.positions.size;
+		var stride: Int = (size != null && size >= 3) ? size : 4;
+
+		// Local units -> packed units
+		var toPacked: Float = 32767 / mo.data.scalePos;
+		ox *= toPacked; oy *= toPacked; oz *= toPacked;
+		dx *= toPacked; dy *= toPacked; dz *= toPacked;
+
+		var best = Math.POSITIVE_INFINITY;
+
+		for (ind in geom.indices) {
+			if (ind == null) continue;
+			var i = 0;
+			var len = ind.length - 2;
+			while (i < len) {
+				var i0: Int = ind[i] * stride;
+				var i1: Int = ind[i + 1] * stride;
+				var i2: Int = ind[i + 2] * stride;
+				i += 3;
+
+				var v0x: Float = pos[i0];
+				var v0y: Float = pos[i0 + 1];
+				var v0z: Float = pos[i0 + 2];
+
+				// Edges
+				var e1x: Float = pos[i1] - v0x;
+				var e1y: Float = pos[i1 + 1] - v0y;
+				var e1z: Float = pos[i1 + 2] - v0z;
+				var e2x: Float = pos[i2] - v0x;
+				var e2y: Float = pos[i2 + 1] - v0y;
+				var e2z: Float = pos[i2 + 2] - v0z;
+
+				// p = d x e2
+				var px = dy * e2z - dz * e2y;
+				var py = dz * e2x - dx * e2z;
+				var pz = dx * e2y - dy * e2x;
+
+				var det = e1x * px + e1y * py + e1z * pz;
+				if (det > -1e-12 && det < 1e-12) continue; // Parallel or degenerate
+				var invDet = 1.0 / det;
+
+				// s = o - v0
+				var sx = ox - v0x;
+				var sy = oy - v0y;
+				var sz = oz - v0z;
+
+				var u = (sx * px + sy * py + sz * pz) * invDet;
+				if (u < 0.0 || u > 1.0) continue;
+
+				// q = s x e1
+				var qx = sy * e1z - sz * e1y;
+				var qy = sz * e1x - sx * e1z;
+				var qz = sx * e1y - sy * e1x;
+
+				var v = (dx * qx + dy * qy + dz * qz) * invDet;
+				if (v < 0.0 || u + v > 1.0) continue;
+
+				var t = (e2x * qx + e2y * qy + e2z * qz) * invDet;
+				if (t >= 0.0 && t < best) best = t;
+			}
+		}
+
+		return best == Math.POSITIVE_INFINITY ? -1 : best;
 	}
 	
 	public static function planeIntersect(normal: Vec4, a: Vec4, inputX: FastFloat, inputY: FastFloat, camera: CameraObject): Vec4 {
