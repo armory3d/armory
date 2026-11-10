@@ -1,0 +1,24 @@
+﻿{
+	"contexts": [
+		{
+			"name": "ssr_blur_pass_x",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [{"name": "dirInv", "link": "_vec2xInv"}],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "ssr_blur_pass.frag.glsl"
+		},
+		{
+			"name": "ssr_blur_pass_y",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [{"name": "dirInv", "link": "_vec2yInv"}],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "ssr_blur_pass.frag.glsl"
+		}
+	]
+}
