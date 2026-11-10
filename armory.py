@@ -176,6 +176,7 @@ class ArmoryAddonPreferences(AddonPreferences):
     khamake_threads: IntProperty(name='Khamake Processes', description='Allow Khamake to spawn multiple processes for faster builds', default=4, min=1)
     khamake_threads_use_auto: BoolProperty(name='Auto', description='Let Khamake choose the number of processes automatically', default=False)
     compilation_server: BoolProperty(name='Compilation Server', description='Allow Haxe to create a local compilation server for faster builds', default=True)
+    compilation_server_port: IntProperty(name='Compilation Server Port', description='Local port for the Haxe compilation server. Change it if another application already uses this port', default=6000, min=1024, max=65535)
     renderdoc_path: StringProperty(name="RenderDoc Path", description="Binary path", subtype="FILE_PATH", update=renderdoc_path_update, default="")
     ffmpeg_path: StringProperty(name="FFMPEG Path", description="Binary path", subtype="FILE_PATH", update=ffmpeg_path_update, default="")
     save_on_build: BoolProperty(name="Save on Build", description="Save .blend", default=False)
@@ -403,7 +404,11 @@ class ArmoryAddonPreferences(AddonPreferences):
                 _col.enabled = not self.khamake_threads_use_auto
                 _col.prop(self, "khamake_threads")
                 row.prop(self, "khamake_threads_use_auto", toggle=True)
-                box.prop(self, "compilation_server")
+                row = box.row()
+                row.prop(self, "compilation_server")
+                _col = row.column()
+                _col.enabled = self.compilation_server
+                _col.prop(self, "compilation_server_port", text="Port")
                 box.prop(self, "open_build_directory")
                 box.prop(self, "save_on_build")
 

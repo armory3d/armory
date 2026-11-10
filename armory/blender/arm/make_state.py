@@ -10,7 +10,6 @@ if not arm.is_reload(__name__):
     last_resx = 0
     last_resy = 0
     last_scene = ''
-    last_world_defs = ''
     proc_play = None
     proc_build = None
     proc_publish_build = None

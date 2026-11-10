@@ -295,27 +295,17 @@ def make(
                 frag = f.read().split("\n", 1)[1]
                 frag = "#version 450\n#define " + d + "\n" + frag
 
-            with open(
-                arm.utils.get_fp_build()
-                + "/compiled/Shaders/"
-                + base_name
-                + d
-                + ".vert.glsl",
-                "w",
+            # Written on every build, unchanged files keep their timestamp
+            arm.utils.write_file_if_changed(
+                arm.utils.get_fp_build() + "/compiled/Shaders/" + base_name + d + ".vert.glsl",
+                vert,
                 encoding="utf-8",
-            ) as f:
-                f.write(vert)
-
-            with open(
-                arm.utils.get_fp_build()
-                + "/compiled/Shaders/"
-                + base_name
-                + d
-                + ".frag.glsl",
-                "w",
+            )
+            arm.utils.write_file_if_changed(
+                arm.utils.get_fp_build() + "/compiled/Shaders/" + base_name + d + ".frag.glsl",
+                frag,
                 encoding="utf-8",
-            ) as f:
-                f.write(frag)
+            )
 
             # Add context variant
             c2 = c.copy()
