@@ -1,7 +1,7 @@
 """Utilities for handling linked blend files in Armory exports."""
 from contextlib import contextmanager
-from pathlib import Path
-from typing import Dict, Optional
+import os
+from typing import Optional
 
 import bpy
 
@@ -13,25 +13,27 @@ else:
     arm.enable_reload(__name__)
 
 
-def is_linked(bdata) -> bool:
-    """Check if a data block is linked from an external library."""
-    if bdata is None:
-        return False
-    return bdata.library is not None
+def library_suffix(lib: bpy.types.Library) -> str:
+    """Get the unique name suffix of a library.
 
+    The suffix is the path of the library's blend file relative to the
+    project root, without the extension and with path separators replaced
+    by `_` (e.g. `levels/forest/level.blend` -> `levels_forest_level`), so
+    blend files with the same name in different folders don't collide.
+    Blend files outside the project root give just their file name.
+    """
+    import arm.utils
 
-def get_library_name(bdata) -> Optional[str]:
-    """Get the library filename for a linked data block."""
-    if bdata is None or bdata.library is None:
-        return None
-    return bdata.library.name
+    lib_path = os.path.normpath(bpy.path.abspath(lib.filepath))
+    try:
+        rel_path = os.path.relpath(lib_path, arm.utils.get_fp())
+    except ValueError:
+        # On another drive than the project
+        rel_path = os.path.basename(lib_path)
+    if rel_path.startswith(os.pardir):
+        rel_path = os.path.basename(lib_path)
 
-
-def get_library_path(bdata) -> Optional[Path]:
-    """Get the absolute path to the library .blend file."""
-    if bdata is None or bdata.library is None:
-        return None
-    return Path(bpy.path.abspath(bdata.library.filepath))
+    return arm.utils.safestr(os.path.splitext(rel_path)[0].replace(os.sep, '_'))
 
 
 def asset_name(bdata) -> Optional[str]:
@@ -40,19 +42,36 @@ def asset_name(bdata) -> Optional[str]:
         return None
     name = bdata.name
     if bdata.library is not None:
-        name += '_' + bdata.library.name
+        name += '_' + library_suffix(bdata.library)
     return name
 
 
-def get_source_path(bdata) -> Optional[Path]:
-    """Get Sources folder path for a linked data block's project."""
-    lib_path = get_library_path(bdata)
-    if lib_path is None:
-        return None
-    sources_path = lib_path.parent / 'Sources'
-    if sources_path.exists() and sources_path.is_dir():
-        return sources_path
-    return None
+def get_scene_name(scene) -> str:
+    """Get the unique export name of a scene (without file extension).
+
+    Local scenes keep their name. Scenes from an external blend file are
+    named `[scene_name]_[blend_subdir_path]_[blend_name]`, where the subdirectories
+    are relative to the external blends path, so scenes with the same name
+    in different files or folders don't collide. Blend files directly in
+    the external blends path give `[scene_name]_[blend_name]`.
+    """
+    import arm.utils
+
+    if scene.library is None:
+        return arm.utils.safestr(scene.name)
+
+    wrd = bpy.data.worlds['Arm']
+    lib_path = os.path.normpath(bpy.path.abspath(scene.library.filepath))
+    root = os.path.normpath(bpy.path.abspath(wrd.arm_external_blends_path.strip()))
+    try:
+        rel_dir = os.path.relpath(os.path.dirname(lib_path), root)
+    except ValueError:
+        # On another drive than the external blends path: no relative path
+        rel_dir = os.curdir
+    subdirs = [] if rel_dir == os.curdir else rel_dir.split(os.sep)
+
+    blend_name = os.path.splitext(os.path.basename(lib_path))[0]
+    return arm.utils.safestr('_'.join([scene.name, *subdirs, blend_name]))
 
 
 class TransformEvaluator:
@@ -131,15 +150,4 @@ def evaluated_mesh(bobject: bpy.types.Object, scene: bpy.types.Scene,
                 bpy.data.collections.remove(temp_collection)
             except Exception:
                 pass
-
-
-def discover_linked_sources() -> Dict[str, Path]:
-    """Discover Sources folders from all linked libraries."""
-    sources: Dict[str, Path] = {}
-    for lib in bpy.data.libraries:
-        lib_path = Path(bpy.path.abspath(lib.filepath))
-        sources_path = lib_path.parent / 'Sources'
-        if sources_path.exists() and sources_path.is_dir():
-            sources[lib.name] = sources_path
-    return sources
 

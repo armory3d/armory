@@ -1,6 +1,8 @@
 import bpy
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
+import arm.utils
+
 
 
 class ArmArrayItem(bpy.types.PropertyGroup):
@@ -228,6 +230,98 @@ class ArmPropertyListMoveItem(bpy.types.Operator):
             return{'CANCELLED'}
         return{'FINISHED'}
 
+
+class ARM_OT_CopyArmoryPropsToSelected(bpy.types.Operator):
+    bl_label = 'Copy Armory Props to Selected Objects'
+    bl_idname = 'arm.copy_armory_props_to_selected'
+    bl_description = 'Copies Armory object properties of the active object to all other selected objects'
+
+    overwrite: BoolProperty(name="Overwrite", default=True)
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and len(context.selected_objects) > 1
+
+    def draw_message_box(self, context):
+        layout = self.layout
+        layout = layout.column(align=True)
+        layout.alignment = 'EXPAND'
+
+        layout.label(text='Warning: At least one target object already has', icon='ERROR')
+        layout.label(text='custom properties assigned to it!', icon='BLANK1')
+        layout.separator()
+        layout.label(text='Do you want to overwrite existing properties', icon='BLANK1')
+        layout.label(text='or append to them?', icon='BLANK1')
+        layout.separator()
+
+        row = layout.row(align=True)
+        row.active_default = True
+        row.operator('arm.copy_armory_props_to_selected', text='Overwrite').overwrite = True
+        row.active_default = False
+        row.operator('arm.copy_armory_props_to_selected', text='Append').overwrite = False
+        row.operator('arm.discard_popup', text='Cancel')
+
+    def execute(self, context):
+        source_obj = bpy.context.active_object
+
+        # Armory object-level settings to copy
+        object_settings = [
+            'arm_sorting_index',
+            'arm_export',
+            'arm_spawn',
+            'arm_mobile',
+            'arm_animation_enabled',
+            'arm_lighting',
+            'arm_instanced',
+        ]
+
+        for target_obj in bpy.context.selected_objects:
+            if source_obj == target_obj:
+                continue
+
+            # Copy object-level Armory flags
+            for prop in object_settings:
+                if hasattr(source_obj, prop) and hasattr(target_obj, prop):
+                    setattr(target_obj, prop, getattr(source_obj, prop))
+
+            # Offset for property iteration when appending properties
+            offset = 0
+            if not self.overwrite:
+                offset = len(target_obj.arm_propertylist)
+
+            arm.utils.merge_into_collection(
+                source_obj.arm_propertylist, target_obj.arm_propertylist, clear_dst=self.overwrite)
+
+            for i in range(len(source_obj.arm_propertylist)):
+                if i + offset < len(target_obj.arm_propertylist):
+                    arm.utils.merge_into_collection(
+                        source_obj.arm_propertylist[i].array_prop,
+                        target_obj.arm_propertylist[i + offset].array_prop,
+                        clear_dst=True
+                    )
+
+        return {"FINISHED"}
+
+    def invoke(self, context, event):
+        show_dialog = False
+
+        source_obj = bpy.context.active_object
+        for target_object in bpy.context.selected_objects:
+            if source_obj == target_object:
+                continue
+            else:
+                if target_object.arm_propertylist:
+                    show_dialog = True
+                    break
+
+        if show_dialog:
+            context.window_manager.popover(self.__class__.draw_message_box, ui_units_x=16)
+        else:
+            bpy.ops.arm.copy_armory_props_to_selected(overwrite=self.overwrite)
+
+        return {'INTERFACE'}
+
+
 def draw_properties(layout, obj):
     layout.label(text="Properties")
 
@@ -240,6 +334,7 @@ def draw_properties(layout, obj):
     col = row.column(align=True)
     col.operator("arm_propertylist.new_item", icon='ADD', text="")
     col.operator("arm_propertylist.delete_item", icon='REMOVE', text="")
+    col.operator("arm.copy_armory_props_to_selected", icon='PASTEDOWN', text="")
     if len(obj.arm_propertylist) > 1:
         col.separator()
         col.operator("arm_propertylist.move_item", icon='TRIA_UP', text="").direction = 'UP'
@@ -264,10 +359,6 @@ def draw_properties(layout, obj):
             col.operator("arm_array.remove_item", icon='REMOVE', text="")
 
 
-
-
-
-
 __REG_CLASSES = (
     ArmArrayItem,
     ArmPropertyListItem,
@@ -278,6 +369,7 @@ __REG_CLASSES = (
     ArmPropertyListMoveItem,
     ArmArrayAddItem,
     ArmArrayRemoveItem,
+    ARM_OT_CopyArmoryPropsToSelected,
 )
 __reg_classes, unregister = bpy.utils.register_classes_factory(__REG_CLASSES)
 
@@ -288,3 +380,4 @@ def register():
     bpy.types.Object.arm_propertylist_index = IntProperty(name="Index for arm_propertylist", default=0)
     # New property for tracking the active index in array items
     bpy.types.PropertyGroup.array_index = IntProperty(name="Array Index", default=0)
+

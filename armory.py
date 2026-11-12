@@ -6,8 +6,8 @@ bl_info = {
     "location": "Properties -> Render -> Armory Player",
     "description": "3D Game Engine for Blender",
     "author": "Armory3D.org",
-    "version": (2025, 9, 0),
-    "blender": (4, 5, 0),
+    "version": (2026, 2, 0),
+    "blender": (5, 2, 0),
     "doc_url": "https://github.com/armory3d/armory/wiki",
     "tracker_url": "https://github.com/armory3d/armory/issues"
 }
@@ -86,10 +86,11 @@ def detect_sdk_path():
     if match:
         addon_prefs.sdk_path = os.path.dirname(match[-1])
 
-def get_link_web_server(self):
-    return self.get('link_web_server', 'http://localhost/')
-
-def set_link_web_server(self, value):
+def link_web_server_update(self, context):
+    # Blender 5.x no longer supports IDProperty-backed get/set on
+    # AddonPreferences, so validation happens in this update callback
+    if self.skip_update:
+        return
     regex = re.compile(
         r'^(?:http|ftp)s?://' # http:// or https://
         r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
@@ -97,8 +98,9 @@ def set_link_web_server(self, value):
         r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
         r'(?::\d+)?' # optional port
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-    if re.match(regex, value) is not None:
-        self['link_web_server'] = value
+    if re.match(regex, self.link_web_server) is None:
+        self.skip_update = True
+        self.link_web_server = 'http://localhost/'
 
 
 class ArmoryAddonPreferences(AddonPreferences):
@@ -283,7 +285,7 @@ class ArmoryAddonPreferences(AddonPreferences):
     android_apk_copy_open_directory: BoolProperty(name="Open Directory After Copy", description="Open the directory after copy the APK file", default=False)
     # HTML5 Settings
     html5_copy_path: StringProperty(name="HTML5 Copy Path", description="Path to copy project after successfully publish", default="", subtype="FILE_PATH", update=html5_copy_path_update)
-    link_web_server: StringProperty(name="Url To Web Server", description="Url to the web server that runs the local server", default="http://localhost/", set=set_link_web_server, get=get_link_web_server)
+    link_web_server: StringProperty(name="Url To Web Server", description="Url to the web server that runs the local server", default="http://localhost/", update=link_web_server_update)
     html5_server_port: IntProperty(name="Web Server Port", description="The port number of the local web server", default=8040, min=1024, max=65535)
     html5_server_log: BoolProperty(name="Enable Http Log", description="Enable logging of http requests to local web server", default=True)
 
@@ -311,7 +313,7 @@ class ArmoryAddonPreferences(AddonPreferences):
         layout.label(text="Welcome to Armory!")
 
         # Compare version Blender and Armory (major, minor)
-        if bpy.app.version[:2] not in [(4, 5), (4, 2), (3, 6), (3, 3)]:
+        if bpy.app.version[:2] not in [(5, 2), (4, 5), (4, 2), (3, 6), (3, 3)]:
             box = layout.box().column()
             box.label(text="Warning: For Armory to work correctly use a Blender LTS version.")
 

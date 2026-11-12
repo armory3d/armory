@@ -102,7 +102,7 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
 	) / (6 + DIFFUSE_CONE_COUNT);
 	vec3 direction_weight = abs(dir);
 
-	float coneCoefficient = 2.0 * tan(aperture);
+	float coneCoefficient = 2.0 * tan(aperture * 0.5);
 
     while (sampleCol.a < 1.0 && dist < MAX_DISTANCE && clipmap_index0 < voxelgiClipmapCount) {
 		vec4 mipSample = vec4(0.0);

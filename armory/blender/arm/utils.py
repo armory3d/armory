@@ -419,7 +419,7 @@ def fetch_script_props(filename: str):
 
         # Property type is annotated
         if p_type is not None:
-            if p_type.startswith("iron.object.") or p_type == "iron.data.SceneFormat.TSceneFormat":
+            if p_type.startswith("iron.object."):
                 p_type = p_type[12:]
             elif p_type.startswith("iron.math."):
                 p_type = p_type[10:]
@@ -497,7 +497,7 @@ def get_type_default_value(prop_type: str):
     if prop_type == "Float":
         return 0.0
     if prop_type == "String" or prop_type in (
-            "Object", "CameraObject", "LightObject", "MeshObject", "SpeakerObject", "TSceneFormat"):
+            "Object", "CameraObject", "LightObject", "MeshObject", "SpeakerObject"):
         return ""
     if prop_type == "Bool":
         return False
@@ -742,7 +742,8 @@ def asset_name(bdata):
     """Get the qualified asset name, with library suffix for linked data.
 
     For local assets, returns just the name.
-    For linked assets, returns 'name_libraryname' to ensure uniqueness.
+    For linked assets, returns 'name_librarysuffix' to ensure uniqueness,
+    see linked_utils.library_suffix().
     """
     import arm.linked_utils as linked_utils
     return linked_utils.asset_name(bdata)
@@ -803,7 +804,7 @@ def check_blender_version(op: bpy.types.Operator):
     """Check whether the Blender version is supported by Armory,
     if not, report in UI.
     """
-    if bpy.app.version[:2] not in [(4, 5), (4, 2), (3, 6), (3, 3)]:
+    if bpy.app.version[:2] not in [(5, 2), (4, 5), (4, 2), (3, 6), (3, 3)]:
         op.report({'INFO'}, 'INFO: For Armory to work correctly use a Blender LTS version.')
 
 
@@ -1010,7 +1011,7 @@ def target_to_gapi(arm_project_target: str) -> str:
         return 'arm_gapi_' + arm.utils.get_os()
     elif arm_project_target == 'krom-windows':
         return 'arm_gapi_win'
-    elif arm_project_target == 'windows-hl':
+    elif arm_project_target in ('windows-hl', 'windows'):
         return 'arm_gapi_win'
     elif arm_project_target == 'krom-linux':
         return 'arm_gapi_linux'

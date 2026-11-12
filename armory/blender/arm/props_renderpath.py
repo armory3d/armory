@@ -140,7 +140,7 @@ def update_preset(self, context):
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
-        rpdat.rp_voxels = 'Voxel GI'
+        rpdat.rp_voxels = 'Off'
         rpdat.rp_voxelgi_resolution = '64'
         rpdat.arm_voxelgi_size = 0.125
         rpdat.arm_voxelgi_revoxelize = False
@@ -486,8 +486,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_ssr_half_res: BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
     rp_voxels: EnumProperty(
         items=[('Off', 'Off', 'Off'),
-               ('Voxel GI', 'Voxel GI', 'Voxel GI'),
-               ('Voxel AO', 'Voxel AO', 'Voxel AO')
+               ('Voxel GI', 'Voxel GI', 'Voxel GI')
+               #('Voxel AO', 'Voxel AO', 'Voxel AO')
                ],
         name="Voxels", description="Dynamic global illumination", default='Off', update=update_renderpath)
     rp_voxelgi_resolution: EnumProperty(
@@ -583,6 +583,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_ss_refraction_search_dist: FloatProperty(name="Search", default=5.0, update=assets.invalidate_shader_cache)
     arm_ss_refraction_falloff_exp: FloatProperty(name="Falloff", default=1.0, update=assets.invalidate_shader_cache)
     arm_ss_refraction_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
+    arm_ss_refraction_absorption: FloatProperty(name="Absorption", description="Density of the Beer-Lambert absorption inside refractive media, the material base color is transmitted at one unit of thickness", default=1.0, min=0.0, update=assets.invalidate_shader_cache)
     arm_volumetric_light_air_turbidity: FloatProperty(name="Air Turbidity", default=1.0, update=assets.invalidate_shader_cache)
     arm_volumetric_light_air_color: FloatVectorProperty(name="Air Color", size=3, default=[1.0, 1.0, 1.0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
     arm_volumetric_light_steps: IntProperty(name="Steps", default=20, min=0, update=assets.invalidate_shader_cache)
@@ -649,11 +650,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off')],
         name='Shape key', description='Enable shape keys', default='On', update=assets.invalidate_shader_cache)
-    arm_particles: EnumProperty(
-        items=[('GPU', 'GPU', 'GPU'),
-               ('CPU', 'CPU', 'CPU'),
-               ('Off', 'Off', 'Off')],
-        name='Particles', description='Enable particle simulation', default='GPU', update=assets.invalidate_shader_cache)
     # Material override flags
     arm_culling: BoolProperty(name="Culling", default=True)
     arm_two_sided_area_light: BoolProperty(name="Two-Sided Area Light", description="Emit light from both faces of area plane", default=False, update=assets.invalidate_shader_cache)

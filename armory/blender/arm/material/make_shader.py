@@ -102,6 +102,9 @@ def build(material: Material, mat_users: Dict[Material, List[Object]], mat_armus
         elif rp == 'refraction':
             con = make_refract.make(rp)
 
+        elif rp == 'refraction_backface':
+            con = make_depth.make(rp, rpasses, backface=True)
+
         elif rp == 'overlay':
             con = make_overlay.make(rp)
 

@@ -738,7 +738,7 @@ class Uniforms {
 					i = w != null ? w.probe.raw.radiance_mipmaps + 1 - 2 : 1; // Include basecolor and exclude 2 scaled mips
 				}
 				case "_frame": {
-					i = RenderPath.active.frame; trace(i);
+					i = RenderPath.active.frame;
 				}
 				default:
 					return false;
@@ -913,29 +913,20 @@ class Uniforms {
 					m = helpMat;
 				}
 				#end
-				#if arm_gpu_particles
+				#if arm_particles
 				case "_particleData": {
 					var mo = cast(object, MeshObject);
 					if (mo.particleOwner != null && mo.particleOwner.particleSystems != null) {
-						m = mo.particleOwner.particleSystems[mo.particleIndex].getData();
+						m = (cast mo.particleOwner.particleSystems[mo.particleIndex]: ParticleSystemGPU).getData();
 					}
 				}
 				#end
 			}
 
 			if (m == null) {
-				#if arm_spot
-				if (c.link.startsWith("_biasLightWorldViewProjectionMatrixSpot")) {
-					var light = getSpot(c.link.charCodeAt(c.link.length - 1) - "0".code);
-					if (light != null) {
-						object == null ? helpMat.setIdentity() : helpMat.setFrom(object.transform.worldUnpack);
-						helpMat.multmat(light.VP);
-						helpMat.multmat(biasMat);
-						m = helpMat;
-					}
-				}
+				#if (!arm_clusters && arm_spot)
 				if (c.link.startsWith("_biasLightViewProjectionMatrixSpot")) {
-					var light = getSpot(c.link.charCodeAt(c.link.length - 1) - "0".code);
+					var light = getSpot(0);
 					if (light != null) {
 						helpMat.setFrom(light.VP);
 						helpMat.multmat(biasMat);
@@ -1129,23 +1120,23 @@ class Uniforms {
 				case "_texUnpack": {
 					f = texUnpack != null ? texUnpack : 1.0;
 				}
-				#if arm_gpu_particles
+				#if arm_particles
 				case "_particleSizeRandom": {
 					var mo = cast(object, MeshObject);
 					if (mo.particleOwner != null && mo.particleOwner.particleSystems != null) {
-						f = mo.particleOwner.particleSystems[mo.particleIndex].getSizeRandom();
+						f = (cast mo.particleOwner.particleSystems[mo.particleIndex]: ParticleSystemGPU).getSizeRandom();
 					}
 				}
 				case "_particleRandom": {
 					var mo = cast(object, MeshObject);
 					if (mo.particleOwner != null && mo.particleOwner.particleSystems != null) {
-						f = mo.particleOwner.particleSystems[mo.particleIndex].getRandom();
+						f = (cast mo.particleOwner.particleSystems[mo.particleIndex]: ParticleSystemGPU).getRandom();
 					}
 				}
 				case "_particleSize": {
 					var mo = cast(object, MeshObject);
 					if (mo.particleOwner != null && mo.particleOwner.particleSystems != null) {
-						f = mo.particleOwner.particleSystems[mo.particleIndex].getSize();
+						f = (cast mo.particleOwner.particleSystems[mo.particleIndex]: ParticleSystemGPU).getSize();
 					}
 				}
 				#end
@@ -1174,11 +1165,22 @@ class Uniforms {
 					}
 				}
 				#end
-				#if (arm_clusters && arm_spot)
+				#if arm_spot
 				case "_biasLightWorldViewProjectionMatrixSpotArray": {
+					#if arm_clusters
 					fa = LightObject.updateLWVPMatrixArray(object, "spot");
+					#else
+					// Single spot light path (_SinglePoint), LWVPSpotArray[1] holds one matrix
+					var light = getSpot(0);
+					if (light != null) {
+						helpMat.setFrom(light.VP);
+						helpMat.multmat(biasMat);
+						g.setMatrix(location, helpMat.self);
+					}
+					return;
+					#end
 				}
-				#end // arm_clusters
+				#end
 				#if arm_morph_target
 				case "_morphWeights": {
 					fa = cast(object, MeshObject).morphTarget.morphWeights;

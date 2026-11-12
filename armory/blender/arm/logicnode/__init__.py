@@ -1,3 +1,4 @@
+import bpy
 import importlib
 import inspect
 import pkgutil
@@ -87,7 +88,10 @@ def init_nodes(base_path=__path__, base_package=__package__, subpackages_only=Fa
         if is_pkg:
             # The package must be loaded as well so that the modules from that package can be accessed (see the
             # pkgutil.walk_packages documentation for more information on this)
-            loader.find_module(module_name).load_module(module_name)
+            if bpy.app.version < (5, 0, 0):
+                loader.find_module(module_name).load_module(module_name)
+            else:
+                importlib.import_module(module_name)
 
         # Only look at modules in sub packages if specified
         elif not subpackages_only or module_name.rsplit('.', 1)[0] != base_package:

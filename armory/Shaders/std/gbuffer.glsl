@@ -81,7 +81,10 @@ vec2 unpackFloat(const float f) {
 
 float packFloat2(const float f1, const float f2) {
 	// Higher f1 = less precise f2
-	return floor(f1 * 255.0) + min(f2, 1.0 - 1.0 / 100.0);
+	// The gbuffer is half float: at f1 = 1.0 the stored value is near 255 where
+	// half floats step by 0.125, f2 close to 1.0 would round up to the next
+	// integer and unpack as f2 = 0.0. Keep f2 below the last representable step.
+	return floor(clamp(f1, 0.0, 1.0) * 255.0) + clamp(f2, 0.0, 0.9);
 }
 
 vec2 unpackFloat2(const float f) {

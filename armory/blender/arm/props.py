@@ -270,6 +270,11 @@ def init_properties():
                ('Enabled', 'Enabled', 'Enabled'),
                ('Auto', 'Auto', 'Auto')],
         name="Networking", default='Auto', description="Include Network library", update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_particles = EnumProperty(
+        items=[('Disabled', 'Disabled', 'Disabled'),
+               ('Auto', 'Auto', 'Auto'),
+               ('Enabled', 'Enabled', 'Enabled')],
+        name="Particles", default='Auto', description="Include particle systems, Auto includes them only if a scene uses one", update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_audio = EnumProperty(
         items=[('Disabled', 'Disabled', 'Disabled'),
                ('Enabled', 'Enabled', 'Enabled')],
@@ -371,6 +376,7 @@ def init_properties():
     bpy.types.Object.arm_rb_angular_factor = FloatVectorProperty(name="Angular Factor", size=3, description="Set to 0 to lock axis", default=[1,1,1])
     bpy.types.Object.arm_rb_angular_friction = FloatProperty(name="Angular Friction", description="Angular Friction", default=0.1)
     bpy.types.Object.arm_rb_trigger = BoolProperty(name="Trigger", description="Disable contact response", default=False)
+    bpy.types.Object.arm_rb_kinematic_character = BoolProperty(name="Kinematic Character", description="Export a kinematic character controller instead of a rigid body", default=False)
     bpy.types.Object.arm_rb_deactivation_time = FloatProperty(name="Deactivation Time", description="Delay putting rigid body into sleep", default=0.0)
     bpy.types.Object.arm_rb_ccd = BoolProperty(name="Continuous Collision Detection", description="Improve collision for fast moving objects", default=False)
     bpy.types.Object.arm_rb_interpolate = BoolProperty(name="Interpolation", description="Smooths out the object's transform on physics steps", default=False)
@@ -457,7 +463,7 @@ def init_properties():
                ('cylindrical', 'Cylindrical', 'Cylindrical')],
         name="Billboard", default='off', description="Track camera", update=assets.invalidate_shader_cache)
     bpy.types.Material.arm_tilesheet_flag = BoolProperty(name="Tilesheet Flag", description="This material is used for tilesheet", default=False)
-    bpy.types.Material.arm_particle_flag = BoolProperty(name="Particle Flag", description="This material is used for particles", default=False)
+    bpy.types.Material.arm_particle_flag = BoolProperty(name="Particle Flag", description="This material is used for GPU particles", default=False)
     bpy.types.Material.arm_particle_fade = BoolProperty(name="Particle Fade", description="Fade particles in and out", default=False)
     bpy.types.Material.arm_blending = BoolProperty(name="Blending", description="Enable additive blending", default=False)
     bpy.types.Material.arm_blending_source = EnumProperty(
@@ -572,6 +578,10 @@ def init_properties():
     bpy.types.Node.arm_watch = BoolProperty(name="Watch", description="Watch value of this node in debug console", default=False)
     bpy.types.Node.arm_version = IntProperty(name="Node Version", description="The version of an instanced node", default=0)
     # Particles
+    bpy.types.ParticleSettings.arm_particle_type = EnumProperty(
+        items=[('CPU', 'CPU', 'Spawn each particle as an object, updated on the CPU'),
+               ('GPU', 'GPU', 'Draw all particles as one instanced object, animated on the GPU')],
+        name="Type", default='CPU', description="Where this particle system is simulated", update=assets.invalidate_shader_cache)
     bpy.types.ParticleSettings.arm_auto_start = BoolProperty(name="Auto Start", description="Automatically start this particle system on load", default=True)
     bpy.types.ParticleSettings.arm_is_unique = BoolProperty(name="Is Unique", description="Make this particle system look different each time it starts. Only affects GPU particles. Default behavior for CPU particles", default=False)
     bpy.types.ParticleSettings.arm_local_coords = BoolProperty(name="Local Coords", description="Keep spawned particles parented to their emitter. Only affects CPU particles. Default behavior for GPU particles at the moment", default=False)

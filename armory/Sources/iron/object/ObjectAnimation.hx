@@ -22,15 +22,35 @@ class ObjectAnimation extends Animation {
 		super();
 	}
 
+	override function get_action(): String {
+		var an: String = action; // an -> action name
+		if (an != "" && object != null && object.filename != "") {
+			var sufix = "_" + object.filename;
+			if (StringTools.endsWith(an, sufix)) an = an.substr(0, an.length - sufix.length);
+		}
+		return an;
+	}
+
+	function getName(n: String): String {
+		var fn: String = n; // fn -> final name
+		if (fn != "" && object != null && object.filename != "") {
+			var sufix = "_" + object.filename;
+			if (!StringTools.endsWith(fn, sufix)) fn += sufix;
+		}
+		return fn;
+	}
+
 	function getAction(action: String): TObj {
 		for (a in oactions) if (a != null && a.objects[0].name == action) return a.objects[0];
 		return null;
 	}
 
 	override public function play(action = "", onComplete: Void->Void = null, blendTime = 0.0, speed = 1.0, loop = true) {
-		super.play(action, onComplete, blendTime, speed, loop);
-		if (this.action == "" && oactions[0] != null) this.action = oactions[0].objects[0].name;
-		oaction = getAction(this.action);
+		// Look up the suffixed name directly, the action getter strips the suffix
+		var actionName: String = getName(action);
+		if (actionName == "" && oactions[0] != null) actionName = oactions[0].objects[0].name;
+		super.play(actionName, onComplete, blendTime, speed, loop);
+		oaction = getAction(actionName);
 		if (oaction != null) {
 			isSampled = oaction.sampled != null && oaction.sampled;
 		}

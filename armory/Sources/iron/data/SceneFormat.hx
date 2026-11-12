@@ -455,6 +455,7 @@ typedef TParticleReference = {
 	public var name: String;
 	public var particle: String;
 	public var seed: Int;
+	@:optional public var type: String; // "CPU" or "GPU"
 }
 
 #if js
@@ -466,6 +467,7 @@ typedef TObj = {
 	public var name: String;
 	public var data_ref: String;
 	public var transform: TTransform;
+	@:optional public var filename: String; // For objects instanced from external files
 	@:optional public var material_refs: Array<String>;
 	@:optional public var particle_refs: Array<TParticleReference>;
 	@:optional public var render_emitter: Bool;

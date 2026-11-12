@@ -11,6 +11,7 @@ class Object {
 	public var raw: TObj = null;
 
 	public var name: String = "";
+	public var filename: String = "";
 	public var transform: Transform;
 	public var constraints: Array<Constraint> = null;
 	public var traits: Array<Trait> = [];
@@ -111,12 +112,15 @@ class Object {
 	**/
 	public function getChild(name: String): Object {
 		if (this.name == name) return this;
-		else {
-			for (c in children) {
-				var r = c.getChild(name);
-				if (r != null) return r;
-			}
+		else if (this.filename != "") {
+			if (this.name == name + "_" + this.filename) return this;
 		}
+
+		for (c in children) {
+			var r = c.getChild(name);
+			if (r != null) return r;
+		}
+
 		return null;
 	}
 
@@ -215,6 +219,15 @@ class Object {
 		for (child in getChildren(true)) {
 			t = child.getTraitFromChildren(c);
 			if (t != null) return t;
+		}
+		return null;
+	}
+
+	public function getAnimation(): Null<Animation> {
+		if (animation != null) return animation;
+		for (c in getChildren(true)) {
+			var a = c.getAnimation();
+			if (a != null) return a;
 		}
 		return null;
 	}

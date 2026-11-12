@@ -10,6 +10,11 @@ class InputMap {
 	public var keys(default, null) = new Array<InputMapKey>();
 	public var lastKeyPressed(default, null) = "";
 
+	var startedCallbacks: Array<Void->Void> = [];
+	var releasedCallbacks: Array<Void->Void> = [];
+
+	var attached = false;
+
 	public function new() {}
 
 	public static function getInputMap(inputMap: String): Null<InputMap> {
@@ -64,10 +69,12 @@ class InputMap {
 
 	public function addKey(key: InputMapKey): InputMapKey {
 		keys.push(key);
+		if (attached) key.attach(this);
 		return key;
 	}
 
 	public function removeKey(key: InputMapKey): Bool {
+		key.detach();
 		return keys.remove(key);
 	}
 
@@ -102,6 +109,49 @@ class InputMap {
 
 		return false;
 	}
+
+	public function notifyOnStarted(callback: Void->Void) {
+		if (!startedCallbacks.contains(callback)) startedCallbacks.push(callback);
+		attach();
+	}
+
+	public function notifyOnReleased(callback: Void->Void) {
+		if (!releasedCallbacks.contains(callback)) releasedCallbacks.push(callback);
+		attach();
+	}
+
+	public function removeStarted(callback: Void->Void) {
+		if (startedCallbacks.contains(callback)) startedCallbacks.remove(callback);
+		detach();
+	}
+
+	public function removeReleased(callback: Void->Void) {
+		if (releasedCallbacks.contains(callback)) releasedCallbacks.remove(callback);
+		detach();
+	}
+
+	public function emitStarted(key: String) {
+		lastKeyPressed = key;
+		for (callback in startedCallbacks) callback();
+	}
+
+	public function emitReleased(key: String) {
+		lastKeyPressed = key;
+		for (callback in releasedCallbacks) callback();
+	}
+
+	function attach() {
+		if (attached) return;
+		attached = true;
+		for (k in keys) k.attach(this);
+	}
+
+	function detach() {
+		if (!attached) return;
+		if (startedCallbacks.length > 0 || releasedCallbacks.length > 0) return;
+		attached = false;
+		for (k in keys) k.detach();
+	}
 }
 
 class InputMapKey {
@@ -130,6 +180,10 @@ class InputMapKey {
 
 	public function setIndex(index: Int) {}
 
+	public function attach(map: InputMap) {}
+
+	public function detach() {}
+
 	function evalDeadzone(value: FastFloat): FastFloat {
 		var v = 0.0;
 
@@ -152,7 +206,7 @@ class InputMapKey {
 		} else {
 			v = 0.0;
 		}
-		
+
 		return v;
 	}
 }
@@ -160,6 +214,9 @@ class InputMapKey {
 class KeyboardKey extends InputMapKey {
 
 	var kb = Input.getKeyboard();
+
+	var startedHandler: String->Void = null;
+	var releasedHandler: String->Void = null;
 
 	public inline override function started() {
 		return kb.started(key);
@@ -172,11 +229,34 @@ class KeyboardKey extends InputMapKey {
 	public inline override function value(): FastFloat {
 		return kb.down(key) ? scale : 0.0;
 	}
+
+	public override function attach(map: InputMap) {
+		if (startedHandler != null) return;
+		startedHandler = function(name: String) {
+			if (name == key) map.emitStarted(key);
+		};
+		releasedHandler = function(name: String) {
+			if (name == key) map.emitReleased(key);
+		};
+		kb.notifyOnStarted(startedHandler);
+		kb.notifyOnReleased(releasedHandler);
+	}
+
+	public override function detach() {
+		if (startedHandler == null) return;
+		kb.removeOnStarted(startedHandler);
+		kb.removeOnReleased(releasedHandler);
+		startedHandler = null;
+		releasedHandler = null;
+	}
 }
 
 class MouseKey extends InputMapKey {
 
 	var m = Input.getMouse();
+
+	var startedHandler: String->Void = null;
+	var releasedHandler: String->Void = null;
 
 	public inline override function started() {
 		return m.started(key);
@@ -194,26 +274,50 @@ class MouseKey extends InputMapKey {
 			default: m.down(key) ? scale : 0.0;
 		}
 	}
+
+	public override function attach(map: InputMap) {
+		if (startedHandler != null) return;
+		if (!Mouse.buttons.contains(key)) return; // Movement and wheel have no down/up event
+		startedHandler = function(name: String) {
+			if (name == key) map.emitStarted(key);
+		};
+		releasedHandler = function(name: String) {
+			if (name == key) map.emitReleased(key);
+		};
+		m.notifyOnStarted(startedHandler);
+		m.notifyOnReleased(releasedHandler);
+	}
+
+	public override function detach() {
+		if (startedHandler == null) return;
+		m.removeOnStarted(startedHandler);
+		m.removeOnReleased(releasedHandler);
+		startedHandler = null;
+		releasedHandler = null;
+	}
 }
 
 class GamepadKey extends InputMapKey {
 
 	var g = Input.getGamepad();
 
+	var startedHandler: String->Void = null;
+	var releasedHandler: String->Void = null;
+
 	public inline override function started() {
-		return g.started(key);
+		return g.started(getKey());
 	}
 
 	public inline override function released() {
-		return g.released(key);
+		return g.released(getKey());
 	}
 
 	public override function value(): FastFloat {
 		return switch(key) {
-			case "ls movement x": evalDeadzone(g.leftStick.movementX);
-			case "ls movement y": evalDeadzone(g.leftStick.movementY);
-			case "rs movement x": evalDeadzone(g.rightStick.movementX);
-			case "rs movement y": evalDeadzone(g.rightStick.movementY);
+			case "ls movement x": evalDeadzone(g.leftStick.x);
+			case "ls movement y": evalDeadzone(g.leftStick.y);
+			case "rs movement x": evalDeadzone(g.rightStick.x);
+			case "rs movement y": evalDeadzone(g.rightStick.y);
 			case "lt pressure": evalDeadzone(evalPressure(g.down("l2")));
 			case "rt pressure": evalDeadzone(evalPressure(g.down("r2")));
 			default: evalDeadzone(g.down(key));
@@ -222,5 +326,39 @@ class GamepadKey extends InputMapKey {
 
 	public override function setIndex(index: Int) {
 		g = Input.getGamepad(index);
+	}
+
+	public override function attach(map: InputMap) {
+		if (startedHandler != null) return;
+		if (g == null) g = Input.getGamepad();
+		if (g == null) return; // No gamepad connected
+		var name = getKey();
+		startedHandler = function(n: String) {
+			if (n == name) map.emitStarted(key);
+		};
+		releasedHandler = function(n: String) {
+			if (n == name) map.emitReleased(key);
+		};
+		g.notifyOnStarted(startedHandler);
+		g.notifyOnReleased(releasedHandler);
+	}
+
+	public override function detach() {
+		if (startedHandler == null) return;
+		if (g != null) {
+			g.removeOnStarted(startedHandler);
+			g.removeOnReleased(releasedHandler);
+		}
+		startedHandler = null;
+		releasedHandler = null;
+	}
+
+	// "lt pressure" and "rt pressure" are reported as the l2/r2 buttons
+	function getKey(): String {
+		return switch (key) {
+			case "lt pressure": "l2";
+			case "rt pressure": "r2";
+			default: key;
+		}
 	}
 }

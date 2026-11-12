@@ -11,10 +11,12 @@ class Hit {
 	public var rb: RigidBody;
 	public var pos: Vec4;
 	public var normal: Vec4;
-	public function new(rb: RigidBody, pos: Vec4, normal: Vec4){
+	public var character: KinematicCharacterController;
+	public function new(rb: RigidBody, pos: Vec4, normal: Vec4, character: KinematicCharacterController = null){
 		this.rb = rb;
 		this.pos = pos;
 		this.normal = normal;
+		this.character = character;
 	}
 }
 
@@ -45,6 +47,7 @@ class ContactPair {
 
 class PhysicsWorld extends Trait {
 	public static var active: PhysicsWorld = null;
+	public static var nextId = 0;
 	static var sceneRemoved = false;
 
 	#if arm_physics_soft
@@ -58,6 +61,7 @@ class PhysicsWorld extends Trait {
 	var contacts: Array<ContactPair>;
 	var preUpdates: Array<Void->Void> = null;
 	public var rbMap: Map<Int, RigidBody>;
+	public var charMap: Map<Int, KinematicCharacterController>;
 	public var conMap: Map<Int, PhysicsConstraint>;
 	public var timeScale = 1.0;
 	var maxSteps = 1;
@@ -66,7 +70,8 @@ class PhysicsWorld extends Trait {
 	public var hitNormalWorld = new Vec4();
 	public var convexHitPointWorld = new Vec4();
 	public var convexHitNormalWorld = new Vec4();
-	var pairCache: Bool = false;
+	static var pairCache: Bool = false;
+	static var ghostPairCallback: bullet.Bt.GhostPairCallback = null;
 
 	static var nullvec = true;
 	static var vec1: bullet.Bt.Vector3 = null;
@@ -114,6 +119,7 @@ class PhysicsWorld extends Trait {
 
 		contacts = [];
 		rbMap = new Map();
+		charMap = new Map();
 		conMap = new Map();
 		active = this;
 
@@ -130,6 +136,7 @@ class PhysicsWorld extends Trait {
 
 	public function reset() {
 		for (rb in active.rbMap) removeRigidBody(rb);
+		for (c in active.charMap) removeKinematicCharacterController(c);
 	}
 
 	function createPhysics() {
@@ -209,27 +216,54 @@ class PhysicsWorld extends Trait {
 		constraint.delete();
 	}
 
-	// public function addKinematicCharacterController(controller:KinematicCharacterController) {
-	// 	if (!pairCache){ // Only create PairCache if needed
-	// 		world.getPairCache().setInternalGhostPairCallback(BtGhostPairCallbackPointer.create());
-	// 		pairCache = true;
-	// 	}
-	// 	world.addAction(controller.character);
-	// 	world.addCollisionObjectToGroup(controller.body, controller.group, controller.group);
-	// }
+	public function addKinematicCharacterController(controller: KinematicCharacterController) {
+		if (world == null) return;
 
-	// public function removeKinematicCharacterController(controller:KinematicCharacterController) {
-	// 	if (world != null) {
-	// 		world.removeCollisionObject(controller.body);
-	// 		world.removeAction(controller.character);
-	// 	}
-	// 	#if js
-	// 	bullet.Bt.Ammo.destroy(controller.body);
-	// 	#else
-	// 	var cbody = controller.body;
-	// 	untyped __cpp__("delete cbody");
-	// 	#end
-	// }
+		if (!pairCache) { // Only create the pair cache if needed
+			ghostPairCallback = new bullet.Bt.GhostPairCallback();
+			world.getPairCache().setInternalGhostPairCallback(ghostPairCallback);
+			pairCache = true;
+		}
+
+		world.addAction(controller.character);
+		world.addCollisionObjectToGroup(controller.body, controller.group, controller.mask);
+		charMap.set(controller.id, controller);
+	}
+
+	public function removeKinematicCharacterController(controller: KinematicCharacterController) {
+		if (charMap != null) charMap.remove(controller.id);
+		if (world != null) {
+			world.removeCollisionObject(controller.body);
+			world.removeAction(controller.character);
+		}
+	}
+
+	public function updateKinematicCharacterController(controller: KinematicCharacterController) {
+		if (world == null || controller.body == null) return;
+		world.removeCollisionObject(controller.body);
+		world.addCollisionObjectToGroup(controller.body, controller.group, controller.mask);
+	}
+
+	public function findCharacter(id: Int): KinematicCharacterController {
+		return charMap.get(id);
+	}
+
+	public function getOverlappingBodies(character: KinematicCharacterController): Array<RigidBody> {
+		if (character == null || character.body == null) return null;
+		var res: Array<RigidBody> = [];
+		var num = character.body.getNumOverlappingObjects();
+		for (i in 0...num) {
+			var co = character.body.getOverlappingObject(i);
+			#if js
+			var body = untyped bullet.Bt.Ammo.btRigidBody.prototype.upcast(co);
+			var rb = rbMap.get(untyped body.userIndex);
+			#else
+			var rb = rbMap.get(co.getUserIndex());
+			#end
+			if (rb != null && res.indexOf(rb) == -1) res.push(rb);
+		}
+		return res;
+	}
 
 	/**
 	   Used to get intersecting rigid bodies with the passed in RigidBody as reference. Often used when checking for object collisions.
@@ -315,13 +349,8 @@ class PhysicsWorld extends Trait {
 
 		for (i in 0...numManifolds) {
 			var contactManifold = disp.getManifoldByIndexInternal(i);
-			#if js
-			var body0 = untyped bullet.Bt.Ammo.btRigidBody.prototype.upcast(contactManifold.getBody0());
-			var body1 = untyped bullet.Bt.Ammo.btRigidBody.prototype.upcast(contactManifold.getBody1());
-			#else
 			var body0: bullet.Bt.CollisionObject = contactManifold.getBody0();
 			var body1: bullet.Bt.CollisionObject = contactManifold.getBody1();
-			#end
 
 			var numContacts = contactManifold.getNumContacts();
 			for (j in 0...numContacts) {
@@ -395,20 +424,23 @@ class PhysicsWorld extends Trait {
 		if (rc.hasHit()) {
 			#if js
 			var co = rayCallback.get_m_collisionObject();
-			var body = untyped bullet.Bt.Ammo.btRigidBody.prototype.upcast(co);
 			var hit = rayCallback.get_m_hitPointWorld();
 			hitPointWorld.set(hit.x(), hit.y(), hit.z());
 			var norm = rayCallback.get_m_hitNormalWorld();
 			hitNormalWorld.set(norm.x(), norm.y(), norm.z());
-			rb = rbMap.get(untyped body.userIndex);
-			hitInfo = new Hit(rb, hitPointWorld, hitNormalWorld);
+			var id: Int = untyped co.userIndex;
+			var character = charMap.get(id);
+			rb = (character == null) ? rbMap.get(id) : null;
+			hitInfo = new Hit(rb, hitPointWorld, hitNormalWorld, character);
 			#elseif (cpp || hl)
 			var hit = rayCallback.m_hitPointWorld;
 			hitPointWorld.set(hit.x(), hit.y(), hit.z());
 			var norm = rayCallback.m_hitNormalWorld;
 			hitNormalWorld.set(norm.x(), norm.y(), norm.z());
-			rb = rbMap.get(rayCallback.m_collisionObject.getUserIndex());
-			hitInfo = new Hit(rb, hitPointWorld, hitNormalWorld);
+			var id = rayCallback.m_collisionObject.getUserIndex();
+			var character = charMap.get(id);
+			rb = (character == null) ? rbMap.get(id) : null;
+			hitInfo = new Hit(rb, hitPointWorld, hitNormalWorld, character);
 			#end
 		}
 

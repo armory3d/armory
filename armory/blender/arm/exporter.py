@@ -17,6 +17,7 @@ import math
 import os
 import time
 from typing import Any, Dict, List, Tuple, Union, Optional
+from bpy_extras import anim_utils
 
 import numpy as np
 
@@ -104,6 +105,15 @@ FCURVE_TARGET_NAMES = {
 current_output = None
 
 
+class BuildExportCache:
+    """Shared cache across all scene exports in a single build.
+    Created once in make.py, passed to each ArmoryExporter instance."""
+    def __init__(self):
+        self.exported_mesh_files: set = set()
+        self.exported_action_files: set = set()
+        self.processed_mesh_names: set = set()
+
+
 class ArmoryExporter:
     """Export to Armory format.
 
@@ -118,14 +128,18 @@ class ArmoryExporter:
     export_all_flag = True
     # Indicates whether rigid body is exported
     export_physics = False
+    # Indicates whether a particle system is exported
+    export_particles = False
     optimize_enabled = False
     option_mesh_only = False
 
     # Class names of referenced traits
     import_traits: List[str] = []
 
-    def __init__(self, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene = None, depsgraph: bpy.types.Depsgraph = None):
+    def __init__(self, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene = None, depsgraph: bpy.types.Depsgraph = None, build_cache=None):
         global current_output
+
+        self.build_cache = build_cache or BuildExportCache()
 
         self.filepath = filepath
         self.scene = context.scene if scene is None else scene
@@ -178,12 +192,12 @@ class ArmoryExporter:
         ArmoryExporter.preprocess()
 
     @classmethod
-    def export_scene(cls, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene = None, depsgraph: bpy.types.Depsgraph = None) -> None:
+    def export_scene(cls, context: bpy.types.Context, filepath: str, scene: bpy.types.Scene = None, depsgraph: bpy.types.Depsgraph = None, build_cache=None) -> None:
         """Exports the given scene to the given file path. This is the
         function that is called in make.py and the entry point of the
         exporter."""
         with arm.profiler.Profile('profile_exporter.prof', arm.utils.get_pref_or_default('profile_exporter', False)):
-            cls(context, filepath, scene, depsgraph).execute()
+            cls(context, filepath, scene, depsgraph, build_cache).execute()
 
     @classmethod
     def preprocess(cls):
@@ -198,6 +212,11 @@ class ArmoryExporter:
         cls.export_network = False
         if wrd.arm_network == 'Enabled':
             cls.export_network = True
+        cls.export_particles = False
+
+    @staticmethod
+    def particles_enabled() -> bool:
+        return bpy.data.worlds['Arm'].arm_particles != 'Disabled'
 
     @staticmethod
     def write_matrix(matrix):
@@ -215,6 +234,22 @@ class ArmoryExporter:
 
         ext = '.lz4' if compressed else '.arm'
         return mesh_fp + object_id + ext
+
+    @staticmethod
+    def get_fcurves(action):
+        if action is None:
+            return []
+
+        if bpy.app.version < (5, 0, 0):
+            return action.fcurves
+
+        fcurves = []
+        if action.slots:
+            for slot in action.slots:
+                channelbag = anim_utils.action_ensure_channelbag_for_slot(action, slot)
+                if channelbag:
+                    fcurves.extend(channelbag.fcurves)
+        return fcurves
 
     @staticmethod
     def get_shape_keys(mesh):
@@ -257,8 +292,9 @@ class ArmoryExporter:
 
         if armature.animation_data:
             action = armature.animation_data.action
+            fcurves = ArmoryExporter.get_fcurves(action)
             if action:
-                return [fcurve for fcurve in action.fcurves if fcurve.data_path.startswith(path)]
+                return [fcurve for fcurve in fcurves if fcurve.data_path.startswith(path)]
 
         return []
 
@@ -304,15 +340,16 @@ class ArmoryExporter:
         frame_range = action.frame_range
         start = frame_range[0]
         end = frame_range[1]
+        fcurves = ArmoryExporter.get_fcurves(action)
 
         # Blender 4.0+ compatibility: Handle zero-length frame ranges
         if start == end:
             start = 1
             end = 2
 
-            if action.fcurves:
+            if fcurves:
                 all_keyframes = []
-                for fcurve in action.fcurves:
+                for fcurve in fcurves:
                     if fcurve.keyframe_points:
                         for keyframe in fcurve.keyframe_points:
                             all_keyframes.append(keyframe.co[0])
@@ -325,7 +362,7 @@ class ArmoryExporter:
 
         # Take FCurve modifiers into account if they have a restricted
         # frame range
-        for fcurve in action.fcurves:
+        for fcurve in fcurves:
             for modifier in fcurve.modifiers:
                 if not modifier.use_restricted_range:
                     continue
@@ -365,6 +402,7 @@ class ArmoryExporter:
         # Animated transform
         if bobject.animation_data is not None and bobject.type != "ARMATURE":
             action = bobject.animation_data.action
+            fcurves = self.get_fcurves(action)
 
             if action is not None:
                 action_name = arm.utils.safestr(arm.utils.asset_name(action))
@@ -389,7 +427,7 @@ class ArmoryExporter:
                 self.export_pose_markers(out_anim, action)
 
                 unresolved_data_paths = set()
-                for fcurve in action.fcurves:
+                for fcurve in fcurves:
                     data_path = fcurve.data_path
 
                     try:
@@ -459,15 +497,9 @@ class ArmoryExporter:
             if btype is not NodeType.MESH and ArmoryExporter.option_mesh_only:
                 return
 
-            is_local_to_linked_scene = bobject.name in self.scene.objects and bobject.name not in self.scene.collection.children and self.scene.library
-            if bobject.type == 'CAMERA' and bobject.library:
-                struct_name = bobject.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
-            else:
-                struct_name = linked_utils.asset_name(bobject)
-
             self.bobject_array[bobject] = {
                 "objectType": btype,
-                "structName": struct_name
+                "structName": linked_utils.asset_name(bobject)
             }
 
             if bobject.type == "ARMATURE":
@@ -530,8 +562,10 @@ class ArmoryExporter:
             self.default_material_objects.append(bobject)
 
     def use_default_material_part(self):
-        """Select the particle material variant for all particle system
-        instance objects that use the armdefault material.
+        """Export all particle system instance objects, so particle systems
+        spawned from another scene find them in the active one, and select
+        the particle material variant for GPU particle instance objects that
+        use the armdefault material.
         """
         for ps in bpy.data.particles:
             if ps.render_type != 'OBJECT' or ps.instance_object is None or not ps.instance_object.arm_export:
@@ -541,6 +575,9 @@ class ArmoryExporter:
             if po not in self.object_to_arm_object_dict:
                 self.process_bobject(po)
                 self.export_object(po)
+            # CPU particles are regular objects
+            if ps.arm_particle_type != 'GPU':
+                continue
             o = self.object_to_arm_object_dict[po]
 
             # Check if the instance object uses the armdefault material
@@ -557,6 +594,8 @@ class ArmoryExporter:
         o['material_refs'].append(arm.utils.asset_name(material))
 
     def export_particle_system_ref(self, psys: bpy.types.ParticleSystem, out_object):
+        if not ArmoryExporter.particles_enabled():
+            return
         if psys.settings.instance_object is None or psys.settings.render_type != 'OBJECT' or not psys.settings.instance_object.arm_export:
            return
 
@@ -568,11 +607,12 @@ class ArmoryExporter:
                             if not mod.show_render:
                                 return
 
-        self.particle_system_array[psys.settings] = {"structName": psys.settings.name}
+        self.particle_system_array[psys.settings] = {"structName": arm.utils.asset_name(psys.settings)}
         pref = {
             'name': psys.name,
             'seed': psys.seed,
-            'particle': psys.settings.name
+            'particle': arm.utils.asset_name(psys.settings),
+            'type': psys.settings.arm_particle_type
         }
         out_object['particle_refs'].append(pref)
 
@@ -637,6 +677,11 @@ class ArmoryExporter:
         matvars: List[bpy.types.Material] = []
         matslots: List[bpy.types.MaterialSlot] = []
 
+        # The particle flag marks GPU particle materials of this export only (set below),
+        # clear stale flags, e.g. saved on old variant copies used by CPU particles
+        for mat in bpy.data.materials:
+            mat.arm_particle_flag = False
+
         bobject: bpy.types.Object
         for bobject in scene.collection.all_objects.values():
             variant_suffix = ''
@@ -657,33 +702,24 @@ class ArmoryExporter:
             if variant_suffix == '' and arm.utils.export_morph_targets(bobject):
                 variant_suffix = '_armskey'
 
+            # Objects inside instanced collections are not part of scene.collection.all_objects, process them separately
+            if bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
+                for cobj in bobject.instance_collection.all_objects:
+                    if cobj.type != 'MESH':
+                        continue
+                    cobj_suffix = ''
+                    if arm.utils.export_bone_data(cobj):
+                        cobj_suffix = '_armskin'
+                    elif arm.utils.export_morph_targets(cobj):
+                        cobj_suffix = '_armskey'
+                    if cobj_suffix != '':
+                        ArmoryExporter.create_slot_variants(cobj, cobj_suffix, matvars, matslots)
+
             if variant_suffix == '':
                 continue
 
             # For regular mesh objects, process their material slots
-            for slot in bobject.material_slots:
-                if slot.material is None:
-                    continue
-                # For linked materials, set the flag directly (can't create variants)
-                if slot.material.library is not None:
-                    if variant_suffix == '_armtile':
-                        slot.material.arm_tilesheet_flag = True
-                        slot.material.arm_cached = False
-                    continue
-                if slot.material.name.endswith(variant_suffix):
-                    continue
-
-                matslots.append(slot)
-                mat_name = slot.material.name + variant_suffix
-                mat = bpy.data.materials.get(mat_name)
-                # Create material variant
-                if mat is None:
-                    mat = slot.material.copy()
-                    mat.name = mat_name
-                    if variant_suffix == '_armtile':
-                        mat.arm_tilesheet_flag = True
-                    matvars.append(mat)
-                slot.material = mat
+            ArmoryExporter.create_slot_variants(bobject, variant_suffix, matvars, matslots)
 
             # For collection instances, set tilesheet flag on materials of objects inside the collection
             # ONLY for objects that have arm_tilesheet_enabled set
@@ -702,20 +738,23 @@ class ArmoryExporter:
                             slot.material.arm_tilesheet_flag = True
                             slot.material.arm_cached = False
 
-        # Particle and non-particle objects can not share material
+        # GPU particle and non-particle objects can not share material,
+        # CPU particles are regular objects and use the original materials
         particle_sys: bpy.types.ParticleSettings
         for particle_sys in bpy.data.particles:
+            if not ArmoryExporter.particles_enabled():
+                break
             bobject = particle_sys.instance_object
             if bobject is None or particle_sys.render_type != 'OBJECT' or not bobject.arm_export:
+                continue
+            if particle_sys.arm_particle_type != 'GPU':
                 continue
 
             for slot in bobject.material_slots:
                 if slot.material is None:
                     continue
-                if slot.material.library is not None:
+                if slot.material.library is not None or slot.material.name.endswith('_armpart'):
                     slot.material.arm_particle_flag = True
-                    continue
-                if slot.material.name.endswith('_armpart'):
                     continue
 
                 matslots.append(slot)
@@ -724,11 +763,44 @@ class ArmoryExporter:
                 if mat is None:
                     mat = slot.material.copy()
                     mat.name = mat_name
-                    mat.arm_particle_flag = True
                     matvars.append(mat)
+                mat.arm_particle_flag = True
                 slot.material = mat
 
         return matvars, matslots
+
+    @staticmethod
+    def create_slot_variants(bobject: bpy.types.Object, variant_suffix: str, matvars: List[bpy.types.Material], matslots: List[bpy.types.MaterialSlot]):
+        """Creates the variant materials for the slots of the given object and assigns them. Linked slots are read-only, so for those a local
+        variant copy is created without touching the slot - slot_to_material() resolves it by name during export."""
+        for slot in bobject.material_slots:
+            if slot.material is None:
+                continue
+            if slot.material.name.endswith(variant_suffix):
+                continue
+            if slot.material.library is not None:
+                mat_name = arm.utils.asset_name(slot.material) + variant_suffix
+                mat = bpy.data.materials.get(mat_name)
+                if mat is None:
+                    mat = slot.material.copy()  # Local copy of the linked material
+                    mat.name = mat_name
+                    mat.arm_cached = False
+                    if variant_suffix == '_armtile':
+                        mat.arm_tilesheet_flag = True
+                    matvars.append(mat)
+                continue
+
+            matslots.append(slot)
+            mat_name = slot.material.name + variant_suffix
+            mat = bpy.data.materials.get(mat_name)
+            # Create material variant
+            if mat is None:
+                mat = slot.material.copy()
+                mat.name = mat_name
+                if variant_suffix == '_armtile':
+                    mat.arm_tilesheet_flag = True
+                matvars.append(mat)
+            slot.material = mat
 
     @staticmethod
     def slot_to_material(bobject: bpy.types.Object, slot: bpy.types.MaterialSlot):
@@ -738,6 +810,20 @@ class ArmoryExporter:
             baked_mat = mat.name + '_' + bobject.name + '_baked'
             if baked_mat in bpy.data.materials:
                 mat = bpy.data.materials[baked_mat]
+        # Linked materials cannot be swapped on their read-only slots, so create_material_variants() creates local variant copies instead.
+        # Resolve them by name here so the object is exported with the variant and the original material keeps its non-variant users only.
+        if mat is not None and mat.library is not None:
+            variant_suffix = ''
+            if arm.utils.export_bone_data(bobject):
+                variant_suffix = '_armskin'
+            elif bobject.type == 'MESH' and bobject.arm_tilesheet_enabled:
+                variant_suffix = '_armtile'
+            elif arm.utils.export_morph_targets(bobject):
+                variant_suffix = '_armskey'
+            if variant_suffix != '':
+                variant_mat = bpy.data.materials.get(arm.utils.asset_name(mat) + variant_suffix)
+                if variant_mat is not None:
+                    mat = variant_mat
         return mat
 
     # def ExportMorphWeights(self, node, shapeKeys, scene):
@@ -855,8 +941,7 @@ class ArmoryExporter:
                         if child.parent is not None and child.parent.name in collection.objects:
                             continue
                         if child.type == 'CAMERA':
-                            asset_name = child.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
-                            self.output['camera_ref'] = asset_name
+                            self.output['camera_ref'] = arm.utils.asset_name(child)
                             self.has_spawning_camera = True
                         self.process_bobject(child)
                         self.export_object(child, out_parent)
@@ -931,6 +1016,14 @@ class ArmoryExporter:
 
             out_object['mobile'] = bobject.arm_mobile
 
+            lib = bobject.library
+            if lib is None and bobject.data:
+                lib = bobject.data.library
+            if lib is None and bobject.override_library:
+                lib = bobject.override_library.library
+            if lib is not None:
+                out_object['filename'] = linked_utils.library_suffix(lib)
+
             if bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
                 out_object['group_ref'] = bobject.instance_collection.name
                 self.referenced_collections.append(bobject.instance_collection)
@@ -955,8 +1048,12 @@ class ArmoryExporter:
                     }
                     # Mesh swap reference (for later implementation)
                     if action.mesh_prop != '':
-                        # Look up the actual mesh to get proper name with library suffix if linked
-                        mesh_data = bpy.data.meshes.get(action.mesh_prop)
+                        # Look up the actual mesh to get proper name with library suffix if linked,
+                        # preferring the mesh from the same blend as the object's mesh
+                        mesh_lib = bobject.data.library if bobject.data else None
+                        mesh_data = bpy.data.meshes.get((action.mesh_prop, mesh_lib.filepath if mesh_lib else None))
+                        if mesh_data is None:
+                            mesh_data = bpy.data.meshes.get(action.mesh_prop)
                         if mesh_data is not None:
                             action_data['mesh'] = arm.utils.safestr(arm.utils.asset_name(mesh_data))
                         else:
@@ -1080,8 +1177,9 @@ class ArmoryExporter:
                                         self.export_particle_system_ref(bobject.particle_systems[i], out_object)
 
                 aabb = bobject.data.arm_aabb
-                if aabb[0] == 0 and aabb[1] == 0 and aabb[2] == 0:
+                if oid not in self.build_cache.processed_mesh_names or (aabb[0] == 0 and aabb[1] == 0 and aabb[2] == 0):
                     self.calc_aabb(bobject)
+                    self.build_cache.processed_mesh_names.add(oid)
                 out_object['dimensions'] = [aabb[0], aabb[1], aabb[2]]
 
                 # shapeKeys = ArmoryExporter.get_shape_keys(objref)
@@ -1225,7 +1323,7 @@ class ArmoryExporter:
                     skelobj.animation_data.action = action
                     fp = self.get_meshes_file_path('action_' + armatureid + '_' + aname, compressed=ArmoryExporter.compress_enabled)
                     assets.add(fp)
-                    if not bdata.arm_cached or not os.path.exists(fp):
+                    if (not bdata.arm_cached or not os.path.exists(fp)) and fp not in self.build_cache.exported_action_files:
                         # Store action to use it after autobake was handled
                         original_action = action
 
@@ -1271,6 +1369,7 @@ class ArmoryExporter:
                         # Save action separately
                         action_obj = {'name': aname, 'objects': bones}
                         arm.utils.write_arm(fp, action_obj)
+                        self.build_cache.exported_action_files.add(fp)
 
                 # Use relative bone constraints
                 out_object['relative_bone_constraints'] = bdata.arm_relative_bone_constraints
@@ -1949,7 +2048,7 @@ Make sure the mesh only has tris/quads.""")
             fp = self.get_meshes_file_path('mesh_' + oid, compressed=ArmoryExporter.compress_enabled)
             assets.add(fp)
             # No export necessary
-            if bobject.data.arm_cached and os.path.exists(fp):
+            if bobject.data.arm_cached and os.path.exists(fp) or fp in self.build_cache.exported_mesh_files:
                 return
 
         # Mesh users have different modifier stack
@@ -2045,6 +2144,7 @@ Make sure the mesh only has tris/quads.""")
             out_mesh['dynamic_usage'] = bobject.data.arm_dynamic_usage
 
         self.write_mesh(bobject, fp, out_mesh)
+        self.build_cache.exported_mesh_files.add(fp)
         # print('Mesh exported in ' + str(time.time() - profile_time))
 
         if hasattr(bobject, 'evaluated_get'):
@@ -2054,7 +2154,30 @@ Make sure the mesh only has tris/quads.""")
         """Exports a single light object."""
         rpdat = arm.utils.get_rp()
         light_ref = object_ref[0]
+        light_objects = object_ref[1]["objectTable"]
+        light_object = light_objects[0] if len(light_objects) > 0 else None
         objtype = light_ref.type
+        color = [light_ref.color[0], light_ref.color[1], light_ref.color[2]]
+        if light_ref.use_temperature:
+            temperature_color = light_ref.temperature_color
+            color[0] *= temperature_color[0]
+            color[1] *= temperature_color[1]
+            color[2] *= temperature_color[2]
+
+        strength = light_ref.energy * math.pow(2.0, light_ref.exposure)
+        if not light_ref.normalize:
+            area = 0.0
+            try:
+                if light_object is not None:
+                    area = light_ref.area(matrix_world=light_object.matrix_world)
+                else:
+                    area = light_ref.area()
+            except TypeError:
+                area = light_ref.area()
+
+            if area > 0.0:
+                strength *= area
+
         out_light = {
             'name': object_ref[1]["structName"],
             'type': objtype.lower(),
@@ -2062,8 +2185,8 @@ Make sure the mesh only has tris/quads.""")
             'near_plane': light_ref.arm_clip_start,
             'far_plane': light_ref.arm_clip_end,
             'fov': light_ref.arm_fov,
-            'color': [light_ref.color[0], light_ref.color[1], light_ref.color[2]],
-            'strength': light_ref.energy,
+            'color': color,
+            'strength': strength,
             'shadows_bias': light_ref.arm_shadows_bias * 0.0001
         }
         if rpdat.rp_shadows:
@@ -2075,27 +2198,42 @@ Make sure the mesh only has tris/quads.""")
             out_light['shadowmap_size'] = 0
 
         if objtype == 'SUN':
-            out_light['strength'] *= 0.325
             # Scale bias for ortho light matrix
             out_light['shadows_bias'] *= 20.0
             if out_light['shadowmap_size'] > 1024:
                 # Less bias for bigger maps
                 out_light['shadows_bias'] *= 1 / (out_light['shadowmap_size'] / 1024)
         elif objtype == 'POINT':
-            out_light['strength'] *= 0.01
+            out_light['strength'] *= 1.0 / (4.0 * math.pi)
             out_light['fov'] = 1.5708 # pi/2
             out_light['shadowmap_cube'] = True
             if light_ref.shadow_soft_size > 0.1:
                 out_light['light_size'] = light_ref.shadow_soft_size * 10
         elif objtype == 'SPOT':
-            out_light['strength'] *= 0.01
-            out_light['spot_size'] = math.cos(light_ref.spot_size / 2)
-            # Cycles defaults to 0.15
-            out_light['spot_blend'] = light_ref.spot_blend / 10
+            out_light['strength'] *= 1.0 / (4.0 * math.pi)
+            # The shadow map frustum has to enclose the whole cone
+            out_light['fov'] = light_ref.spot_size
+            half_angle = light_ref.spot_size * 0.5
+            outer_cos = math.cos(half_angle)
+            blend = max(0.0, min(1.0, light_ref.spot_blend))
+            inner_angle = math.atan(math.tan(half_angle) * (1.0 - blend))
+            out_light['spot_size'] = outer_cos
+            out_light['spot_blend'] = max(0.0001, math.cos(inner_angle) - outer_cos)
+            if light_ref.shadow_soft_size > 0.0:
+                out_light['light_size'] = light_ref.shadow_soft_size * 10
         elif objtype == 'AREA':
-            out_light['strength'] *= 0.01
+            light_area = light_ref.size * light_ref.size_y
+            if light_ref.shape in ('DISK', 'ELLIPSE'):
+                light_area *= math.pi / 4.0
+
+            if light_area > 0.0:
+                out_light['strength'] *= 1.0 / (light_area * math.pi)
+            else:
+                out_light['strength'] *= 1.0 / (math.pi)
+
             out_light['size'] = light_ref.size
             out_light['size_y'] = light_ref.size_y
+
 
         self.output['light_datas'].append(out_light)
 
@@ -2137,11 +2275,7 @@ Make sure the mesh only has tris/quads.""")
             # outside the collection, then instantiate the full object
             # child tree if the collection gets spawned as a whole
             if bobject.parent is None or bobject.parent.name not in collection.objects:
-                is_local_to_linked_scene = bobject.name in self.scene.objects and bobject.name not in self.scene.collection.children and self.scene.library
-                if bobject.type == 'CAMERA':
-                    asset_name = bobject.name + '_' + (os.path.basename(self.scene.library.filepath) if self.scene.library else self.scene.name)
-                else:
-                    asset_name = arm.utils.asset_name(bobject)
+                asset_name = arm.utils.asset_name(bobject)
 
                 if collection.library and not collection.name in self.scene.collection.children:
                     # Add external linked objects
@@ -2438,6 +2572,22 @@ Make sure the mesh only has tris/quads.""")
                 material.export_vcols = vcol_export
                 material.export_tangents = tang_export
 
+                # Variants of linked materials are removed after the export, so store the flags on the original material - meshes are
+                # exported after the materials and read them from there (get_export_uvs and friends)
+                flags = ('_armskin', '_armtile', '_armskey', '_armpart')
+                if material.name.endswith(flags):
+                    current_flag = next((f for f in flags if material.name.endswith(f)), None)
+                    if current_flag is not None:
+                        base_name = material.name.removesuffix(current_flag)
+
+                        if bpy.data.materials.get(base_name) is None:
+                            for base_mat in bpy.data.materials:
+                                if base_mat.library is not None and arm.utils.asset_name(base_mat) == base_name:
+                                    base_mat.export_uvs = uv_export
+                                    base_mat.export_vcols = vcol_export
+                                    base_mat.export_tangents = tang_export
+                                    break
+
                 if material in self.material_to_object_dict:
                     mat_users = self.material_to_object_dict[material]
                     for ob in mat_users:
@@ -2483,7 +2633,7 @@ Make sure the mesh only has tris/quads.""")
             for obj in bpy.data.objects:
                 for mod in obj.modifiers:
                     if mod.type == 'PARTICLE_SYSTEM':
-                        if mod.particle_system.settings.name == particleRef[1]["structName"]:
+                        if mod.particle_system.settings == particleRef[0]:
                             if mod.show_render:
                                 padd = True
 
@@ -2584,7 +2734,10 @@ Make sure the mesh only has tris/quads.""")
                 # in a different scene outside of every (non-scene) collection
                 self.process_bobject(psettings.instance_object)
                 self.export_object(psettings.instance_object)
-            self.object_to_arm_object_dict[psettings.instance_object]['is_particle'] = True
+            if psettings.arm_particle_type == 'GPU':
+                # Only rendered through its GPU particle system, CPU particles spawn copies of it
+                self.object_to_arm_object_dict[psettings.instance_object]['is_particle'] = True
+            ArmoryExporter.export_particles = True
 
             self.output['particle_datas'].append(out_particlesys)
 
@@ -2635,7 +2788,7 @@ Make sure the mesh only has tris/quads.""")
         world = self.scene.world
 
         if world is not None:
-            world_name = arm.utils.safestr(arm.utils.asset_name(world) if world.library else world.name)
+            world_name = arm.utils.safestr(arm.utils.asset_name(world))
 
             if world_name not in self.world_array:
                 self.world_array.append(world_name)
@@ -2719,7 +2872,7 @@ Make sure the mesh only has tris/quads.""")
 
         self.process_skinned_meshes()
 
-        self.output['name'] = arm.utils.safestr(self.scene.name + "_" + os.path.basename(self.scene.library.filepath).replace(".blend", "") if self.scene.library else self.scene.name)
+        self.output['name'] = linked_utils.get_scene_name(self.scene)
         if self.filepath.endswith('.lz4'):
             self.output['name'] += '.lz4'
         elif not bpy.data.worlds['Arm'].arm_minimize:
@@ -2783,27 +2936,29 @@ Make sure the mesh only has tris/quads.""")
             for collection in bpy.data.collections:
                 if collection.name.startswith(('RigidBodyWorld', 'Trait|')):
                     continue
-
-                if self.scene.user_of_id(collection) or collection.library and not self.scene.library or collection in self.referenced_collections:
+                if self.scene.user_of_id(collection) or collection in self.referenced_collections:
                     if collection not in self.inlined_collections:
                         self.export_collection(collection)
 
         if not ArmoryExporter.option_mesh_only:
-            if self.scene.camera is not None:
-                self.output['camera_ref'] = arm.utils.asset_name(self.scene.camera) if self.scene.library else self.scene.camera.name + "_" + self.scene.name if self.scene.camera.library else self.scene.camera.name
-            else:
+            # The scene camera may not be exported, e.g. a leftover camera in a linked scene that
+            # spawns its camera from a collection instance, keep the exported camera in that case
+            if self.scene.camera is not None and self.scene.camera in self.bobject_array:
+                self.output['camera_ref'] = arm.utils.asset_name(self.scene.camera)
+            elif 'camera_ref' not in self.output:
                 if self.scene.name == arm.utils.get_project_scene_name():
                     log.warn(f'Scene "{self.scene.name}" is missing a camera')
 
             self.output['material_datas'] = []
 
+            # Exports the particle instance objects, which may need the default materials below
+            if len(bpy.data.particles) > 0 and ArmoryExporter.particles_enabled():
+                self.use_default_material_part()
             # Object with no material assigned in the scene
             if len(self.default_material_objects) > 0:
                 self.make_default_mat('armdefault', self.default_material_objects)
             if len(self.default_skin_material_objects) > 0:
                 self.make_default_mat('armdefaultskin', self.default_skin_material_objects)
-            if len(bpy.data.particles) > 0:
-                self.use_default_material_part()
             if len(self.default_part_material_objects) > 0:
                 self.make_default_mat('armdefaultpart', self.default_part_material_objects, is_particle=True)
 
@@ -2813,7 +2968,7 @@ Make sure the mesh only has tris/quads.""")
             self.export_world()
 
             if self.scene.world is not None:
-                self.output['world_ref'] = arm.utils.safestr(arm.utils.asset_name(self.scene.world) if self.scene.world.library else self.scene.world.name)
+                self.output['world_ref'] = arm.utils.safestr(arm.utils.asset_name(self.scene.world))
 
             if self.scene.use_gravity:
                 self.output['gravity'] = [self.scene.gravity[0], self.scene.gravity[1], self.scene.gravity[2]]
@@ -3000,6 +3155,44 @@ Make sure the mesh only has tris/quads.""")
     def rigid_body_static(rb):
         return (not rb.enabled and not rb.kinematic) or (rb.type == 'PASSIVE' and not rb.kinematic)
 
+    def add_kinematic_character(self, bobject: bpy.types.Object, o, phys_pkg: str):
+        ArmoryExporter.export_physics = True
+        rb = bobject.rigid_body
+
+        # ControllerShape: Box, Sphere, ConvexHull, Cone, Cylinder, Capsule
+        shape = 1  # SPHERE (cheapest fallback for MESH/COMPOUND)
+        if rb.collision_shape == 'BOX':
+            shape = 0
+        elif rb.collision_shape == 'CONVEX_HULL':
+            shape = 2
+        elif rb.collision_shape == 'CONE':
+            shape = 3
+        elif rb.collision_shape == 'CYLINDER':
+            shape = 4
+        elif rb.collision_shape == 'CAPSULE':
+            shape = 5
+
+        collision_margin = rb.collision_margin if rb.use_margin else 0.0
+        animated = 'true' if rb.kinematic else 'false'
+
+        col_group = ''
+        for b in rb.collision_collections:
+            col_group = ('1' if b else '0') + col_group
+        col_mask = ''
+        for b in bobject.arm_rb_collision_filter_mask:
+            col_mask = ('1' if b else '0') + col_mask
+
+        trait = {}
+        trait['type'] = 'Script'
+        trait['class_name'] = 'armory.trait.physics.' + phys_pkg + '.KinematicCharacterController'
+        interpolate = 'true' if bobject.arm_rb_interpolate else 'false'
+        # Constructor: mass, shape, jumpSpeed, friction, restitution, collisionMargin, animated, group, mask, interpolate
+        trait['parameters'] = [
+            str(rb.mass), str(shape), '8.0', str(rb.friction), str(rb.restitution),
+            str(collision_margin), animated, str(int(col_group, 2)), str(int(col_mask, 2)), interpolate
+        ]
+        o['traits'].append(trait)
+
     def post_export_object(self, bobject: bpy.types.Object, o, type):
         # Export traits
         self.export_traits(bobject, o)
@@ -3008,8 +3201,11 @@ Make sure the mesh only has tris/quads.""")
         phys_enabled = wrd.arm_physics != 'Disabled'
         phys_pkg = 'bullet' if wrd.arm_physics_engine == 'Bullet' else 'oimo'
 
+        # Kinematic character controller trait
+        if bobject.rigid_body is not None and phys_enabled and bobject.arm_rb_kinematic_character:
+            self.add_kinematic_character(bobject, o, phys_pkg)
         # Rigid body trait
-        if bobject.rigid_body is not None and phys_enabled:
+        elif bobject.rigid_body is not None and phys_enabled:
             # Skip children of compound parents - their shapes are baked into the parent
             is_compound_child = (bobject.parent is not None and
                                  bobject.parent.rigid_body is not None and
@@ -3329,8 +3525,6 @@ Make sure the mesh only has tris/quads.""")
 
                         if trait_prop.type.endswith("Object"):
                             value = arm.utils.asset_name(trait_prop.value_object)
-                        elif trait_prop.type == "TSceneFormat":
-                            value = arm.utils.asset_name(trait_prop.value_scene)
                         else:
                             value = trait_prop.get_value()
 
@@ -3648,7 +3842,7 @@ Make sure the mesh only has tris/quads.""")
         if mobile_mat or '_EnvCol' in world.world_defs:
             arm_radiance = False
 
-        out_probe = {'name': arm.utils.asset_name(world) if world.library else world.name}
+        out_probe = {'name': arm.utils.asset_name(world)}
         if arm_irradiance:
             ext = '' if wrd.arm_minimize else '.json'
             out_probe['irradiance'] = irrsharmonics + '_irradiance' + ext

@@ -299,33 +299,35 @@ class Scene {
 		return root.children.length > 0 ? root.children[0].getTrait(c) : null;
 	}
 
-	public function getMesh(name: String): MeshObject {
-		for (m in meshes) if (m.name == name) return m;
+	static function getByName<T: Object>(objects: Array<T>, name: String): T {
+		for (o in objects) if (o.name == name) return o;
+		for (o in objects) if (o.filename != "" && o.name == name + "_" + o.filename) return o;
 		return null;
+	}
+
+	public function getMesh(name: String): MeshObject {
+		return getByName(meshes, name);
 	}
 
 	public function getLight(name: String): LightObject {
-		for (l in lights) if (l.name == name) return l;
-		return null;
+		return getByName(lights, name);
 	}
 
 	public function getCamera(name: String): CameraObject {
-		for (c in cameras) if (c.name == name) return c;
-		return null;
+		return getByName(cameras, name);
 	}
 
 	#if arm_audio
 	public function getSpeaker(name: String): SpeakerObject {
-		for (s in speakers) if (s.name == name) return s;
-		return null;
+		return getByName(speakers, name);
 	}
 	#end
 
 	public function getEmpty(name: String): Object {
-		for (e in empties) if (e.name == name) return e;
-		return null;
+		return getByName(empties, name);
 	}
 
+	// TODO: solve name referencing for linked objects
 	public function getGroup(name: String): Array<Object> {
 		if (groups == null) groups = new Map();
 		var g = groups.get(name);
@@ -522,6 +524,10 @@ class Scene {
 	static function traverseObjs(children: Array<TObj>, name: String): TObj {
 		for (o in children) {
 			if (o.name == name) return o;
+			else if (o.filename != "") {
+				var n: String = name + "_" + o.filename;
+				if (o.name == n) return o;
+			}
 			if (o.children != null) {
 				var res = traverseObjs(o.children, name);
 				if (res != null) return res;
@@ -862,6 +868,7 @@ class Scene {
 		if (object != null) {
 			object.raw = o;
 			object.name = o.name;
+			if (o.filename != null) object.filename = o.filename;
 			if (o.visible != null) object.visible = o.visible;
 			if (o.visible_mesh != null) object.visibleMesh = o.visible_mesh;
 			if (o.visible_shadow != null) object.visibleShadow = o.visible_shadow;
@@ -933,10 +940,6 @@ class Scene {
 
 						if (StringTools.endsWith(ptype, "Object") && pval != "") {
 							Reflect.setProperty(traitInst, pname, Scene.active.getChild(pval));
-						} else if (ptype == "TSceneFormat" && pval != "" && pval != null) {
-							Data.getSceneRaw(pval, function (r: TSceneFormat) {
-								Reflect.setProperty(traitInst, pname, r);
-							});
 						}
 						else {
 							switch (ptype) {

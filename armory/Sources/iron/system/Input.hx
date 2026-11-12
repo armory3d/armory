@@ -153,6 +153,25 @@ class Mouse extends VirtualInput {
 	public var lastX = -1.0;
 	public var lastY = -1.0;
 
+	var onStartedCallbacks: Array<String->Void> = [];
+	var onReleasedCallbacks: Array<String->Void> = [];
+
+	public function notifyOnStarted(callback: String->Void) {
+		onStartedCallbacks.push(callback);
+	}
+
+	public function notifyOnReleased(callback: String->Void) {
+		onReleasedCallbacks.push(callback);
+	}
+
+	public function removeOnStarted(callback: String->Void) {
+		onStartedCallbacks.remove(callback);
+	}
+
+	public function removeOnReleased(callback: String->Void) {
+		onReleasedCallbacks.remove(callback);
+	}
+
 	public function new() {
 		kha.input.Mouse.get().notify(downListener, upListener, moveListener, wheelListener);
 		#if (kha_android || kha_ios)
@@ -219,6 +238,7 @@ class Mouse extends VirtualInput {
 	function downListener(index: Int, x: Int, y: Int) {
 		if (Input.getPen().inUse) return;
 
+		var started = !buttonsDown[index];
 		buttonsDown[index] = true;
 		buttonsStarted[index] = true;
 		this.x = x;
@@ -231,17 +251,26 @@ class Mouse extends VirtualInput {
 		#end
 
 		downVirtual(buttons[index]);
+
+		if (started) {
+			for (callback in onStartedCallbacks) callback(buttons[index]);
+		}
 	}
 
 	function upListener(index: Int, x: Int, y: Int) {
 		if (Input.getPen().inUse) return;
 
+		var released = buttonsDown[index];
 		buttonsDown[index] = false;
 		buttonsReleased[index] = true;
 		this.x = x;
 		this.y = y;
 
 		upVirtual(buttons[index]);
+
+		if (released) {
+			for (callback in onReleasedCallbacks) callback(buttons[index]);
+		}
 	}
 
 	function moveListener(x: Int, y: Int, movementX: Int, movementY: Int) {
@@ -440,6 +469,25 @@ class Keyboard extends VirtualInput {
 	var repeatKey = false;
 	var repeatTime = 0.0;
 
+	var onStartedCallbacks: Array<String->Void> = [];
+	var onReleasedCallbacks: Array<String->Void> = [];
+
+	public function notifyOnStarted(callback: String->Void) {
+		onStartedCallbacks.push(callback);
+	}
+
+	public function notifyOnReleased(callback: String->Void) {
+		onReleasedCallbacks.push(callback);
+	}
+
+	public function removeOnStarted(callback: String->Void) {
+		onStartedCallbacks.remove(callback);
+	}
+
+	public function removeOnReleased(callback: String->Void) {
+		onReleasedCallbacks.remove(callback);
+	}
+
 	public function new() {
 		reset();
 		kha.input.Keyboard.get().notify(downListener, upListener, pressListener);
@@ -601,7 +649,8 @@ class Keyboard extends VirtualInput {
 
 	function downListener(code: KeyCode) {
 		var s = keyCode(code);
-		if (!keysDown.get(s)) {
+		var started = !keysDown.get(s);
+		if (started) {
 			keysFrame.push(s);
 			keysStarted.set(s, true);
 		}
@@ -616,11 +665,16 @@ class Keyboard extends VirtualInput {
 		#end
 
 		downVirtual(s);
+
+		if (started) {
+			for (callback in onStartedCallbacks) callback(s);
+		}
 	}
 
 	function upListener(code: KeyCode) {
 		var s = keyCode(code);
-		if (keysDown.get(s)) {
+		var released = keysDown.get(s);
+		if (released) {
 			keysFrame.push(s);
 			keysReleased.set(s, true);
 		}
@@ -634,6 +688,10 @@ class Keyboard extends VirtualInput {
 		#end
 
 		upVirtual(s);
+
+		if (released) {
+			for (callback in onReleasedCallbacks) callback(s);
+		}
 	}
 
 	function pressListener(char: String) {}
@@ -670,6 +728,25 @@ class Gamepad extends VirtualInput {
 
 	public var connected = false;
 	var num = 0;
+
+	var onStartedCallbacks: Array<String->Void> = [];
+	var onReleasedCallbacks: Array<String->Void> = [];
+
+	public function notifyOnStarted(callback: String->Void) {
+		onStartedCallbacks.push(callback);
+	}
+
+	public function notifyOnReleased(callback: String->Void) {
+		onReleasedCallbacks.push(callback);
+	}
+
+	public function removeOnStarted(callback: String->Void) {
+		onStartedCallbacks.remove(callback);
+	}
+
+	public function removeOnReleased(callback: String->Void) {
+		onReleasedCallbacks.remove(callback);
+	}
 
 	public function new(i: Int, virtual = false) {
 		for (s in buttons) {
@@ -761,6 +838,8 @@ class Gamepad extends VirtualInput {
 	}
 
 	function buttonListener(button: Int, value: Float) {
+		var previous = buttonsDown[button];
+
 		buttonsFrame.push(button);
 
 		buttonsDown[button] = value;
@@ -769,6 +848,13 @@ class Gamepad extends VirtualInput {
 
 		if (value == 0.0) upVirtual(buttons[button]);
 		else if (value == 1.0) downVirtual(buttons[button]);
+
+		if (previous == 0.0 && value > 0.0) {
+			for (callback in onStartedCallbacks) callback(buttons[button]);
+		}
+		else if (previous > 0.0 && value == 0.0) {
+			for (callback in onReleasedCallbacks) callback(buttons[button]);
+		}
 	}
 }
 

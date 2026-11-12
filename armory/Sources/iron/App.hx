@@ -61,12 +61,10 @@ class App {
 			lasth = App.h();
 		}
 		if (lastw != App.w() || lasth != App.h()) {
-			resized.emit(App.w(), App.h());
 			if (onResize != null) onResize();
-			else {
-				if (Scene.active != null && Scene.active.camera != null) {
-					Scene.active.camera.buildProjection();
-				}
+			resized.emit(App.w(), App.h());
+			if (Scene.active != null && Scene.active.camera != null) {
+				Scene.active.camera.buildProjection();
 			}
 		}
 		lastw = App.w();
