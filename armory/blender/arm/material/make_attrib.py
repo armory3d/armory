@@ -28,10 +28,9 @@ else:
 def write_vertpos(vert):
     billboard = mat_state.material.arm_billboard
     particle = mat_state.material.arm_particle_flag
-    # Particles
+    # GPU particles
     if particle:
-        if arm.utils.get_rp().arm_particles == 'GPU':
-            make_particle.write(vert, particle_info=cycles.particle_info)
+        make_particle.write(vert, particle_info=cycles.particle_info)
         # Billboards
         if billboard == 'spherical':
             vert.add_uniform('mat4 WV', '_worldViewMatrix')
@@ -71,13 +70,11 @@ def write_norpos(con_mesh: ShaderContext, vert: Shader, declare=False, write_nor
 
 
 def write_tex_coords(con_mesh: ShaderContext, vert: Shader, frag: Shader, tese: Optional[Shader]):
-    rpdat = arm.utils.get_rp()
-
     if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
         vert.add_uniform('float texUnpack', link='_texUnpack')
         if mat_state.material.arm_tilesheet_flag:
-            if mat_state.material.arm_particle_flag and rpdat.arm_particles == 'GPU':
+            if mat_state.material.arm_particle_flag:
                 make_particle.write_tilesheet(vert)
             else:
                 vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')

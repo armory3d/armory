@@ -1,6 +1,9 @@
 import importlib
+import importlib.machinery
+import importlib.util
 import os
 import queue
+import re
 import sys
 import types
 
@@ -219,19 +222,32 @@ def load_py_libraries():
         libs = os.listdir(lib_path)
         for lib_name in libs:
             fp = os.path.join(lib_path, lib_name)
-            if os.path.isdir(fp):
-                if os.path.exists(os.path.join(fp, 'blender.py')):
-                    sys.path.append(fp)
+            blender_py = os.path.join(fp, 'blender.py')
+            if os.path.isdir(fp) and os.path.exists(blender_py):
+                # The library's folder is a package of its own, so its modules can
+                # import each other relatively ("from . import utils") without
+                # clashing with other libraries' modules of the same name
+                package_name = 'arm_library_' + re.sub(r'\W', '_', lib_name)
+                package_spec = importlib.machinery.ModuleSpec(package_name, None, is_package=True)
+                package_spec.submodule_search_locations = [fp]
+                sys.modules[package_name] = importlib.util.module_from_spec(package_spec)
 
-                    lib_module = importlib.import_module('blender')
-                    importlib.reload(lib_module)
+                spec = importlib.util.spec_from_file_location(package_name + '.blender', blender_py)
+                lib_module = importlib.util.module_from_spec(spec)
+                sys.modules[spec.name] = lib_module
+
+                # Absolute imports ("import utils") still work while the library loads,
+                # but those modules are shared by name with everything else
+                sys.path.append(fp)
+                try:
+                    spec.loader.exec_module(lib_module)
                     if hasattr(lib_module, 'register'):
                         lib_module.register()
-
-                    log.debug(f'Armory: Loaded Python library {lib_name}')
-                    loaded_py_libraries[lib_name] = lib_module
-
+                finally:
                     sys.path.remove(fp)
+
+                log.debug(f'Armory: Loaded Python library {lib_name}')
+                loaded_py_libraries[lib_name] = lib_module
 
         # Register newly added nodes and node categories
         arm.nodes_logic.register_nodes()
@@ -241,6 +257,10 @@ def unload_py_libraries():
     for lib_name, lib_module in loaded_py_libraries.items():
         if hasattr(lib_module, 'unregister'):
             lib_module.unregister()
+        # Forget the library's package and its modules, so the next load reads their files again
+        package_name = lib_module.__package__
+        for name in [name for name in sys.modules if name == package_name or name.startswith(package_name + '.')]:
+            del sys.modules[name]
         arm.log.debug(f'Armory: Unloaded Python library {lib_name}')
 
     loaded_py_libraries.clear()

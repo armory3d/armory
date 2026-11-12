@@ -1,9 +1,16 @@
 package iron.object;
 
-#if arm_gpu_particles
-typedef ParticleSystem = ParticleSystemGPU;
-#elseif arm_cpu_particles
-typedef ParticleSystem = ParticleSystemCPU;
-#else
-class ParticleSystem { public function new() { } }
+#if arm_particles
+import kha.FastFloat;
+import iron.data.ParticleData;
+
+interface ParticleSystem {
+	var data: ParticleData;
+	var speed: FastFloat;
+	function start(): Void;
+	function pause(): Void;
+	function resume(): Void;
+	function stop(): Void;
+	function remove(): Void;
+}
 #end
