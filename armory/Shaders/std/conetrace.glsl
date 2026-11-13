@@ -38,9 +38,9 @@ const float MAX_DISTANCE = voxelgiRange;
 #ifdef _VoxelGI
 uniform sampler3D dummy;
 
-vec4 sampleVoxel(sampler3D voxels, vec3 P, const float clipmaps[voxelgiClipmapCount * 10], const float clipmap_index, const float step_dist, const int precomputed_direction, const vec3 face_offset, const vec3 direction_weight) {
+vec4 sampleVoxel(sampler3D voxels, vec3 P, float voxelSize, const float clipmaps[voxelgiClipmapCount * 10], const float clipmap_index, const float step_dist, const int precomputed_direction, const vec3 face_offset, const vec3 direction_weight) {
  	vec4 col = vec4(0.0);
-	vec3 tc = (P - vec3(clipmaps[int(clipmap_index * 10 + 4)], clipmaps[int(clipmap_index * 10 + 5)], clipmaps[int(clipmap_index * 10 + 6)])) / (float(clipmaps[int(clipmap_index * 10)]) * voxelgiResolution);
+	vec3 tc = (P - vec3(clipmaps[int(clipmap_index * 10 + 4)], clipmaps[int(clipmap_index * 10 + 5)], clipmaps[int(clipmap_index * 10 + 6)])) / (voxelSize * voxelgiResolution);
 	vec3 half_texel = vec3(0.5) / voxelgiResolution;
 	tc = tc * 0.5 + 0.5;
 	tc = clamp(tc, half_texel, 1.0 - half_texel);
@@ -111,7 +111,7 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
         float clipmap_index = floor(lod);
 		float clipmap_blend = fract(lod);
 		float voxelSize = float(clipmaps[int(clipmap_index * 10)]);
-		vec3 p0 = (origin + n * voxelSize * 2.0) + dir * dist;
+		vec3 p0 = (origin + n * sqrt(voxelSize * voxelSize * 2.0)) + dir * dist;
 
         samplePos = (p0 - vec3(clipmaps[int(clipmap_index * 10 + 4)], clipmaps[int(clipmap_index * 10 + 5)], clipmaps[int(clipmap_index * 10 + 6)])) / (voxelSize * voxelgiResolution);
 		samplePos = samplePos * 0.5 + 0.5;
@@ -121,11 +121,11 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
 			continue;
 		}
 
-		mipSample = sampleVoxel(voxels, p0, clipmaps, clipmap_index, step_dist, precomputed_direction, face_offset, direction_weight);
+		mipSample = sampleVoxel(voxels, p0, voxelSize, clipmaps, clipmap_index, step_dist, precomputed_direction, face_offset, direction_weight);
 
 		if(clipmap_blend > 0.0 && clipmap_index < voxelgiClipmapCount - 1) {
-			vec4 mipSampleNext = sampleVoxel(voxels, p0, clipmaps, clipmap_index + 1.0, step_dist, precomputed_direction, face_offset, direction_weight);
-			mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
+			vec4 mipSampleNext = sampleVoxel(voxels, samplePos, voxelSize, clipmaps, clipmap_index + 1.0, step_dist, precomputed_direction, face_offset, direction_weight);
+			mipSample = mix(mipSample, mipSampleNext, smoothstep(0.0, 1.0, clipmap_blend));
 		}
 
 		sampleCol += (1.0 - sampleCol.a) * mipSample;
