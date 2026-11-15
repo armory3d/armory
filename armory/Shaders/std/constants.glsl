@@ -5,7 +5,7 @@ const int DIFFUSE_CONE_COUNT = 16;
 
 const float SHADOW_CONE_APERTURE = 0.2;
 
-const float DIFFUSE_CONE_APERTURE = 1.0; // was 0.872665; full angle, ~57deg — fills the hemisphere given even cone spacing
+const float DIFFUSE_CONE_APERTURE = 0.872665; // 50 degrees full angle
 
 const vec3 DIFFUSE_CONE_DIRECTIONS[16] = vec3[](
 	vec3( 0.3480,  0.0000,  0.9375),
