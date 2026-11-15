@@ -145,9 +145,7 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
 		vec4 mipSample = vec4(0.0);
 		float diam = max(voxelSize0, dist * coneCoefficient);
 		float coneLod = max(log2(diam / voxelSize0), startLod);
-		// Offset away from the surface by the (continuous) voxel size of the LOD
-		// to avoid self-occlusion without a jump when the clipmap changes.
-		vec3 p0 = origin + n * (sqrt(2.0) * float(clipmaps[0]) * exp2(coneLod)) + dir * dist;
+		vec3 p0 = origin + n * voxelSize0 + dir * dist;
 		float lod = max(coneLod, clipmapMinLod(p0, clipmaps));
 		if (lod >= float(voxelgiClipmapCount)) break; // left the outermost clipmap
 		lod = min(lod, float(voxelgiClipmapCount - 1));
@@ -249,7 +247,7 @@ float traceConeAO(const sampler3D voxels, const vec3 origin, const vec3 n, const
 		float mipSample = 0.0;
 		float diam = max(voxelSize0, dist * coneCoefficient);
 		float coneLod = max(log2(diam / voxelSize0), startLod);
-		vec3 p0 = origin + n * (2.0 * float(clipmaps[0]) * exp2(coneLod)) + dir * dist;
+		vec3 p0 = origin + n * voxelSize0 + dir * dist;
 		float lod = max(coneLod, clipmapMinLod(p0, clipmaps));
 		if (lod >= float(voxelgiClipmapCount)) break;
 		lod = min(lod, float(voxelgiClipmapCount - 1));
@@ -333,8 +331,8 @@ traceConeShadow(
         #endif
 
         float diam = max(voxelSize0, dist * coneCoefficient);
-        float coneLod = max(log2(diam / voxelSize0), startLod);
-        vec3 p0 = origin + n * (2.0 * float(clipmaps[0]) * exp2(coneLod)) + dir * dist;
+		float coneLod = max(log2(diam / voxelSize0), startLod);
+		vec3 p0 = origin + n * voxelSize0 + dir * dist;
         float lod = max(coneLod, clipmapMinLod(p0, clipmaps));
         if (lod >= float(voxelgiClipmapCount)) break;
         lod = min(lod, float(voxelgiClipmapCount - 1));

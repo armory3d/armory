@@ -128,7 +128,7 @@ void main() {
 
 	vec3 viewNormal = V3 * n;
 	vec3 viewPos = getPosView(viewRay, d, cameraProj);
-	vec3 viewDir = normalize(viewPos);
+	vec3 viewDir = viewPos;
 	vec3 refracted = refract(viewDir, viewNormal, 1.0 / ior);
 	// Total internal reflection, let the ray pass straight through
 	if (dot(refracted, refracted) == 0.0) refracted = viewDir;
