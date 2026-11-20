@@ -35,6 +35,11 @@
 					"link": "_cameraPlaneProj"
 				},
 				{
+					"name": "clipmaps",
+					"link": "_clipmaps",
+					"ifdef": ["_VoxelRefract"]
+				},
+				{
 					"name": "senvmapBrdf",
 					"link": "$brdf.png",
 					"ifdef": ["_Brdf"]

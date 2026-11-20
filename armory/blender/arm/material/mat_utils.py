@@ -52,6 +52,9 @@ def get_rpasses(material):
         elif is_transluc(material) and not material.arm_discard and not material.arm_blending and rpdat.rp_ss_refraction:
             ar.append('refraction')
             ar.append('refraction_backface')
+            if rpdat.rp_ss_refraction_nested:
+                ar.append('refraction_frontface')
+                ar.append('refraction_inner')
         if rpdat.rp_voxels != "Off" and has_voxels:
             ar.append('voxel')
         if rpdat.rp_renderer == 'Forward' and rpdat.rp_depthprepass and not material.arm_blending and not material.arm_particle_flag:

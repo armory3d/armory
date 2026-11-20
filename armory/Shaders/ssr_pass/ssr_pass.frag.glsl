@@ -24,6 +24,36 @@ uniform sampler2D senvmapBrdf;
 
 uniform vec3 eye;
 
+#ifdef _SSRVoxelFallback
+// SSR runs before the lighting and reads the previous frame (tex), the voxel
+// specular resolve traces cones only where the confidence written here is low
+#ifdef _Veloc
+uniform sampler2D sveloc;
+#else
+uniform mat4 prevVP;
+#endif
+
+vec2 getPrevUV(const vec2 uv, const vec3 viewPos) {
+	#ifdef _Veloc
+	// Same convention as the TAA and SSGI passes
+	vec2 velocity = -textureLod(sveloc, uv, 0.0).rg;
+	#ifdef _InvY
+	velocity.y = -velocity.y;
+	#endif
+	return uv + velocity;
+	#else
+	// Camera-only reprojection, assumes static geometry
+	vec3 wpos = transpose(V3) * viewPos + eye;
+	vec4 prevPos = prevVP * vec4(wpos, 1.0);
+	vec2 prevUV = (prevPos.xy / prevPos.w) * 0.5 + 0.5;
+	#ifdef _InvY
+	prevUV.y = 1.0 - prevUV.y;
+	#endif
+	return prevUV;
+	#endif
+}
+#endif
+
 in vec3 viewRay;
 in vec2 texCoord;
 out vec4 fragColor;
@@ -92,13 +122,13 @@ void main() {
 	float metallic;
 	uint matid;
 	unpackFloatInt16(g0.a, metallic, matid);
-	if (roughness == 1.0) { fragColor.rgb = vec3(0.0); return; }
+	if (roughness == 1.0) { fragColor = vec4(0.0); return; }
 
 	float spec = fract(textureLod(gbuffer1, texCoord, 0.0).a);
-	if (spec == 0.0) { fragColor.rgb = vec3(0.0); return; }
+	if (spec == 0.0) { fragColor = vec4(0.0); return; }
 
 	float d = textureLod(gbufferD, texCoord, 0.0).r;
-	if (d >= 1.0) { fragColor.rgb = vec3(0.0); return; }
+	if (d >= 1.0) { fragColor = vec4(0.0); return; }
 
 	vec2 enc = g0.rg;
 	vec3 n;
@@ -143,7 +173,15 @@ void main() {
 	#endif
 
 	intensity = clamp(intensity, 0.0, 1.0);
+	#ifdef _SSRVoxelFallback
+	vec2 prevUV = getPrevUV(coords.xy, hitCoord);
+	// The hit was not on screen in the previous frame
+	if (prevUV.x < 0.0 || prevUV.x > 1.0 || prevUV.y < 0.0 || prevUV.y > 1.0) intensity = 0.0;
+	vec3 reflCol = clamp(textureLod(tex, prevUV, 0.0).rgb, 0.0, 1.0);
+	fragColor = vec4(reflCol, intensity);
+	#else
 	vec3 reflCol = textureLod(tex, coords.xy, 0.0).rgb;
 	reflCol = clamp(reflCol, 0.0, 1.0);
 	fragColor.rgb = reflCol * intensity;// * F;
+	#endif
 }

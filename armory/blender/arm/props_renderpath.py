@@ -388,6 +388,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_volumetriclight: BoolProperty(name="Volumetric Light", description="Use volumetric lighting", default=False, update=update_renderpath)
     rp_ssr: BoolProperty(name="SSR", description="Screen space reflections", default=False, update=update_renderpath)
     rp_ss_refraction: BoolProperty(name="SSRefraction", description="Screen space refractions", default=False, update=update_renderpath)
+    rp_ss_refraction_nested: BoolProperty(name="Nested Refraction", description="Also refract the refractive surfaces seen through another one, like a liquid in a glass. Costs an extra mesh pass and refraction pass", default=True, update=update_renderpath)
+    rp_ssr_voxel_fallback: BoolProperty(name="Voxel Fallback", description="Trace voxel reflections only where SSR misses or the surface is too rough, instead of adding SSR over them. SSR then uses the previous frame. Deferred renderer with Voxel GI only", default=False, update=update_renderpath)
     rp_ssgi: EnumProperty(
         items=[('Off', 'No AO', 'Off'),
                ('SSAO', 'SSAO', 'Screen space ambient occlusion'),

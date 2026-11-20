@@ -458,6 +458,9 @@ class RenderPathDeferred {
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 
+			// Depth test for the closest backface / frontface passes
+			path.createDepthBuffer("refrdepth", "DEPTH24");
+
 			// holds the closest backface depth of the refractive meshes
 			var t = new RenderTargetRaw();
 			t.name = "gbufferD2";
@@ -466,7 +469,21 @@ class RenderPathDeferred {
 			t.displayp = Inc.getDisplayp();
 			t.format = "R32";
 			t.scale = Inc.getSuperSampling();
+			t.depth_buffer = "refrdepth";
 			path.createRenderTarget(t);
+
+			#if rp_ssrefr_nested
+			// holds the closest frontface depth of the refractive meshes
+			var t = new RenderTargetRaw();
+			t.name = "gbufferD3";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R32";
+			t.scale = Inc.getSuperSampling();
+			t.depth_buffer = "refrdepth";
+			path.createRenderTarget(t);
+			#end
 
 			// holds background color
 			var t = new RenderTargetRaw();
@@ -502,6 +519,33 @@ class RenderPathDeferred {
 				t.height = 0;
 				t.scale = Inc.getSuperSampling() * 0.5;
 				t.format = Inc.getHdrFormat();
+				path.createRenderTarget(t);
+			}
+			#end
+
+			#if rp_ssr_voxel_fallback
+			{
+				path.loadShader("shader_datas/copy_pass/copy_pass");
+
+				// Lit image of the previous frame, the SSR pass reads it as it
+				// runs before this frame is lit
+				var t = new RenderTargetRaw();
+				t.name = "ssr_prev";
+				t.width = 0;
+				t.height = 0;
+				t.displayp = Inc.getDisplayp();
+				t.format = Inc.getHdrFormat();
+				t.scale = Inc.getSuperSampling();
+				path.createRenderTarget(t);
+
+				// SSR color and confidence, read by the voxel specular resolve
+				var t = new RenderTargetRaw();
+				t.name = "ssr_fallback";
+				t.width = 0;
+				t.height = 0;
+				t.displayp = Inc.getDisplayp();
+				t.format = "RGBA64";
+				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
 			}
 			#end
@@ -748,6 +792,28 @@ class RenderPathDeferred {
 		#if (!kha_opengl)
 		path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
 		#end
+
+		#if rp_ssr_voxel_fallback
+		{
+			// Screen space reflections of the previous frame, the voxel
+			// specular resolve only traces cones where they found nothing
+			path.setTarget("ssr_fallback");
+			if (armory.data.Config.raw.rp_ssr != false) {
+				path.bindTarget("ssr_prev", "tex");
+				path.bindTarget("_main", "gbufferD");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("gbuffer1", "gbuffer1");
+				#if (rp_gbuffer2 && arm_veloc)
+				path.bindTarget("gbuffer2", "sveloc");
+				#end
+				path.drawShader("shader_datas/ssr_pass/ssr_pass");
+			}
+			else {
+				path.clearTarget(0x00000000);
+			}
+		}
+		#end
+
 		path.setTarget("tex");
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
@@ -838,6 +904,15 @@ class RenderPathDeferred {
 					path.drawVolume(p, "shader_datas/probe_cubemap/probe_cubemap");
 				}
 			}
+		}
+		#end
+
+		#if rp_ssr_voxel_fallback
+		if (armory.data.Config.raw.rp_ssr != false) {
+			// Keep the lit image for the SSR pass of the next frame
+			path.setTarget("ssr_prev");
+			path.bindTarget("tex", "tex");
+			path.drawShader("shader_datas/copy_pass/copy_pass");
 		}
 		#end
 
@@ -938,67 +1013,97 @@ class RenderPathDeferred {
 		{
 			if (armory.data.Config.raw.rp_ssrefr != false)
 			{
-				//save depth
-				#if (!kha_opengl)
-				path.setDepthFrom("gbuffer0", "gbuffer1"); // Unbind depth so we can read it
-				path.depthToRenderTarget.set("main", path.renderTargets.get("tex")); // tex and gbuffer0 share a depth buffer
-				#end
+				// Store the scene seen behind the refractive surfaces: its depth
+				// in gbufferD1 and its color in refr
+				function saveBackground() {
+					#if (!kha_opengl)
+					path.setDepthFrom("gbuffer0", "gbuffer1"); // Unbind depth so we can read it
+					path.depthToRenderTarget.set("main", path.renderTargets.get("tex")); // tex and gbuffer0 share a depth buffer
+					#end
 
-				// Copy the depth buffer to the depth texture
-				path.setTarget("gbufferD1");
-				path.bindTarget("_main", "tex");
-				path.drawShader("shader_datas/copy_pass/copy_pass");
+					// Copy the depth buffer to the depth texture
+					path.setTarget("gbufferD1");
+					path.bindTarget("_main", "tex");
+					path.drawShader("shader_datas/copy_pass/copy_pass");
 
-				#if (!kha_opengl)
-				path.setDepthFrom("gbuffer0", "tex"); // Re-bind depth
-				path.depthToRenderTarget.set("main", path.renderTargets.get("gbuffer0"));
-				#end
+					#if (!kha_opengl)
+					path.setDepthFrom("gbuffer0", "tex"); // Re-bind depth
+					path.depthToRenderTarget.set("main", path.renderTargets.get("gbuffer0"));
+					#end
 
-				//save color
-				path.setTarget("refr");
-				path.bindTarget("tex", "tex");
-				path.drawShader("shader_datas/copy_pass/copy_pass");
+					path.setTarget("refr");
+					path.bindTarget("tex", "tex");
+					path.drawShader("shader_datas/copy_pass/copy_pass");
+				}
+
+				// Shade one layer of refractive surfaces and composite it over tex
+				function drawLayer(context:String) {
+					path.setTarget("gbuffer0", ["gbuffer1", "gbuffer_refraction"]);
+
+					#if (rp_voxels != "Off")
+					path.bindTarget("voxelsOut", "voxels");
+					path.bindTarget("voxelsSDF", "voxelsSDF");
+					#end
+
+					#if rp_shadowmap
+					{
+						#if arm_shadowmap_atlas
+						Inc.bindShadowMapAtlas();
+						#else
+						Inc.bindShadowMap();
+						#end
+					}
+					#end
+
+					#if rp_ssrefr_nested
+					path.bindTarget("gbufferD3", "gbufferD3");
+					#end
+					path.drawMeshes(context);
+
+					path.setTarget("tex");
+					path.bindTarget("refr", "tex");
+					path.bindTarget("gbufferD1", "gbufferD1");
+					path.bindTarget("gbufferD2", "gbufferD2");
+					path.bindTarget("gbuffer0", "gbuffer0");
+					path.bindTarget("gbuffer1", "tex1");
+					path.bindTarget("_main", "gbufferD");
+					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
+					#if arm_voxelgi_refract
+					path.bindTarget("voxelsOut", "voxels");
+					path.bindTarget("voxelsSDF", "voxelsSDF");
+					#end
+
+					path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
+				}
+
+				saveBackground();
 
 				// Closest backface depth of the refractive meshes, used to
 				// find where the refracted ray leaves the medium
 				path.setTarget("gbufferD2");
-				path.clearTarget(0x00000000);
+				path.clearTarget(0x00000000, 1.0);
 				path.drawMeshes("refraction_backface");
 
-				path.setTarget("gbuffer0", ["gbuffer1", "gbuffer_refraction"]);
+				#if rp_ssrefr_nested
+				// Closest frontface depth of the refractive meshes, used to peel
+				// the nearest layer off
+				path.setTarget("gbufferD3");
+				path.clearTarget(0x00000000, 1.0);
+				path.drawMeshes("refraction_frontface");
 
-				#if (rp_voxels != "Off")
-				path.bindTarget("voxelsOut", "voxels");
-				path.bindTarget("voxelsSDF", "voxelsSDF");
+				// Refractive surfaces seen through another one, like a liquid in
+				// a glass, are composited first and become part of the background
+				// the nearest layer refracts
+				drawLayer("refraction_inner");
+				saveBackground();
 				#end
 
-				#if rp_shadowmap
-				{
-					#if arm_shadowmap_atlas
-					Inc.bindShadowMapAtlas();
-					#else
-					Inc.bindShadowMap();
-					#end
-				}
-				#end
-
-				path.drawMeshes("refraction");
-
-				path.setTarget("tex");
-				path.bindTarget("refr", "tex");
-				path.bindTarget("gbufferD1", "gbufferD1");
-				path.bindTarget("gbufferD2", "gbufferD2");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.bindTarget("gbuffer1", "tex1");
-				path.bindTarget("_main", "gbufferD");
-				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
-
-				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
+				drawLayer("refraction");
 			}
 		}
 		#end
 
-		#if rp_ssr
+		#if (rp_ssr && !rp_ssr_voxel_fallback)
 		{
 			if (armory.data.Config.raw.rp_ssr != false) {
 				#if (!kha_opengl)

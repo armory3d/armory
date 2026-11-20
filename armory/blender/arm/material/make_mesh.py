@@ -843,11 +843,17 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         frag.write('indirect += emissionCol;')
 
     if '_VoxelRefract' in wrd.world_defs and parse_opacity:
-        frag.write('if (opacity < 1.0) {')
-        frag.write('    vec3 refraction = traceRefraction(wposition, n, voxels, voxelsSDF, vVec, ior, roughness * roughness, clipmaps, gl_FragCoord.xy, velocity, opacity).rgb * (1.0 - F) * voxelgiRefr;')
-        frag.write('    indirect = mix(refraction, indirect, opacity);')
-        frag.write('    direct = mix(refraction, direct, opacity);')
-        frag.write('}')
+        if '_SSRefraction' in wrd.world_defs and con_mesh.data['name'] in ('refraction', 'refraction_inner'):
+            # The screen space refraction pass composites the refraction and
+            # traces the voxels itself, only where its ray misses
+            pass
+        else:
+            frag.write('if (opacity < 1.0) {')
+            frag.write('    vec3 refraction = traceRefraction(wposition, n, voxels, voxelsSDF, vVec, ior, roughness * roughness, clipmaps, gl_FragCoord.xy, velocity, opacity).rgb * (1.0 - F) * voxelgiRefr;')
+            # Add the refraction once, not to both the direct and indirect terms
+            frag.write('    indirect = mix(refraction, indirect, opacity);')
+            frag.write('    direct *= opacity;')
+            frag.write('}')
 
 def _write_material_attribs_default(frag: shader.Shader, parse_opacity: bool):
     frag.write('vec3 basecol;')

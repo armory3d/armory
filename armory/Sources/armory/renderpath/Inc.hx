@@ -76,6 +76,9 @@ class Inc {
 	static var voxel_td4:kha.compute.TextureUnit;
 	static var voxel_te4:kha.compute.TextureUnit;
 	static var voxel_tf4:kha.compute.TextureUnit;
+	#if rp_ssr_voxel_fallback
+	static var voxel_tg4:kha.compute.TextureUnit;
+	#end
 	static var voxel_ca4:kha.compute.ConstantLocation;
 	static var voxel_cb4:kha.compute.ConstantLocation;
 	static var voxel_cc4:kha.compute.ConstantLocation;
@@ -904,6 +907,9 @@ class Inc {
 			voxel_td4 = voxel_sh4.getTextureUnit("voxelsSDF");
 			voxel_te4 = voxel_sh4.getTextureUnit("voxels_specular");
 			voxel_tf4 = voxel_sh4.getTextureUnit("sveloc");
+			#if rp_ssr_voxel_fallback
+			voxel_tg4 = voxel_sh4.getTextureUnit("ssrFallback");
+			#end
 	 		voxel_ca4 = voxel_sh4.getConstantLocation("clipmaps");
 	 		voxel_cb4 = voxel_sh4.getConstantLocation("InvVP");
 	 		voxel_cc4 = voxel_sh4.getConstantLocation("eye");
@@ -1237,6 +1243,9 @@ class Inc {
 		kha.compute.Compute.setTexture(voxel_te4, rts.get("voxels_specular").image, kha.compute.Access.Write);
 		#if rp_gbuffer2
 		kha.compute.Compute.setSampledTexture(voxel_tf4, rts.get("gbuffer2").image);
+		#end
+		#if rp_ssr_voxel_fallback
+		kha.compute.Compute.setSampledTexture(voxel_tg4, rts.get("ssr_fallback").image);
 		#end
 
 		var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);

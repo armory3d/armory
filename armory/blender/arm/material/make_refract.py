@@ -17,26 +17,39 @@ else:
 	arm.enable_reload(__name__)
 
 
-def make(context_id):
+def make(context_id, inner=False):
+    """inner: the refractive surfaces seen through another refractive surface,
+    such as a liquid in a glass. They are drawn and composited first so that
+    the outer layer refracts them like the rest of the background."""
     wrd = bpy.data.worlds['Arm']
     attachment_format = 'RGBA32' if '_LDR' in wrd.world_defs else 'RGBA64'
+    # gbuffer0, gbuffer1, gbuffer_refraction
+    color_attachments = [attachment_format, attachment_format, 'RGBA64']
 
     con_refract = mat_state.data.add_context({
         'name': context_id,
         'depth_write': True,
         'compare_mode': 'less',
         'cull_mode': 'clockwise',
-        # gbuffer0, gbuffer1, gbuffer_refraction
-        'color_attachments': [attachment_format, attachment_format, 'RGBA64']
+        'color_attachments': color_attachments
     })
 
     make_mesh.make_forward_base(con_refract, parse_opacity=True, transluc_pass=True)
+
+    if inner:
+        # Peel the nearest refractive layer off, its depth is in gbufferD3
+        # (stored as 1 - z). Compare linear depths with a relative tolerance as
+        # both layers come from different shaders.
+        con_refract.frag.add_include('std/math.glsl')
+        con_refract.frag.add_uniform('sampler2D gbufferD3')
+        con_refract.frag.add_uniform('vec2 cameraProj', link='_cameraPlaneProj')
+        con_refract.frag.write_init('if (abs(linearize(gl_FragCoord.z, cameraProj)) <= abs(linearize(1.0 - texelFetch(gbufferD3, ivec2(gl_FragCoord.xy), 0).r, cameraProj)) * 1.0005) discard;')
 
     vert = con_refract.vert
     frag = con_refract.frag
     tese = con_refract.tese
     frag.add_include('std/gbuffer.glsl')
-    frag.add_out('vec4 fragColor[3]')
+    frag.add_out(f'vec4 fragColor[{len(color_attachments)}]')
 
     rpdat = arm.utils.get_rp()
 

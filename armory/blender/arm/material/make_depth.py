@@ -37,7 +37,7 @@ write_material_attribs: Optional[Callable[[dict[str, Any], shader.Shader], bool]
 write_material_attribs_post: Optional[Callable[[dict[str, Any], shader.Shader], None]] = None
 write_vertex_attribs: Optional[Callable[[shader.Shader], bool]] = None
 
-def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False, backface=False):
+def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False, backface=False, frontface=False):
 
     is_disp = mat_utils.disp_linked(mat_state.output_node)
 
@@ -45,23 +45,17 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False, back
     if is_disp or shadowmap_transparent:
         vs.append({'name': 'nor', 'data': 'short2norm'})
 
-    if backface:
-        # Closest backface depth of the refractive meshes, stored as 1 - z and
-        # resolved with max blending, so that neither an additional depth buffer
-        # nor a non black clear is needed
+    if backface or frontface:
+        # Closest backface (or frontface) depth of the refractive meshes, stored
+        # as 1 - z so that the cleared (black) target means "no surface". The
+        # closest surface is resolved with a depth test, not with max blending:
+        # the Krom backend ignores the blend operation and would add the depths.
         con_depth = mat_state.data.add_context({
             'name': context_id,
             'vertex_elements': vs,
-            'depth_write': False,
-            'depth_read': False,
-            'compare_mode': 'always',
-            'cull_mode': 'counter_clockwise',
-            'blend_source': 'blend_one',
-            'blend_destination': 'blend_one',
-            'blend_operation': 'max',
-            'alpha_blend_source': 'blend_one',
-            'alpha_blend_destination': 'blend_one',
-            'alpha_blend_operation': 'max',
+            'depth_write': True,
+            'compare_mode': 'less',
+            'cull_mode': 'clockwise' if frontface else 'counter_clockwise',
             'color_attachments': ['R32'],
             'color_writes_red': [True],
             'color_writes_green': [True],
@@ -298,11 +292,14 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False, back
         frag.write('color *= 1.0 - opacity;')
         frag.write('fragColor = vec4(color, depth);')
 
-    if backface:
+    if backface or frontface:
         # Unlike the depth passes, transparent fragments must be kept here,
         # only alpha clipped ones are dropped
         if parse_opacity and mat_state.material.arm_discard:
             frag.write('if (opacity < {0}) discard;'.format(mat_state.material.arm_discard_opacity))
+        if frontface and parse_opacity:
+            # Same surfaces as the refraction context draws
+            frag.write('if (opacity == 1.0) discard;')
         frag.add_out('vec4 fragColor')
         frag.write('fragColor = vec4(1.0 - gl_FragCoord.z);')
 

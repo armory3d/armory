@@ -7,6 +7,9 @@
 #include "std/math.glsl"
 #include "std/brdf.glsl"
 #include "std/gbuffer.glsl"
+#ifdef _VoxelRefract
+#include "std/conetrace.glsl"
+#endif
 
 #ifdef _Brdf
 uniform sampler2D senvmapBrdf;
@@ -19,6 +22,11 @@ uniform sampler2D gbuffer0;
 uniform sampler2D gbufferD1; // Opaque scene depth, refractive meshes excluded
 uniform sampler2D gbufferD2; // Closest refractive backface depth
 uniform sampler2D gbuffer_refraction; // ior\opacity
+#ifdef _VoxelRefract
+uniform sampler3D voxels;
+uniform sampler3D voxelsSDF;
+uniform float clipmaps[voxelgiClipmapCount * 10];
+#endif
 uniform mat4 P;
 uniform mat3 V3;
 uniform vec2 cameraProj;
@@ -161,9 +169,26 @@ void main() {
 
 	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
+	// How much the screen space result can be trusted
+	float confidence = screenEdgeFactor * clamp(abs(refracted.z), 0.0, 1.0);
 
 	float refractivity = 1.0 - opac;
-	vec3 intensity = refractivity * screenEdgeFactor * clamp(abs(refracted.z), 0.0, 1.0) * (1.0 - F);
+	#ifdef _VoxelRefract
+	// Fall back to the voxel traced refraction where the ray found no hit
+	// or the screen space data runs out, instead of fading to black. The cone
+	// is only traced there, a confident screen space hit skips it.
+	confidence *= coords.w;
+	if (confidence < 0.99) {
+		vec3 wpos = transpose(V3) * viewPos + eye;
+		vec3 vVec = normalize(eye - wpos);
+		vec3 voxelCol = traceRefraction(wpos, n, voxels, voxelsSDF, vVec, ior, roughness * roughness, clipmaps, gl_FragCoord.xy, vec2(0.0), 0.0).rgb * voxelgiRefr;
+		voxelCol *= exp(-absorption * travelled);
+		refractionCol = mix(voxelCol, refractionCol, confidence);
+	}
+	vec3 intensity = refractivity * (1.0 - F);
+	#else
+	vec3 intensity = refractivity * confidence * (1.0 - F);
+	#endif
 
 	intensity = clamp(intensity, 0.0, 1.0);
 

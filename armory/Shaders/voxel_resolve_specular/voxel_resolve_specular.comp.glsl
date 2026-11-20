@@ -42,6 +42,9 @@ uniform mat4 InvVP;
 uniform vec3 eye;
 uniform vec2 postprocess_resolution;
 uniform sampler2D sveloc;
+#ifdef _SSRVoxelFallback
+uniform sampler2D ssrFallback; // SSR color, confidence in alpha
+#endif
 
 void main() {
 	const vec2 pixel = gl_GlobalInvocationID.xy;
@@ -66,9 +69,22 @@ void main() {
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
 	n = normalize(n);
 
+	#ifdef _SSRVoxelFallback
+	// Screen space reflection first, cones only where it found nothing
+	vec4 ssr = textureLod(ssrFallback, uv, 0.0);
+	if (ssr.a >= 0.99) {
+		imageStore(voxels_specular, ivec2(pixel), vec4(ssr.rgb, 1.0));
+		return;
+	}
+	#endif
+
 	vec2 velocity = -textureLod(sveloc, uv, 0.0).rg;
 
 	vec3 color = traceSpecular(P, n, voxels, voxelsSDF, normalize(eye - P), g0.z * g0.z, clipmaps, pixel, velocity).rgb;
+
+	#ifdef _SSRVoxelFallback
+	color = mix(color, ssr.rgb, ssr.a);
+	#endif
 
 	imageStore(voxels_specular, ivec2(pixel), vec4(color, 1.0));
 }
