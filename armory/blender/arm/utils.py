@@ -214,6 +214,16 @@ def is_gapi_gl_es() -> bool:
         return wrd.arm_runtime == 'Browser'
 
 
+UPSCALE_RATIOS = {'Native': 1.0, 'Quality': 0.667, 'Balanced': 0.58, 'Performance': 0.5, 'UltraPerformance': 0.333}
+
+
+def get_upscale_ratio(rpdat) -> float:
+    """Render resolution ratio of the temporal upscaler, 0 when upscaling is off or unsupported."""
+    if rpdat.rp_upscaling == 'Off' or rpdat.rp_antialiasing != 'TAA' or rpdat.rp_renderer != 'Deferred' or not rpdat.rp_render_to_texture:
+        return 0.0
+    return UPSCALE_RATIOS[rpdat.rp_upscaling]
+
+
 def get_rp() -> arm.props_renderpath.ArmRPListItem:
     wrd = bpy.data.worlds['Arm']
     if not state.is_export and wrd.arm_play_renderpath != '':

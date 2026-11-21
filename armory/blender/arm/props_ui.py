@@ -1858,7 +1858,16 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         layout.enabled = rpdat.rp_render_to_texture
         col = layout.column()
         col.prop(rpdat, "rp_antialiasing")
-        col.prop(rpdat, "rp_supersampling")
+        upscale_supported = rpdat.rp_antialiasing == 'TAA' and rpdat.rp_renderer == 'Deferred'
+        row = col.row()
+        row.enabled = upscale_supported
+        row.prop(rpdat, "rp_upscaling")
+        upscaling = upscale_supported and rpdat.rp_upscaling != 'Off'
+        if upscaling:
+            col.prop(rpdat, "arm_upscale_sharpness")
+        row = col.row()
+        row.enabled = not upscaling  # Super sampling is ignored while upscaling
+        row.prop(rpdat, "rp_supersampling")
 
         col = layout.column()
         col.prop(rpdat, 'arm_rp_resolution')

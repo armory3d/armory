@@ -108,6 +108,10 @@ class Inc {
 		#end
 
 		#end
+
+		#if rp_upscale
+		iron.object.CameraObject.renderScale = getSuperSampling();
+		#end
 	}
 
 	#if arm_shadowmap_atlas
@@ -562,6 +566,9 @@ class Inc {
 		}
 		if (superSample != config.rp_supersample) {
 			superSample = config.rp_supersample;
+			#if rp_upscale
+			iron.object.CameraObject.renderScale = getSuperSampling();
+			#end
 			for (rt in path.renderTargets) {
 				if (rt.raw.width == 0 && rt.raw.scale != null) {
 					rt.raw.scale = getSuperSampling();
@@ -778,8 +785,33 @@ class Inc {
 	}
 
 	public static inline function getSuperSampling(): Float {
+		#if rp_upscale
+		return superSample * upscaleRatio;
+		#else
 		return superSample;
+		#end
 	}
+
+	#if rp_upscale
+	/** Render resolution relative to the display resolution when temporal upscaling is enabled. **/
+	public static var upscaleRatio(default, null): Float = Std.parseFloat(haxe.macro.Compiler.getDefine("rp_upscale_ratio"));
+
+	/** Change the upscaling render resolution at runtime, for example for dynamic resolution. **/
+	public static function setUpscaleRatio(ratio: Float) {
+		ratio = Math.max(0.25, Math.min(1.0, ratio));
+		if (ratio == upscaleRatio) return;
+		var factor = ratio / upscaleRatio;
+		upscaleRatio = ratio;
+		iron.object.CameraObject.renderScale = getSuperSampling();
+		// Display resolution targets have no scale; keep half resolution targets at half
+		for (rt in path.renderTargets) {
+			if (rt.raw.width == 0 && rt.raw.scale != null) {
+				rt.raw.scale *= factor;
+			}
+		}
+		path.resize();
+	}
+	#end
 
 	public static inline function getHdrFormat(): String {
 		#if rp_hdr

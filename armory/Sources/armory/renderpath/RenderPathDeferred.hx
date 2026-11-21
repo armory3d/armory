@@ -20,6 +20,12 @@ class RenderPathDeferred {
 	static var ssgitexb = "singleb";
 	#end
 
+	#if rp_upscale
+	static var upscaleFlip = false;
+	static var upscaleW = 0;
+	static var upscaleH = 0;
+	#end
+
 	public static inline function setTargetMeshes() {
 		//Always keep the order of render targets the same as defined in compiled.inc
 		path.setTarget("gbuffer0", [
@@ -360,6 +366,23 @@ class RenderPathDeferred {
 				path.loadShader("shader_datas/taa_pass/taa_pass");
 			}
 			#end
+		}
+		#end
+
+		#if rp_upscale
+		{
+			// Display resolution history, ping-ponged between frames.
+			// No scale so that render resolution changes leave them alone
+			for (name in ["upscale_a", "upscale_b"]) {
+				var t = new RenderTargetRaw();
+				t.name = name;
+				t.width = 0;
+				t.height = 0;
+				t.format = "RGBA64";
+				path.createRenderTarget(t);
+			}
+			path.loadShader("shader_datas/upscale_pass/upscale_pass");
+			path.loadShader("shader_datas/upscale_sharpen_pass/upscale_sharpen_pass");
 		}
 		#end
 
@@ -1232,7 +1255,7 @@ class RenderPathDeferred {
 		#if rp_autoexposure
 		{
 			path.setTarget("histogram");
-			#if (rp_antialiasing == "TAA")
+			#if ((rp_antialiasing == "TAA") && !rp_upscale)
 			path.bindTarget("taa", "tex");
 			#else
 			path.bindTarget("tex", "tex");
@@ -1305,7 +1328,40 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if ((rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA"))
+		#if rp_upscale
+		{
+			if (path.isProbe) { // No history for probes
+				path.setTarget(framebuffer);
+				path.bindTarget("buf", "tex");
+				path.drawShader("shader_datas/copy_pass/copy_pass");
+			}
+			else {
+				var w = iron.App.w();
+				var h = iron.App.h();
+				if (w != upscaleW || h != upscaleH) { // First frame or resized, history is invalid
+					upscaleW = w;
+					upscaleH = h;
+					path.setTarget("upscale_a");
+					path.clearTarget(0x00000000);
+					path.setTarget("upscale_b");
+					path.clearTarget(0x00000000);
+				}
+				var current = upscaleFlip ? "upscale_b" : "upscale_a";
+				var history = upscaleFlip ? "upscale_a" : "upscale_b";
+				upscaleFlip = !upscaleFlip;
+
+				path.setTarget(current);
+				path.bindTarget("buf", "tex");
+				path.bindTarget(history, "tex2");
+				path.bindTarget("gbuffer2", "sveloc");
+				path.drawShader("shader_datas/upscale_pass/upscale_pass");
+
+				path.setTarget(framebuffer);
+				path.bindTarget(current, "tex");
+				path.drawShader("shader_datas/upscale_sharpen_pass/upscale_sharpen_pass");
+			}
+		}
+		#elseif ((rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA"))
 		{
 			path.setTarget("bufa");
 			path.clearTarget(0x00000000);

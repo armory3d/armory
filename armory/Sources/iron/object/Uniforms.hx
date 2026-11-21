@@ -589,6 +589,11 @@ class Uniforms {
 					v.x = App.w();
 					v.y = App.h();
 				}
+				case "_cameraJitter": {
+					v = helpVec;
+					v.x = camera.jitterX;
+					v.y = camera.jitterY;
+				}
 				case "_screenSize": {
 					v = helpVec;
 					v.x = RenderPath.active.currentW;

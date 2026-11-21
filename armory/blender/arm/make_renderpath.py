@@ -293,9 +293,18 @@ def build():
             if rpdat.rp_antialiasing == 'TAA':
                 assets.add_khafile_def('arm_taa')
 
-        assets.add_khafile_def('rp_supersampling={0}'.format(rpdat.rp_supersampling))
-        if rpdat.rp_supersampling == '4':
-            assets.add_shader_pass('supersample_resolve')
+        upscale_ratio = arm.utils.get_upscale_ratio(rpdat)
+        if upscale_ratio > 0.0:
+            # The upscaler outputs at display resolution, super sampling does not apply
+            assets.add_khafile_def('rp_supersampling=1')
+            assets.add_khafile_def('rp_upscale')
+            assets.add_khafile_def('rp_upscale_ratio={0}'.format(upscale_ratio))
+            assets.add_shader_pass('upscale_pass')
+            assets.add_shader_pass('upscale_sharpen_pass')
+        else:
+            assets.add_khafile_def('rp_supersampling={0}'.format(rpdat.rp_supersampling))
+            if rpdat.rp_supersampling == '4':
+                assets.add_shader_pass('supersample_resolve')
 
         assets.add_khafile_def('rp_ssgi={0}'.format(rpdat.rp_ssgi))
         if rpdat.rp_ssgi != 'Off':

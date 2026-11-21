@@ -385,6 +385,15 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('SMAA', 'SMAA', 'SMAA'),
                ('TAA', 'TAA', 'TAA')],
         name="Anti Aliasing", description="Post-process anti aliasing technique", default='SMAA', update=update_renderpath)
+    rp_upscaling: EnumProperty(
+        items=[('Off', 'Off', 'Render at display resolution'),
+               ('Native', 'Native AA', 'Temporal upscaler at display resolution, used as anti aliasing only (100%)'),
+               ('Quality', 'Quality', 'Render at 67% of the display resolution and upscale temporally'),
+               ('Balanced', 'Balanced', 'Render at 58% of the display resolution and upscale temporally'),
+               ('Performance', 'Performance', 'Render at 50% of the display resolution and upscale temporally'),
+               ('UltraPerformance', 'Ultra Performance', 'Render at 33% of the display resolution and upscale temporally')],
+        name="Upscaling", description="Temporal upscaling: render at a lower resolution and rebuild the display resolution image from jittered frames. Requires TAA and the Deferred renderer", default='Off', update=update_renderpath)
+    arm_upscale_sharpness: FloatProperty(name="Sharpness", description="Contrast adaptive sharpening applied after upscaling", default=0.3, min=0.0, max=1.0, update=assets.invalidate_compiled_data)
     rp_volumetriclight: BoolProperty(name="Volumetric Light", description="Use volumetric lighting", default=False, update=update_renderpath)
     rp_ssr: BoolProperty(name="SSR", description="Screen space reflections", default=False, update=update_renderpath)
     rp_ss_refraction: BoolProperty(name="SSRefraction", description="Screen space refractions", default=False, update=update_renderpath)
