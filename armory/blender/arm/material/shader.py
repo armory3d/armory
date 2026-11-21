@@ -1,3 +1,4 @@
+import bpy
 import arm.utils
 
 if arm.is_reload(__name__):
@@ -286,7 +287,8 @@ class Shader:
                 ar[0] = 'floats'
                 ar[1] = ar[1].split('[', 1)[0]
             elif ar[0] == 'mat4' and '[' in ar[1]:
-                ar[0] = 'floats'
+                if not (ar[1].startswith('LWVPSpot') and not '_Clusters' in bpy.data.worlds['Arm'].world_defs): #HACK: do not convert mat4 to floats when using single spot lights
+                    ar[0] = 'floats'
                 ar[1] = ar[1].split('[', 1)[0]
             self.context.add_constant(ar[0], ar[1], link=link, default_value=default_value, is_arm_mat_param=is_arm_mat_param)
         if top:

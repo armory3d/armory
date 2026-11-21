@@ -37,6 +37,11 @@
 					"ifdef": ["_CPostprocess"]
 				},
 				{
+					"name": "prevVP",
+					"link": "_prevViewProjectionMatrix",
+					"ifdef": ["_SSRVoxelFallback"]
+				},
+				{
 					"name": "senvmapBrdf",
 					"link": "$brdf.png",
 					"ifdef": ["_Brdf"]

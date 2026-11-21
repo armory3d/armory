@@ -1,5 +1,6 @@
 """Utilities for handling linked blend files in Armory exports."""
 from contextlib import contextmanager
+import os
 from pathlib import Path
 from typing import Dict, Optional
 
@@ -42,6 +43,30 @@ def asset_name(bdata) -> Optional[str]:
     if bdata.library is not None:
         name += '_' + bdata.library.name
     return name
+
+
+def get_scene_name(scene) -> str:
+    """Get the unique export name of a scene (without file extension).
+
+    Local scenes keep their name. Scenes from an external blend file are
+    named `[scene_name]_[blend_subdir_path]_[blend_name]`, where the subdirectories
+    are relative to the external blends path, so scenes with the same name
+    in different files or folders don't collide. Blend files directly in
+    the external blends path give `[scene_name]_[blend_name]`.
+    """
+    import arm.utils
+
+    if scene.library is None:
+        return arm.utils.safestr(scene.name)
+
+    wrd = bpy.data.worlds['Arm']
+    lib_path = os.path.normpath(bpy.path.abspath(scene.library.filepath))
+    root = os.path.normpath(bpy.path.abspath(wrd.arm_external_blends_path.strip()))
+    rel_dir = os.path.relpath(os.path.dirname(lib_path), root)
+    subdirs = [] if rel_dir == os.curdir else rel_dir.split(os.sep)
+
+    blend_name = os.path.splitext(os.path.basename(lib_path))[0]
+    return arm.utils.safestr('_'.join([scene.name, *subdirs, blend_name]))
 
 
 def get_source_path(bdata) -> Optional[Path]:

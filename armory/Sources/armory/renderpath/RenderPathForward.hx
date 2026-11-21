@@ -136,7 +136,6 @@ class RenderPathForward {
 				path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
 				path.loadShader("shader_datas/copy_pass/copy_pass");
 
-				// holds background depth
 				var t = new RenderTargetRaw();
 				t.name = "gbufferD1";
 				t.width = 0;
@@ -146,13 +145,40 @@ class RenderPathForward {
 				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
 
+				// Depth test for the closest backface / frontface passes
+				path.createDepthBuffer("refrdepth", "DEPTH24");
+
+				// holds the closest backface depth of the refractive meshes
+				var t = new RenderTargetRaw();
+				t.name = "gbufferD2";
+				t.width = 0;
+				t.height = 0;
+				t.displayp = Inc.getDisplayp();
+				t.format = "R32";
+				t.scale = Inc.getSuperSampling();
+				t.depth_buffer = "refrdepth";
+				path.createRenderTarget(t);
+
+				#if rp_ssrefr_nested
+				// holds the closest frontface depth of the refractive meshes
+				var t = new RenderTargetRaw();
+				t.name = "gbufferD3";
+				t.width = 0;
+				t.height = 0;
+				t.displayp = Inc.getDisplayp();
+				t.format = "R32";
+				t.scale = Inc.getSuperSampling();
+				t.depth_buffer = "refrdepth";
+				path.createRenderTarget(t);
+				#end
+
 				// holds background color
 				var t = new RenderTargetRaw();
 				t.name = "refr";
 				t.width = 0;
 				t.height = 0;
 				t.displayp = Inc.getDisplayp();
-				t.format = "RGBA64";
+				t.format = "RGBA32";
 				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
 			}
@@ -490,52 +516,88 @@ class RenderPathForward {
 			{
 				if (armory.data.Config.raw.rp_ssrefr != false)
 				{
-					//save depth
-					path.setTarget("gbufferD1");
-					path.bindTarget("_main", "tex");
-					path.drawShader("shader_datas/copy_pass/copy_pass");
+					// Store the scene seen behind the refractive surfaces: its depth
+					// in gbufferD1 and its color in refr
+					function saveBackground() {
+						path.setTarget("gbufferD1");
+						path.bindTarget("_main", "tex");
+						path.drawShader("shader_datas/copy_pass/copy_pass");
 
-					//save background color
-					path.setTarget("refr");
-					path.bindTarget("lbuffer0", "tex");
-					path.drawShader("shader_datas/copy_pass/copy_pass");
-
-					path.setTarget("lbuffer0", ["lbuffer1", "gbuffer_refraction"]);
-
-					#if rp_shadowmap
-					{
-						#if arm_shadowmap_atlas
-						Inc.bindShadowMapAtlas();
-						#else
-						Inc.bindShadowMap();
-						#end
+						path.setTarget("refr");
+						path.bindTarget("lbuffer0", "tex");
+						path.drawShader("shader_datas/copy_pass/copy_pass");
 					}
+
+					// Shade one layer of refractive surfaces and composite it over lbuffer0
+					function drawLayer(context:String) {
+						path.setTarget("lbuffer0", ["lbuffer1", "gbuffer_refraction"]);
+
+						#if (rp_voxels != "Off")
+						path.bindTarget("voxelsOut", "voxels");
+						#if (rp_voxels == "Voxel GI" || arm_voxelgi_shadows)
+						path.bindTarget("voxelsSDF", "voxelsSDF");
+						#end
+						#end
+
+						#if rp_ssrs
+						path.bindTarget("_main", "gbufferD");
+						#end
+
+						#if rp_shadowmap
+						{
+							#if arm_shadowmap_atlas
+							Inc.bindShadowMapAtlas();
+							#else
+							Inc.bindShadowMap();
+							#end
+						}
+						#end
+
+						#if rp_ssrefr_nested
+						path.bindTarget("gbufferD3", "gbufferD3");
+						#end
+						path.drawMeshes(context);
+
+						path.setTarget("lbuffer0");
+
+						path.bindTarget("refr", "tex");
+						path.bindTarget("lbuffer0", "tex1");
+						path.bindTarget("_main", "gbufferD");
+						path.bindTarget("gbufferD1", "gbufferD1");
+						path.bindTarget("gbufferD2", "gbufferD2");
+						path.bindTarget("lbuffer1", "gbuffer0");
+						path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
+						#if arm_voxelgi_refract
+						path.bindTarget("voxelsOut", "voxels");
+						path.bindTarget("voxelsSDF", "voxelsSDF");
+						#end
+
+						path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
+					}
+
+					saveBackground();
+
+					// Closest backface depth of the refractive meshes, used to
+					// find where the refracted ray leaves the medium
+					path.setTarget("gbufferD2");
+					path.clearTarget(0x00000000, 1.0);
+					path.drawMeshes("refraction_backface");
+
+					#if rp_ssrefr_nested
+					// Closest frontface depth of the refractive meshes, used to peel
+					// the nearest layer off
+					path.setTarget("gbufferD3");
+					path.clearTarget(0x00000000, 1.0);
+					path.drawMeshes("refraction_frontface");
+
+					// Refractive surfaces seen through another one, like a liquid in
+					// a glass, are composited first and become part of the background
+					// the nearest layer refracts
+					drawLayer("refraction_inner");
+					saveBackground();
 					#end
 
-					#if (rp_voxels != "Off")
-					path.bindTarget("voxelsOut", "voxels");
-					#if (rp_voxels == "Voxel GI" || arm_voxelgi_shadows)
-					path.bindTarget("voxelsSDF", "voxelsSDF");
-					#end
-					#end
-
-					#if rp_ssrs
-					path.bindTarget("_main", "gbufferD");
-					#end
-
-					path.drawMeshes("refraction");
-
-					path.setTarget("lbuffer0");
-
-					path.bindTarget("lbuffer0", "tex");
-					path.bindTarget("refr", "tex1");
-					path.bindTarget("_main", "gbufferD");
-					path.bindTarget("gbufferD1", "gbufferD1");
-					path.bindTarget("lbuffer1", "gbuffer0");
-					path.bindTarget("lbuffer0", "gbuffer1");
-					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
-
-					path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
+					drawLayer("refraction");
 				}
 			}
 			#end

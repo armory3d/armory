@@ -118,11 +118,6 @@ def add_world_defs():
         assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_offsetprev/voxel_offsetprev.comp.glsl')
         assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_temporal/voxel_temporal.comp.glsl')
         assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_sdf_jumpflood/voxel_sdf_jumpflood.comp.glsl')
-        #wrd.world_defs += "_VoxelCones" + rpdat.arm_voxelgi_cones
-        if rpdat.arm_voxelgi_shadows and (point_lights > 0 or '_Sun' in wrd.world_defs):
-            wrd.world_defs += '_VoxelShadow'
-            assets.add_khafile_def('arm_voxelgi_shadows')
-            assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_shadows/voxel_resolve_shadows.comp.glsl')
 
         if voxelgi:
             assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_resolve_diffuse/voxel_resolve_diffuse.comp.glsl')
@@ -312,6 +307,7 @@ def build():
                 wrd.world_defs += '_SSGI'
                 assets.add_shader_pass('ssgi_pass')
                 assets.add_shader_pass('blur_edge_pass')
+                assets.add_shader_pass('copy_pass')
             else:
                 assets.add_shader_pass('ssgi_pass')
                 assets.add_shader_pass('blur_edge_pass')
@@ -339,11 +335,19 @@ def build():
             assets.add_shader_pass('blur_adaptive_pass')
             if rpdat.arm_ssr_half_res:
                 assets.add_khafile_def('rp_ssr_half')
+            if rpdat.rp_ssr_voxel_fallback and rpdat.rp_voxels == 'Voxel GI' and rpdat.rp_renderer == 'Deferred' and '_VoxelGI' in wrd.world_defs:
+                # SSR runs before the voxel specular resolve, which only
+                # traces cones where SSR found nothing
+                wrd.world_defs += '_SSRVoxelFallback'
+                assets.add_khafile_def('rp_ssr_voxel_fallback')
+                assets.add_shader_pass('copy_pass')
 
         if rpdat.rp_ss_refraction:
             wrd.world_defs += '_SSRefraction'
             assets.add_khafile_def('rp_ssrefr')
             assets.add_shader_pass('ssrefr_pass')
+            if rpdat.rp_ss_refraction_nested:
+                assets.add_khafile_def('rp_ssrefr_nested')
             if rpdat.rp_renderer == "Forward":
                 assets.add_shader_pass('copy_pass')
 
@@ -480,9 +484,11 @@ def get_num_gbuffer_rts_deferred()-> int:
 
     for flag in ('_gbuffer2', '_EmissionShaded', '_SSRefraction', '_VoxelRefract'):
         if flag in wrd.world_defs:
-            if flag in refraction_flags and not found_refraction_flag:
-                num += 1
-                found_refraction_flag = True
+            if flag in refraction_flags:
+                # Both refraction modes share the gbuffer_refraction target
+                if not found_refraction_flag:
+                    num += 1
+                    found_refraction_flag = True
             else:
                 num += 1
     return num

@@ -24,12 +24,41 @@ uniform sampler2D senvmapBrdf;
 
 uniform vec3 eye;
 
+#ifdef _SSRVoxelFallback
+// SSR runs before the lighting and reads the previous frame (tex), the voxel
+// specular resolve traces cones only where the confidence written here is low
+#ifdef _Veloc
+uniform sampler2D sveloc;
+#else
+uniform mat4 prevVP;
+#endif
+
+vec2 getPrevUV(const vec2 uv, const vec3 viewPos) {
+	#ifdef _Veloc
+	// Same convention as the TAA and SSGI passes
+	vec2 velocity = -textureLod(sveloc, uv, 0.0).rg;
+	#ifdef _InvY
+	velocity.y = -velocity.y;
+	#endif
+	return uv + velocity;
+	#else
+	// Camera-only reprojection, assumes static geometry
+	vec3 wpos = transpose(V3) * viewPos + eye;
+	vec4 prevPos = prevVP * vec4(wpos, 1.0);
+	vec2 prevUV = (prevPos.xy / prevPos.w) * 0.5 + 0.5;
+	#ifdef _InvY
+	prevUV.y = 1.0 - prevUV.y;
+	#endif
+	return prevUV;
+	#endif
+}
+#endif
+
 in vec3 viewRay;
 in vec2 texCoord;
 out vec4 fragColor;
 
 vec3 hitCoord;
-float depth;
 
 const int numBinarySearchSteps = 7;
 const int maxSteps = int(ceil(1.0 / ssrRayStep) * ssrSearchDist);
@@ -44,37 +73,45 @@ vec2 getProjectedCoord(const vec3 hit) {
 	return projectedCoord.xy;
 }
 
-float getDeltaDepth(const vec3 hit) {
-	depth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
-	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
-	return viewPos.z - hit.z;
+// > 0.0 once the ray passed behind the surface stored in the depth buffer
+float getDeltaDepth(const vec3 hit, const vec2 coord) {
+	float d = textureLod(gbufferD, coord, 0.0).r;
+	return getPosView(viewRay, d, cameraProj).z - hit.z;
 }
 
-vec4 binarySearch(vec3 dir) {
+vec4 binarySearch(vec3 dir, const float thickness) {
 	float ddepth;
 	for (int i = 0; i < numBinarySearchSteps; i++) {
 		dir *= 0.5;
 		hitCoord -= dir;
-		ddepth = getDeltaDepth(hitCoord);
+		ddepth = getDeltaDepth(hitCoord, getProjectedCoord(hitCoord));
 		if (ddepth < 0.0) hitCoord += dir;
 	}
-	// Ugly discard of hits too far away
-	#ifdef _CPostprocess
-		if (abs(ddepth) > PPComp9.z / 500) return vec4(0.0);
-	#else
-		if (abs(ddepth) > ssrSearchDist / 500) return vec4(0.0);
-	#endif
+	// The refinement did not settle on the surface
+	if (abs(ddepth) > thickness) return vec4(0.0);
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
-vec4 rayCast(vec3 dir) {
+vec4 rayCast(const vec3 dir) {
+	#ifdef _CPostprocess
+	vec3 rayStep = dir * PPComp9.x;
+	#else
+	vec3 rayStep = dir * ssrRayStep;
+	#endif
+
+	// Depth buffer surfaces have no thickness, so a crossing found further than
+	// one step behind one means the ray passed behind the geometry, not into it
+	float thickness = length(rayStep);
+
 	for (int i = 0; i < maxSteps; i++) {
-		#ifdef _CPostprocess
-			hitCoord += dir * PPComp9.x;
-		#else
-			hitCoord += dir * ssrRayStep;
-		#endif
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		hitCoord += rayStep;
+
+		vec2 coord = getProjectedCoord(hitCoord);
+		// The ray left the screen, there is nothing left to sample
+		if (coord.x < 0.0 || coord.x > 1.0 || coord.y < 0.0 || coord.y > 1.0) return vec4(0.0);
+
+		float ddepth = getDeltaDepth(hitCoord, coord);
+		if (ddepth > 0.0 && ddepth < thickness) return binarySearch(rayStep, thickness);
 	}
 	return vec4(0.0);
 }
@@ -85,13 +122,13 @@ void main() {
 	float metallic;
 	uint matid;
 	unpackFloatInt16(g0.a, metallic, matid);
-	if (roughness == 1.0) { fragColor.rgb = vec3(0.0); return; }
+	if (roughness == 1.0) { fragColor = vec4(0.0); return; }
 
 	float spec = fract(textureLod(gbuffer1, texCoord, 0.0).a);
-	if (spec == 0.0) { fragColor.rgb = vec3(0.0); return; }
+	if (spec == 0.0) { fragColor = vec4(0.0); return; }
 
-	float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
-	if (d == 1.0) { fragColor.rgb = vec3(0.0); return; }
+	float d = textureLod(gbufferD, texCoord, 0.0).r;
+	if (d >= 1.0) { fragColor = vec4(0.0); return; }
 
 	vec2 enc = g0.rg;
 	vec3 n;
@@ -100,8 +137,9 @@ void main() {
 	n = normalize(n);
 
 	vec3 viewNormal = V3 * n;
-	vec3 viewPos = getPosView(normalize(viewRay), d, cameraProj);
-	vec3 reflected = reflect(viewPos, viewNormal);
+	vec3 viewPos = getPosView(viewRay, d, cameraProj);
+	vec3 viewDir = normalize(viewPos);
+	vec3 reflected = reflect(viewDir, viewNormal);
 	hitCoord = viewPos;
 
 	#ifdef _CPostprocess
@@ -112,10 +150,10 @@ void main() {
 
 	vec4 g1 = textureLod(gbuffer1, texCoord, 0.0); // Basecolor.rgb, spec/occ
 	vec3 f0 = surfaceF0(g1.rgb, metallic);
-	float dotNV = max(dot(viewNormal, viewPos), 0.0);
+	float dotNV = max(dot(viewNormal, -viewDir), 0.0);
 
 	#ifdef _Brdf
-	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
+	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(clamp(vec2(dotNV, 1.0 - roughness) * 256.0, 0.0, 255.0)), 0).xy;
 	vec3 F = f0 * envBRDF.x + envBRDF.y;
 	#else
 	vec3 F = f0;
@@ -135,7 +173,15 @@ void main() {
 	#endif
 
 	intensity = clamp(intensity, 0.0, 1.0);
+	#ifdef _SSRVoxelFallback
+	vec2 prevUV = getPrevUV(coords.xy, hitCoord);
+	// The hit was not on screen in the previous frame
+	if (prevUV.x < 0.0 || prevUV.x > 1.0 || prevUV.y < 0.0 || prevUV.y > 1.0) intensity = 0.0;
+	vec3 reflCol = clamp(textureLod(tex, prevUV, 0.0).rgb, 0.0, 1.0);
+	fragColor = vec4(reflCol, intensity);
+	#else
 	vec3 reflCol = textureLod(tex, coords.xy, 0.0).rgb;
 	reflCol = clamp(reflCol, 0.0, 1.0);
 	fragColor.rgb = reflCol * intensity;// * F;
+	#endif
 }
