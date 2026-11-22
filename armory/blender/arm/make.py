@@ -214,6 +214,21 @@ def export_data(fp, sdk_path):
         if os.path.isdir(build_dir + '/compiled/Shaders'):
             shutil.rmtree(build_dir + '/compiled/Shaders', onerror=remove_readonly)
 
+    # Shader binaries differ per graphics API (GLSL vs SPIR-V); drop cached ones when it changes
+    gapi_stamp = os.path.join(build_dir, 'gapi.txt')
+    current_gapi = arm.utils.get_gapi()
+    previous_gapi = None
+    if os.path.isfile(gapi_stamp):
+        with open(gapi_stamp, 'r') as f:
+            previous_gapi = f.read().strip()
+    if previous_gapi != current_gapi:
+        for d in ('krom-resources', 'debug/krom-resources', 'linux-resources', 'compiled/Shaders'):
+            if os.path.isdir(os.path.join(build_dir, d)):
+                shutil.rmtree(os.path.join(build_dir, d), onerror=remove_readonly)
+        os.makedirs(build_dir, exist_ok=True)
+        with open(gapi_stamp, 'w') as f:
+            f.write(current_gapi)
+
     raw_shaders_path = sdk_path + '/armory/Shaders/'
     assets_path = sdk_path + '/armory/Assets/'
     export_physics = bpy.data.worlds['Arm'].arm_physics != 'Disabled'

@@ -2815,6 +2815,12 @@ namespace {
 		}
 		#endif
 
+		#ifdef KINC_G4ONG5
+		// G4onG5 (Vulkan etc.) only maps the uniform buffers and acquires the swapchain image
+		// inside begin/end, so the JS frame must render between them (GL doesn't care).
+		kinc_g4_begin(0);
+		#endif
+
 		{ // FIXME: patch to prevent random crashes
 			v8::Locker locker{isolate};
 			v8::Isolate::Scope isolate_scope(isolate);
@@ -2839,7 +2845,9 @@ namespace {
 			v8::MicrotasksScope::PerformCheckpoint(isolate);
 		}
 
+		#ifndef KINC_G4ONG5
 		kinc_g4_begin(0);
+		#endif
 		kinc_g4_end(0);
 		kinc_g4_swap_buffers();
 	}

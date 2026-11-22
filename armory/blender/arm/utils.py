@@ -191,7 +191,33 @@ def get_gapi():
         return getattr(item, target_to_gapi(item.arm_project_target))
     if wrd.arm_runtime == 'Browser':
         return 'webgl'
-    return 'direct3d11' if get_os() == 'win' else 'opengl'
+    if get_os() == 'win':
+        return 'direct3d11'
+    if get_os() == 'linux' and krom_uses_vulkan():
+        return 'vulkan'
+    return 'opengl'
+
+
+_krom_vulkan_cache: Dict[str, Tuple[float, bool]] = {}
+
+def krom_uses_vulkan() -> bool:
+    """True if the installed Linux Krom binary links libvulkan (a Vulkan build of armorcore).
+    Play then compiles shaders to SPIR-V instead of GLSL. Cached per binary mtime."""
+    _, krom_path = krom_paths()
+    try:
+        mtime = os.path.getmtime(krom_path)
+    except OSError:
+        return False
+    cached = _krom_vulkan_cache.get(krom_path)
+    if cached is not None and cached[0] == mtime:
+        return cached[1]
+    try:
+        with open(krom_path, 'rb') as f:
+            uses_vulkan = b'libvulkan.so' in f.read()
+    except OSError:
+        uses_vulkan = False
+    _krom_vulkan_cache[krom_path] = (mtime, uses_vulkan)
+    return uses_vulkan
 
 
 def is_gapi_gl_es() -> bool:
