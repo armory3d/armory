@@ -385,6 +385,13 @@ class Uniforms {
 						helpVec = sun.look().normalize();
 						v = helpVec;
 					}
+					else {
+						// No sun lamp: a zero vector makes shaders normalize() to NaN, which GL drivers
+						// happen to clamp to "sun below the horizon" while Vulkan propagates (black sky).
+						// Use that direction explicitly.
+						helpVec.set(0, 0, -1);
+						v = helpVec;
+					}
 				}
 				case "_sunColor": {
 					var sun = RenderPath.active.sun;
