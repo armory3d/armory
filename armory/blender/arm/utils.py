@@ -241,6 +241,22 @@ def is_gapi_gl_es() -> bool:
 
 
 UPSCALE_RATIOS = {'Native': 1.0, 'Quality': 0.667, 'Balanced': 0.58, 'Performance': 0.5, 'UltraPerformance': 0.333}
+# Quality index passed to Krom.dlss* (0 = DLAA ... 4 = Ultra Performance), same ratios as above
+UPSCALE_QUALITY = {'Native': 0, 'Quality': 1, 'Balanced': 2, 'Performance': 3, 'UltraPerformance': 4}
+
+
+def dlss_libraries() -> List[str]:
+    """DLSS model libraries of the SDK cloned into armorcore/dlss (empty when absent)."""
+    rel = os.path.join(get_sdk_path(), 'armorcore', 'dlss', 'lib', 'Linux_x86_64', 'rel')
+    return sorted(glob.glob(os.path.join(rel, 'libnvidia-ngx-dlss.so.*')))
+
+
+def copy_dlss_libraries(directory: str):
+    """NGX loads the DLSS model library from the Krom executable's directory."""
+    for lib in dlss_libraries():
+        dst = os.path.join(directory, os.path.basename(lib))
+        if not os.path.isfile(dst) or os.path.getsize(dst) != os.path.getsize(lib):
+            shutil.copy(lib, dst)
 
 
 def get_upscale_ratio(rpdat) -> float:

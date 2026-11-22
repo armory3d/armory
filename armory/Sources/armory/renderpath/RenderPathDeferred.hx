@@ -24,6 +24,10 @@ class RenderPathDeferred {
 	static var upscaleFlip = false;
 	static var upscaleW = 0;
 	static var upscaleH = 0;
+	#if (rp_upscale_dlss && kha_krom)
+	static var dlssState = -1; // -1 unknown, 0 unavailable (TAAU fallback), 1 available
+	static var dlssReset = true;
+	#end
 	#end
 
 	public static inline function setTargetMeshes() {
@@ -1345,7 +1349,20 @@ class RenderPathDeferred {
 					path.clearTarget(0x00000000);
 					path.setTarget("upscale_b");
 					path.clearTarget(0x00000000);
+					#if (rp_upscale_dlss && kha_krom)
+					dlssReset = true;
+					#end
 				}
+
+				#if (rp_upscale_dlss && kha_krom)
+				if (dlssState == -1) {
+					dlssState = untyped Krom.dlssAvailable != null && Krom.dlssAvailable() ? 1 : 0;
+					if (dlssState == 0) trace("DLSS not available, using TAAU");
+				}
+				// Nothing else is drawn after the upscaler (super sampling is off while upscaling)
+				if (dlssState == 1 && upscaleDlss(framebuffer)) return;
+				#end
+
 				var current = upscaleFlip ? "upscale_b" : "upscale_a";
 				var history = upscaleFlip ? "upscale_a" : "upscale_b";
 				upscaleFlip = !upscaleFlip;
@@ -1434,6 +1451,34 @@ class RenderPathDeferred {
 		// Prepare to draw meshes
 		setTargetMeshes();
 		path.bindTarget("depthtex", "depthtex");
+	}
+	#end
+
+	#if (rp_upscale_dlss && kha_krom)
+	/** Upscales "buf" into the display resolution with NVIDIA DLSS, then sharpens to the framebuffer. **/
+	static function upscaleDlss(framebuffer: String): Bool {
+		var color = path.renderTargets.get("buf").image;
+		var motion = path.renderTargets.get("gbuffer2").image;
+		var output = path.renderTargets.get("upscale_a").image;
+		var depthTarget = path.depthToRenderTarget.get("main");
+		var camera = iron.Scene.active.camera;
+		if (color == null || motion == null || output == null || depthTarget == null || camera == null) return false;
+
+		// gbuffer2.rg holds (current - previous) in UV units; DLSS wants render pixels from current to previous
+		var ok = Krom.dlssEvaluate(Std.parseInt(haxe.macro.Compiler.getDefine("rp_upscale_quality")),
+			color.renderTarget_, depthTarget.image.renderTarget_, motion.renderTarget_, output.renderTarget_,
+			camera.jitterX, camera.jitterY, -color.width, -color.height, dlssReset, false);
+		if (!ok) {
+			dlssState = 0;
+			trace("DLSS evaluation failed, using TAAU");
+			return false;
+		}
+		dlssReset = false;
+
+		path.setTarget(framebuffer);
+		path.bindTarget("upscale_a", "tex");
+		path.drawShader("shader_datas/upscale_sharpen_pass/upscale_sharpen_pass");
+		return true;
 	}
 	#end
 }

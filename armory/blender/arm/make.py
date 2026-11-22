@@ -664,11 +664,21 @@ def get_khajs_path(target):
         return arm.utils.build_dir() + '/debug/krom/krom.js'
     return arm.utils.build_dir() + '/debug/html5/kha.js'
 
+def uses_dlss() -> bool:
+    rpdat = arm.utils.get_rp()
+    return (arm.utils.get_gapi() == 'vulkan' and arm.utils.get_upscale_ratio(rpdat) > 0.0
+            and rpdat.arm_upscale_method == 'DLSS' and len(arm.utils.dlss_libraries()) > 0)
+
+
 def play():
     global scripts_mtime
     wrd = bpy.data.worlds['Arm']
 
     build(target=runtime_to_target(), is_play=True)
+
+    # DLSS on Vulkan Krom: NGX loads the model library from the Krom executable's directory
+    if state.target == 'krom' and uses_dlss():
+        arm.utils.copy_dlss_libraries(arm.utils.krom_paths()[0])
 
     khajs_path = get_khajs_path(state.target)
     if not wrd.arm_cache_build or \
@@ -818,6 +828,9 @@ def build_success():
             elif state.target == 'krom-linux':
                 krom_location = sdk_path + '/Krom/Krom'
                 shutil.copy(krom_location, files_path)
+                if uses_dlss():
+                    # Redistributing the DLSS library requires NVIDIA's attribution in the game's credits/docs
+                    arm.utils.copy_dlss_libraries(files_path)
                 krom_exe = arm.utils.safestr(wrd.arm_project_name)
                 os.rename(files_path + '/Krom', files_path + '/' + krom_exe)
                 krom_exe = './' + krom_exe

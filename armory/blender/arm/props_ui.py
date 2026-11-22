@@ -1864,6 +1864,7 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         row.prop(rpdat, "rp_upscaling")
         upscaling = upscale_supported and rpdat.rp_upscaling != 'Off'
         if upscaling:
+            col.prop(rpdat, "arm_upscale_method")
             col.prop(rpdat, "arm_upscale_sharpness")
         row = col.row()
         row.enabled = not upscaling  # Super sampling is ignored while upscaling

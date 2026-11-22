@@ -299,6 +299,10 @@ def build():
             assets.add_khafile_def('rp_supersampling=1')
             assets.add_khafile_def('rp_upscale')
             assets.add_khafile_def('rp_upscale_ratio={0}'.format(upscale_ratio))
+            if rpdat.arm_upscale_method == 'DLSS':
+                # Used at runtime when Krom reports DLSS available, TAAU otherwise
+                assets.add_khafile_def('rp_upscale_dlss')
+                assets.add_khafile_def('rp_upscale_quality={0}'.format(arm.utils.UPSCALE_QUALITY[rpdat.rp_upscaling]))
             assets.add_shader_pass('upscale_pass')
             assets.add_shader_pass('upscale_sharpen_pass')
         else:

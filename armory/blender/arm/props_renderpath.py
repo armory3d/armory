@@ -393,6 +393,10 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Performance', 'Performance', 'Render at 50% of the display resolution and upscale temporally'),
                ('UltraPerformance', 'Ultra Performance', 'Render at 33% of the display resolution and upscale temporally')],
         name="Upscaling", description="Temporal upscaling: render at a lower resolution and rebuild the display resolution image from jittered frames. Requires TAA and the Deferred renderer", default='Off', update=update_renderpath)
+    arm_upscale_method: EnumProperty(
+        items=[('TAAU', 'TAAU', 'Built-in temporal upscaler, works on every graphics API'),
+               ('DLSS', 'DLSS', 'NVIDIA DLSS Super Resolution: Vulkan Krom on NVIDIA RTX GPUs, falls back to TAAU elsewhere')],
+        name="Upscaler", description="Upscaler reconstructing the display resolution image", default='TAAU', update=update_renderpath)
     arm_upscale_sharpness: FloatProperty(name="Sharpness", description="Contrast adaptive sharpening applied after upscaling", default=0.3, min=0.0, max=1.0, update=assets.invalidate_compiled_data)
     rp_volumetriclight: BoolProperty(name="Volumetric Light", description="Use volumetric lighting", default=False, update=update_renderpath)
     rp_ssr: BoolProperty(name="SSR", description="Screen space reflections", default=False, update=update_renderpath)
