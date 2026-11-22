@@ -62,6 +62,16 @@ if (platform === Platform.Windows) {
 else if (platform === Platform.Linux) {
 	project.addLib('v8_monolith -L' + libdir);
 	project.addDefine("KINC_NO_WAYLAND");
+
+	// NVIDIA DLSS (Vulkan only), when the SDK is checked out in armorcore/dlss (git-ignored):
+	// git clone --depth 1 https://github.com/NVIDIA/DLSS.git dlss
+	if (graphics === GraphicsApi.Vulkan && fs.existsSync(path.join(root, 'dlss', 'lib', 'Linux_x86_64', 'libnvsdk_ngx.a'))) {
+		project.addDefine('WITH_DLSS');
+		project.addIncludeDir('dlss/include');
+		project.addFile('Sources/dlss.cpp');
+		project.addLib('nvsdk_ngx -L' + path.join(root, 'dlss', 'lib', 'Linux_x86_64'));
+		project.addLib('dl');
+	}
 }
 else if (platform === Platform.OSX) {
 	project.addLib('v8/libraries/macos/release/libv8_monolith.a');

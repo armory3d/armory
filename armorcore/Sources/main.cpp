@@ -65,6 +65,10 @@ bool show_window = false;
 #include "worker.h"
 #endif
 
+#ifdef WITH_DLSS
+#include "dlss.h"
+#endif
+
 using namespace v8;
 
 #ifdef KINC_MACOS
@@ -231,7 +235,13 @@ namespace {
 		frame.depth_bits = 0;
 		frame.stencil_bits = 0;
 		frame.samples_per_pixel = samples_per_pixel;
+		#ifdef WITH_DLSS
+		dlss_request_extensions();
+		#endif
 		kinc_init(*title, width, height, &win, &frame);
+		#ifdef WITH_DLSS
+		dlss_init();
+		#endif
 		kinc_random_init((int)(kinc_time() * 1000));
 
 		#ifdef KINC_WINDOWS
@@ -1393,6 +1403,60 @@ namespace {
 		Local<External> texfield = Local<External>::Cast(args[1]->ToObject(isolate->GetCurrentContext()).ToLocalChecked()->GetInternalField(0));
 		kinc_g4_texture_t *texture = (kinc_g4_texture_t *)texfield->Value();
 		kinc_g4_set_texture(*unit, texture);
+	}
+
+	#ifdef WITH_DLSS
+	kinc_g4_render_target_t *render_target_arg(const FunctionCallbackInfo<Value> &args, int index) {
+		Local<External> field = Local<External>::Cast(args[index]->ToObject(isolate->GetCurrentContext()).ToLocalChecked()->GetInternalField(0));
+		return (kinc_g4_render_target_t *)field->Value();
+	}
+	#endif
+
+	// DLSS: Krom.dlssAvailable(): Bool
+	void krom_dlss_available(const FunctionCallbackInfo<Value> &args) {
+		HandleScope scope(args.GetIsolate());
+		#ifdef WITH_DLSS
+		args.GetReturnValue().Set(Boolean::New(isolate, dlss_available()));
+		#else
+		args.GetReturnValue().Set(Boolean::New(isolate, false));
+		#endif
+	}
+
+	// DLSS: Krom.dlssRenderSize(quality, outputWidth, outputHeight): [width, height] or null
+	void krom_dlss_render_size(const FunctionCallbackInfo<Value> &args) {
+		HandleScope scope(args.GetIsolate());
+		#ifdef WITH_DLSS
+		Local<Context> context = isolate->GetCurrentContext();
+		int quality = args[0]->ToInt32(context).ToLocalChecked()->Value();
+		int output_width = args[1]->ToInt32(context).ToLocalChecked()->Value();
+		int output_height = args[2]->ToInt32(context).ToLocalChecked()->Value();
+		int width, height;
+		if (dlss_render_size(quality, output_width, output_height, &width, &height)) {
+			Local<Array> size = Array::New(isolate, 2);
+			(void)size->Set(context, 0, Int32::New(isolate, width));
+			(void)size->Set(context, 1, Int32::New(isolate, height));
+			args.GetReturnValue().Set(size);
+			return;
+		}
+		#endif
+		args.GetReturnValue().SetNull();
+	}
+
+	// DLSS: Krom.dlssEvaluate(quality, color, depth, motion, output, jitterX, jitterY, motionScaleX, motionScaleY, reset, hdr): Bool
+	// color/depth/motion/output are renderTarget_ objects; depth is taken from the depth buffer of that target
+	void krom_dlss_evaluate(const FunctionCallbackInfo<Value> &args) {
+		HandleScope scope(args.GetIsolate());
+		#ifdef WITH_DLSS
+		Local<Context> context = isolate->GetCurrentContext();
+		int quality = args[0]->ToInt32(context).ToLocalChecked()->Value();
+		bool ok = dlss_evaluate(quality, render_target_arg(args, 1), render_target_arg(args, 2), render_target_arg(args, 3), render_target_arg(args, 4),
+		                        (float)args[5]->ToNumber(context).ToLocalChecked()->Value(), (float)args[6]->ToNumber(context).ToLocalChecked()->Value(),
+		                        (float)args[7]->ToNumber(context).ToLocalChecked()->Value(), (float)args[8]->ToNumber(context).ToLocalChecked()->Value(),
+		                        args[9]->BooleanValue(isolate), args[10]->BooleanValue(isolate));
+		args.GetReturnValue().Set(Boolean::New(isolate, ok));
+		#else
+		args.GetReturnValue().Set(Boolean::New(isolate, false));
+		#endif
 	}
 
 	void krom_set_render_target(const FunctionCallbackInfo<Value> &args) {
@@ -2720,6 +2784,9 @@ namespace {
 		SET_FUNCTION_FAST(krom, "scissor", krom_scissor);
 		SET_FUNCTION_FAST(krom, "disableScissor", krom_disable_scissor);
 		SET_FUNCTION_FAST(krom, "renderTargetsInvertedY", krom_render_targets_inverted_y);
+		SET_FUNCTION(krom, "dlssAvailable", krom_dlss_available);
+		SET_FUNCTION(krom, "dlssRenderSize", krom_dlss_render_size);
+		SET_FUNCTION(krom, "dlssEvaluate", krom_dlss_evaluate);
 		SET_FUNCTION(krom, "begin", krom_begin);
 		SET_FUNCTION(krom, "beginFace", krom_begin_face);
 		SET_FUNCTION(krom, "end", krom_end);
