@@ -25,7 +25,10 @@ uniform sampler2D gbuffer_refraction; // ior\opacity
 #ifdef _VoxelRefract
 uniform sampler3D voxels;
 uniform sampler3D voxelsSDF;
+#ifndef _ConetraceClipmaps // declared by std/conetrace.glsl
+#define _ConetraceClipmaps
 uniform float clipmaps[voxelgiClipmapCount * 10];
+#endif
 #endif
 uniform mat4 P;
 uniform mat3 V3;

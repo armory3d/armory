@@ -37,7 +37,10 @@ uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform layout(rgba8) image2D voxels_diffuse;
 
+#ifndef _ConetraceClipmaps // declared by std/conetrace.glsl
+#define _ConetraceClipmaps
 uniform float clipmaps[voxelgiClipmapCount * 10];
+#endif
 uniform mat4 InvVP;
 uniform vec3 eye;
 uniform vec2 postprocess_resolution;

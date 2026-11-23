@@ -763,8 +763,8 @@ class RenderPath {
 			case "RGBA64": return TextureFormat.RGBA64;
 			case "RGBA128": return TextureFormat.RGBA128;
 			case "DEPTH16": return TextureFormat.DEPTH16;
-			case "R32": return TextureFormat.A32;
-			case "R16": return TextureFormat.A16;
+			case "R32", "A32": return TextureFormat.A32; // Armory's voxel code uses the A* names
+			case "R16", "A16": return TextureFormat.A16;
 			case "R8": return TextureFormat.L8;
 			default: return TextureFormat.RGBA32;
 		}
