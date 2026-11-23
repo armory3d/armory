@@ -40,10 +40,7 @@ uniform layout(rgba8) image2D voxels_shadows;
 #else
 uniform layout(r8) image2D voxels_shadows;
 #endif
-#ifndef _ConetraceClipmaps // declared by std/conetrace.glsl
-#define _ConetraceClipmaps
 uniform float clipmaps[voxelgiClipmapCount * 10];
-#endif
 uniform mat4 InvVP;
 uniform vec2 cameraProj;
 uniform vec3 eye;

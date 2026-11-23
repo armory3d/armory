@@ -26,10 +26,7 @@ uniform vec4 pointLightDataArray[maxLightsCluster * 6];
 #endif
 #endif
 
-#ifndef _ConetraceClipmaps // declared by std/conetrace.glsl
-#define _ConetraceClipmaps
 uniform float clipmaps[voxelgiClipmapCount * 10];
-#endif
 uniform int clipmapLevel;
 
 uniform layout(r32ui) uimage3D voxelsLight;

@@ -38,10 +38,7 @@ uniform sampler2D voxels_ao;
 //!uniform sampler2D voxels_shadows;
 uniform sampler3D dum;
 uniform sampler3D my;
-#ifndef _ConetraceClipmaps // declared by std/conetrace.glsl (via std/light.glsl)
-#define _ConetraceClipmaps
 uniform float clipmaps[10 * voxelgiClipmapCount];
-#endif
 #endif
 
 uniform float envmapStrength;

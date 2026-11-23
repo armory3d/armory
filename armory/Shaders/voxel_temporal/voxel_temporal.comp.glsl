@@ -44,10 +44,7 @@ uniform layout(r16f) image3D voxelsOut;
 #endif
 
 uniform int clipmapLevel;
-#ifndef _ConetraceClipmaps // declared by std/conetrace.glsl
-#define _ConetraceClipmaps
 uniform float clipmaps[voxelgiClipmapCount * 10];
-#endif
 
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 

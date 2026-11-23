@@ -37,10 +37,7 @@ uniform sampler3D voxels;
 uniform sampler3D voxelsSDF;
 uniform layout(rgba8) image2D voxels_specular;
 
-#ifndef _ConetraceClipmaps // declared by std/conetrace.glsl
-#define _ConetraceClipmaps
 uniform float clipmaps[voxelgiClipmapCount * 10];
-#endif
 uniform mat4 InvVP;
 uniform vec3 eye;
 uniform vec2 postprocess_resolution;

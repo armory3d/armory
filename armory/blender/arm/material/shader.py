@@ -447,11 +447,7 @@ class Shader:
             if not self.geom_passthrough:
                 s += 'out {0}{1};\n'.format(a, out_ext)
         for a in self.uniforms:
-            if a.startswith('float clipmaps['):
-                # std/conetrace.glsl declares it itself (directly or via std/light.glsl)
-                s += '#ifndef _ConetraceClipmaps\n#define _ConetraceClipmaps\nuniform ' + a + ';\n#endif\n'
-            else:
-                s += 'uniform ' + a + ';\n'
+            s += 'uniform ' + a + ';\n'
         for c in self.constants:
             s += 'const ' + c + ';\n'
         for f in self.functions:
