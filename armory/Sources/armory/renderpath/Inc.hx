@@ -737,7 +737,10 @@ class Inc {
 						t.mipmaps = false;
 					}
 					else {
-						t.format = "A32";
+						// 32-bit texels accessed as r32ui (atomics). Kha has no uint format and GL binds image units with
+						// the texture's own format: RGBA8 is what works there (R32F gave garbage sums); Vulkan uses an
+						// R32_UINT view of either
+						t.format = "RGBA32";
 						t.width = res * 6;
 						t.height = res;
 						t.depth = res * 2;
@@ -754,7 +757,10 @@ class Inc {
 						t.mipmaps = false;
 					}
 					else {
-						t.format = "A32";
+						// 32-bit texels accessed as r32ui (atomics). Kha has no uint format and GL binds image units with
+						// the texture's own format: RGBA8 is what works there (R32F gave garbage sums); Vulkan uses an
+						// R32_UINT view of either
+						t.format = "RGBA32";
 						t.width = res * 6;
 						t.height = res;
 						t.depth = res * 16;
@@ -1292,7 +1298,10 @@ class Inc {
 		setSampledVolume(voxel_ta4, rts.get("voxelsOut").image);
 		kha.compute.Compute.setSampledTexture(voxel_tb4, rts.get("half").image);
 		kha.compute.Compute.setSampledTexture(voxel_tc4, rts.get("gbuffer0").image);
-		setSampledVolume(voxel_td4, rts.get("voxelsSDF").image);
+		kha.compute.Compute.setSampledTexture(voxel_td4, rts.get("voxelsSDF").image);
+		// Point sampled, as Iron binds it in graphics passes
+		kha.compute.Compute.setTexture3DParameters(voxel_td4, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp,
+			kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureFilter.PointFilter, kha.graphics4.TextureFilter.PointFilter, kha.graphics4.MipMapFilter.NoMipFilter);
 		kha.compute.Compute.setTexture(voxel_te4, rts.get("voxels_specular").image, kha.compute.Access.Write);
 		#if rp_gbuffer2
 		kha.compute.Compute.setSampledTexture(voxel_tf4, rts.get("gbuffer2").image);
