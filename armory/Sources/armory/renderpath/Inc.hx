@@ -677,24 +677,6 @@ class Inc {
 	#end
 
 	#if (rp_voxels != 'Off')
-	#if (rp_voxels != "Off")
-	// Compute samplers must state their filtering: GL textures carry linear defaults, but G4onG5 backends
-	// (Vulkan) default every compute slot to point sampling, which made cone traced lighting blocky.
-	static inline function setSampledVolume(unit: kha.compute.TextureUnit, image: kha.Image) {
-		kha.compute.Compute.setSampledTexture(unit, image);
-		kha.compute.Compute.setTexture3DParameters(unit, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp,
-			kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureFilter.LinearFilter, kha.graphics4.TextureFilter.LinearFilter,
-			kha.graphics4.MipMapFilter.NoMipFilter);
-	}
-
-	static inline function setSampledLinear(unit: kha.compute.TextureUnit, image: kha.Image, mipmaps: Bool) {
-		kha.compute.Compute.setSampledTexture(unit, image);
-		kha.compute.Compute.setTextureParameters(unit, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp,
-			kha.graphics4.TextureFilter.LinearFilter, kha.graphics4.TextureFilter.LinearFilter,
-			mipmaps ? kha.graphics4.MipMapFilter.LinearMipFilter : kha.graphics4.MipMapFilter.NoMipFilter);
-	}
-	#end
-
 	public static function initGI(tname = "voxels") {
 		var t = new RenderTargetRaw();
 		t.name = tname;
@@ -1022,7 +1004,7 @@ class Inc {
 		kha.compute.Compute.setTexture(voxel_tb1, rts.get("voxelsOutB").image, kha.compute.Access.Read);
 		kha.compute.Compute.setTexture(voxel_tc1, rts.get("voxelsOut").image, kha.compute.Access.Write);
 		#if (rp_voxels == "Voxel GI")
-		setSampledVolume(voxel_td1, rts.get("voxelsOutB").image);
+		kha.compute.Compute.setSampledTexture(voxel_td1, rts.get("voxelsOutB").image);
 		kha.compute.Compute.setTexture(voxel_te1, rts.get("voxelsSDF").image, kha.compute.Access.Write);
 		#end
 
@@ -1104,7 +1086,7 @@ class Inc {
 
 		kha.compute.Compute.setShader(voxel_sh3);
 
-		setSampledVolume(voxel_ta3, rts.get("voxelsOut").image);
+		kha.compute.Compute.setSampledTexture(voxel_ta3, rts.get("voxelsOut").image);
 		kha.compute.Compute.setSampledTexture(voxel_tb3, rts.get("half").image);
 		kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("gbuffer0").image);
 		kha.compute.Compute.setTexture(voxel_td3, rts.get("voxels_ao").image, kha.compute.Access.Write);
@@ -1114,10 +1096,10 @@ class Inc {
 		kha.compute.Compute.setSampledTexture(voxel_tf3, rts.get("gbuffer2").image);
 		#end
 		#if arm_brdf
-		setSampledLinear(voxel_tg3, iron.Scene.active.embedded.get("brdf.png"), false);
+		kha.compute.Compute.setSampledTexture(voxel_tg3, iron.Scene.active.embedded.get("brdf.png"));
 		#end
 		#if arm_radiance
-		setSampledLinear(voxel_th3, iron.Scene.active.world.probe.radiance, true);
+		kha.compute.Compute.setSampledTexture(voxel_th3, iron.Scene.active.world.probe.radiance);
 		#end
 
 		var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);
@@ -1200,7 +1182,7 @@ class Inc {
 
 		kha.compute.Compute.setShader(voxel_sh3);
 
-		setSampledVolume(voxel_ta3, rts.get("voxelsOut").image);
+		kha.compute.Compute.setSampledTexture(voxel_ta3, rts.get("voxelsOut").image);
 		kha.compute.Compute.setSampledTexture(voxel_tb3, rts.get("half").image);
 		kha.compute.Compute.setSampledTexture(voxel_tc3, rts.get("gbuffer0").image);
 		kha.compute.Compute.setTexture(voxel_td3, rts.get("voxels_diffuse").image, kha.compute.Access.Write);
@@ -1209,10 +1191,10 @@ class Inc {
 		kha.compute.Compute.setSampledTexture(voxel_tf3, rts.get("gbuffer2").image);
 		#end
 		#if arm_brdf
-		setSampledLinear(voxel_tg3, iron.Scene.active.embedded.get("brdf.png"), false);
+		kha.compute.Compute.setSampledTexture(voxel_tg3, iron.Scene.active.embedded.get("brdf.png"));
 		#end
 		#if arm_radiance
-		setSampledLinear(voxel_th3, iron.Scene.active.world.probe.radiance, true);
+		kha.compute.Compute.setSampledTexture(voxel_th3, iron.Scene.active.world.probe.radiance);
 		#end
 
 		var fa:Float32Array = new Float32Array(Main.voxelgiClipmapCount * 10);
@@ -1295,13 +1277,10 @@ class Inc {
 
 		kha.compute.Compute.setShader(voxel_sh4);
 
-		setSampledVolume(voxel_ta4, rts.get("voxelsOut").image);
+		kha.compute.Compute.setSampledTexture(voxel_ta4, rts.get("voxelsOut").image);
 		kha.compute.Compute.setSampledTexture(voxel_tb4, rts.get("half").image);
 		kha.compute.Compute.setSampledTexture(voxel_tc4, rts.get("gbuffer0").image);
 		kha.compute.Compute.setSampledTexture(voxel_td4, rts.get("voxelsSDF").image);
-		// Point sampled, as Iron binds it in graphics passes
-		kha.compute.Compute.setTexture3DParameters(voxel_td4, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp,
-			kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureFilter.PointFilter, kha.graphics4.TextureFilter.PointFilter, kha.graphics4.MipMapFilter.NoMipFilter);
 		kha.compute.Compute.setTexture(voxel_te4, rts.get("voxels_specular").image, kha.compute.Access.Write);
 		#if rp_gbuffer2
 		kha.compute.Compute.setSampledTexture(voxel_tf4, rts.get("gbuffer2").image);
