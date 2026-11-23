@@ -724,11 +724,14 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     else:
         frag.write('vec3 indirect = envl;')
 
+    # The voxel traces offset their dither pattern by the velocity, which only exists with TAA/motion blur
+    velocity = 'velocity' if frag.contains('vec2 velocity =') else 'vec2(0.0)'
+
     if '_VoxelGI' in wrd.world_defs:
         frag.write('vec4 diffuse_indirect = traceDiffuse(wposition, n, voxels, clipmaps);')
         frag.write('indirect = (diffuse_indirect.rgb * albedo * (1.0 - F) + envl * (1.0 - diffuse_indirect.a)) * voxelgiDiff;')
         frag.write('if (roughness < 1.0 && specular > 0.0) {')
-        frag.write('    indirect += traceSpecular(wposition, n, voxels, voxelsSDF, vVec, roughness * roughness, clipmaps, gl_FragCoord.xy, velocity).rgb * F * voxelgiRefl;')
+        frag.write('    indirect += traceSpecular(wposition, n, voxels, voxelsSDF, vVec, roughness * roughness, clipmaps, gl_FragCoord.xy, ' + velocity + ').rgb * F * voxelgiRefl;')
         frag.write('}')
 
     frag.write('vec3 direct = vec3(0.0);')
@@ -849,7 +852,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             pass
         else:
             frag.write('if (opacity < 1.0) {')
-            frag.write('    vec3 refraction = traceRefraction(wposition, n, voxels, voxelsSDF, vVec, ior, roughness * roughness, clipmaps, gl_FragCoord.xy, velocity, opacity).rgb * (1.0 - F) * voxelgiRefr;')
+            frag.write('    vec3 refraction = traceRefraction(wposition, n, voxels, voxelsSDF, vVec, ior, roughness * roughness, clipmaps, gl_FragCoord.xy, ' + velocity + ', opacity).rgb * (1.0 - F) * voxelgiRefr;')
             # Add the refraction once, not to both the direct and indirect terms
             frag.write('    indirect = mix(refraction, indirect, opacity);')
             frag.write('    direct *= opacity;')

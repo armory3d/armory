@@ -598,8 +598,13 @@ class Uniforms {
 				}
 				case "_cameraJitter": {
 					v = helpVec;
+					#if arm_taa
 					v.x = camera.jitterX;
 					v.y = camera.jitterY;
+					#else
+					v.x = 0.0;
+					v.y = 0.0;
+					#end
 				}
 				case "_screenSize": {
 					v = helpVec;
