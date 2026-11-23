@@ -694,6 +694,7 @@ class Inc {
 			t.width = 0;
 			t.height = 0;
 			t.displayp = getDisplayp();
+			t.scale = getSuperSampling(); // render resolution, like the gbuffers the resolves read
 			t.format = "RGBA32";
 			#if (rp_voxels == "Voxel AO")
 			if (t.name == "voxels_shadows") t.format = "R8"; // voxel_resolve_shadows declares r8 in AO mode
@@ -1124,19 +1125,11 @@ class Inc {
 
 		kha.compute.Compute.setFloat3(voxel_cc3, camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
 
-		var width = iron.App.w();
-		var height = iron.App.h();
-		var dp = getDisplayp();
-		if (dp != null) { // 1080p/..
-			if (width > height) {
-				width = Std.int(width * (dp / height) * Inc.getSuperSampling());
-				height = Std.int(dp * Inc.getSuperSampling());
-			}
-			else {
-				height = Std.int(height * (dp / width) * Inc.getSuperSampling());
-				width = Std.int(dp * Inc.getSuperSampling());
-			}
-		}
+		// The size of the image written: computing it from the display resolution separately could
+		// differ from it (custom post-process resolution, upscaling) and leave part of it unwritten
+		var target = path.renderTargets.get("voxels_ao").image;
+		var width = target.width;
+		var height = target.height;
 		kha.compute.Compute.setFloat2(voxel_cd3, width, height);
 
 		kha.compute.Compute.setFloat(voxel_ce3, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
@@ -1219,19 +1212,11 @@ class Inc {
 
 		kha.compute.Compute.setFloat3(voxel_cc3, camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
 
-		var width = iron.App.w();
-		var height = iron.App.h();
-		var dp = getDisplayp();
-		if (dp != null) { // 1080p/..
-			if (width > height) {
-				width = Std.int(width * (dp / height) * Inc.getSuperSampling());
-				height = Std.int(dp * Inc.getSuperSampling());
-			}
-			else {
-				height = Std.int(height * (dp / width) * Inc.getSuperSampling());
-				width = Std.int(dp * Inc.getSuperSampling());
-			}
-		}
+		// The size of the image written: computing it from the display resolution separately could
+		// differ from it (custom post-process resolution, upscaling) and leave part of it unwritten
+		var target = path.renderTargets.get("voxels_diffuse").image;
+		var width = target.width;
+		var height = target.height;
 		kha.compute.Compute.setFloat2(voxel_cd3, width, height);
 
 		kha.compute.Compute.setFloat(voxel_ce3, iron.Scene.active.world == null ? 0.0 : iron.Scene.active.world.probe.raw.strength);
@@ -1311,19 +1296,11 @@ class Inc {
 
 		kha.compute.Compute.setFloat3(voxel_cc4, camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
 
-		var width = iron.App.w();
-		var height = iron.App.h();
-		var dp = getDisplayp();
-		if (dp != null) { // 1080p/..
-			if (width > height) {
-				width = Std.int(width * (dp / height) * Inc.getSuperSampling());
-				height = Std.int(dp * Inc.getSuperSampling());
-			}
-			else {
-				height = Std.int(height * (dp / width) * Inc.getSuperSampling());
-				width = Std.int(dp * Inc.getSuperSampling());
-			}
-		}
+		// The size of the image written: computing it from the display resolution separately could
+		// differ from it (custom post-process resolution, upscaling) and leave part of it unwritten
+		var target = path.renderTargets.get("voxels_specular").image;
+		var width = target.width;
+		var height = target.height;
 		kha.compute.Compute.setFloat2(voxel_cd4, width, height);
 
 		kha.compute.Compute.compute(Std.int((width + 7) / 8), Std.int((height + 7) / 8), 1);
