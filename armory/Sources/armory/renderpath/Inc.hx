@@ -702,7 +702,7 @@ class Inc {
 		}
 		else {
 			if (t.name == "voxelsSDF" || t.name == "voxelsSDFtmp") {
-				t.format = "A16";
+				t.format = "R8";
 				t.width = res;
 				t.height = res * Main.voxelgiClipmapCount;
 				t.depth = res;
@@ -719,10 +719,7 @@ class Inc {
 						t.mipmaps = false;
 					}
 					else {
-						// 32-bit texels accessed as r32ui (atomics). Kha has no uint format and GL binds image units with
-						// the texture's own format: RGBA8 is what works there (R32F gave garbage sums); Vulkan uses an
-						// R32_UINT view of either
-						t.format = "RGBA32";
+						t.format = "R32";
 						t.width = res * 6;
 						t.height = res;
 						t.depth = res * 2;
@@ -739,10 +736,7 @@ class Inc {
 						t.mipmaps = false;
 					}
 					else {
-						// 32-bit texels accessed as r32ui (atomics). Kha has no uint format and GL binds image units with
-						// the texture's own format: RGBA8 is what works there (R32F gave garbage sums); Vulkan uses an
-						// R32_UINT view of either
-						t.format = "RGBA32";
+						t.format = "R32";
 						t.width = res * 6;
 						t.height = res;
 						t.depth = res * 16;
