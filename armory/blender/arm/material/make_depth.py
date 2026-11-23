@@ -301,14 +301,7 @@ def make(context_id, rpasses, shadowmap=False, shadowmap_transparent=False, back
             # Same surfaces as the refraction context draws
             frag.write('if (opacity == 1.0) discard;')
         frag.add_out('vec4 fragColor')
-        if is_disp:
-            frag.write('fragColor = vec4(1.0 - gl_FragCoord.z);')
-        else:
-            # Window depth as GL computes it, from the clip position: gl_FragCoord.z came out as NaN
-            # in these passes on Vulkan
-            vert.add_out('vec4 wvpposition')
-            vert.write('wvpposition = gl_Position;')
-            frag.write('fragColor = vec4(1.0 - ((wvpposition.z / wvpposition.w) * 0.5 + 0.5));')
+        frag.write('fragColor = vec4(1.0 - gl_FragCoord.z);')
 
     elif parse_opacity and not shadowmap_transparent:
         if mat_state.material.arm_discard:
