@@ -24,6 +24,14 @@ THE SOFTWARE.
 
 #include "std/constants.glsl"
 
+// The clipmaps uniform is read directly instead of being passed down as a parameter: SPIR-V passes
+// arrays by value, so every helper call inside the cone marching loops copied all of it (unlike GL
+// drivers, the Vulkan path does not optimize that away, making voxel GI ~70x slower).
+#ifndef _ConetraceClipmaps
+#define _ConetraceClipmaps
+uniform float clipmaps[voxelgiClipmapCount * 10];
+#endif
+
 // References
 // https://github.com/Friduric/voxel-cone-tracing
 // https://github.com/Cigg/Voxel-Cone-Tracing
@@ -53,7 +61,7 @@ const float MAX_DISTANCE = voxelgiRange;
 
 // Continuous minimum LOD at which P can be sampled. Returns voxelgiClipmapCount
 // when P lies outside every clipmap.
-float clipmapMinLod(const vec3 P, const float clipmaps[voxelgiClipmapCount * 10]) {
+float clipmapMinLod(const vec3 P) {
 	const vec3 halfRes = vec3(voxelgiResolution) * 0.5;
 	for (int i = 0; i < voxelgiClipmapCount; ++i) {
 		vec3 center = vec3(clipmaps[i * 10 + 4], clipmaps[i * 10 + 5], clipmaps[i * 10 + 6]);
@@ -74,7 +82,7 @@ float clipmapMinLod(const vec3 P, const float clipmaps[voxelgiClipmapCount * 10]
 #ifdef _VoxelGI
 uniform sampler3D dummy;
 
-vec4 sampleVoxel(sampler3D voxels, vec3 P, const float clipmaps[voxelgiClipmapCount * 10], const float clipmap_index, const float step_dist, const int precomputed_direction, const vec3 face_offset, const vec3 direction_weight) {
+vec4 sampleVoxel(sampler3D voxels, vec3 P, const float clipmap_index, const float step_dist, const int precomputed_direction, const vec3 face_offset, const vec3 direction_weight) {
  	vec4 col = vec4(0.0);
 	vec3 tc = (P - vec3(clipmaps[int(clipmap_index * 10 + 4)], clipmaps[int(clipmap_index * 10 + 5)], clipmaps[int(clipmap_index * 10 + 6)])) / (float(clipmaps[int(clipmap_index * 10)]) * voxelgiResolution);
 	vec3 half_texel = vec3(0.5) / voxelgiResolution;
@@ -98,7 +106,7 @@ vec4 sampleVoxel(sampler3D voxels, vec3 P, const float clipmaps[voxelgiClipmapCo
 
 #endif
 #ifdef _VoxelAOvar
-float sampleVoxel(sampler3D voxels, vec3 P, const float clipmaps[voxelgiClipmapCount * 10], const float clipmap_index, const float step_dist, const int precomputed_direction, const vec3 face_offset, const vec3 direction_weight) {
+float sampleVoxel(sampler3D voxels, vec3 P, const float clipmap_index, const float step_dist, const int precomputed_direction, const vec3 face_offset, const vec3 direction_weight) {
  	float opac = 0.0;
 	vec3 tc = (P - vec3(clipmaps[int(clipmap_index * 10 + 4)], clipmaps[int(clipmap_index * 10 + 5)], clipmaps[int(clipmap_index * 10 + 6)])) / (float(clipmaps[int(clipmap_index * 10)]) * voxelgiResolution);
 	vec3 half_texel = vec3(0.5) / voxelgiResolution;
@@ -122,7 +130,7 @@ float sampleVoxel(sampler3D voxels, vec3 P, const float clipmaps[voxelgiClipmapC
 #endif
 
 #ifdef _VoxelGI
-vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 origin, const vec3 n, const vec3 dir, const int precomputed_direction, const bool use_sdf, const float aperture, const float step_size, const float clipmaps[voxelgiClipmapCount * 10]) {
+vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 origin, const vec3 n, const vec3 dir, const int precomputed_direction, const bool use_sdf, const float aperture, const float step_size) {
     vec3 color = vec3(0.0);
 	float alpha = 0.0;
 	float voxelSize0 = float(clipmaps[0]) * 2.0;
@@ -139,14 +147,14 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
 	vec3 direction_weight = abs(dir);
 
 	float coneCoefficient = 2.0 * tan(aperture * 0.5);
-	float startLod = clipmapMinLod(origin, clipmaps);
+	float startLod = clipmapMinLod(origin);
 
     while (alpha < 1.0 && dist < MAX_DISTANCE) {
 		vec4 mipSample = vec4(0.0);
 		float diam = max(voxelSize0, dist * coneCoefficient);
 		float coneLod = max(log2(diam / voxelSize0), startLod);
 		vec3 p0 = origin + n * voxelSize0 + dir * dist;
-		float lod = max(coneLod, clipmapMinLod(p0, clipmaps));
+		float lod = max(coneLod, clipmapMinLod(p0));
 		if (lod >= float(voxelgiClipmapCount)) break; // left the outermost clipmap
 		lod = min(lod, float(voxelgiClipmapCount - 1));
         float clipmap_index = floor(lod);
@@ -156,10 +164,10 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
         samplePos = (p0 - vec3(clipmaps[int(clipmap_index * 10 + 4)], clipmaps[int(clipmap_index * 10 + 5)], clipmaps[int(clipmap_index * 10 + 6)])) / (voxelSize * voxelgiResolution);
 		samplePos = samplePos * 0.5 + 0.5;
 
-		mipSample = sampleVoxel(voxels, p0, clipmaps, clipmap_index, step_dist, precomputed_direction, face_offset, direction_weight);
+		mipSample = sampleVoxel(voxels, p0, clipmap_index, step_dist, precomputed_direction, face_offset, direction_weight);
 
 		if(clipmap_blend > 0.0 && clipmap_index < voxelgiClipmapCount - 1) {
-			vec4 mipSampleNext = sampleVoxel(voxels, p0, clipmaps, clipmap_index + 1.0, step_dist, precomputed_direction, face_offset, direction_weight);
+			vec4 mipSampleNext = sampleVoxel(voxels, p0, clipmap_index + 1.0, step_dist, precomputed_direction, face_offset, direction_weight);
 			mipSample = mix(mipSample, mipSampleNext, smoothstep(0.0, 1.0, clipmap_blend));
 		}
 
@@ -182,7 +190,7 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
     return vec4(color, alpha);
 }
 
-vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels, const float clipmaps[voxelgiClipmapCount * 10]) {
+vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels) {
 	float sum = 0.0;
 	vec4 amount = vec4(0.0);
 	for (int i = 0; i < DIFFUSE_CONE_COUNT; ++i) {
@@ -191,7 +199,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels, 
 		if (cosTheta <= 0)
 			continue;
 		int precomputed_direction = 6 + i;
-		amount += traceCone(voxels, dummy, origin, normal, coneDir, precomputed_direction, false, DIFFUSE_CONE_APERTURE, 1.0, clipmaps) * cosTheta;
+		amount += traceCone(voxels, dummy, origin, normal, coneDir, precomputed_direction, false, DIFFUSE_CONE_APERTURE, 1.0) * cosTheta;
 		sum += cosTheta;
 	}
 
@@ -202,10 +210,10 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels, 
 	return amount * voxelgiOcc;
 }
 
-vec4 traceSpecular(const vec3 origin, const vec3 normal, const sampler3D voxels, const sampler3D voxelsSDF, const vec3 viewDir, const float roughness, const float clipmaps[voxelgiClipmapCount * 10], const vec2 pixel, const vec2 velocity) {
+vec4 traceSpecular(const vec3 origin, const vec3 normal, const sampler3D voxels, const sampler3D voxelsSDF, const vec3 viewDir, const float roughness, const vec2 pixel, const vec2 velocity) {
 	vec3 specularDir = reflect(-viewDir, normal);
 	vec3 P = origin + specularDir * ((BayerMatrix8[int(pixel.x + velocity.x) % 8][int(pixel.y + velocity.y) % 8] - 0.5)) * voxelgiStep;
-	vec4 amount = traceCone(voxels, voxelsSDF, P, normal, specularDir, 0, true, roughness, voxelgiStep, clipmaps);
+	vec4 amount = traceCone(voxels, voxelsSDF, P, normal, specularDir, 0, true, roughness, voxelgiStep);
 
 	amount.rgb = max(vec3(0.0), amount.rgb);
 	amount.a = clamp(amount.a, 0.0, 1.0);
@@ -213,11 +221,11 @@ vec4 traceSpecular(const vec3 origin, const vec3 normal, const sampler3D voxels,
 	return amount * voxelgiOcc;
 }
 
-vec4 traceRefraction(const vec3 origin, const vec3 normal, sampler3D voxels, sampler3D voxelsSDF, const vec3 viewDir, const float ior, const float roughness, const float clipmaps[voxelgiClipmapCount * 10], const vec2 pixel, const vec2 velocity, const float opacity) {
+vec4 traceRefraction(const vec3 origin, const vec3 normal, sampler3D voxels, sampler3D voxelsSDF, const vec3 viewDir, const float ior, const float roughness, const vec2 pixel, const vec2 velocity, const float opacity) {
  	const float transmittance = 1.0 - opacity;
  	vec3 refractionDir = refract(viewDir, normal, 1.0 / ior);
  	vec3 P = origin + refractionDir * (BayerMatrix8[int(pixel.x + velocity.x) % 8][int(pixel.y + velocity.y) % 8] - 0.5) * voxelgiStep;
-	vec4 amount =  transmittance * traceCone(voxels, voxelsSDF, P, normal, refractionDir, 0, true, roughness, voxelgiStep, clipmaps);
+	vec4 amount =  transmittance * traceCone(voxels, voxelsSDF, P, normal, refractionDir, 0, true, roughness, voxelgiStep);
 
 	amount.rgb = max(vec3(0.0), amount.rgb);
 	amount.a = clamp(amount.a, 0.0, 1.0);
@@ -227,7 +235,7 @@ vec4 traceRefraction(const vec3 origin, const vec3 normal, sampler3D voxels, sam
 #endif
 
 #ifdef _VoxelAOvar
-float traceConeAO(const sampler3D voxels, const vec3 origin, const vec3 n, const vec3 dir, const int precomputed_direction, const float aperture, const float step_size, const float clipmaps[voxelgiClipmapCount * 10]) {
+float traceConeAO(const sampler3D voxels, const vec3 origin, const vec3 n, const vec3 dir, const int precomputed_direction, const float aperture, const float step_size) {
 	float sampleCol = 0.0;
 	float voxelSize0 = float(clipmaps[0]) * 2.0;
 	float dist = voxelSize0;
@@ -241,23 +249,23 @@ float traceConeAO(const sampler3D voxels, const vec3 origin, const vec3 n, const
 	vec3 direction_weight = abs(dir);
 
 	float coneCoefficient = 2.0 * tan(aperture * 0.5);
-	float startLod = clipmapMinLod(origin, clipmaps);
+	float startLod = clipmapMinLod(origin);
 
     while (sampleCol < 1.0 && dist < MAX_DISTANCE) {
 		float mipSample = 0.0;
 		float diam = max(voxelSize0, dist * coneCoefficient);
 		float coneLod = max(log2(diam / voxelSize0), startLod);
 		vec3 p0 = origin + n * voxelSize0 + dir * dist;
-		float lod = max(coneLod, clipmapMinLod(p0, clipmaps));
+		float lod = max(coneLod, clipmapMinLod(p0));
 		if (lod >= float(voxelgiClipmapCount)) break;
 		lod = min(lod, float(voxelgiClipmapCount - 1));
 		float clipmap_index = floor(lod);
 		float clipmap_blend = fract(lod);
 
-		mipSample = sampleVoxel(voxels, p0, clipmaps, clipmap_index, step_dist, precomputed_direction, face_offset, direction_weight);
+		mipSample = sampleVoxel(voxels, p0, clipmap_index, step_dist, precomputed_direction, face_offset, direction_weight);
 
 		if(clipmap_blend > 0.0 && clipmap_index < voxelgiClipmapCount - 1) {
-			float mipSampleNext = sampleVoxel(voxels, p0, clipmaps, clipmap_index + 1.0, step_dist, precomputed_direction, face_offset, direction_weight);
+			float mipSampleNext = sampleVoxel(voxels, p0, clipmap_index + 1.0, step_dist, precomputed_direction, face_offset, direction_weight);
 			mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
 		}
 
@@ -270,7 +278,7 @@ float traceConeAO(const sampler3D voxels, const vec3 origin, const vec3 n, const
 }
 
 
-float traceAO(const vec3 origin, const vec3 normal, const sampler3D voxels, const float clipmaps[voxelgiClipmapCount * 10]) {
+float traceAO(const vec3 origin, const vec3 normal, const sampler3D voxels) {
 	float sum = 0.0;
 	float amount = 0.0;
 	for (int i = 0; i < DIFFUSE_CONE_COUNT; i++) {
@@ -279,7 +287,7 @@ float traceAO(const vec3 origin, const vec3 normal, const sampler3D voxels, cons
 		const float cosTheta = dot(normal, coneDir);
 		if (cosTheta <= 0)
 			continue;
-		amount += traceConeAO(voxels, origin, normal, coneDir, precomputed_direction, DIFFUSE_CONE_APERTURE, 1.0, clipmaps) * cosTheta;
+		amount += traceConeAO(voxels, origin, normal, coneDir, precomputed_direction, DIFFUSE_CONE_APERTURE, 1.0) * cosTheta;
 		sum += cosTheta;
 	}
 	amount /= sum;
@@ -301,8 +309,7 @@ traceConeShadow(
     const vec3 n,
     const vec3 dir,
     const float aperture,
-    const float step_size,
-    const float clipmaps[voxelgiClipmapCount * 10]
+    const float step_size
 ) {
     #ifdef _VoxelGI
     vec3 transmittance = vec3(1.0);
@@ -321,7 +328,7 @@ traceConeShadow(
     ) / (6 + DIFFUSE_CONE_COUNT);
     vec3 direction_weight = abs(dir);
     float coneCoefficient = 2.0 * tan(aperture * 0.5);
-    float startLod = clipmapMinLod(origin, clipmaps);
+    float startLod = clipmapMinLod(origin);
 
     while (dist < MAX_DISTANCE) {
         #ifdef _VoxelGI
@@ -333,7 +340,7 @@ traceConeShadow(
         float diam = max(voxelSize0, dist * coneCoefficient);
 		float coneLod = max(log2(diam / voxelSize0), startLod);
 		vec3 p0 = origin + n * voxelSize0 + dir * dist;
-        float lod = max(coneLod, clipmapMinLod(p0, clipmaps));
+        float lod = max(coneLod, clipmapMinLod(p0));
         if (lod >= float(voxelgiClipmapCount)) break;
         lod = min(lod, float(voxelgiClipmapCount - 1));
         float clipmap_index = floor(lod);
@@ -346,14 +353,14 @@ traceConeShadow(
         )) / (float(clipmaps[int(clipmap_index * 10)]) * voxelgiResolution);
         samplePos = samplePos * 0.5 + 0.5;
 
-        mipSample = sampleVoxel(voxels, p0, clipmaps, clipmap_index, step_dist, 0, face_offset, direction_weight);
+        mipSample = sampleVoxel(voxels, p0, clipmap_index, step_dist, 0, face_offset, direction_weight);
 
         if (clipmap_blend > 0.0 && clipmap_index < voxelgiClipmapCount - 1) {
             #ifdef _VoxelGI
-            vec4 mipSampleNext = sampleVoxel(voxels, p0, clipmaps, clipmap_index + 1.0, step_dist, 0, face_offset, direction_weight);
+            vec4 mipSampleNext = sampleVoxel(voxels, p0, clipmap_index + 1.0, step_dist, 0, face_offset, direction_weight);
             mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
             #else
-            float mipSampleNext = sampleVoxel(voxels, p0, clipmaps, clipmap_index + 1.0, step_dist, 0, face_offset, direction_weight);
+            float mipSampleNext = sampleVoxel(voxels, p0, clipmap_index + 1.0, step_dist, 0, face_offset, direction_weight);
             mipSample = mix(mipSample, mipSampleNext, clipmap_blend);
             #endif
         }
@@ -395,7 +402,6 @@ traceShadow(
     const sampler3D voxels,
     const sampler3D voxelsSDF,
     const vec3 dir,
-    const float clipmaps[voxelgiClipmapCount * 10],
     const vec2 pixel,
     const vec2 velocity
 ) {
@@ -403,13 +409,20 @@ traceShadow(
         (BayerMatrix8[int(pixel.x + velocity.x) % 8][int(pixel.y + velocity.y) % 8] - 0.5) * voxelgiStep;
 
     #ifdef _VoxelGI
-    vec4 trans = traceConeShadow(voxels, voxelsSDF, P, normal, dir, SHADOW_CONE_APERTURE, voxelgiStep, clipmaps);
+    vec4 trans = traceConeShadow(voxels, voxelsSDF, P, normal, dir, SHADOW_CONE_APERTURE, voxelgiStep);
     return clamp(trans, 0.0, 1.0);
     #else
-    float occ = traceConeShadow(voxels, voxelsSDF, P, normal, dir, SHADOW_CONE_APERTURE, voxelgiStep, clipmaps);
+    float occ = traceConeShadow(voxels, voxelsSDF, P, normal, dir, SHADOW_CONE_APERTURE, voxelgiStep);
     return clamp(occ, 0.0, 1.0) * voxelgiOcc;
     #endif
 }
 #endif
+
+// Keep the historical signatures with a clipmaps argument working for existing callers
+#define traceDiffuse(origin, normal, voxels, cm) traceDiffuse(origin, normal, voxels)
+#define traceSpecular(origin, normal, voxels, voxelsSDF, viewDir, roughness, cm, pixel, velocity) traceSpecular(origin, normal, voxels, voxelsSDF, viewDir, roughness, pixel, velocity)
+#define traceRefraction(origin, normal, voxels, voxelsSDF, viewDir, ior, roughness, cm, pixel, velocity, opacity) traceRefraction(origin, normal, voxels, voxelsSDF, viewDir, ior, roughness, pixel, velocity, opacity)
+#define traceAO(origin, normal, voxels, cm) traceAO(origin, normal, voxels)
+#define traceShadow(origin, normal, voxels, voxelsSDF, dir, cm, pixel, velocity) traceShadow(origin, normal, voxels, voxelsSDF, dir, pixel, velocity)
 
 #endif // _CONETRACE_GLSL_
