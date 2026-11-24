@@ -1903,9 +1903,9 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_ssr_search_dist')
         col.prop(rpdat, 'arm_ssr_falloff_exp')
         col.prop(rpdat, 'arm_ssr_jitter')
-        #row = col.row()
-        #row.enabled = rpdat.rp_voxels == 'Voxel GI' and rpdat.rp_renderer == 'Deferred'
-        #row.prop(rpdat, 'rp_ssr_voxel_fallback')
+        row = col.row()
+        row.enabled = rpdat.rp_voxels == 'Voxel GI' and rpdat.rp_renderer == 'Deferred'
+        row.prop(rpdat, 'rp_ssr_voxel_fallback')
         layout.separator()
 
         col = layout.column()

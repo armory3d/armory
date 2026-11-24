@@ -170,17 +170,22 @@ void main() {
 	vec3 F = f0;
 	#endif
 
-	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
-	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
-	// How much the screen space result can be trusted
-	float confidence = screenEdgeFactor * clamp(abs(refracted.z), 0.0, 1.0);
-
 	float refractivity = 1.0 - opac;
 	#ifdef _VoxelRefract
 	// Fall back to the voxel traced refraction where the ray found no hit
 	// or the screen space data runs out, instead of fading to black. The cone
 	// is only traced there, a confident screen space hit skips it.
-	confidence *= coords.w;
+	// The confidence says whether the hit is valid, like the SSR voxel
+	// fallback, not the artistic fade below that stays well under 1.
+	// - a hit was found
+	float confidence = coords.w;
+	// - fade out only over the last 10% of the screen border (and drop hits
+	//   projected outside of it)
+	vec2 border = min(coords.xy, 1.0 - coords.xy);
+	confidence *= clamp(min(border.x, border.y) / 0.1, 0.0, 1.0);
+	// - a single screen space ray cannot blur like a wide cone: leave rough
+	//   surfaces to the voxels
+	confidence *= 1.0 - smoothstep(0.6, 0.8, roughness);
 	if (confidence < 0.99) {
 		vec3 wpos = transpose(V3) * viewPos + eye;
 		vec3 vVec = normalize(eye - wpos);
@@ -190,7 +195,10 @@ void main() {
 	}
 	vec3 intensity = refractivity * (1.0 - F);
 	#else
-	vec3 intensity = refractivity * confidence * (1.0 - F);
+	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
+	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
+	float fade = screenEdgeFactor * clamp(abs(refracted.z), 0.0, 1.0);
+	vec3 intensity = refractivity * fade * (1.0 - F);
 	#endif
 
 	intensity = clamp(intensity, 0.0, 1.0);

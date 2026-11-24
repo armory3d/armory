@@ -174,11 +174,29 @@ void main() {
 
 	intensity = clamp(intensity, 0.0, 1.0);
 	#ifdef _SSRVoxelFallback
+	// Confidence that the screen space hit is valid, not the artistic fade
+	// above: that one stays well below 1 even for good hits, which made the
+	// voxel resolve trace (and mostly show) cones everywhere.
+	// - a hit was found and refined onto a surface
+	float confidence = coords.w;
+	// - fade out only over the last 10% of the screen border
+	vec2 border = min(coords.xy, 1.0 - coords.xy);
+	confidence *= clamp(min(border.x, border.y) / 0.1, 0.0, 1.0);
+	// - fade out over the last 20% of the search distance
+	#ifdef _CPostprocess
+	float searchDist = PPComp9.z;
+	#else
+	float searchDist = ssrSearchDist;
+	#endif
+	confidence *= clamp((searchDist - length(viewPos - hitCoord)) / (0.2 * searchDist), 0.0, 1.0);
+	// - a single screen space ray cannot blur like a wide cone: leave rough
+	//   surfaces to the voxels
+	confidence *= 1.0 - smoothstep(0.6, 0.8, roughness);
+	// - the hit was on screen in the previous frame
 	vec2 prevUV = getPrevUV(coords.xy, hitCoord);
-	// The hit was not on screen in the previous frame
-	if (prevUV.x < 0.0 || prevUV.x > 1.0 || prevUV.y < 0.0 || prevUV.y > 1.0) intensity = 0.0;
+	if (prevUV.x < 0.0 || prevUV.x > 1.0 || prevUV.y < 0.0 || prevUV.y > 1.0) confidence = 0.0;
 	vec3 reflCol = clamp(textureLod(tex, prevUV, 0.0).rgb, 0.0, 1.0);
-	fragColor = vec4(reflCol, intensity);
+	fragColor = vec4(reflCol, confidence);
 	#else
 	vec3 reflCol = textureLod(tex, coords.xy, 0.0).rgb;
 	reflCol = clamp(reflCol, 0.0, 1.0);
