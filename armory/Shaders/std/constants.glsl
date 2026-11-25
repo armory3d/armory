@@ -3,9 +3,7 @@
 
 const int DIFFUSE_CONE_COUNT = 16;
 
-const float SHADOW_CONE_APERTURE = 0.2;
-
-const float DIFFUSE_CONE_APERTURE = 0.872665; // 50 degrees full angle
+const float DIFFUSE_CONE_APERTURE = 0.872665;
 
 const vec3 DIFFUSE_CONE_DIRECTIONS[16] = vec3[](
 	vec3( 0.3480,  0.0000,  0.9375),
@@ -25,7 +23,6 @@ const vec3 DIFFUSE_CONE_DIRECTIONS[16] = vec3[](
 	vec3(-0.3353,  0.4769, -0.8125),
 	vec3(-0.0447, -0.3451, -0.9375)
 );
-
 
 const float BayerMatrix8[8][8] =
 {
