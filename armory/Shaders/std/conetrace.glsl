@@ -147,13 +147,14 @@ vec4 traceCone(const sampler3D voxels, const sampler3D voxelsSDF, const vec3 ori
 	vec3 direction_weight = abs(dir);
 
 	float coneCoefficient = 2.0 * tan(aperture * 0.5);
-	float startLod = clipmapMinLod(origin);
+	vec3 start_pos = origin + n * dist;
+	float startLod = clipmapMinLod(start_pos);
 
     while (alpha < 1.0 && dist < MAX_DISTANCE) {
 		vec4 mipSample = vec4(0.0);
 		float diam = max(voxelSize0, dist * coneCoefficient);
 		float coneLod = max(log2(diam / voxelSize0), startLod);
-		vec3 p0 = origin + n * voxelSize0 + dir * dist;
+		vec3 p0 = start_pos + dir * dist;
 		float lod = max(coneLod, clipmapMinLod(p0));
 		if (lod >= float(voxelgiClipmapCount)) break; // left the outermost clipmap
 		lod = min(lod, float(voxelgiClipmapCount - 1));
@@ -254,13 +255,15 @@ float traceConeAO(const sampler3D voxels, const vec3 origin, const vec3 n, const
 	vec3 direction_weight = abs(dir);
 
 	float coneCoefficient = 2.0 * tan(aperture * 0.5);
-	float startLod = clipmapMinLod(origin);
+
+	vec3 start_pos = origin + n * dist;
+	float startLod = clipmapMinLod(start_pos);
 
     while (sampleCol < 1.0 && dist < MAX_DISTANCE) {
 		float mipSample = 0.0;
 		float diam = max(voxelSize0, dist * coneCoefficient);
 		float coneLod = max(log2(diam / voxelSize0), startLod);
-		vec3 p0 = origin + n * voxelSize0 + dir * dist;
+		vec3 p0 = start_pos + dir * dist;
 		float lod = max(coneLod, clipmapMinLod(p0));
 		if (lod >= float(voxelgiClipmapCount)) break;
 		lod = min(lod, float(voxelgiClipmapCount - 1));
@@ -332,8 +335,9 @@ traceConeShadow(
         aniso_direction.z > 0.0 ? 4 : 5
     ) / (6 + DIFFUSE_CONE_COUNT);
     vec3 direction_weight = abs(dir);
-    float coneCoefficient = 2.0 * tan(aperture * 0.5);
-    float startLod = clipmapMinLod(origin);
+	float coneCoefficient = 2.0 * tan(aperture * 0.5);
+	vec3 start_pos = origin + n * dist;
+	float startLod = clipmapMinLod(start_pos);
 
     while (dist < MAX_DISTANCE) {
         #ifdef _VoxelGI
@@ -344,7 +348,7 @@ traceConeShadow(
 
         float diam = max(voxelSize0, dist * coneCoefficient);
 		float coneLod = max(log2(diam / voxelSize0), startLod);
-		vec3 p0 = origin + n * voxelSize0 + dir * dist;
+		vec3 p0 = start_pos + dir * dist;
         float lod = max(coneLod, clipmapMinLod(p0));
         if (lod >= float(voxelgiClipmapCount)) break;
         lod = min(lod, float(voxelgiClipmapCount - 1));
