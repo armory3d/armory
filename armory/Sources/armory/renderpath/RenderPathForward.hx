@@ -134,6 +134,20 @@ class RenderPathForward {
 			#if rp_ssrefr
 			{
 				path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
+				#if arm_voxelgi_refract
+				path.loadShader("shader_datas/ssrefr_pass/ssrefr_resolve");
+
+				// Screen space refraction hits (uv, confidence, attenuation), gathered
+				// by ssrefr_resolve which falls back to the voxels
+				var t = new RenderTargetRaw();
+				t.name = "refr_ss";
+				t.width = 0;
+				t.height = 0;
+				t.displayp = Inc.getDisplayp();
+				t.format = "RGBA64";
+				t.scale = Inc.getSuperSampling();
+				path.createRenderTarget(t);
+				#end
 				path.loadShader("shader_datas/copy_pass/copy_pass");
 
 				var t = new RenderTargetRaw();
@@ -558,6 +572,20 @@ class RenderPathForward {
 						#end
 						path.drawMeshes(context);
 
+						#if arm_voxelgi_refract
+						// Screen space hits first, then ssrefr_resolve gathers them, falls
+						// back to the voxel cones where they are not confident and composites
+						path.setTarget("refr_ss");
+
+						path.bindTarget("refr", "tex");
+						path.bindTarget("lbuffer0", "tex1");
+						path.bindTarget("_main", "gbufferD");
+						path.bindTarget("gbufferD1", "gbufferD1");
+						path.bindTarget("gbufferD2", "gbufferD2");
+						path.bindTarget("lbuffer1", "gbuffer0");
+						path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
+						path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
+
 						path.setTarget("lbuffer0");
 
 						path.bindTarget("refr", "tex");
@@ -567,12 +595,22 @@ class RenderPathForward {
 						path.bindTarget("gbufferD2", "gbufferD2");
 						path.bindTarget("lbuffer1", "gbuffer0");
 						path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
-						#if arm_voxelgi_refract
+						path.bindTarget("refr_ss", "refrSS");
 						path.bindTarget("voxelsOut", "voxels");
 						path.bindTarget("voxelsSDF", "voxelsSDF");
-						#end
+						path.drawShader("shader_datas/ssrefr_pass/ssrefr_resolve");
+						#else
+						path.setTarget("lbuffer0");
 
+						path.bindTarget("refr", "tex");
+						path.bindTarget("lbuffer0", "tex1");
+						path.bindTarget("_main", "gbufferD");
+						path.bindTarget("gbufferD1", "gbufferD1");
+						path.bindTarget("gbufferD2", "gbufferD2");
+						path.bindTarget("lbuffer1", "gbuffer0");
+						path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
 						path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
+						#end
 					}
 
 					saveBackground();

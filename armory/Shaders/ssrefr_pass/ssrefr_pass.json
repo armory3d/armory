@@ -35,18 +35,48 @@
 					"link": "_cameraPlaneProj"
 				},
 				{
-					"name": "clipmaps",
-					"link": "_clipmaps",
-					"ifdef": ["_VoxelRefract"]
-				},
-				{
 					"name": "senvmapBrdf",
 					"link": "$brdf.png",
-					"ifdef": ["_Brdf"]
+					"ifdef": [
+						"_Brdf"
+					]
 				}
 			],
 			"vertex_shader": "../include/pass_viewray2.vert.glsl",
 			"fragment_shader": "ssrefr_pass.frag.glsl"
+		},
+		{
+			"name": "ssrefr_resolve",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"name": "V3",
+					"link": "_viewMatrix3"
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
+				},
+				{
+					"name": "clipmaps",
+					"link": "_clipmaps"
+				},
+				{
+					"name": "senvmapBrdf",
+					"link": "$brdf.png",
+					"ifdef": [
+						"_Brdf"
+					]
+				}
+			],
+			"vertex_shader": "../include/pass_viewray2.vert.glsl",
+			"fragment_shader": "ssrefr_resolve.frag.glsl"
 		}
 	]
 }

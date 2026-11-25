@@ -7,9 +7,6 @@
 #include "std/math.glsl"
 #include "std/brdf.glsl"
 #include "std/gbuffer.glsl"
-#ifdef _VoxelRefract
-#include "std/conetrace.glsl"
-#endif
 
 #ifdef _Brdf
 uniform sampler2D senvmapBrdf;
@@ -22,14 +19,6 @@ uniform sampler2D gbuffer0;
 uniform sampler2D gbufferD1; // Opaque scene depth, refractive meshes excluded
 uniform sampler2D gbufferD2; // Closest refractive backface depth
 uniform sampler2D gbuffer_refraction; // ior\opacity
-#ifdef _VoxelRefract
-uniform sampler3D voxels;
-uniform sampler3D voxelsSDF;
-#ifndef _ConetraceClipmaps // declared by std/conetrace.glsl
-#define _ConetraceClipmaps
-uniform float clipmaps[voxelgiClipmapCount * 10];
-#endif
-#endif
 uniform mat4 P;
 uniform mat3 V3;
 uniform vec2 cameraProj;
@@ -96,6 +85,13 @@ vec3 binarySearchBackface(vec3 dir) {
 vec4 rayCast(vec3 dir) {
 	vec3 rayStep = dir * ss_refractionRayStep;
 	bool inside = true;
+	#ifdef _VoxelRefract
+	// Like the SSR voxel fallback: a crossing is a hit only if the refinement
+	// settles on a surface, a ray passing behind an object keeps marching
+	// (and falls back to the voxels if it finds nothing)
+	float thickness = length(rayStep);
+	bool behind = false;
+	#endif
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += rayStep;
 
@@ -105,11 +101,25 @@ vec4 rayCast(vec3 dir) {
 			inside = false;
 		}
 
+		#ifdef _VoxelRefract
+		float ddepth = getDeltaDepth(hitCoord);
+		if (ddepth > 0.0 && !behind) {
+			vec3 crossing = hitCoord;
+			vec4 coords = binarySearch(rayStep);
+			if (abs(getDeltaDepth(hitCoord)) <= thickness) {
+				if (inside) travelled = distance(hitCoord, entryCoord);
+				return coords;
+			}
+			hitCoord = crossing;
+		}
+		behind = ddepth > 0.0;
+		#else
 		if (getDeltaDepth(hitCoord) > 0.0) {
 			vec4 coords = binarySearch(dir);
 			if (inside) travelled = distance(hitCoord, entryCoord);
 			return coords;
 		}
+		#endif
 	}
 	if (inside) travelled = distance(hitCoord, entryCoord);
 	return vec4(getProjectedCoord(hitCoord), 0.0, 0.0);
@@ -127,7 +137,11 @@ void main() {
 	float d = textureLod(gbufferD, texCoord, 0.0).r;
 
 	if (d >= 1.0 || opac == 1.0) {
+		#ifdef _VoxelRefract
+		fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+		#else
 		fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb;
+		#endif
 		return;
 	}
 
@@ -152,13 +166,31 @@ void main() {
 	vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter * roughness) * length(viewPos) * 2.0;
 
 	vec4 coords = rayCast(dir);
-	vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb;
 
 	// Beer-Lambert absorption over the distance travelled inside the medium,
 	// the opacity gives the transmission through one unit of the medium
 	float transmission = clamp(1.0 - opac, 0.001, 1.0);
 	float absorption = -log(transmission) * ss_refractionAbsorption;
-	refractionCol *= exp(-absorption * travelled);
+	float attenuation = exp(-absorption * travelled);
+
+	#ifdef _VoxelRefract
+	// Voxel fallback, like the SSR one: this pass only writes the screen space
+	// hit, ssrefr_resolve gathers it over 5x5 pixels, traces the voxel cone
+	// where the neighborhood is not confident and composites.
+	// The confidence says whether the hit is valid, not the artistic fade of
+	// the screen space only path:
+	// - a hit was found
+	float confidence = coords.w;
+	// - fade out only over the last 10% of the screen border (and drop hits
+	//   projected outside of it)
+	vec2 border = min(coords.xy, 1.0 - coords.xy);
+	confidence *= clamp(min(border.x, border.y) / 0.1, 0.0, 1.0);
+	// - a single screen space ray cannot blur like a wide cone: leave rough
+	//   surfaces to the voxels
+	confidence *= 1.0 - smoothstep(0.6, 0.8, roughness);
+	fragColor = vec4(coords.xy, confidence, attenuation);
+	#else
+	vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb * attenuation;
 
 	vec3 f0 = surfaceF0(refractionCol.rgb, metallic);
 	float dotNV = max(dot(viewNormal, -viewDir), 0.0);
@@ -171,35 +203,10 @@ void main() {
 	#endif
 
 	float refractivity = 1.0 - opac;
-	#ifdef _VoxelRefract
-	// Fall back to the voxel traced refraction where the ray found no hit
-	// or the screen space data runs out, instead of fading to black. The cone
-	// is only traced there, a confident screen space hit skips it.
-	// The confidence says whether the hit is valid, like the SSR voxel
-	// fallback, not the artistic fade below that stays well under 1.
-	// - a hit was found
-	float confidence = coords.w;
-	// - fade out only over the last 10% of the screen border (and drop hits
-	//   projected outside of it)
-	vec2 border = min(coords.xy, 1.0 - coords.xy);
-	confidence *= clamp(min(border.x, border.y) / 0.1, 0.0, 1.0);
-	// - a single screen space ray cannot blur like a wide cone: leave rough
-	//   surfaces to the voxels
-	confidence *= 1.0 - smoothstep(0.6, 0.8, roughness);
-	if (confidence < 0.99) {
-		vec3 wpos = transpose(V3) * viewPos + eye;
-		vec3 vVec = normalize(eye - wpos);
-		vec3 voxelCol = traceRefraction(wpos, n, voxels, voxelsSDF, vVec, ior, roughness * roughness, clipmaps, gl_FragCoord.xy, vec2(0.0), 0.0).rgb * voxelgiRefr;
-		voxelCol *= exp(-absorption * travelled);
-		refractionCol = mix(voxelCol, refractionCol, confidence);
-	}
-	vec3 intensity = refractivity * (1.0 - F);
-	#else
 	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
 	float fade = screenEdgeFactor * clamp(abs(refracted.z), 0.0, 1.0);
 	vec3 intensity = refractivity * fade * (1.0 - F);
-	#endif
 
 	intensity = clamp(intensity, 0.0, 1.0);
 
@@ -207,4 +214,5 @@ void main() {
 	vec3 color = textureLod(tex1, texCoord.xy, 0.0).rgb;
 
 	fragColor.rgb = mix(refractionCol, color, opac);
+	#endif
 }
