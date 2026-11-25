@@ -22,7 +22,7 @@ using StringTools;
 // Structure for setting shader uniforms
 class Uniforms {
 
-	#if (kha_opengl || (kha_webgl && !arm_shadowmap_atlas) || (!kha_webgl && arm_shadowmap_atlas))
+	#if (kha_opengl || kha_vulkan || (kha_webgl && !arm_shadowmap_atlas) || (!kha_webgl && arm_shadowmap_atlas))
 	public static var biasMat = new Mat4(
 		0.5, 0.0, 0.0, 0.5,
 		0.0, 0.5, 0.0, 0.5,
@@ -911,7 +911,7 @@ class Uniforms {
 							helpMat2._30 = l.tileOffsetX[0];
 							helpMat2._31 = l.tileOffsetY[0];
 							helpMat.multmat(helpMat2);
-							#if (!kha_opengl)
+							#if (!kha_opengl && !kha_vulkan)
 							helpMat2.setIdentity();
 							helpMat2._11 = -1.0;
 							helpMat2._31 = 1.0;

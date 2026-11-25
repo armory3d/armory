@@ -185,7 +185,7 @@ class ProbeObject extends Object {
 			if (perFrame || redraw) {
 				for (i in 0...6) {
 					camera.currentFace = i;
-					#if (!kha_opengl && !kha_webgl)
+					#if (!kha_opengl && !kha_vulkan && !kha_webgl)
 					var flip = (i == 2 || i == 3) ? true : false; // Flip +Y, -Y
 					#else
 					var flip = false;

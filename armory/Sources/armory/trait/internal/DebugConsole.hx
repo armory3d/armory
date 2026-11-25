@@ -854,7 +854,7 @@ class DebugConsole extends Trait {
 
 				if (ui.panel(Id.handle({selected: false}), "Render Targets")) {
 					ui.indent();
-					#if (kha_opengl || kha_webgl)
+					#if (kha_opengl || kha_webgl || kha_vulkan)
 					ui.imageInvertY = true;
 					#end
 					for (rt in iron.RenderPath.active.renderTargets) {
@@ -863,7 +863,7 @@ class DebugConsole extends Trait {
 							ui.image(rt.image);
 						}
 					}
-					#if (kha_opengl || kha_webgl)
+					#if (kha_opengl || kha_webgl || kha_vulkan)
 					ui.imageInvertY = false;
 					#end
 					ui.unindent();

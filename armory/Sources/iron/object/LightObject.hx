@@ -298,7 +298,7 @@ class LightObject extends Object {
 	public function setCubeFace(face: Int, camera: CameraObject) {
 		// Set matrix to match cubemap face
 		eye.set(transform.worldx(), transform.worldy(), transform.worldz());
-		#if (!kha_opengl && !kha_webgl && !arm_shadowmap_atlas)
+		#if (!kha_opengl && !kha_vulkan && !kha_webgl && !arm_shadowmap_atlas)
 		var flip = (face == 2 || face == 3) ? true : false; // Flip +Y, -Y
 		#else
 		var flip = false;
@@ -333,7 +333,7 @@ class LightObject extends Object {
 			helpMat._30 = this.tileOffsetX[i];
 			helpMat._31 = this.tileOffsetY[i];
 			bias.multmat(helpMat);
-			#if (!kha_opengl)
+			#if (!kha_opengl && !kha_vulkan)
 			helpMat.setIdentity();
 			helpMat._11 = -1.0;
 			helpMat._31 = 1.0;
@@ -611,7 +611,7 @@ class LightObject extends Object {
 				helpMat._30 = light.tileOffsetX[0];
 				helpMat._31 = light.tileOffsetY[0];
 				m.multmat(helpMat);
-				#if (!kha_opengl)
+				#if (!kha_opengl && !kha_vulkan)
 				helpMat.setIdentity();
 				helpMat._11 = -1.0;
 				helpMat._31 = 1.0;
