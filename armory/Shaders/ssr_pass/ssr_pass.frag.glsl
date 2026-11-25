@@ -59,6 +59,10 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 vec3 hitCoord;
+#ifdef _SSRVoxelFallback
+// Fraction of a step the ray starts at, varied per pixel and per frame
+float rayStartOffset = 0.0;
+#endif
 
 const int numBinarySearchSteps = 7;
 const int maxSteps = int(ceil(1.0 / ssrRayStep) * ssrSearchDist);
@@ -103,6 +107,13 @@ vec4 rayCast(const vec3 dir) {
 	// one step behind one means the ray passed behind the geometry, not into it
 	float thickness = length(rayStep);
 
+	#ifdef _SSRVoxelFallback
+	// Start a random fraction of a step along the ray: with a fixed start
+	// the hits snap to the step positions and show as bands
+	hitCoord += rayStep * rayStartOffset;
+	bool behind = false;
+	#endif
+
 	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += rayStep;
 
@@ -111,7 +122,24 @@ vec4 rayCast(const vec3 dir) {
 		if (coord.x < 0.0 || coord.x > 1.0 || coord.y < 0.0 || coord.y > 1.0) return vec4(0.0);
 
 		float ddepth = getDeltaDepth(hitCoord, coord);
+		#ifdef _SSRVoxelFallback
+		// Any crossing is refined, the refinement tells whether it is a hit:
+		// it settles on the surface for a real one, on a depth discontinuity
+		// when the ray passed behind an object. A rejected hit falls back to
+		// the voxels, so near contact lines (the floor at the base of a wall),
+		// where the ray crosses by more than one step, real hits must not be
+		// rejected up front. Behind an object, keep marching.
+		// Only refine where the ray goes from in front to behind
+		if (ddepth > 0.0 && !behind) {
+			vec3 crossing = hitCoord;
+			vec4 hit = binarySearch(rayStep, thickness);
+			if (hit.w > 0.0) return hit;
+			hitCoord = crossing;
+		}
+		behind = ddepth > 0.0;
+		#else
 		if (ddepth > 0.0 && ddepth < thickness) return binarySearch(rayStep, thickness);
+		#endif
 	}
 	return vec4(0.0);
 }
@@ -141,11 +169,24 @@ void main() {
 	vec3 viewDir = normalize(viewPos);
 	vec3 reflected = reflect(viewDir, viewNormal);
 	hitCoord = viewPos;
+	#ifdef _SSRVoxelFallback
+	// Start off the surface: a ray that hits within its first step (the floor
+	// right at the base of a wall) refines back toward its origin, where the
+	// depth buffer holds the starting surface itself, and settled there
+	// (grey floor colored hits) or got rejected (voxel colors)
+	hitCoord += viewNormal * (0.01 + 0.002 * abs(viewPos.z));
+	#endif
 
 	#ifdef _CPostprocess
 		vec3 dir = reflected * (1.0 - rand(texCoord) * PPComp10.y * roughness) * 2.0;
 	#else
-		vec3 dir = reflected * (1.0 - rand(texCoord) * ssrJitter * roughness) * 2.0;
+		float jitter = rand(texCoord);
+		#ifdef _SSRVoxelFallback
+		// Static per pixel noise: the voxel resolve averages the SSR result
+		// over 5x5 pixels, a per frame one made the reflections unstable
+		rayStartOffset = rand(texCoord.yx);
+		#endif
+		vec3 dir = reflected * (1.0 - jitter * ssrJitter * roughness) * 2.0;
 	#endif
 
 	vec4 g1 = textureLod(gbuffer1, texCoord, 0.0); // Basecolor.rgb, spec/occ

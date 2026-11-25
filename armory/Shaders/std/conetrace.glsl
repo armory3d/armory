@@ -212,7 +212,12 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, const sampler3D voxels) 
 
 vec4 traceSpecular(const vec3 origin, const vec3 normal, const sampler3D voxels, const sampler3D voxelsSDF, const vec3 viewDir, const float roughness, const vec2 pixel, const vec2 velocity) {
 	vec3 specularDir = reflect(-viewDir, normal);
-	vec3 P = origin + specularDir * ((BayerMatrix8[int(pixel.x + velocity.x) % 8][int(pixel.y + velocity.y) % 8] - 0.5)) * voxelgiStep;
+	// 4x4 Bayer dither of the start offset (period 4, a 4x4 box filter of the
+	// result would cancel it exactly). Indexed by the pixel alone: the velocity
+	// (UV units) only moved the index across cell boundaries from frame to
+	// frame, making the pattern unstable.
+	ivec2 bayer = ivec2(pixel) & 3;
+	vec3 P = origin + specularDir * (BayerMatrix4[bayer.x][bayer.y] - 0.5) * voxelgiStep;
 	vec4 amount = traceCone(voxels, voxelsSDF, P, normal, specularDir, 0, true, roughness, voxelgiStep);
 
 	amount.rgb = max(vec3(0.0), amount.rgb);

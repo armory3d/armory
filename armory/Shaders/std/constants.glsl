@@ -39,4 +39,14 @@ const float BayerMatrix8[8][8] =
 	{ 43.0 / 65.0, 27.0 / 65.0, 39.0 / 65.0, 23.0 / 65.0, 42.0 / 65.0, 26.0 / 65.0, 38.0 / 65.0, 22.0 / 65.0 }
 };
 
+// Period 4: any 4x4 window holds each of the 16 values once, so a 4x4 box
+// filter cancels the dither exactly whatever its alignment
+const float BayerMatrix4[4][4] =
+{
+	{ 0.5 / 16.0, 8.5 / 16.0, 2.5 / 16.0, 10.5 / 16.0 },
+	{ 12.5 / 16.0, 4.5 / 16.0, 14.5 / 16.0, 6.5 / 16.0 },
+	{ 3.5 / 16.0, 11.5 / 16.0, 1.5 / 16.0, 9.5 / 16.0 },
+	{ 15.5 / 16.0, 7.5 / 16.0, 13.5 / 16.0, 5.5 / 16.0 }
+};
+
 #endif
