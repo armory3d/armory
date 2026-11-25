@@ -217,8 +217,9 @@ vec4 traceSpecular(const vec3 origin, const vec3 normal, const sampler3D voxels,
 	// result would cancel it exactly). Indexed by the pixel alone: the velocity
 	// (UV units) only moved the index across cell boundaries from frame to
 	// frame, making the pattern unstable.
-	ivec2 bayer = ivec2(pixel) & 3;
-	vec3 P = origin + specularDir * (BayerMatrix4[bayer.x][bayer.y] - 0.5) * voxelgiStep;
+	ivec2 bayer = ivec2(pixel) & 7;
+	ivec2 veloc = ivec2(velocity + bayer) & 7;
+	vec3 P = origin + specularDir * (BayerMatrix8[veloc.x][veloc.y] - 0.5) * voxelgiStep;
 	vec4 amount = traceCone(voxels, voxelsSDF, P, normal, specularDir, 0, true, roughness, voxelgiStep);
 
 	amount.rgb = max(vec3(0.0), amount.rgb);
