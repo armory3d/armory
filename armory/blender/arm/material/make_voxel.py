@@ -349,6 +349,16 @@ def make_gi(context_id):
         # sun
 
     if '_SinglePoint' in wrd.world_defs:
+        if '_LTC' in wrd.world_defs:
+            frag.add_uniform('vec3 lightArea0', '_lightArea0', included=True)
+            frag.add_uniform('vec3 lightArea1', '_lightArea1', included=True)
+            frag.add_uniform('vec3 lightArea2', '_lightArea2', included=True)
+            frag.add_uniform('vec3 lightArea3', '_lightArea3', included=True)
+            frag.add_uniform('sampler2D sltcMat', '_ltcMat', included=True)
+            frag.add_uniform('sampler2D sltcMag', '_ltcMag', included=True)
+            if is_shadows:
+                frag.add_uniform('mat4 LWVPSpotArray[1]', link='_biasLightViewProjectionMatrixSpot0', included=True)
+                frag.add_uniform('sampler2DShadow shadowMapSpot[1]', included=True)
         frag.add_uniform('vec3 pointPos', link='_pointPosition')
         frag.add_uniform('vec3 pointCol', link='_pointColor')
         if '_Spot' in wrd.world_defs:
@@ -360,7 +370,7 @@ def make_gi(context_id):
             frag.add_uniform('float pointBias', link='_pointShadowsBias')
             if '_Spot' in wrd.world_defs:
                 # Skip world matrix, already in world-space
-                frag.add_uniform('mat4 LWVPSpot[1]', link='_biasLightViewProjectionMatrixSpotArray', included=True)
+                frag.add_uniform('mat4 LWVPSpotArray[1]', link='_biasLightViewProjectionMatrixSpot0', included=True)
                 frag.add_uniform('sampler2DShadow shadowMapSpot[1]', included=True)
                 if is_transparent_shadows:
                     frag.add_uniform('sampler2D shadowMapSpotTransparent[1]', included=True)

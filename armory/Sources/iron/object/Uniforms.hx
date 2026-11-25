@@ -941,7 +941,7 @@ class Uniforms {
 			}
 
 			if (m == null) {
-				#if (!arm_clusters && arm_spot)
+				#if (!arm_clusters && (arm_spot || arm_ltc))
 				if (c.link.startsWith("_biasLightViewProjectionMatrixSpot")) {
 					var light = getSpot(0);
 					if (light != null) {
@@ -1182,7 +1182,7 @@ class Uniforms {
 					}
 				}
 				#end
-				#if arm_spot
+				#if (arm_spot || arm_ltc)
 				case "_biasLightWorldViewProjectionMatrixSpotArray": {
 					#if arm_clusters
 					fa = LightObject.updateLWVPMatrixArray(object, "spot");
@@ -1273,7 +1273,7 @@ class Uniforms {
 		}
 	}
 
-	#if arm_spot
+	#if (arm_spot || arm_ltc)
 	static function getSpot(index: Int): LightObject {
 		var i = 0;
 		for (l in Scene.active.lights) {

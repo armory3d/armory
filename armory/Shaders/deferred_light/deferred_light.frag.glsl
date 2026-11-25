@@ -96,7 +96,7 @@ uniform mat4 invVP;
 	#ifdef _SinglePoint
 	//!uniform sampler2DShadow shadowMapSpot[1];
 	//!uniform sampler2D shadowMapSpotTransparent[1];
-	//!uniform mat4 LWVPSpot[1];
+	//!uniform mat4 LWVPSpotArray[1];
 	#endif
 	#ifdef _Clusters
 	//!uniform sampler2DShadow shadowMapSpot[4];
@@ -518,7 +518,7 @@ void main() {
 
 	#ifdef _Spot
 	#ifdef _SSS
-	if (matid == 2) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpot[0], p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);//TODO implement transparent shadowmaps into the SSSSTransmittance()
+	if (matid == 2) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpotArray[0], p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);//TODO implement transparent shadowmaps into the SSSSTransmittance()
 	#endif
 	#endif
 
