@@ -535,21 +535,6 @@ def make_forward(con_mesh):
     make_forward_base(con_mesh, parse_opacity=parse_opacity)
     frag = con_mesh.frag
 
-    if '_LTC' in wrd.world_defs:
-        frag.add_uniform('vec3 lightArea0', '_lightArea0', included=True)
-        frag.add_uniform('vec3 lightArea1', '_lightArea1', included=True)
-        frag.add_uniform('vec3 lightArea2', '_lightArea2', included=True)
-        frag.add_uniform('vec3 lightArea3', '_lightArea3', included=True)
-        frag.add_uniform('sampler2D sltcMat', '_ltcMat', included=True)
-        frag.add_uniform('sampler2D sltcMag', '_ltcMag', included=True)
-        if '_ShadowMap' in wrd.world_defs:
-            if '_SinglePoint' in wrd.world_defs:
-                frag.add_uniform('mat4 LWVPSpotArray[1]', link='_biasLightViewProjectionMatrixSpot0', included=True)
-                frag.add_uniform('sampler2DShadow shadowMapSpot[1]', included=True)
-            if '_Clusters' in wrd.world_defs:
-                frag.add_uniform('mat4 LWVPSpotArray[4]', link='_biasLightWorldViewProjectionMatrixSpotArray', included=True)
-                frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
-
     if not blend:
         mrt = 0  # mrt: multiple render targets
         if rpdat.rp_ssr:
@@ -656,6 +641,30 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
 
     frag.add_include('std/light.glsl')
     is_shadows = '_ShadowMap' in wrd.world_defs
+
+    if '_LTC' in wrd.world_defs:
+        # Area lights: std/light.glsl takes its LTC path for every forward
+        # shaded surface, including the translucent and refraction contexts
+        # of the deferred renderer. Without these the area polygon, the LTC
+        # tables and the shadow matrix were unset: refractive objects flashed
+        # and received no area light shadows.
+        frag.add_uniform('vec3 lightArea0', '_lightArea0', included=True)
+        frag.add_uniform('vec3 lightArea1', '_lightArea1', included=True)
+        frag.add_uniform('vec3 lightArea2', '_lightArea2', included=True)
+        frag.add_uniform('vec3 lightArea3', '_lightArea3', included=True)
+        frag.add_uniform('sampler2D sltcMat', '_ltcMat', included=True)
+        frag.add_uniform('sampler2D sltcMag', '_ltcMag', included=True)
+        if is_shadows:
+            if '_SinglePoint' in wrd.world_defs:
+                frag.add_uniform('mat4 LWVPSpotArray[1]', link='_biasLightWorldViewProjectionMatrixSpotArray', included=True)
+                frag.add_uniform('sampler2DShadow shadowMapSpot[1]', included=True)
+                if '_ShadowMapTransparent' in wrd.world_defs:
+                    frag.add_uniform('sampler2D shadowMapSpotTransparent[1]', included=True)
+            if '_Clusters' in wrd.world_defs:
+                frag.add_uniform('mat4 LWVPSpotArray[4]', link='_biasLightWorldViewProjectionMatrixSpotArray', included=True)
+                frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
+                if '_ShadowMapTransparent' in wrd.world_defs:
+                    frag.add_uniform('sampler2D shadowMapSpotTransparent[4]', included=True)
     is_transparent_shadows = '_ShadowMapTransparent' in wrd.world_defs
     is_shadows_atlas = '_ShadowMapAtlas' in wrd.world_defs
     is_single_atlas = is_shadows_atlas and '_SingleAtlas' in wrd.world_defs

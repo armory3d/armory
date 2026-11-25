@@ -29,6 +29,11 @@ class LightObject extends Object {
 	public static var cascadeCount = 1;
 	public static var cascadeSplitFactor = 0.8;
 	public static var cascadeBounds = 1.0;
+	static var unscaledLoc = new Vec4();
+	static var unscaledRot = new iron.math.Quat();
+	static var unscaledScale = new Vec4();
+	static var unscaledOne = new Vec4(1.0, 1.0, 1.0);
+	static var unscaledWorld = Mat4.identity();
 	#if arm_csm
 	var cascadeData: Float32Array = null;
 	var cascadeVP: Array<Mat4>;
@@ -132,7 +137,14 @@ class LightObject extends Object {
 			#end
 		}
 		else { // Point, spot, area
-			V.getInverse(transform.world);
+			// The light view must not carry the object scale: a scaled light
+			// (an area light sized with its object scale) shrank the light
+			// view space, so the shadow near/far range and bias, given in
+			// world units, covered a much deeper range and the shadows got
+			// blocky
+			transform.world.decompose(unscaledLoc, unscaledRot, unscaledScale);
+			unscaledWorld.compose(unscaledLoc, unscaledRot, unscaledOne);
+			V.getInverse(unscaledWorld);
 			updateViewFrustum(camera);
 		}
 	}

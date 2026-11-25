@@ -2201,7 +2201,17 @@ Make sure the mesh only has tris/quads.""")
             if light_ref.shadow_soft_size > 0.0:
                 out_light['light_size'] = light_ref.shadow_soft_size * 10
         elif objtype == 'AREA':
-            light_area = light_ref.size * light_ref.size_y
+            # Square and disk shapes ignore size_y in Blender
+            size_y = light_ref.size if light_ref.shape in ('SQUARE', 'DISK') else light_ref.size_y
+            # The area polygon is built with the light's world matrix at
+            # runtime, object scale included (like in Blender): the radiance
+            # must be computed for that scaled area, not the raw size, or a
+            # scaled area light is overlit by the scale squared
+            sx, sy = 1.0, 1.0
+            if light_object is not None:
+                scale = light_object.matrix_world.to_scale()
+                sx, sy = abs(scale[0]), abs(scale[1])
+            light_area = light_ref.size * sx * size_y * sy
             if light_ref.shape in ('DISK', 'ELLIPSE'):
                 light_area *= math.pi / 4.0
 
@@ -2211,7 +2221,7 @@ Make sure the mesh only has tris/quads.""")
                 out_light['strength'] *= 1.0 / (math.pi)
 
             out_light['size'] = light_ref.size
-            out_light['size_y'] = light_ref.size_y
+            out_light['size_y'] = size_y
 
 
         self.output['light_datas'].append(out_light)
