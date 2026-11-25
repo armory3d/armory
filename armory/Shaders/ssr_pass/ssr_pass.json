@@ -50,6 +50,27 @@
 			"texture_params": [],
 			"vertex_shader": "../include/pass_viewray2.vert.glsl",
 			"fragment_shader": "ssr_pass.frag.glsl"
+		},
+		{
+			"name": "ssr_temporal",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "invVP",
+					"link": "_inverseViewProjectionMatrix",
+					"ifndef": ["_Veloc"]
+				},
+				{
+					"name": "prevVP",
+					"link": "_prevViewProjectionMatrix",
+					"ifndef": ["_Veloc"]
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "ssr_temporal.frag.glsl"
 		}
 	]
 }

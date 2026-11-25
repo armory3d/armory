@@ -580,14 +580,18 @@ class RenderPathDeferred {
 				path.createRenderTarget(t);
 
 				// SSR color and confidence, read by the voxel specular resolve
-				var t = new RenderTargetRaw();
-				t.name = "ssr_fallback";
-				t.width = 0;
-				t.height = 0;
-				t.displayp = Inc.getDisplayp();
-				t.format = "RGBA64";
-				t.scale = Inc.getSuperSampling();
-				path.createRenderTarget(t);
+				// (temporally accumulated), its history and the raw SSR result
+				path.loadShader("shader_datas/ssr_pass/ssr_temporal");
+				for (name in ["ssr_fallback", "ssr_hist", "ssr_raw"]) {
+					var t = new RenderTargetRaw();
+					t.name = name;
+					t.width = 0;
+					t.height = 0;
+					t.displayp = Inc.getDisplayp();
+					t.format = "RGBA64";
+					t.scale = Inc.getSuperSampling();
+					path.createRenderTarget(t);
+				}
 			}
 			#end
 		}
@@ -838,8 +842,8 @@ class RenderPathDeferred {
 		{
 			// Screen space reflections of the previous frame, the voxel
 			// specular resolve only traces cones where they found nothing
-			path.setTarget("ssr_fallback");
 			if (armory.data.Config.raw.rp_ssr != false) {
+				path.setTarget("ssr_raw");
 				path.bindTarget("ssr_prev", "tex");
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbuffer0", "gbuffer0");
@@ -848,8 +852,24 @@ class RenderPathDeferred {
 				path.bindTarget("gbuffer2", "sveloc");
 				#end
 				path.drawShader("shader_datas/ssr_pass/ssr_pass");
+
+				// Accumulate over frames: the TAA jitter moves the rays and
+				// flips pixels between SSR and the voxel cones every frame
+				path.setTarget("ssr_fallback");
+				path.bindTarget("ssr_raw", "tex");
+				path.bindTarget("ssr_hist", "hist");
+				path.bindTarget("_main", "gbufferD");
+				#if (rp_gbuffer2 && arm_veloc)
+				path.bindTarget("gbuffer2", "sveloc");
+				#end
+				path.drawShader("shader_datas/ssr_pass/ssr_temporal");
+
+				path.setTarget("ssr_hist");
+				path.bindTarget("ssr_fallback", "tex");
+				path.drawShader("shader_datas/copy_pass/copy_pass");
 			}
 			else {
+				path.setTarget("ssr_fallback");
 				path.clearTarget(0x00000000);
 			}
 		}
