@@ -262,6 +262,7 @@ class ARM_PT_DataPropsPanel(bpy.types.Panel):
         wrd = bpy.data.worlds['Arm']
         if obj.type == 'CAMERA':
             layout.prop(obj.data, 'arm_frustum_culling')
+            layout.prop(obj.data, 'arm_overlay_camera')
         elif obj.type == 'MESH' or obj.type == 'FONT' or obj.type == 'META':
             layout.prop(obj.data, 'arm_dynamic_usage')
             layout.operator("arm.invalidate_cache")

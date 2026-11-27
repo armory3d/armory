@@ -19,10 +19,11 @@ class RaycastClosestObjectNode extends LogicNode {
 		var inputX: Float = inputs[2].get();
 		var inputY: Float = inputs[3].get();
 		var camera: CameraObject = inputs[4].get();
+		// Older node trees may not have the `Exact Mesh` socket yet
+		var exactMesh: Bool = inputs.length > 5 && inputs[5] != null && inputs[5].get() == true;
 
-		o = RayCaster.closestBoxIntersectObject(objects, inputX, inputY, camera);
-		if (o != null)
-			v = RayCaster.boxIntersectObject(o, inputX, inputY, camera);
+		o = RayCaster.closestObbIntersectObject(objects, inputX, inputY, camera, exactMesh);
+		v = o != null ? RayCaster.lastHit : null;
 
 		if (o == null) runOutput(2); else runOutput(1);
 		

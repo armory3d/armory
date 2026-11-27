@@ -940,7 +940,7 @@ class ArmoryExporter:
                             continue
                         if child.parent is not None and child.parent.name in collection.objects:
                             continue
-                        if child.type == 'CAMERA':
+                        if child.type == 'CAMERA' and not getattr(child.data, 'arm_overlay_camera', False):
                             self.output['camera_ref'] = arm.utils.asset_name(child)
                             self.has_spawning_camera = True
                         self.process_bobject(child)
@@ -2293,7 +2293,7 @@ Make sure the mesh only has tris/quads.""")
                     self.process_bobject(bobject)
                     self.export_object(bobject, allow_inline=False)
 
-                if bobject.type == 'CAMERA':
+                if bobject.type == 'CAMERA' and not getattr(bobject.data, 'arm_overlay_camera', False):
                     self.output['camera_ref'] = asset_name
                     self.has_spawning_camera = True
 
@@ -2366,6 +2366,9 @@ Make sure the mesh only has tris/quads.""")
 
         o['frustum_culling'] = objref.arm_frustum_culling
         o['clear_color'] = self.get_camera_clear_color()
+        if getattr(objref, 'arm_overlay_camera', False):
+            o['overlay'] = True
+            assets.add_khafile_def('rp_overlay_cameras')
 
         self.output['camera_datas'].append(o)
 
@@ -2941,7 +2944,7 @@ Make sure the mesh only has tris/quads.""")
         if not ArmoryExporter.option_mesh_only:
             # The scene camera may not be exported, e.g. a leftover camera in a linked scene that
             # spawns its camera from a collection instance, keep the exported camera in that case
-            if self.scene.camera is not None and self.scene.camera in self.bobject_array:
+            if self.scene.camera is not None and self.scene.camera in self.bobject_array and not getattr(self.scene.camera.data, 'arm_overlay_camera', False):
                 self.output['camera_ref'] = arm.utils.asset_name(self.scene.camera)
             elif 'camera_ref' not in self.output:
                 if self.scene.name == arm.utils.get_project_scene_name():

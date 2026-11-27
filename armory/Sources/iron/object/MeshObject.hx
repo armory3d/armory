@@ -233,7 +233,13 @@ class MeshObject extends Object {
 			tilesheet.update();
 		}
 
-		if (cameraList != null && cameraList.indexOf(Scene.active.camera.name) < 0) return;
+		var cam = Scene.active.camera;
+		if (cameraList != null) {
+			if (cameraList.indexOf(cam.name) < 0) return;
+		}
+		else if (cam != null && cam.data.raw.overlay == true) {
+			return;
+		}
 
 		#if arm_particles
 		if (raw != null && raw.is_particle && particleOwner == null) return; // Instancing not yet set-up by particle system owner

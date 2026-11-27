@@ -707,7 +707,31 @@ class RenderPathForward {
 			#end
 		}
 		#end
+
+		#if rp_overlay_cameras
+		drawOverlayCameras();
+		#end
 	}
+
+	#if rp_overlay_cameras
+	@:access(iron.RenderPath)
+	static function drawOverlayCameras() {
+		if (path.isProbe) return;
+		var mainCam = Scene.active.camera;
+		for (cam in Scene.active.cameras) {
+			if (cam == mainCam || cam.data.raw.overlay != true || !cam.visible) continue;
+			Scene.active.camera = cam;
+			cam.buildProjection();
+			cam.buildMatrix();
+			path.meshesSorted = false;
+			path.setTarget("");
+			path.clearTarget(null, 1.0);
+			path.drawMeshes("overlay");
+		}
+		Scene.active.camera = mainCam;
+		path.meshesSorted = false;
+	}
+	#end
 
 	public static function setupDepthTexture() {
 		// When render to texture is off, lbuffer0 does not exist, so for
