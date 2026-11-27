@@ -46,9 +46,9 @@ class KinematicCharacterController extends Trait {
 
 	static inline var CF_CHARACTER_OBJECT = 16;
 
-	// `interpolate` is exported for Oimo's controller; accepted here so Bullet builds don't break, not implemented.
-	public function new(mass = 1.0, shape = ControllerShape.Capsule, jumpSpeed = 8.0, friction = 0.5, restitution = 0.0,
-						collisionMargin = 0.0, animated = false, group = 1, mask = 1, interpolate = false) {
+	// `flags.interpolate` is exported for Oimo's controller; not implemented here.
+	public function new(shape = ControllerShape.Capsule, mass = 1.0, friction = 0.5, restitution = 0.0, group = 1, mask = 1,
+						params: CharacterControllerParams = null, flags: CharacterControllerFlags = null) {
 		super();
 
 		if (nullvec) {
@@ -58,15 +58,18 @@ class KinematicCharacterController extends Trait {
 			trans1 = new bullet.Bt.Transform();
 		}
 
-		this.mass = mass;
-		this.jumpSpeed = jumpSpeed;
+		if (params == null) params = { jumpSpeed: 8.0, collisionMargin: 0.0 };
+		if (flags == null) flags = { animated: false, interpolate: false };
+
 		this.shape = shape;
+		this.mass = mass;
 		this.friction = friction;
 		this.restitution = restitution;
-		this.collisionMargin = collisionMargin;
-		this.animated = animated;
 		this.group = group;
 		this.mask = mask;
+		this.jumpSpeed = params.jumpSpeed;
+		this.collisionMargin = params.collisionMargin;
+		this.animated = flags.animated;
 
 		notifyOnAdd(init);
 		notifyOnLateUpdate(lateUpdate);
@@ -376,6 +379,16 @@ enum abstract ControllerActivationState(Int) from Int to Int {
 	var Active = 1;
 	var NoDeactivation = 4;
 	var NoSimulation = 5;
+}
+
+typedef CharacterControllerParams = {
+	var jumpSpeed: Float;
+	var collisionMargin: Float;
+}
+
+typedef CharacterControllerFlags = {
+	var animated: Bool;
+	var interpolate: Bool;
 }
 
 #end
