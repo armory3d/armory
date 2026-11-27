@@ -3174,7 +3174,6 @@ Make sure the mesh only has tris/quads.""")
             shape = 5
 
         collision_margin = rb.collision_margin if rb.use_margin else 0.0
-        animated = 'true' if rb.kinematic else 'false'
 
         col_group = ''
         for b in rb.collision_collections:
@@ -3186,12 +3185,21 @@ Make sure the mesh only has tris/quads.""")
         trait = {}
         trait['type'] = 'Script'
         trait['class_name'] = 'armory.trait.physics.' + phys_pkg + '.KinematicCharacterController'
-        interpolate = 'true' if bobject.arm_rb_interpolate else 'false'
-        # Constructor: mass, shape, jumpSpeed, friction, restitution, collisionMargin, animated, group, mask, interpolate
+        # HL/C can't create a trait dynamically with more than 8 constructor arguments, so extras go in params/flags
         trait['parameters'] = [
-            str(rb.mass), str(shape), '8.0', str(rb.friction), str(rb.restitution),
-            str(collision_margin), animated, str(int(col_group, 2)), str(int(col_mask, 2)), interpolate
+            str(shape), str(rb.mass), str(rb.friction), str(rb.restitution),
+            str(int(col_group, 2)), str(int(col_mask, 2))
         ]
+        character_params = {
+            'jumpSpeed': 8.0,
+            'collisionMargin': collision_margin
+        }
+        character_flags = {
+            'animated': rb.kinematic,
+            'interpolate': bobject.arm_rb_interpolate
+        }
+        trait['parameters'].append(arm.utils.get_haxe_json_string(character_params))
+        trait['parameters'].append(arm.utils.get_haxe_json_string(character_flags))
         o['traits'].append(trait)
 
     def post_export_object(self, bobject: bpy.types.Object, o, type):
