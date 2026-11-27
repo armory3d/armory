@@ -152,7 +152,7 @@ class InputMapKey {
 		} else {
 			v = 0.0;
 		}
-		
+
 		return v;
 	}
 }
@@ -210,10 +210,10 @@ class GamepadKey extends InputMapKey {
 
 	public override function value(): FastFloat {
 		return switch(key) {
-			case "ls movement x": evalDeadzone(g.leftStick.movementX);
-			case "ls movement y": evalDeadzone(g.leftStick.movementY);
-			case "rs movement x": evalDeadzone(g.rightStick.movementX);
-			case "rs movement y": evalDeadzone(g.rightStick.movementY);
+			case "ls movement x": evalDeadzone(g.leftStick.x);
+			case "ls movement y": evalDeadzone(g.leftStick.y);
+			case "rs movement x": evalDeadzone(g.rightStick.x);
+			case "rs movement y": evalDeadzone(g.rightStick.y);
 			case "lt pressure": evalDeadzone(evalPressure(g.down("l2")));
 			case "rt pressure": evalDeadzone(evalPressure(g.down("r2")));
 			default: evalDeadzone(g.down(key));

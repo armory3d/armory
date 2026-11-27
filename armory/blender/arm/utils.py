@@ -191,7 +191,33 @@ def get_gapi():
         return getattr(item, target_to_gapi(item.arm_project_target))
     if wrd.arm_runtime == 'Browser':
         return 'webgl'
-    return 'direct3d11' if get_os() == 'win' else 'opengl'
+    if get_os() == 'win':
+        return 'direct3d11'
+    if get_os() == 'linux' and krom_uses_vulkan():
+        return 'vulkan'
+    return 'opengl'
+
+
+_krom_vulkan_cache: Dict[str, Tuple[float, bool]] = {}
+
+def krom_uses_vulkan() -> bool:
+    """True if the installed Linux Krom binary links libvulkan (a Vulkan build of armorcore).
+    Play then compiles shaders to SPIR-V instead of GLSL. Cached per binary mtime."""
+    _, krom_path = krom_paths()
+    try:
+        mtime = os.path.getmtime(krom_path)
+    except OSError:
+        return False
+    cached = _krom_vulkan_cache.get(krom_path)
+    if cached is not None and cached[0] == mtime:
+        return cached[1]
+    try:
+        with open(krom_path, 'rb') as f:
+            uses_vulkan = b'libvulkan.so' in f.read()
+    except OSError:
+        uses_vulkan = False
+    _krom_vulkan_cache[krom_path] = (mtime, uses_vulkan)
+    return uses_vulkan
 
 
 def is_gapi_gl_es() -> bool:
@@ -212,6 +238,32 @@ def is_gapi_gl_es() -> bool:
 
     else:
         return wrd.arm_runtime == 'Browser'
+
+
+UPSCALE_RATIOS = {'Native': 1.0, 'Quality': 0.667, 'Balanced': 0.58, 'Performance': 0.5, 'UltraPerformance': 0.333}
+# Quality index passed to Krom.dlss* (0 = DLAA ... 4 = Ultra Performance), same ratios as above
+UPSCALE_QUALITY = {'Native': 0, 'Quality': 1, 'Balanced': 2, 'Performance': 3, 'UltraPerformance': 4}
+
+
+def dlss_libraries() -> List[str]:
+    """DLSS model libraries of the SDK cloned into armorcore/dlss (empty when absent)."""
+    rel = os.path.join(get_sdk_path(), 'armorcore', 'dlss', 'lib', 'Linux_x86_64', 'rel')
+    return sorted(glob.glob(os.path.join(rel, 'libnvidia-ngx-dlss.so.*')))
+
+
+def copy_dlss_libraries(directory: str):
+    """NGX loads the DLSS model library from the Krom executable's directory."""
+    for lib in dlss_libraries():
+        dst = os.path.join(directory, os.path.basename(lib))
+        if not os.path.isfile(dst) or os.path.getsize(dst) != os.path.getsize(lib):
+            shutil.copy(lib, dst)
+
+
+def get_upscale_ratio(rpdat) -> float:
+    """Render resolution ratio of the temporal upscaler, 0 when upscaling is off or unsupported."""
+    if rpdat.rp_upscaling == 'Off' or rpdat.rp_antialiasing != 'TAA' or rpdat.rp_renderer != 'Deferred' or not rpdat.rp_render_to_texture:
+        return 0.0
+    return UPSCALE_RATIOS[rpdat.rp_upscaling]
 
 
 def get_rp() -> arm.props_renderpath.ArmRPListItem:
@@ -419,7 +471,7 @@ def fetch_script_props(filename: str):
 
         # Property type is annotated
         if p_type is not None:
-            if p_type.startswith("iron.object.") or p_type == "iron.data.SceneFormat.TSceneFormat":
+            if p_type.startswith("iron.object."):
                 p_type = p_type[12:]
             elif p_type.startswith("iron.math."):
                 p_type = p_type[10:]
@@ -497,7 +549,7 @@ def get_type_default_value(prop_type: str):
     if prop_type == "Float":
         return 0.0
     if prop_type == "String" or prop_type in (
-            "Object", "CameraObject", "LightObject", "MeshObject", "SpeakerObject", "TSceneFormat"):
+            "Object", "CameraObject", "LightObject", "MeshObject", "SpeakerObject"):
         return ""
     if prop_type == "Bool":
         return False
@@ -803,7 +855,7 @@ def check_blender_version(op: bpy.types.Operator):
     """Check whether the Blender version is supported by Armory,
     if not, report in UI.
     """
-    if bpy.app.version[:2] not in [(4, 5), (4, 2), (3, 6), (3, 3)]:
+    if bpy.app.version[:2] not in [(5, 2), (4, 5), (4, 2), (3, 6), (3, 3)]:
         op.report({'INFO'}, 'INFO: For Armory to work correctly use a Blender LTS version.')
 
 

@@ -18,9 +18,11 @@ import webbrowser
 import bpy
 
 from arm import assets
+from arm.exporter import BuildExportCache
 from arm.exporter import ArmoryExporter
 import arm.lib.make_datas
 import arm.lib.server
+import arm.linked_utils as linked_utils
 import arm.live_patch as live_patch
 import arm.log as log
 import arm.make_logic as make_logic
@@ -212,6 +214,21 @@ def export_data(fp, sdk_path):
         if os.path.isdir(build_dir + '/compiled/Shaders'):
             shutil.rmtree(build_dir + '/compiled/Shaders', onerror=remove_readonly)
 
+    # Shader binaries differ per graphics API (GLSL vs SPIR-V); drop cached ones when it changes
+    gapi_stamp = os.path.join(build_dir, 'gapi.txt')
+    current_gapi = arm.utils.get_gapi()
+    previous_gapi = None
+    if os.path.isfile(gapi_stamp):
+        with open(gapi_stamp, 'r') as f:
+            previous_gapi = f.read().strip()
+    if previous_gapi != current_gapi:
+        for d in ('krom-resources', 'debug/krom-resources', 'linux-resources', 'compiled/Shaders'):
+            if os.path.isdir(os.path.join(build_dir, d)):
+                shutil.rmtree(os.path.join(build_dir, d), onerror=remove_readonly)
+        os.makedirs(build_dir, exist_ok=True)
+        with open(gapi_stamp, 'w') as f:
+            f.write(current_gapi)
+
     raw_shaders_path = sdk_path + '/armory/Shaders/'
     assets_path = sdk_path + '/armory/Assets/'
     export_physics = bpy.data.worlds['Arm'].arm_physics != 'Disabled'
@@ -250,19 +267,20 @@ def export_data(fp, sdk_path):
             continue
         for o in scene.collection.all_objects:
             if o.type in ('MESH', 'EMPTY'):
-                if o.name not in export_coll_names:
+                if o.name not in export_coll_names or o.library:
                     export_coll.objects.link(o)
                     export_coll_names.add(o.name)
     depsgraph = bpy.context.evaluated_depsgraph_get()
     bpy.data.collections.remove(export_coll)  # Destroy the "zoo" collection
+    build_cache = BuildExportCache()
 
     for scene in bpy.data.scenes:
         if scene.arm_export:
             # Reset shader comparison arrays to prevent cross-scene shader merging
             assets.reset_shader_cons()
             ext = '.lz4' if ArmoryExporter.compress_enabled else '.arm'
-            asset_path = build_dir + '/compiled/Assets/' + arm.utils.safestr(scene.name + "_" + os.path.basename(scene.library.filepath).replace(".blend", "") if scene.library else scene.name) + ext
-            ArmoryExporter.export_scene(bpy.context, asset_path, scene=scene, depsgraph=depsgraph)
+            asset_path = build_dir + '/compiled/Assets/' + linked_utils.get_scene_name(scene) + ext
+            ArmoryExporter.export_scene(bpy.context, asset_path, scene=scene, depsgraph=depsgraph, build_cache=build_cache)
             if ArmoryExporter.export_physics:
                 physics_found = True
             if ArmoryExporter.export_navigation:
@@ -558,7 +576,17 @@ def build(target, is_play=False, is_publish=False, is_export=False):
                 f.write(text.as_string())
 
     # Export data
-    export_data(fp, sdk_path)
+    # Disable shader cache invalidation while exporting: the exporter sets
+    # render path properties (e.g. arm_skin_max_bones via auto-bones) whose
+    # update callbacks would otherwise wipe compiled/Shaders mid-build,
+    # deleting freshly generated shaders such as the world shaders. The UI
+    # operators already guard this, but headless/direct build() callers don't.
+    prev_invalidate_enabled = assets.invalidate_enabled
+    assets.invalidate_enabled = False
+    try:
+        export_data(fp, sdk_path)
+    finally:
+        assets.invalidate_enabled = prev_invalidate_enabled
 
     if state.target == 'html5':
         w, h = arm.utils.get_render_resolution(arm.utils.get_active_scene())
@@ -636,11 +664,21 @@ def get_khajs_path(target):
         return arm.utils.build_dir() + '/debug/krom/krom.js'
     return arm.utils.build_dir() + '/debug/html5/kha.js'
 
+def uses_dlss() -> bool:
+    rpdat = arm.utils.get_rp()
+    return (arm.utils.get_gapi() == 'vulkan' and arm.utils.get_upscale_ratio(rpdat) > 0.0
+            and rpdat.arm_upscale_method == 'DLSS' and len(arm.utils.dlss_libraries()) > 0)
+
+
 def play():
     global scripts_mtime
     wrd = bpy.data.worlds['Arm']
 
     build(target=runtime_to_target(), is_play=True)
+
+    # DLSS on Vulkan Krom: NGX loads the model library from the Krom executable's directory
+    if state.target == 'krom' and uses_dlss():
+        arm.utils.copy_dlss_libraries(arm.utils.krom_paths()[0])
 
     khajs_path = get_khajs_path(state.target)
     if not wrd.arm_cache_build or \
@@ -790,6 +828,9 @@ def build_success():
             elif state.target == 'krom-linux':
                 krom_location = sdk_path + '/Krom/Krom'
                 shutil.copy(krom_location, files_path)
+                if uses_dlss():
+                    # Redistributing the DLSS library requires NVIDIA's attribution in the game's credits/docs
+                    arm.utils.copy_dlss_libraries(files_path)
                 krom_exe = arm.utils.safestr(wrd.arm_project_name)
                 os.rename(files_path + '/Krom', files_path + '/' + krom_exe)
                 krom_exe = './' + krom_exe

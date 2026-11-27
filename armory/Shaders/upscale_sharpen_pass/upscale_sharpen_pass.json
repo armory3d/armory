@@ -1,0 +1,14 @@
+{
+	"contexts": [
+		{
+			"name": "upscale_sharpen_pass",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "upscale_sharpen_pass.frag.glsl"
+		}
+	]
+}

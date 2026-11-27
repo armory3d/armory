@@ -29,6 +29,11 @@ class LightObject extends Object {
 	public static var cascadeCount = 1;
 	public static var cascadeSplitFactor = 0.8;
 	public static var cascadeBounds = 1.0;
+	static var unscaledLoc = new Vec4();
+	static var unscaledRot = new iron.math.Quat();
+	static var unscaledScale = new Vec4();
+	static var unscaledOne = new Vec4(1.0, 1.0, 1.0);
+	static var unscaledWorld = Mat4.identity();
 	#if arm_csm
 	var cascadeData: Float32Array = null;
 	var cascadeVP: Array<Mat4>;
@@ -132,7 +137,14 @@ class LightObject extends Object {
 			#end
 		}
 		else { // Point, spot, area
-			V.getInverse(transform.world);
+			// The light view must not carry the object scale: a scaled light
+			// (an area light sized with its object scale) shrank the light
+			// view space, so the shadow near/far range and bias, given in
+			// world units, covered a much deeper range and the shadows got
+			// blocky
+			transform.world.decompose(unscaledLoc, unscaledRot, unscaledScale);
+			unscaledWorld.compose(unscaledLoc, unscaledRot, unscaledOne);
+			V.getInverse(unscaledWorld);
 			updateViewFrustum(camera);
 		}
 	}
@@ -298,7 +310,7 @@ class LightObject extends Object {
 	public function setCubeFace(face: Int, camera: CameraObject) {
 		// Set matrix to match cubemap face
 		eye.set(transform.worldx(), transform.worldy(), transform.worldz());
-		#if (!kha_opengl && !kha_webgl && !arm_shadowmap_atlas)
+		#if (!kha_opengl && !kha_vulkan && !kha_webgl && !arm_shadowmap_atlas)
 		var flip = (face == 2 || face == 3) ? true : false; // Flip +Y, -Y
 		#else
 		var flip = false;
@@ -333,7 +345,7 @@ class LightObject extends Object {
 			helpMat._30 = this.tileOffsetX[i];
 			helpMat._31 = this.tileOffsetY[i];
 			bias.multmat(helpMat);
-			#if (!kha_opengl)
+			#if (!kha_opengl && !kha_vulkan)
 			helpMat.setIdentity();
 			helpMat._11 = -1.0;
 			helpMat._31 = 1.0;
@@ -366,8 +378,6 @@ class LightObject extends Object {
 	}
 	#end // arm_csm
 
-	#if arm_clusters
-
 	// Centralize discarding conditions when iterating over lights
 	// Important to avoid issues later with "misaligned" data in uniforms (lightsArray, clusterData, LWVPSpotArray)
 	public inline static function discardLight(light: LightObject) {
@@ -377,7 +387,8 @@ class LightObject extends Object {
 	public inline static function discardLightCulled(light: LightObject) {
 		return #if arm_shadowmap_atlas light.culledLight || #end discardLight(light);
 	}
-
+	
+	#if arm_clusters
 	#if (arm_shadowmap_atlas && arm_shadowmap_atlas_lod)
 	// Arbitrary function to map from [0-16] to [1.0-0.0]
 	public inline static function zToShadowMapScale(z: Int, max: Int): Float {
@@ -418,7 +429,8 @@ class LightObject extends Object {
 
 		#if arm_spot // Point lamps first
 		lights.sort(function(a, b): Int {
-			return a.data.raw.type >= b.data.raw.type ? 1 : -1;
+			if (a.data.raw.type == b.data.raw.type) return 0;
+			return a.data.raw.type > b.data.raw.type ? 1 : -1;
 		});
 		#end
 
@@ -490,6 +502,13 @@ class LightObject extends Object {
 				continue;
 			}
 			#end
+			if (minX < 0) minX = 0;
+			if (maxX >= slicesX) maxX = slicesX - 1;
+			if (minY < 0) minY = 0;
+			if (maxY >= slicesY) maxY = slicesY - 1;
+			if (minZ < 0) minZ = 0;
+			if (maxZ >= slicesZ) maxZ = slicesZ - 1;
+
 			// Mark affected clusters
 			for (z in minZ...maxZ + 1) {
 				for (y in minY...maxY + 1) {
@@ -604,7 +623,7 @@ class LightObject extends Object {
 				helpMat._30 = light.tileOffsetX[0];
 				helpMat._31 = light.tileOffsetY[0];
 				m.multmat(helpMat);
-				#if (!kha_opengl)
+				#if (!kha_opengl && !kha_vulkan)
 				helpMat.setIdentity();
 				helpMat._11 = -1.0;
 				helpMat._31 = 1.0;

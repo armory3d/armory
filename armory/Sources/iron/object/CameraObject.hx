@@ -15,6 +15,11 @@ class CameraObject extends Object {
 	public var P: Mat4;
 	#if arm_taa
 	public var noJitterP = Mat4.identity();
+	// Projection jitter of the current frame in render pixels, the scene is shifted by it
+	public var jitterX = 0.0;
+	public var jitterY = 0.0;
+	// Render resolution relative to the window, set by the render path when upscaling
+	public static var renderScale = 1.0;
 	var frame = 0;
 	#end
 	public var V: Mat4;
@@ -93,6 +98,35 @@ class CameraObject extends Object {
 	}
 
 	#if arm_taa
+	#if rp_upscale
+	function projectionJitter() {
+		var w = Std.int(iron.App.w() * renderScale);
+		var h = Std.int(iron.App.h() * renderScale);
+		P.setFrom(noJitterP);
+		if (w <= 0 || h <= 0) return;
+		// Halton(2, 3) sequence, long enough to cover every display pixel inside a render pixel
+		var phases = Std.int(Math.min(64, Math.max(8, Math.ceil(8.0 / (renderScale * renderScale)))));
+		var i = (frame % phases) + 1;
+		jitterX = halton(i, 2) - 0.5;
+		jitterY = halton(i, 3) - 0.5;
+		// Shift the scene by the jitter: ndc.x moves by -_20 for perspective projection
+		P._20 -= 2.0 * jitterX / w;
+		P._21 -= 2.0 * jitterY / h;
+		frame++;
+	}
+
+	static inline function halton(index: Int, base: Int): Float {
+		var f = 1.0;
+		var r = 0.0;
+		var i = index;
+		while (i > 0) {
+			f /= base;
+			r += f * (i % base);
+			i = Std.int(i / base);
+		}
+		return r;
+	}
+	#else
 	function projectionJitter() {
 		var w = RenderPath.active.currentW;
 		var h = RenderPath.active.currentH;
@@ -111,6 +145,7 @@ class CameraObject extends Object {
 		P._21 += y / h;
 		frame++;
 	}
+	#end
 	#end
 
 	public function buildMatrix() {

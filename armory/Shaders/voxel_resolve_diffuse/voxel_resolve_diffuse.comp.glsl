@@ -37,7 +37,10 @@ uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform layout(rgba8) image2D voxels_diffuse;
 
+#ifndef _ConetraceClipmaps // declared by std/conetrace.glsl
+#define _ConetraceClipmaps
 uniform float clipmaps[voxelgiClipmapCount * 10];
+#endif
 uniform mat4 InvVP;
 uniform vec3 eye;
 uniform vec2 postprocess_resolution;
@@ -104,7 +107,7 @@ void main() {
 #endif
 
 #ifdef _Brdf
-	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
+	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(clamp(vec2(dotNV, 1.0 - roughness) * 256.0, 0.0, 255.0)), 0).xy;
 	vec3 F = f0 * envBRDF.x + envBRDF.y;
 #else
 	vec3 F = f0;

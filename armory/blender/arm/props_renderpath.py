@@ -140,7 +140,7 @@ def update_preset(self, context):
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
-        rpdat.rp_voxels = 'Voxel GI'
+        rpdat.rp_voxels = 'Off'
         rpdat.rp_voxelgi_resolution = '64'
         rpdat.arm_voxelgi_size = 0.125
         rpdat.arm_voxelgi_revoxelize = False
@@ -385,9 +385,24 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('SMAA', 'SMAA', 'SMAA'),
                ('TAA', 'TAA', 'TAA')],
         name="Anti Aliasing", description="Post-process anti aliasing technique", default='SMAA', update=update_renderpath)
+    rp_upscaling: EnumProperty(
+        items=[('Off', 'Off', 'Render at display resolution'),
+               ('Native', 'Native AA', 'Temporal upscaler at display resolution, used as anti aliasing only (100%)'),
+               ('Quality', 'Quality', 'Render at 67% of the display resolution and upscale temporally'),
+               ('Balanced', 'Balanced', 'Render at 58% of the display resolution and upscale temporally'),
+               ('Performance', 'Performance', 'Render at 50% of the display resolution and upscale temporally'),
+               ('UltraPerformance', 'Ultra Performance', 'Render at 33% of the display resolution and upscale temporally')],
+        name="Upscaling", description="Temporal upscaling: render at a lower resolution and rebuild the display resolution image from jittered frames. Requires TAA and the Deferred renderer", default='Off', update=update_renderpath)
+    arm_upscale_method: EnumProperty(
+        items=[('TAAU', 'TAAU', 'Built-in temporal upscaler, works on every graphics API'),
+               ('DLSS', 'DLSS', 'NVIDIA DLSS Super Resolution: Vulkan Krom on NVIDIA RTX GPUs, falls back to TAAU elsewhere')],
+        name="Upscaler", description="Upscaler reconstructing the display resolution image", default='TAAU', update=update_renderpath)
+    arm_upscale_sharpness: FloatProperty(name="Sharpness", description="Contrast adaptive sharpening applied after upscaling", default=0.3, min=0.0, max=1.0, update=assets.invalidate_compiled_data)
     rp_volumetriclight: BoolProperty(name="Volumetric Light", description="Use volumetric lighting", default=False, update=update_renderpath)
     rp_ssr: BoolProperty(name="SSR", description="Screen space reflections", default=False, update=update_renderpath)
     rp_ss_refraction: BoolProperty(name="SSRefraction", description="Screen space refractions", default=False, update=update_renderpath)
+    rp_ss_refraction_nested: BoolProperty(name="Nested Refraction", description="Also refract the refractive surfaces seen through another one, like a liquid in a glass. Costs an extra mesh pass and refraction pass", default=True, update=update_renderpath)
+    rp_ssr_voxel_fallback: BoolProperty(name="Voxel Fallback", description="Trace voxel reflections only where SSR misses or the surface is too rough, instead of adding SSR over them. SSR then uses the previous frame. Deferred renderer with Voxel GI only", default=True, update=update_renderpath)
     rp_ssgi: EnumProperty(
         items=[('Off', 'No AO', 'Off'),
                ('SSAO', 'SSAO', 'Screen space ambient occlusion'),
@@ -583,6 +598,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_ss_refraction_search_dist: FloatProperty(name="Search", default=5.0, update=assets.invalidate_shader_cache)
     arm_ss_refraction_falloff_exp: FloatProperty(name="Falloff", default=1.0, update=assets.invalidate_shader_cache)
     arm_ss_refraction_jitter: FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
+    arm_ss_refraction_absorption: FloatProperty(name="Absorption", description="Density of the Beer-Lambert absorption inside refractive media, the material base color is transmitted at one unit of thickness", default=1.0, min=0.0, update=assets.invalidate_shader_cache)
     arm_volumetric_light_air_turbidity: FloatProperty(name="Air Turbidity", default=1.0, update=assets.invalidate_shader_cache)
     arm_volumetric_light_air_color: FloatVectorProperty(name="Air Color", size=3, default=[1.0, 1.0, 1.0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
     arm_volumetric_light_steps: IntProperty(name="Steps", default=20, min=0, update=assets.invalidate_shader_cache)

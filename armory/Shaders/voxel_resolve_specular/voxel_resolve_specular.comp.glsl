@@ -37,11 +37,17 @@ uniform sampler3D voxels;
 uniform sampler3D voxelsSDF;
 uniform layout(rgba8) image2D voxels_specular;
 
+#ifndef _ConetraceClipmaps // declared by std/conetrace.glsl
+#define _ConetraceClipmaps
 uniform float clipmaps[voxelgiClipmapCount * 10];
+#endif
 uniform mat4 InvVP;
 uniform vec3 eye;
 uniform vec2 postprocess_resolution;
 uniform sampler2D sveloc;
+#ifdef _SSRVoxelFallback
+uniform sampler2D ssrFallback; // SSR color, confidence in alpha
+#endif
 
 void main() {
 	const vec2 pixel = gl_GlobalInvocationID.xy;
@@ -66,9 +72,37 @@ void main() {
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
 	n = normalize(n);
 
+	#ifdef _SSRVoxelFallback
+	// Screen space reflection first, cones only where it found nothing.
+	// Hits and misses are all or nothing per pixel, gather a 5x5 neighborhood
+	// so the blend into the cones is gradual and isolated misses do not show
+	// up as voxel colored speckles. The cone is skipped only when the whole
+	// neighborhood is confident.
+	vec2 texel = 1.0 / vec2(textureSize(ssrFallback, 0));
+	vec3 ssrSum = vec3(0.0);
+	float confSum = 0.0;
+	for (int j = -2; j <= 2; j++) {
+		for (int i = -2; i <= 2; i++) {
+			vec4 s = textureLod(ssrFallback, uv + vec2(i, j) * texel, 0.0);
+			ssrSum += s.rgb * s.a;
+			confSum += s.a;
+		}
+	}
+	float conf = confSum / 25.0;
+	vec3 ssrCol = ssrSum / max(confSum, 1e-4);
+	if (conf >= 0.99) {
+		imageStore(voxels_specular, ivec2(pixel), vec4(ssrCol, 1.0));
+		return;
+	}
+	#endif
+
 	vec2 velocity = -textureLod(sveloc, uv, 0.0).rg;
 
 	vec3 color = traceSpecular(P, n, voxels, voxelsSDF, normalize(eye - P), g0.z * g0.z, clipmaps, pixel, velocity).rgb;
+
+	#ifdef _SSRVoxelFallback
+	color = mix(color, ssrCol, conf);
+	#endif
 
 	imageStore(voxels_specular, ivec2(pixel), vec4(color, 1.0));
 }

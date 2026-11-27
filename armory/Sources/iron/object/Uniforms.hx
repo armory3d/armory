@@ -22,7 +22,7 @@ using StringTools;
 // Structure for setting shader uniforms
 class Uniforms {
 
-	#if (kha_opengl || (kha_webgl && !arm_shadowmap_atlas) || (!kha_webgl && arm_shadowmap_atlas))
+	#if (kha_opengl || kha_vulkan || (kha_webgl && !arm_shadowmap_atlas) || (!kha_webgl && arm_shadowmap_atlas))
 	public static var biasMat = new Mat4(
 		0.5, 0.0, 0.0, 0.5,
 		0.0, 0.5, 0.0, 0.5,
@@ -193,7 +193,7 @@ class Uniforms {
 						}
 						else if (rt.raw.name.startsWith("voxels"))
 						{
-							g.setTexture3DParameters(context.textureUnits[j], TextureAddressing.Clamp, TextureAddressing.Clamp, TextureAddressing.Clamp, TextureFilter.PointFilter, TextureFilter.LinearFilter, MipMapFilter.NoMipFilter);
+							g.setTexture3DParameters(context.textureUnits[j], TextureAddressing.Clamp, TextureAddressing.Clamp, TextureAddressing.Clamp, TextureFilter.LinearFilter, TextureFilter.LinearFilter, MipMapFilter.NoMipFilter);
 						}
 						else
 						{
@@ -383,6 +383,13 @@ class Uniforms {
 					var sun = RenderPath.active.sun;
 					if (sun != null) {
 						helpVec = sun.look().normalize();
+						v = helpVec;
+					}
+					else {
+						// No sun lamp: a zero vector makes shaders normalize() to NaN, which GL drivers
+						// happen to clamp to "sun below the horizon" while Vulkan propagates (black sky).
+						// Use that direction explicitly.
+						helpVec.set(0, 0, -1);
 						v = helpVec;
 					}
 				}
@@ -589,6 +596,16 @@ class Uniforms {
 					v.x = App.w();
 					v.y = App.h();
 				}
+				case "_cameraJitter": {
+					v = helpVec;
+					#if arm_taa
+					v.x = camera.jitterX;
+					v.y = camera.jitterY;
+					#else
+					v.x = 0.0;
+					v.y = 0.0;
+					#end
+				}
 				case "_screenSize": {
 					v = helpVec;
 					v.x = RenderPath.active.currentW;
@@ -738,7 +755,7 @@ class Uniforms {
 					i = w != null ? w.probe.raw.radiance_mipmaps + 1 - 2 : 1; // Include basecolor and exclude 2 scaled mips
 				}
 				case "_frame": {
-					i = RenderPath.active.frame; trace(i);
+					i = RenderPath.active.frame;
 				}
 				default:
 					return false;
@@ -894,7 +911,7 @@ class Uniforms {
 							helpMat2._30 = l.tileOffsetX[0];
 							helpMat2._31 = l.tileOffsetY[0];
 							helpMat.multmat(helpMat2);
-							#if (!kha_opengl)
+							#if (!kha_opengl && !kha_vulkan)
 							helpMat2.setIdentity();
 							helpMat2._11 = -1.0;
 							helpMat2._31 = 1.0;
@@ -924,18 +941,9 @@ class Uniforms {
 			}
 
 			if (m == null) {
-				#if arm_spot
-				if (c.link.startsWith("_biasLightWorldViewProjectionMatrixSpot")) {
-					var light = getSpot(c.link.charCodeAt(c.link.length - 1) - "0".code);
-					if (light != null) {
-						object == null ? helpMat.setIdentity() : helpMat.setFrom(object.transform.worldUnpack);
-						helpMat.multmat(light.VP);
-						helpMat.multmat(biasMat);
-						m = helpMat;
-					}
-				}
+				#if (!arm_clusters && (arm_spot || arm_ltc))
 				if (c.link.startsWith("_biasLightViewProjectionMatrixSpot")) {
-					var light = getSpot(c.link.charCodeAt(c.link.length - 1) - "0".code);
+					var light = getSpot(0);
 					if (light != null) {
 						helpMat.setFrom(light.VP);
 						helpMat.multmat(biasMat);
@@ -1174,11 +1182,22 @@ class Uniforms {
 					}
 				}
 				#end
-				#if (arm_clusters && arm_spot)
+				#if (arm_spot || arm_ltc)
 				case "_biasLightWorldViewProjectionMatrixSpotArray": {
+					#if arm_clusters
 					fa = LightObject.updateLWVPMatrixArray(object, "spot");
+					#else
+					// Single spot light path (_SinglePoint), LWVPSpotArray[1] holds one matrix
+					var light = getSpot(0);
+					if (light != null) {
+						helpMat.setFrom(light.VP);
+						helpMat.multmat(biasMat);
+						g.setMatrix(location, helpMat.self);
+					}
+					return;
+					#end
 				}
-				#end // arm_clusters
+				#end
 				#if arm_morph_target
 				case "_morphWeights": {
 					fa = cast(object, MeshObject).morphTarget.morphWeights;
@@ -1254,7 +1273,7 @@ class Uniforms {
 		}
 	}
 
-	#if arm_spot
+	#if (arm_spot || arm_ltc)
 	static function getSpot(index: Int): LightObject {
 		var i = 0;
 		for (l in Scene.active.lights) {

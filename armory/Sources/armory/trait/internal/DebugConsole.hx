@@ -839,7 +839,7 @@ class DebugConsole extends Trait {
 								highLightNext(kha.Color.fromFloats(0.447, 0.247, 0.188));
 								ui.text('Not enough space in atlas for ${atlas.rejectedLights.length} light${atlas.rejectedLights.length > 1 ? "s" : ""}:');
 								ui.indent();
-								ui.text(${rejectedLightsNames});
+								ui.text(rejectedLightsNames);
 								ui.unindent(false);
 							}
 
@@ -854,7 +854,7 @@ class DebugConsole extends Trait {
 
 				if (ui.panel(Id.handle({selected: false}), "Render Targets")) {
 					ui.indent();
-					#if (kha_opengl || kha_webgl)
+					#if (kha_opengl || kha_webgl || kha_vulkan)
 					ui.imageInvertY = true;
 					#end
 					for (rt in iron.RenderPath.active.renderTargets) {
@@ -863,7 +863,7 @@ class DebugConsole extends Trait {
 							ui.image(rt.image);
 						}
 					}
-					#if (kha_opengl || kha_webgl)
+					#if (kha_opengl || kha_webgl || kha_vulkan)
 					ui.imageInvertY = false;
 					#end
 					ui.unindent();

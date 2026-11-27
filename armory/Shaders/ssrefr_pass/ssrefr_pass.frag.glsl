@@ -12,12 +12,12 @@
 uniform sampler2D senvmapBrdf;
 #endif
 
-uniform sampler2D tex;
-uniform sampler2D tex1;
+uniform sampler2D tex;  // Background color, refractive meshes excluded
+uniform sampler2D tex1; // Shaded refractive surfaces
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
-uniform sampler2D gbuffer1;
-uniform sampler2D gbufferD1;
+uniform sampler2D gbufferD1; // Opaque scene depth, refractive meshes excluded
+uniform sampler2D gbufferD2; // Closest refractive backface depth
 uniform sampler2D gbuffer_refraction; // ior\opacity
 uniform mat4 P;
 uniform mat3 V3;
@@ -29,7 +29,9 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 vec3 hitCoord;
-float depth;
+vec3 entryCoord;
+// Distance the ray travelled inside the medium
+float travelled;
 
 const int numBinarySearchSteps = 7;
 const int maxSteps = int(ceil(1.0 / ss_refractionRayStep) * ss_refractionSearchDist);
@@ -44,10 +46,18 @@ vec2 getProjectedCoord(const vec3 hit) {
 	return projectedCoord.xy;
 }
 
+// > 0.0 once the ray passed behind the opaque scene
 float getDeltaDepth(const vec3 hit) {
-	depth = textureLod(gbufferD1, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
-	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
-	return viewPos.z - hit.z;
+	float d = textureLod(gbufferD1, getProjectedCoord(hit), 0.0).r;
+	return getPosView(viewRay, d, cameraProj).z - hit.z;
+}
+
+// > 0.0 once the ray left the refractive medium through a backface
+float getDeltaBackface(const vec3 hit) {
+	float d = textureLod(gbufferD2, getProjectedCoord(hit), 0.0).r;
+	// No backface recorded here, the ray is out of the silhouette already
+	if (d <= 0.0) return 1.0;
+	return getPosView(viewRay, 1.0 - d, cameraProj).z - hit.z;
 }
 
 vec4 binarySearch(vec3 dir) {
@@ -61,71 +71,148 @@ vec4 binarySearch(vec3 dir) {
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
-vec4 rayCast(vec3 dir) {
-	float ddepth;
-	for (int i = 0; i < maxSteps; i++) {
-		hitCoord += dir * ss_refractionRayStep;
-		ddepth = getDeltaDepth(hitCoord);
-		if (ddepth > 0.0) return binarySearch(dir);
+// Refine the position at which the ray crossed the backface
+vec3 binarySearchBackface(vec3 dir) {
+	vec3 hit = hitCoord;
+	for (int i = 0; i < numBinarySearchSteps; i++) {
+		dir *= 0.5;
+		hit -= dir;
+		if (getDeltaBackface(hit) < 0.0) hit += dir;
 	}
+	return hit;
+}
+
+vec4 rayCast(vec3 dir) {
+	vec3 rayStep = dir * ss_refractionRayStep;
+	bool inside = true;
+	#ifdef _VoxelRefract
+	// Like the SSR voxel fallback: a crossing is a hit only if the refinement
+	// settles on a surface, a ray passing behind an object keeps marching
+	// (and falls back to the voxels if it finds nothing)
+	float thickness = length(rayStep);
+	bool behind = false;
+	#endif
+	for (int i = 0; i < maxSteps; i++) {
+		hitCoord += rayStep;
+
+		// Backface z test, the medium ends here so absorption stops accumulating
+		if (inside && getDeltaBackface(hitCoord) > 0.0) {
+			travelled = distance(binarySearchBackface(rayStep), entryCoord);
+			inside = false;
+		}
+
+		#ifdef _VoxelRefract
+		float ddepth = getDeltaDepth(hitCoord);
+		if (ddepth > 0.0 && !behind) {
+			vec3 crossing = hitCoord;
+			vec4 coords = binarySearch(rayStep);
+			if (abs(getDeltaDepth(hitCoord)) <= thickness) {
+				if (inside) travelled = distance(hitCoord, entryCoord);
+				return coords;
+			}
+			hitCoord = crossing;
+		}
+		behind = ddepth > 0.0;
+		#else
+		if (getDeltaDepth(hitCoord) > 0.0) {
+			vec4 coords = binarySearch(dir);
+			if (inside) travelled = distance(hitCoord, entryCoord);
+			return coords;
+		}
+		#endif
+	}
+	if (inside) travelled = distance(hitCoord, entryCoord);
 	return vec4(getProjectedCoord(hitCoord), 0.0, 0.0);
 }
 
 void main() {
-    vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
+	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
 	float roughness = g0.b;
 	float metallic;
 	uint matid;
 	unpackFloatInt16(g0.a, metallic, matid);
-    vec4 gr = textureLod(gbuffer_refraction, texCoord, 0.0);
-    float ior = gr.x;
-    float opac = gr.y;
-    float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
+	vec4 gr = textureLod(gbuffer_refraction, texCoord, 0.0);
+	float ior = gr.x;
+	float opac = gr.y;
+	float d = textureLod(gbufferD, texCoord, 0.0).r;
 
-    if (d == 0.0 || d == 1.0 || opac == 1.0) {
-        fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb;
-        return;
-    }
+	if (d >= 1.0 || opac == 1.0) {
+		#ifdef _VoxelRefract
+		fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+		#else
+		fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb;
+		#endif
+		return;
+	}
 
 	vec2 enc = g0.rg;
-    vec3 n;
-    n.z = 1.0 - abs(enc.x) - abs(enc.y);
-    n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
-    n = normalize(n);
+	vec3 n;
+	n.z = 1.0 - abs(enc.x) - abs(enc.y);
+	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
+	n = normalize(n);
 
-    vec3 viewNormal = V3 * n;
-    vec3 viewPos = getPosView(normalize(viewRay), d, cameraProj);
-    vec3 refracted = refract(viewPos, viewNormal, 1.0 / ior);
-    vec3 hitCoord1 = viewPos;
+	vec3 viewNormal = V3 * n;
+	vec3 viewPos = getPosView(viewRay, d, cameraProj);
+	vec3 viewDir = viewPos;
+	vec3 refracted = refract(viewDir, viewNormal, 1.0 / ior);
+	// Total internal reflection, let the ray pass straight through
+	if (dot(refracted, refracted) == 0.0) refracted = viewDir;
 
-	vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter * roughness) * 2.0;
+	entryCoord = viewPos;
+	hitCoord = viewPos;
+	travelled = 0.0;
 
-    vec4 coords = rayCast(dir);
-    float dist = length(hitCoord - hitCoord1);
-    vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb; /* * exp(log(1.0 - opac) * dist); */
+	// Keep the screen space step proportional to the view distance
+	vec3 dir = refracted * (1.0 - rand(texCoord) * ss_refractionJitter * roughness) * length(viewPos) * 2.0;
 
-	vec4 g1 = textureLod(gbuffer1, texCoord, 0.0); // Basecolor.rgb, spec/occ
+	vec4 coords = rayCast(dir);
+
+	// Beer-Lambert absorption over the distance travelled inside the medium,
+	// the opacity gives the transmission through one unit of the medium
+	float transmission = clamp(1.0 - opac, 0.001, 1.0);
+	float absorption = -log(transmission) * ss_refractionAbsorption;
+	float attenuation = exp(-absorption * travelled);
+
+	#ifdef _VoxelRefract
+	// Voxel fallback, like the SSR one: this pass only writes the screen space
+	// hit, ssrefr_resolve gathers it over 5x5 pixels, traces the voxel cone
+	// where the neighborhood is not confident and composites.
+	// The confidence says whether the hit is valid, not the artistic fade of
+	// the screen space only path:
+	// - a hit was found
+	float confidence = coords.w;
+	// - fade out only over the last 10% of the screen border (and drop hits
+	//   projected outside of it)
+	vec2 border = min(coords.xy, 1.0 - coords.xy);
+	confidence *= clamp(min(border.x, border.y) / 0.1, 0.0, 1.0);
+	// - a single screen space ray cannot blur like a wide cone: leave rough
+	//   surfaces to the voxels
+	confidence *= 1.0 - smoothstep(0.6, 0.8, roughness);
+	fragColor = vec4(coords.xy, confidence, attenuation);
+	#else
+	vec3 refractionCol = textureLod(tex, coords.xy, 0.0).rgb * attenuation;
+
 	vec3 f0 = surfaceF0(refractionCol.rgb, metallic);
-	float dotNV = max(dot(viewNormal, viewPos), 0.0);
+	float dotNV = max(dot(viewNormal, -viewDir), 0.0);
 
 	#ifdef _Brdf
-	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
+	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(clamp(vec2(dotNV, 1.0 - roughness) * 256.0, 0.0, 255.0)), 0).xy;
 	vec3 F = f0 * envBRDF.x + envBRDF.y;
 	#else
 	vec3 F = f0;
 	#endif
 
+	float refractivity = 1.0 - opac;
 	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
-
-	float refractivity = 1.0 - opac;
-	vec3 intensity = refractivity * screenEdgeFactor * clamp(abs(refracted.z), 0.0, 1.0) * (1.0 - F);
+	float fade = screenEdgeFactor * clamp(abs(refracted.z), 0.0, 1.0);
+	vec3 intensity = refractivity * fade * (1.0 - F);
 
 	intensity = clamp(intensity, 0.0, 1.0);
 
 	refractionCol *= intensity;
 	vec3 color = textureLod(tex1, texCoord.xy, 0.0).rgb;
 
-    fragColor.rgb = mix(refractionCol, color, opac);
-
+	fragColor.rgb = mix(refractionCol, color, opac);
+	#endif
 }

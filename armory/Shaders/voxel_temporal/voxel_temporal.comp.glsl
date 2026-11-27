@@ -30,36 +30,24 @@ THE SOFTWARE.
 #include "std/brdf.glsl"
 
 #ifdef _VoxelGI
-uniform vec3 lightPos;
-uniform vec3 lightColor;
-uniform int lightType;
-uniform vec3 lightDir;
-uniform vec2 spotData;
-#ifdef _ShadowMap
-uniform int lightShadow;
-uniform vec2 lightProj;
-uniform float shadowsBias;
-uniform mat4 LVP;
-#endif
 uniform sampler3D voxelsSampler;
 uniform layout(r32ui) uimage3D voxels;
-uniform layout(r32ui) uimage3D voxelsLight;
-uniform layout(rgba8) image3D voxelsB;
-uniform layout(rgba8) image3D voxelsOut;
-uniform layout(r16f) image3D SDF;
+uniform layout(rgba16f) image3D voxelsB;
+uniform layout(rgba16f) image3D voxelsOut;
+uniform layout(r8) image3D SDF;
 #else
 #ifdef _VoxelAOvar
-#ifdef _VoxelShadow
-uniform layout(r16f) image3D SDF;
-#endif
 uniform layout(r32ui) uimage3D voxels;
-uniform layout(r8) image3D voxelsB;
-uniform layout(r8) image3D voxelsOut;
+uniform layout(r16f) image3D voxelsB;
+uniform layout(r16f) image3D voxelsOut;
 #endif
 #endif
 
 uniform int clipmapLevel;
+#ifndef _ConetraceClipmaps // declared by std/conetrace.glsl
+#define _ConetraceClipmaps
 uniform float clipmaps[voxelgiClipmapCount * 10];
+#endif
 
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 
@@ -69,9 +57,6 @@ void main() {
 	#ifdef _VoxelGI
 	float sdf = float(clipmaps[int(clipmapLevel * 10)]) * 2.0 * res;
 	#else
-	#ifdef _VoxelShadow
-	float sdf = float(clipmaps[int(clipmapLevel * 10)]) * 2.0 * res;
-	#endif
 	#endif
 
 	#ifdef _VoxelGI
@@ -189,10 +174,6 @@ void main() {
 				sdf = 0.0;
 			#else
 			aniso_colors[i] = opac;
-			#ifdef _VoxelShadow
-			if (opac > 0)
-				sdf = 0.0;
-			#endif
 			#endif
 		}
 		else {
@@ -230,11 +211,5 @@ void main() {
 	ivec3 dst_sdf = ivec3(gl_GlobalInvocationID.xyz);
 	dst_sdf.y += clipmapLevel * res;
 	imageStore(SDF, dst_sdf, vec4(sdf));
-	#else
-	#ifdef _VoxelShadow
-	ivec3 dst_sdf = ivec3(gl_GlobalInvocationID.xyz);
-	dst_sdf.y += clipmapLevel * res;
-	imageStore(SDF, dst_sdf, vec4(sdf));
-	#endif
 	#endif
 }

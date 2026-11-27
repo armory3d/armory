@@ -38,7 +38,10 @@ uniform sampler2D voxels_ao;
 //!uniform sampler2D voxels_shadows;
 uniform sampler3D dum;
 uniform sampler3D my;
+#ifndef _ConetraceClipmaps // declared by std/conetrace.glsl (via std/light.glsl)
+#define _ConetraceClipmaps
 uniform float clipmaps[10 * voxelgiClipmapCount];
+#endif
 #endif
 
 uniform float envmapStrength;
@@ -93,7 +96,7 @@ uniform mat4 invVP;
 	#ifdef _SinglePoint
 	//!uniform sampler2DShadow shadowMapSpot[1];
 	//!uniform sampler2D shadowMapSpotTransparent[1];
-	//!uniform mat4 LWVPSpot[1];
+	//!uniform mat4 LWVPSpotArray[1];
 	#endif
 	#ifdef _Clusters
 	//!uniform sampler2DShadow shadowMapSpot[4];
@@ -123,7 +126,7 @@ uniform vec2 cameraPlane;
 	#ifdef _ShadowMapTransparent
 	//!uniform sampler2D shadowMapSpotTransparent[1];
 	#endif
-	//!uniform mat4 LWVPSpot[1];
+	//!uniform mat4 LWVPSpotArray[1];
 	#else
 	//!uniform samplerCubeShadow shadowMapPoint[1];
 	#ifdef _ShadowMapTransparent
@@ -258,7 +261,7 @@ void main() {
 #endif
 
 #ifdef _Brdf
-	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(vec2(dotNV, 1.0 - roughness) * 256.0), 0).xy;
+	vec2 envBRDF = texelFetch(senvmapBrdf, ivec2(clamp(vec2(dotNV, 1.0 - roughness) * 256.0, 0.0, 255.0)), 0).xy;
 	vec3 F = f0 * envBRDF.x + envBRDF.y;
 #else
 	vec3 F = f0;
@@ -349,7 +352,8 @@ void main() {
 	// #endif
 #else
 #ifdef _SSGI
-	fragColor.rgb += textureLod(ssaotex, texCoord, 0.0).rgb;
+	// Gathered irradiance, reflected by the diffuse albedo
+	fragColor.rgb += albedo * textureLod(ssaotex, texCoord, 0.0).rgb;
 #endif
 #endif
 
@@ -443,19 +447,11 @@ void main() {
 		#endif
 	#endif
 
-	#ifdef _VoxelShadow
-	#ifdef _VoxelGI
-	svisibility *= textureLod(voxels_shadows, texCoord, 0.0).rgb * voxelgiShad;
-	#else
-	svisibility *= textureLod(voxels_shadows, texCoord, 0.0).r * voxelgiShad;
-	#endif
-	#endif
-
 	#ifdef _SSRS
 	// vec2 coords = getProjectedCoord(hitCoord);
 	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	// float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
-	svisibility *= traceShadowSS(sunDir, p, gbufferD, invVP, eye);
+	svisibility *= traceShadowSS(sunDir, p, n, ssrsSearchDist, gbufferD, invVP, eye);
 	#endif
 
 	#ifdef _LightClouds
@@ -512,9 +508,6 @@ void main() {
 		#ifdef _Spot
 		, true, spotData.x, spotData.y, spotDir, spotData.zw, spotRight
 		#endif
-		#ifdef _VoxelShadow
-			, dum, my, clipmaps, -g2.rg, texCoord
-		#endif
 		#ifdef _MicroShadowing
 		, occspec.x
 		#endif
@@ -525,7 +518,7 @@ void main() {
 
 	#ifdef _Spot
 	#ifdef _SSS
-	if (matid == 2) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpot[0], p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);//TODO implement transparent shadowmaps into the SSSSTransmittance()
+	if (matid == 2) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpotArray[0], p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);//TODO implement transparent shadowmaps into the SSSSTransmittance()
 	#endif
 	#endif
 
@@ -570,9 +563,6 @@ void main() {
 			, lightsArraySpot[li * 2].xyz // spotDir
 			, vec2(lightsArray[li * 3].w, lightsArray[li * 3 + 1].w) // scale
 			, lightsArraySpot[li * 2 + 1].xyz // right
-			#endif
-			#ifdef _VoxelShadow
-			, dum, my, clipmaps, -g2.rg, texCoord
 			#endif
 			#ifdef _MicroShadowing
 			, occspec.x

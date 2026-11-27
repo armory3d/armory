@@ -568,7 +568,7 @@ def write_config(resx, resy):
         'window_vsync': wrd.arm_vsync,
         'window_msaa': int(rpdat.arm_samples_per_pixel),
         'window_scale': 1.0,
-        'rp_supersample': float(rpdat.rp_supersampling),
+        'rp_supersample': 1.0 if arm.utils.get_upscale_ratio(rpdat) > 0.0 else float(rpdat.rp_supersampling),
         'rp_shadowmap_cube': rp_shadowmap_cube,
         'rp_shadowmap_cascade': rp_shadowmap_cascade,
         'rp_ssgi': rpdat.rp_ssgi != 'Off',
@@ -835,6 +835,9 @@ const float bloomRadius = """ + str(round(rpdat.arm_bloom_radius * 100) / 100) +
             f.write(
 """const float motionBlurIntensity = """ + str(round(rpdat.arm_motion_blur_intensity * 100) / 100) + """;
 """)
+        if arm.utils.get_upscale_ratio(rpdat) > 0.0:
+            f.write(f'const float upscaleSharpness = {round(rpdat.arm_upscale_sharpness * 100) / 100};\n')
+
         if rpdat.rp_ssr:
             f.write(
 """const float ssrRayStep = """ + str(round(rpdat.arm_ssr_ray_step * 100) / 100) + """;
@@ -848,15 +851,16 @@ const float ssrJitter = """ + str(round(rpdat.arm_ssr_jitter * 100) / 100) + """
 const float ss_refractionSearchDist = """ + str(round(rpdat.arm_ss_refraction_search_dist * 100) / 100) + """;
 const float ss_refractionFalloffExp = """ + str(round(rpdat.arm_ss_refraction_falloff_exp * 100) / 100) + """;
 const float ss_refractionJitter = """ + str(round(rpdat.arm_ss_refraction_jitter * 100) / 100) + """;
+const float ss_refractionAbsorption = """ + str(round(rpdat.arm_ss_refraction_absorption * 100) / 100) + """;
 """)
 
 
         if rpdat.arm_ssrs:
             f.write(
-"""const float ssrsSamples = """ + str(round(rpdat.arm_ssrs_samples * 100) / 100) + """;
-const float ssrsRayStep = """ + str(round(rpdat.arm_ssrs_ray_step * 100) / 100) + """;
-const float ssrsSearchDist = """ + str(round(rpdat.arm_ssrs_search_dist * 100) / 100) + """;
-const float ssrsThickness = """ + str(round(rpdat.arm_ssrs_thickness * 100) / 100) + """;
+"""const int ssrsSamples = """ + str(max(1, rpdat.arm_ssrs_samples)) + """;
+const float ssrsRayStep = """ + str(max(0.0001, round(rpdat.arm_ssrs_ray_step, 4))) + """;
+const float ssrsSearchDist = """ + str(round(rpdat.arm_ssrs_search_dist, 4)) + """;
+const float ssrsThickness = """ + str(round(rpdat.arm_ssrs_thickness, 4)) + """;
 """)
 
         if rpdat.rp_volumetriclight:

@@ -20,6 +20,16 @@ class RenderPathDeferred {
 	static var ssgitexb = "singleb";
 	#end
 
+	#if rp_upscale
+	static var upscaleFlip = false;
+	static var upscaleW = 0;
+	static var upscaleH = 0;
+	#if (rp_upscale_dlss && kha_krom)
+	static var dlssState = -1; // -1 unknown, 0 unavailable (TAAU fallback), 1 available
+	static var dlssReset = true;
+	#end
+	#end
+
 	public static inline function setTargetMeshes() {
 		//Always keep the order of render targets the same as defined in compiled.inc
 		path.setTarget("gbuffer0", [
@@ -65,9 +75,6 @@ class RenderPathDeferred {
 			#if (rp_voxels == "Voxel GI" || arm_voxelgi_shadows)
 			Inc.initGI("voxelsSDF");
 			Inc.initGI("voxelsSDFtmp");
-			#if arm_voxelgi_shadows
-			Inc.initGI("voxels_shadows");
-			#end
 			#end
 			#if (rp_voxels == "Voxel GI")
 			Inc.initGI("voxels_diffuse");
@@ -205,6 +212,7 @@ class RenderPathDeferred {
 		#elseif (rp_ssgi == "SSGI")
 		{
 			path.loadShader("shader_datas/ssgi_pass/ssgi_pass");
+			path.loadShader("shader_datas/copy_pass/copy_pass");
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
 			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 		}
@@ -218,7 +226,7 @@ class RenderPathDeferred {
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			#if (rp_ssgi == "SSGI")
-			t.format = "RGBA32";
+			t.format = "RGBA64";
 			#else
 			t.format = "R8";
 			#end
@@ -234,7 +242,7 @@ class RenderPathDeferred {
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			#if (rp_ssgi == "SSGI")
-			t.format = "RGBA32";
+			t.format = "RGBA64";
 			#else
 			t.format = "R8";
 			#end
@@ -243,6 +251,21 @@ class RenderPathDeferred {
 			t.scale *= 0.5;
 			#end
 			path.createRenderTarget(t);
+
+			#if (rp_ssgi == "SSGI")
+			// Lit image of the previous frame, gathered by the SSGI pass
+			var t = new RenderTargetRaw();
+			t.name = "ssgi_prev";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = Inc.getHdrFormat();
+			t.scale = Inc.getSuperSampling();
+			#if rp_ssgi_half
+			t.scale *= 0.5;
+			#end
+			path.createRenderTarget(t);
+			#end
 		}
 		#end
 
@@ -350,6 +373,23 @@ class RenderPathDeferred {
 		}
 		#end
 
+		#if rp_upscale
+		{
+			// Display resolution history, ping-ponged between frames.
+			// No scale so that render resolution changes leave them alone
+			for (name in ["upscale_a", "upscale_b"]) {
+				var t = new RenderTargetRaw();
+				t.name = name;
+				t.width = 0;
+				t.height = 0;
+				t.format = "RGBA64";
+				path.createRenderTarget(t);
+			}
+			path.loadShader("shader_datas/upscale_pass/upscale_pass");
+			path.loadShader("shader_datas/upscale_sharpen_pass/upscale_sharpen_pass");
+		}
+		#end
+
 		#if (rp_supersampling == 4)
 		{
 			path.loadShader("shader_datas/supersample_resolve/supersample_resolve");
@@ -434,6 +474,20 @@ class RenderPathDeferred {
 		#if rp_ssrefr
 		{
 			path.loadShader("shader_datas/ssrefr_pass/ssrefr_pass");
+			#if arm_voxelgi_refract
+			path.loadShader("shader_datas/ssrefr_pass/ssrefr_resolve");
+
+			// Screen space refraction hits (uv, confidence, attenuation), gathered
+			// by ssrefr_resolve which falls back to the voxels
+			var t = new RenderTargetRaw();
+			t.name = "refr_ss";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			path.createRenderTarget(t);
+			#end
 			path.loadShader("shader_datas/copy_pass/copy_pass");
 
 			var t = new RenderTargetRaw();
@@ -444,6 +498,33 @@ class RenderPathDeferred {
 			t.format = "R32";
 			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
+
+			// Depth test for the closest backface / frontface passes
+			path.createDepthBuffer("refrdepth", "DEPTH24");
+
+			// holds the closest backface depth of the refractive meshes
+			var t = new RenderTargetRaw();
+			t.name = "gbufferD2";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R32";
+			t.scale = Inc.getSuperSampling();
+			t.depth_buffer = "refrdepth";
+			path.createRenderTarget(t);
+
+			#if rp_ssrefr_nested
+			// holds the closest frontface depth of the refractive meshes
+			var t = new RenderTargetRaw();
+			t.name = "gbufferD3";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R32";
+			t.scale = Inc.getSuperSampling();
+			t.depth_buffer = "refrdepth";
+			path.createRenderTarget(t);
+			#end
 
 			// holds background color
 			var t = new RenderTargetRaw();
@@ -482,6 +563,37 @@ class RenderPathDeferred {
 				path.createRenderTarget(t);
 			}
 			#end
+
+			#if rp_ssr_voxel_fallback
+			{
+				path.loadShader("shader_datas/copy_pass/copy_pass");
+
+				// Lit image of the previous frame, the SSR pass reads it as it
+				// runs before this frame is lit
+				var t = new RenderTargetRaw();
+				t.name = "ssr_prev";
+				t.width = 0;
+				t.height = 0;
+				t.displayp = Inc.getDisplayp();
+				t.format = Inc.getHdrFormat();
+				t.scale = Inc.getSuperSampling();
+				path.createRenderTarget(t);
+
+				// SSR color and confidence, read by the voxel specular resolve
+				// (temporally accumulated), its history and the raw SSR result
+				path.loadShader("shader_datas/ssr_pass/ssr_temporal");
+				for (name in ["ssr_fallback", "ssr_hist", "ssr_raw"]) {
+					var t = new RenderTargetRaw();
+					t.name = name;
+					t.width = 0;
+					t.height = 0;
+					t.displayp = Inc.getDisplayp();
+					t.format = "RGBA64";
+					t.scale = Inc.getSuperSampling();
+					path.createRenderTarget(t);
+				}
+			}
+			#end
 		}
 		#end
 
@@ -511,6 +623,19 @@ class RenderPathDeferred {
 			b.set(0, 255);
 			rt.image = kha.Image.fromBytes(b, t.width, t.height, kha.graphics4.TextureFormat.L8);
 			path.renderTargets.set(t.name, rt);
+
+			#if (rp_ssgi == "SSGI")
+			var t = new RenderTargetRaw();
+			t.name = "empty_black";
+			t.width = 1;
+			t.height = 1;
+			t.format = "R8";
+			var rt = new RenderTarget(t);
+			var b = haxe.io.Bytes.alloc(1);
+			b.set(0, 0);
+			rt.image = kha.Image.fromBytes(b, t.width, t.height, kha.graphics4.TextureFormat.L8);
+			path.renderTargets.set(t.name, rt);
+			#end
 		}
 		#end
 
@@ -628,12 +753,9 @@ class RenderPathDeferred {
 				path.setTarget("singlea");
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbuffer0", "gbuffer0");
-				path.bindTarget("gbuffer1", "gbuffer1");
-				#if rp_gbuffer2
+				path.bindTarget("ssgi_prev", "prevLit");
+				#if (rp_gbuffer2 && arm_veloc)
 				path.bindTarget("gbuffer2", "sveloc");
-				#end
-				#if rp_gbuffer_emission
-				path.bindTarget("gbuffer_emission", "gbufferEmission");
 				#end
 				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
 				path.setTarget("singleb");
@@ -662,7 +784,7 @@ class RenderPathDeferred {
 				path.clearImage("voxels", 0x00000000);
 				path.clearImage("voxelsOut", 0x00000000);
 				path.clearImage("voxelsOutB", 0x00000000);
-				#if (arm_voxelgi_shadows || (rp_voxels == "Voxel GI"))
+				#if (rp_voxels == "Voxel GI")
 				path.clearImage("voxelsSDF", 0x00000000);
 				path.clearImage("voxelsSDFtmp", 0x00000000);
 				#end
@@ -705,9 +827,6 @@ class RenderPathDeferred {
 				#else
 				path.clearImage("voxels_ao", 0x00000000);
 				#end
-				#if arm_voxelgi_shadows
-				path.clearImage("voxels_shadows", 0x00000000);
-				#end
 			}
 		}
 		#end
@@ -718,6 +837,44 @@ class RenderPathDeferred {
 		#if (!kha_opengl)
 		path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
 		#end
+
+		#if rp_ssr_voxel_fallback
+		{
+			// Screen space reflections of the previous frame, the voxel
+			// specular resolve only traces cones where they found nothing
+			if (armory.data.Config.raw.rp_ssr != false) {
+				path.setTarget("ssr_raw");
+				path.bindTarget("ssr_prev", "tex");
+				path.bindTarget("_main", "gbufferD");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("gbuffer1", "gbuffer1");
+				#if (rp_gbuffer2 && arm_veloc)
+				path.bindTarget("gbuffer2", "sveloc");
+				#end
+				path.drawShader("shader_datas/ssr_pass/ssr_pass");
+
+				// Accumulate over frames: the TAA jitter moves the rays and
+				// flips pixels between SSR and the voxel cones every frame
+				path.setTarget("ssr_fallback");
+				path.bindTarget("ssr_raw", "tex");
+				path.bindTarget("ssr_hist", "hist");
+				path.bindTarget("_main", "gbufferD");
+				#if (rp_gbuffer2 && arm_veloc)
+				path.bindTarget("gbuffer2", "sveloc");
+				#end
+				path.drawShader("shader_datas/ssr_pass/ssr_temporal");
+
+				path.setTarget("ssr_hist");
+				path.bindTarget("ssr_fallback", "tex");
+				path.drawShader("shader_datas/copy_pass/copy_pass");
+			}
+			else {
+				path.setTarget("ssr_fallback");
+				path.clearTarget(0x00000000);
+			}
+		}
+		#end
+
 		path.setTarget("tex");
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
@@ -741,7 +898,11 @@ class RenderPathDeferred {
 				path.bindTarget("singlea", "ssaotex");
 			}
 			else {
+				#if (rp_ssgi == "SSGI")
+				path.bindTarget("empty_black", "ssaotex");
+				#else
 				path.bindTarget("empty_white", "ssaotex");
+				#end
 			}
 		}
 		#end
@@ -761,10 +922,6 @@ class RenderPathDeferred {
 			Inc.resolveSpecular();
 			path.bindTarget("voxels_diffuse", "voxels_diffuse");
 			path.bindTarget("voxels_specular", "voxels_specular");
-			#end
-			#if arm_voxelgi_shadows
-			Inc.resolveShadows();
-			path.bindTarget("voxels_shadows", "voxels_shadows");
 			#end
 		}
 		#end
@@ -808,6 +965,25 @@ class RenderPathDeferred {
 					path.drawVolume(p, "shader_datas/probe_cubemap/probe_cubemap");
 				}
 			}
+		}
+		#end
+
+		#if rp_ssr_voxel_fallback
+		if (armory.data.Config.raw.rp_ssr != false) {
+			// Keep the lit image for the SSR pass of the next frame
+			path.setTarget("ssr_prev");
+			path.bindTarget("tex", "tex");
+			path.drawShader("shader_datas/copy_pass/copy_pass");
+		}
+		#end
+
+		#if (rp_ssgi == "SSGI")
+		if (armory.data.Config.raw.rp_ssgi != false) {
+			// Keep the lit image for the SSGI pass of the next frame,
+			// before the sky and transparent surfaces are drawn
+			path.setTarget("ssgi_prev");
+			path.bindTarget("tex", "tex");
+			path.drawShader("shader_datas/copy_pass/copy_pass");
 		}
 		#end
 
@@ -898,60 +1074,119 @@ class RenderPathDeferred {
 		{
 			if (armory.data.Config.raw.rp_ssrefr != false)
 			{
-				//save depth
-				#if (!kha_opengl)
-				path.setDepthFrom("gbuffer0", "gbuffer1"); // Unbind depth so we can read it
-				path.depthToRenderTarget.set("main", path.renderTargets.get("tex")); // tex and gbuffer0 share a depth buffer
-				#end
+				// Store the scene seen behind the refractive surfaces: its depth
+				// in gbufferD1 and its color in refr
+				function saveBackground() {
+					#if (!kha_opengl)
+					path.setDepthFrom("gbuffer0", "gbuffer1"); // Unbind depth so we can read it
+					path.depthToRenderTarget.set("main", path.renderTargets.get("tex")); // tex and gbuffer0 share a depth buffer
+					#end
 
-				// Copy the depth buffer to the depth texture
-				path.setTarget("gbufferD1");
-				path.bindTarget("_main", "tex");
-				path.drawShader("shader_datas/copy_pass/copy_pass");
+					// Copy the depth buffer to the depth texture
+					path.setTarget("gbufferD1");
+					path.bindTarget("_main", "tex");
+					path.drawShader("shader_datas/copy_pass/copy_pass");
 
-				#if (!kha_opengl)
-				path.setDepthFrom("gbuffer0", "tex"); // Re-bind depth
-				path.depthToRenderTarget.set("main", path.renderTargets.get("gbuffer0"));
-				#end
+					#if (!kha_opengl)
+					path.setDepthFrom("gbuffer0", "tex"); // Re-bind depth
+					path.depthToRenderTarget.set("main", path.renderTargets.get("gbuffer0"));
+					#end
 
-				//save color
-				path.setTarget("refr");
-				path.bindTarget("tex", "tex");
-				path.drawShader("shader_datas/copy_pass/copy_pass");
+					path.setTarget("refr");
+					path.bindTarget("tex", "tex");
+					path.drawShader("shader_datas/copy_pass/copy_pass");
+				}
 
-				path.setTarget("gbuffer0", ["gbuffer1", "gbuffer_refraction"]);
+				// Shade one layer of refractive surfaces and composite it over tex
+				function drawLayer(context:String) {
+					path.setTarget("gbuffer0", ["gbuffer1", "gbuffer_refraction"]);
 
-				#if (rp_voxels != "Off")
-				path.bindTarget("voxelsOut", "voxels");
-				path.bindTarget("voxelsSDF", "voxelsSDF");
-				#end
+					#if (rp_voxels != "Off")
+					path.bindTarget("voxelsOut", "voxels");
+					path.bindTarget("voxelsSDF", "voxelsSDF");
+					#end
 
-				#if rp_shadowmap
-				{
-					#if arm_shadowmap_atlas
-					Inc.bindShadowMapAtlas();
+					#if rp_shadowmap
+					{
+						#if arm_shadowmap_atlas
+						Inc.bindShadowMapAtlas();
+						#else
+						Inc.bindShadowMap();
+						#end
+					}
+					#end
+
+					#if rp_ssrefr_nested
+					path.bindTarget("gbufferD3", "gbufferD3");
+					#end
+					path.drawMeshes(context);
+
+					#if arm_voxelgi_refract
+					// Screen space hits first, then ssrefr_resolve gathers them, falls
+					// back to the voxel cones where they are not confident and composites
+					path.setTarget("refr_ss");
+					path.bindTarget("refr", "tex");
+					path.bindTarget("gbufferD1", "gbufferD1");
+					path.bindTarget("gbufferD2", "gbufferD2");
+					path.bindTarget("gbuffer0", "gbuffer0");
+					path.bindTarget("gbuffer1", "tex1");
+					path.bindTarget("_main", "gbufferD");
+					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
+					path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
+
+					path.setTarget("tex");
+					path.bindTarget("refr", "tex");
+					path.bindTarget("gbufferD1", "gbufferD1");
+					path.bindTarget("gbufferD2", "gbufferD2");
+					path.bindTarget("gbuffer0", "gbuffer0");
+					path.bindTarget("gbuffer1", "tex1");
+					path.bindTarget("_main", "gbufferD");
+					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
+					path.bindTarget("refr_ss", "refrSS");
+					path.bindTarget("voxelsOut", "voxels");
+					path.bindTarget("voxelsSDF", "voxelsSDF");
+					path.drawShader("shader_datas/ssrefr_pass/ssrefr_resolve");
 					#else
-					Inc.bindShadowMap();
+					path.setTarget("tex");
+					path.bindTarget("refr", "tex");
+					path.bindTarget("gbufferD1", "gbufferD1");
+					path.bindTarget("gbufferD2", "gbufferD2");
+					path.bindTarget("gbuffer0", "gbuffer0");
+					path.bindTarget("gbuffer1", "tex1");
+					path.bindTarget("_main", "gbufferD");
+					path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
+					path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
 					#end
 				}
+
+				saveBackground();
+
+				// Closest backface depth of the refractive meshes, used to
+				// find where the refracted ray leaves the medium
+				path.setTarget("gbufferD2");
+				path.clearTarget(0x00000000, 1.0);
+				path.drawMeshes("refraction_backface");
+
+				#if rp_ssrefr_nested
+				// Closest frontface depth of the refractive meshes, used to peel
+				// the nearest layer off
+				path.setTarget("gbufferD3");
+				path.clearTarget(0x00000000, 1.0);
+				path.drawMeshes("refraction_frontface");
+
+				// Refractive surfaces seen through another one, like a liquid in
+				// a glass, are composited first and become part of the background
+				// the nearest layer refracts
+				drawLayer("refraction_inner");
+				saveBackground();
 				#end
 
-				path.drawMeshes("refraction");
-
-				path.setTarget("tex");
-				path.bindTarget("refr", "tex");
-				path.bindTarget("gbufferD1", "gbufferD1");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				path.bindTarget("gbuffer1", "tex1");
-				path.bindTarget("_main", "gbufferD");
-				path.bindTarget("gbuffer_refraction", "gbuffer_refraction");
-
-				path.drawShader("shader_datas/ssrefr_pass/ssrefr_pass");
+				drawLayer("refraction");
 			}
 		}
 		#end
 
-		#if rp_ssr
+		#if (rp_ssr && !rp_ssr_voxel_fallback)
 		{
 			if (armory.data.Config.raw.rp_ssr != false) {
 				#if (!kha_opengl)
@@ -1080,7 +1315,7 @@ class RenderPathDeferred {
 		#if rp_autoexposure
 		{
 			path.setTarget("histogram");
-			#if (rp_antialiasing == "TAA")
+			#if ((rp_antialiasing == "TAA") && !rp_upscale)
 			path.bindTarget("taa", "tex");
 			#else
 			path.bindTarget("tex", "tex");
@@ -1153,7 +1388,53 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if ((rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA"))
+		#if rp_upscale
+		{
+			if (path.isProbe) { // No history for probes
+				path.setTarget(framebuffer);
+				path.bindTarget("buf", "tex");
+				path.drawShader("shader_datas/copy_pass/copy_pass");
+			}
+			else {
+				var w = iron.App.w();
+				var h = iron.App.h();
+				if (w != upscaleW || h != upscaleH) { // First frame or resized, history is invalid
+					upscaleW = w;
+					upscaleH = h;
+					path.setTarget("upscale_a");
+					path.clearTarget(0x00000000);
+					path.setTarget("upscale_b");
+					path.clearTarget(0x00000000);
+					#if (rp_upscale_dlss && kha_krom)
+					dlssReset = true;
+					#end
+				}
+
+				#if (rp_upscale_dlss && kha_krom)
+				if (dlssState == -1) {
+					dlssState = untyped Krom.dlssAvailable != null && Krom.dlssAvailable() ? 1 : 0;
+					if (dlssState == 0) trace("DLSS not available, using TAAU");
+				}
+				// Nothing else is drawn after the upscaler (super sampling is off while upscaling)
+				if (dlssState == 1 && upscaleDlss(framebuffer)) return;
+				#end
+
+				var current = upscaleFlip ? "upscale_b" : "upscale_a";
+				var history = upscaleFlip ? "upscale_a" : "upscale_b";
+				upscaleFlip = !upscaleFlip;
+
+				path.setTarget(current);
+				path.bindTarget("buf", "tex");
+				path.bindTarget(history, "tex2");
+				path.bindTarget("gbuffer2", "sveloc");
+				path.drawShader("shader_datas/upscale_pass/upscale_pass");
+
+				path.setTarget(framebuffer);
+				path.bindTarget(current, "tex");
+				path.drawShader("shader_datas/upscale_sharpen_pass/upscale_sharpen_pass");
+			}
+		}
+		#elseif ((rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA"))
 		{
 			path.setTarget("bufa");
 			path.clearTarget(0x00000000);
@@ -1226,6 +1507,34 @@ class RenderPathDeferred {
 		// Prepare to draw meshes
 		setTargetMeshes();
 		path.bindTarget("depthtex", "depthtex");
+	}
+	#end
+
+	#if (rp_upscale_dlss && kha_krom)
+	/** Upscales "buf" into the display resolution with NVIDIA DLSS, then sharpens to the framebuffer. **/
+	static function upscaleDlss(framebuffer: String): Bool {
+		var color = path.renderTargets.get("buf").image;
+		var motion = path.renderTargets.get("gbuffer2").image;
+		var output = path.renderTargets.get("upscale_a").image;
+		var depthTarget = path.depthToRenderTarget.get("main");
+		var camera = iron.Scene.active.camera;
+		if (color == null || motion == null || output == null || depthTarget == null || camera == null) return false;
+
+		// gbuffer2.rg holds (current - previous) in UV units; DLSS wants render pixels from current to previous
+		var ok = Krom.dlssEvaluate(Std.parseInt(haxe.macro.Compiler.getDefine("rp_upscale_quality")),
+			color.renderTarget_, depthTarget.image.renderTarget_, motion.renderTarget_, output.renderTarget_,
+			camera.jitterX, camera.jitterY, -color.width, -color.height, dlssReset, false);
+		if (!ok) {
+			dlssState = 0;
+			trace("DLSS evaluation failed, using TAAU");
+			return false;
+		}
+		dlssReset = false;
+
+		path.setTarget(framebuffer);
+		path.bindTarget("upscale_a", "tex");
+		path.drawShader("shader_datas/upscale_sharpen_pass/upscale_sharpen_pass");
+		return true;
 	}
 	#end
 }

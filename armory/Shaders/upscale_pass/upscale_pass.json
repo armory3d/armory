@@ -1,0 +1,19 @@
+{
+	"contexts": [
+		{
+			"name": "upscale_pass",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "jitter",
+					"link": "_cameraJitter"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "upscale_pass.frag.glsl"
+		}
+	]
+}

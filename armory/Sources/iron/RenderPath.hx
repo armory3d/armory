@@ -328,7 +328,8 @@ class RenderPath {
 			if (depthDiff != 0) return depthDiff;
 			#end
 
-			return a.cameraDistance >= b.cameraDistance ? 1 : -1;
+			if (a.cameraDistance == b.cameraDistance) return 0;
+			return a.cameraDistance > b.cameraDistance ? 1 : -1;
 		});
 	}
 
@@ -342,8 +343,8 @@ class RenderPath {
 			if (a.data.sortingIndex != b.data.sortingIndex) {
 				return a.data.sortingIndex > b.data.sortingIndex ? 1 : -1;
 			}
-
-			return a.data.name >= b.data.name ? 1 : -1;
+			if (a.data.name == b.data.name) return 0;
+			return a.data.name > b.data.name ? 1 : -1;
 		});
 	}
 
@@ -762,8 +763,8 @@ class RenderPath {
 			case "RGBA64": return TextureFormat.RGBA64;
 			case "RGBA128": return TextureFormat.RGBA128;
 			case "DEPTH16": return TextureFormat.DEPTH16;
-			case "R32": return TextureFormat.A32;
-			case "R16": return TextureFormat.A16;
+			case "R32", "A32": return TextureFormat.A32; // Armory's voxel code uses the A* names
+			case "R16", "A16": return TextureFormat.A16;
 			case "R8": return TextureFormat.L8;
 			default: return TextureFormat.RGBA32;
 		}
