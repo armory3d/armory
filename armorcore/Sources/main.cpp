@@ -1,7 +1,12 @@
+#include <algorithm>
 #include <map>
+#include <stdarg.h>
+#include <stdio.h>
 #include <string>
+#include <utility>
 #include <vector>
 #include <kinc/log.h>
+#include <kinc/error.h>
 #include <kinc/io/filereader.h>
 #include <kinc/io/filewriter.h>
 #ifdef WITH_AUDIO
@@ -33,6 +38,10 @@
 #include <kinc/graphics4/compute.h>
 #endif
 #include <kinc/io/lz4/lz4.h>
+#ifndef KINC_WINDOWS
+#include <dirent.h>
+#include <sys/stat.h>
+#endif
 #define STB_IMAGE_IMPLEMENTATION
 #include <kinc/libs/stb_image.h>
 #ifdef KINC_DIRECT3D11
@@ -86,6 +95,7 @@ namespace {
 	Isolate *isolate;
 	std::unique_ptr<Platform> plat;
 	Global<Context> global_context;
+	Global<Object> embedded_files; // Files embedded in the startup snapshot, by normalized path
 	Global<Function> update_func;
 	Global<Function> drop_files_func;
 	Global<Function> cut_func;
@@ -1035,14 +1045,85 @@ namespace {
 		return strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0;
 	}
 
-	bool load_image(kinc_file_reader_t &reader, const char *filename, unsigned char *&output, int &width, int &height, kinc_image_format_t &format) {
+	std::string normalize_embedded_key(const char *path) {
+		std::string normalized;
+		if (path == nullptr) return normalized;
+
+		size_t length = strlen(path);
+		size_t i = 0;
+		while (i < length) {
+			while (i < length && (path[i] == '/' || path[i] == '\\')) i++;
+			if (i >= length) break;
+
+			size_t start = i;
+			while (i < length && path[i] != '/' && path[i] != '\\') i++;
+			if (i - start == 1 && path[start] == '.') continue;
+
+			if (!normalized.empty()) normalized += '/';
+			while (start < i) {
+				char c = path[start++];
+				if (c >= 'A' && c <= 'Z') c = c - 'A' + 'a';
+				normalized += c;
+			}
+		}
+
+		return normalized;
+	}
+
+	MaybeLocal<ArrayBuffer> get_embedded_data(Isolate *isolate, const char *path) {
+		if (embedded_files.IsEmpty()) return MaybeLocal<ArrayBuffer>();
+		Local<Context> context = isolate->GetCurrentContext();
+		if (context.IsEmpty()) return MaybeLocal<ArrayBuffer>();
+
+		std::string key = normalize_embedded_key(path);
+		if (key.empty()) return MaybeLocal<ArrayBuffer>();
+
+		Local<String> name;
+		if (!String::NewFromUtf8(isolate, key.c_str()).ToLocal(&name)) return MaybeLocal<ArrayBuffer>();
+
+		Local<Value> value;
+		if (!embedded_files.Get(isolate)->Get(context, name).ToLocal(&value) || !value->IsArrayBuffer()) {
+			return MaybeLocal<ArrayBuffer>();
+		}
+
+		return value.As<ArrayBuffer>();
+	}
+
+	// The bytes of an asset, read from disk or, when not found there, embedded in the startup snapshot
+	struct AssetData {
+		unsigned char *data = nullptr;
+		int size = 0;
+		bool owned = false; // Read from disk into memory that is freed with this
+		std::shared_ptr<BackingStore> embedded; // Keeps the embedded data alive while it's used
+
+		~AssetData() {
+			if (owned) free(data);
+		}
+	};
+
+	bool read_asset(const char *path, AssetData &asset) {
+		kinc_file_reader_t reader;
+		if (kinc_file_reader_open(&reader, path, KINC_FILE_TYPE_ASSET)) {
+			asset.size = (int)kinc_file_reader_size(&reader);
+			asset.data = (unsigned char *)malloc(asset.size);
+			asset.owned = true;
+			kinc_file_reader_read(&reader, asset.data, asset.size);
+			kinc_file_reader_close(&reader);
+			return true;
+		}
+
+		MaybeLocal<ArrayBuffer> embedded = get_embedded_data(isolate, path);
+		if (embedded.IsEmpty()) return false;
+		asset.embedded = embedded.ToLocalChecked()->GetBackingStore();
+		asset.data = (unsigned char *)asset.embedded->Data();
+		asset.size = (int)asset.embedded->ByteLength();
+		return true;
+	}
+
+	bool load_image(unsigned char *data, int size, const char *filename, unsigned char *&output, int &width, int &height, kinc_image_format_t &format) {
 		format = KINC_IMAGE_FORMAT_RGBA32;
-		int size = (int)kinc_file_reader_size(&reader);
 		int comp;
 		bool success = true;
-		unsigned char *data = (unsigned char *)malloc(size);
-		kinc_file_reader_read(&reader, data, size);
-		kinc_file_reader_close(&reader);
 
 		if (ends_with(filename, "k")) {
 			width = kinc_read_s32le(data);
@@ -1097,7 +1178,6 @@ namespace {
 				}
 			}
 		}
-		free(data);
 		return success;
 	}
 
@@ -1105,37 +1185,23 @@ namespace {
 		HandleScope scope(args.GetIsolate());
 		String::Utf8Value utf8_value(isolate, args[0]);
 		bool readable = args[1]->ToInt32(isolate->GetCurrentContext()).ToLocalChecked()->Value();
-		bool success = true;
 
 		kinc_image_t *image = (kinc_image_t *)malloc(sizeof(kinc_image_t));
 
-		// if (armorcore) {
-			kinc_file_reader_t reader;
-			if (kinc_file_reader_open(&reader, *utf8_value, KINC_FILE_TYPE_ASSET)) {
+		bool success = false;
+		{
+			AssetData asset;
+			if (read_asset(*utf8_value, asset)) {
 				unsigned char *image_data;
 				int image_width;
 				int image_height;
 				kinc_image_format_t image_format;
-				success = load_image(reader, *utf8_value, image_data, image_width, image_height, image_format);
+				success = load_image(asset.data, asset.size, *utf8_value, image_data, image_width, image_height, image_format);
 				if (success) {
 					kinc_image_init(image, image_data, image_width, image_height, image_format);
 				}
 			}
-			else {
-				success = false;
-			}
-		// }
-		// else {
-		// 	// TODO: make kinc_image load faster
-		// 	size_t byte_size = kinc_image_size_from_file(*utf8_value);
-		// 	if (byte_size == 0) {
-		// 		success = false;
-		// 	}
-		// 	else {
-		// 		void *memory = malloc(byte_size);
-		// 		kinc_image_init_from_file(image, memory, *utf8_value);
-		// 	}
-		// }
+		}
 
 		if (!success) {
 			free(image);
@@ -1202,8 +1268,19 @@ namespace {
 	void krom_load_sound(const FunctionCallbackInfo<Value> &args) {
 		HandleScope scope(args.GetIsolate());
 		String::Utf8Value utf8_value(isolate, args[0]);
-		kinc_a1_sound_t *sound = kinc_a1_sound_create(*utf8_value);
 
+		kinc_a1_audioformat_t format;
+		if (ends_with(*utf8_value, ".ogg")) format = KINC_A1_AUDIOFORMAT_OGG;
+		else if (ends_with(*utf8_value, ".wav")) format = KINC_A1_AUDIOFORMAT_WAV;
+		else return;
+
+		kinc_a1_sound_t *sound;
+		{
+			AssetData asset;
+			if (!read_asset(*utf8_value, asset)) return;
+			// Decodes into memory of its own
+			sound = kinc_a1_sound_create_from_buffer(asset.data, (uint32_t)asset.size, format);
+		}
 		if (sound == nullptr) {
 			return;
 		}
@@ -1327,15 +1404,27 @@ namespace {
 		String::Utf8Value utf8_value(isolate, args[0]);
 
 		kinc_file_reader_t reader;
-		if (!kinc_file_reader_open(&reader, *utf8_value, KINC_FILE_TYPE_ASSET)) return;
-		uint32_t reader_size = (uint32_t)kinc_file_reader_size(&reader);
+		if (kinc_file_reader_open(&reader, *utf8_value, KINC_FILE_TYPE_ASSET)) {
+			uint32_t reader_size = (uint32_t)kinc_file_reader_size(&reader);
 
-		Local<ArrayBuffer> buffer = ArrayBuffer::New(isolate, reader_size);
-		std::shared_ptr<BackingStore> content = buffer->GetBackingStore();
-		kinc_file_reader_read(&reader, content->Data(), reader_size);
-		kinc_file_reader_close(&reader);
+			Local<ArrayBuffer> buffer = ArrayBuffer::New(isolate, reader_size);
+			std::shared_ptr<BackingStore> content = buffer->GetBackingStore();
+			kinc_file_reader_read(&reader, content->Data(), reader_size);
+			kinc_file_reader_close(&reader);
 
-		args.GetReturnValue().Set(buffer);
+			args.GetReturnValue().Set(buffer);
+			return;
+		}
+
+		// File not found on disk, try data embedded in the startup snapshot.
+		// Returns a copy, like a load from disk: changes to it must not reach the embedded data.
+		MaybeLocal<ArrayBuffer> embedded = get_embedded_data(isolate, *utf8_value);
+		if (!embedded.IsEmpty()) {
+			std::shared_ptr<BackingStore> source = embedded.ToLocalChecked()->GetBackingStore();
+			Local<ArrayBuffer> buffer = ArrayBuffer::New(isolate, source->ByteLength());
+			memcpy(buffer->GetBackingStore()->Data(), source->Data(), source->ByteLength());
+			args.GetReturnValue().Set(buffer);
+		}
 	}
 
 	void krom_load_url(const FunctionCallbackInfo<Value> &args) {
@@ -2768,6 +2857,12 @@ namespace {
 
 		Local<Context> context = Context::New(isolate, NULL, global);
 		global_context.Reset(isolate, context);
+
+		// V8 hands the snapshot data out only once, so it's kept here
+		Local<Object> files;
+		if (krom_bin_size > 0 && context->GetDataFromSnapshotOnce<Object>(0).ToLocal(&files)) {
+			embedded_files.Reset(isolate, files);
+		}
 	}
 
 	void start_krom(char *scriptfile) {
@@ -3295,6 +3390,170 @@ namespace {
 			handle_exception(&try_catch);
 		}
 	}
+
+	// Logs a message of `--snapshot` (and startup), also to stderr: kinc_log writes to a console,
+	// which a build tool capturing the output through a pipe (make.py) doesn't see
+	void snapshot_log(kinc_log_level_t level, const char *format, ...) {
+		va_list args;
+		va_start(args, format);
+		kinc_log_args(level, format, args);
+		va_end(args);
+
+		va_start(args, format);
+		vfprintf(stderr, format, args);
+		fputc('\n', stderr);
+		fflush(stderr);
+		va_end(args);
+	}
+
+	#ifdef KINC_WINDOWS
+	std::string utf8_from_wide(const wchar_t *text) {
+		int size = WideCharToMultiByte(CP_UTF8, 0, text, -1, nullptr, 0, nullptr, nullptr);
+		if (size <= 1) return std::string();
+
+		std::string utf8(size, '\0');
+		WideCharToMultiByte(CP_UTF8, 0, text, -1, &utf8[0], size, nullptr, nullptr);
+		utf8.pop_back();
+		return utf8;
+	}
+
+	std::wstring wide_from_utf8(const std::string &text) {
+		int size = MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, nullptr, 0);
+		if (size <= 1) return std::wstring();
+
+		std::wstring wide(size, L'\0');
+		MultiByteToWideChar(CP_UTF8, 0, text.c_str(), -1, &wide[0], size);
+		wide.pop_back();
+		return wide;
+	}
+
+	FILE *open_snapshot_file(const std::string &path) {
+		std::wstring wide_path = wide_from_utf8(path);
+		return _wfopen(wide_path.c_str(), L"wb");
+	}
+
+	void remove_snapshot_file(const std::string &path) {
+		std::wstring wide_path = wide_from_utf8(path);
+		_wremove(wide_path.c_str());
+	}
+	#else
+	FILE *open_snapshot_file(const std::string &path) {
+		return fopen(path.c_str(), "wb");
+	}
+
+	void remove_snapshot_file(const std::string &path) {
+		remove(path.c_str());
+	}
+	#endif
+
+	void collect_embedded_files(const std::string &dir, const std::string &prefix, std::vector<std::string> &files) {
+		#ifdef KINC_WINDOWS
+		WIN32_FIND_DATAW find_data;
+		std::wstring search = wide_from_utf8(dir + "\\*");
+		HANDLE find_handle = FindFirstFileW(search.c_str(), &find_data);
+		if (find_handle == INVALID_HANDLE_VALUE) {
+			snapshot_log(KINC_LOG_LEVEL_WARNING, "Could not open directory %s.", dir.c_str());
+			return;
+		}
+
+		do {
+			std::string name = utf8_from_wide(find_data.cFileName);
+			if (name.empty() || name == "." || name == "..") continue;
+			// Skip links and junctions: they can point outside data/ or create cycles.
+			if (find_data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) continue;
+
+			if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+				collect_embedded_files(dir + "\\" + name, prefix + name + "/", files);
+			}
+			else {
+				files.push_back(prefix + name);
+			}
+		} while (FindNextFileW(find_handle, &find_data));
+
+		FindClose(find_handle);
+		#else
+		DIR *directory = opendir(dir.c_str());
+		if (directory == nullptr) {
+			snapshot_log(KINC_LOG_LEVEL_WARNING, "Could not open directory %s.", dir.c_str());
+			return;
+		}
+
+		struct dirent *entry;
+		while ((entry = readdir(directory)) != nullptr) {
+			std::string name = entry->d_name;
+			if (name == "." || name == "..") continue;
+
+			std::string path = dir + "/" + name;
+			struct stat info;
+			if (lstat(path.c_str(), &info) != 0) continue;
+			// Skip links: they can point outside data/ or create cycles.
+			if (S_ISLNK(info.st_mode)) continue;
+
+			if (S_ISDIR(info.st_mode)) {
+				collect_embedded_files(path, prefix + name + "/", files);
+			}
+			else {
+				files.push_back(prefix + name);
+			}
+		}
+
+		closedir(directory);
+		#endif
+	}
+
+	// data.bin starts with a header: "KROMSNAP" and the V8 version that made it, zero-padded.
+	// A snapshot only works with the V8 build that made it, so a mismatch is reported instead of crashing in V8.
+	const char snapshot_magic[8] = {'K', 'R', 'O', 'M', 'S', 'N', 'A', 'P'};
+	const int snapshot_header_size = 32;
+
+	void write_snapshot_header(char *header) {
+		memset(header, 0, snapshot_header_size);
+		memcpy(header, snapshot_magic, sizeof(snapshot_magic));
+		strncpy(header + sizeof(snapshot_magic), V8::GetVersion(), snapshot_header_size - sizeof(snapshot_magic) - 1);
+	}
+
+	// Reads data.bin into `file` (the V8 snapshot starts after the header). Leaves `file` null if
+	// there is no data.bin or it isn't a snapshot, and exits with an error if another V8 made it.
+	void read_snapshot(char *&file, int &size) {
+		file = nullptr;
+		size = 0;
+		kinc_file_reader_t reader;
+		if (!kinc_file_reader_open(&reader, "data.bin", KINC_FILE_TYPE_ASSET)) return;
+		int file_size = (int)kinc_file_reader_size(&reader);
+		char *data = (char *)malloc(file_size);
+		kinc_file_reader_read(&reader, data, file_size);
+		kinc_file_reader_close(&reader);
+
+		if (file_size <= snapshot_header_size || memcmp(data, snapshot_magic, sizeof(snapshot_magic)) != 0) {
+			kinc_log(KINC_LOG_LEVEL_WARNING, "data.bin is not a Krom snapshot, ignoring it.");
+			free(data);
+			return;
+		}
+
+		char expected[snapshot_header_size];
+		write_snapshot_header(expected);
+		if (memcmp(data, expected, snapshot_header_size) != 0) {
+			std::string made_by(data + sizeof(snapshot_magic), strnlen(data + sizeof(snapshot_magic), snapshot_header_size - sizeof(snapshot_magic)));
+			free(data);
+			kinc_error_message("data.bin was made by a different Krom (V8 %s; this Krom uses V8 %s). Publish the game again.", made_by.c_str(), V8::GetVersion());
+		}
+
+		file = data;
+		size = file_size;
+	}
+
+	// Compiles `source` in `context`, or logs the JavaScript error (with its line) and exits with a failure.
+	Local<Script> compile_or_exit(Isolate *isolate, Local<Context> context, ScriptCompiler::Source *source, ScriptCompiler::CompileOptions options) {
+		TryCatch try_catch(isolate);
+		Local<Script> script;
+		if (!ScriptCompiler::Compile(context, source, options).ToLocal(&script)) {
+			String::Utf8Value message(isolate, try_catch.Exception());
+			int line = try_catch.Message().IsEmpty() ? 0 : try_catch.Message()->GetLineNumber(context).FromMaybe(0);
+			snapshot_log(KINC_LOG_LEVEL_ERROR, "Could not compile krom.js (line %i): %s", line, *message == nullptr ? "unknown error" : *message);
+			exit(1);
+		}
+		return script;
+	}
 }
 
 int kickstart(int argc, char **argv) {
@@ -3315,6 +3574,7 @@ int kickstart(int argc, char **argv) {
 	bindir = bindir.substr(0, bindir.find_last_of("/"));
 #endif
 	assetsdir = argc > 1 ? argv[1] : bindir;
+	if (assetsdir.empty()) assetsdir = ".";
 
 	// Opening a file
 	int l = (int)assetsdir.length();
@@ -3360,47 +3620,37 @@ int kickstart(int argc, char **argv) {
 	}
 #endif
 
-	bool snapshot_found = true;
-	kinc_file_reader_t reader;
-	if (snapshot || !kinc_file_reader_open(&reader, "krom.bin", KINC_FILE_TYPE_ASSET)) {
+	char *snapshot_file = nullptr;
+	int snapshot_size = 0;
+	if (!snapshot) read_snapshot(snapshot_file, snapshot_size);
+	bool snapshot_found = snapshot_file != nullptr;
+
+	char *code = nullptr;
+	if (!snapshot_found) {
+		kinc_file_reader_t reader;
 		if (!kinc_file_reader_open(&reader, "krom.js", KINC_FILE_TYPE_ASSET)) {
-			kinc_log(KINC_LOG_LEVEL_ERROR, "Could not load krom.js, aborting.");
+			snapshot_log(KINC_LOG_LEVEL_ERROR, "Could not load krom.js, aborting.");
 			exit(1);
 		}
-		snapshot_found = false;
+		int reader_size = (int)kinc_file_reader_size(&reader);
+		code = (char *)malloc(reader_size + 1);
+		kinc_file_reader_read(&reader, code, reader_size);
+		code[reader_size] = 0;
+		kinc_file_reader_close(&reader);
 	}
 
-	int reader_size = (int)kinc_file_reader_size(&reader);
-	char *code = (char *)malloc(reader_size + 1);
-	kinc_file_reader_read(&reader, code, reader_size);
-	code[reader_size] = 0;
-	kinc_file_reader_close(&reader);
-
 	if (snapshot) {
+		std::string wrapped = "function kickstart() {\n";
+		wrapped += code;
+		wrapped += "\n}\n";
+
 		plat = platform::NewDefaultPlatform();
 		V8::InitializePlatform(plat.get());
 
+		// Compile every function now, so the snapshot keeps them compiled
 		std::string flags = "--nolazy";
 		V8::SetFlagsFromString(flags.c_str(), (int)flags.size());
 		V8::Initialize();
-
-		ScriptCompiler::CachedData *cache;
-		Isolate::CreateParams create_params;
-		create_params.array_buffer_allocator = ArrayBuffer::Allocator::NewDefaultAllocator();
-		Isolate *isolate_cache = Isolate::New(create_params);
-		{
-			HandleScope handle_scope(isolate_cache);
-			{
-				Local<Context> context = Context::New(isolate_cache);
-				Context::Scope context_scope(context);
-
-				ScriptOrigin origin(isolate_cache, String::NewFromUtf8(isolate_cache, "krom_cache").ToLocalChecked());
-				ScriptCompiler::Source source(String::NewFromUtf8(isolate_cache, code).ToLocalChecked(), origin);
-
-				Local<Script> compiled_script = ScriptCompiler::Compile(context, &source, ScriptCompiler::kEagerCompile).ToLocalChecked();
-				cache = ScriptCompiler::CreateCodeCache(compiled_script->GetUnboundScript());
-			}
-		}
 
 		SnapshotCreator creator_cold;
 		Isolate *isolate_cold = creator_cold.GetIsolate();
@@ -3410,81 +3660,103 @@ int kickstart(int argc, char **argv) {
 				Local<Context> context = Context::New(isolate_cold);
 				Context::Scope context_scope(context);
 
-				const size_t line_size = 512;
-				char line[line_size];
-				strcpy(line, assetsdir.c_str());
-				strcat(line, "/data/embed.txt");
-				FILE *fp = fopen (line, "r");
-				if (fp != NULL) {
-					while (fgets(line, line_size, fp) != NULL)  {
-						line[strlen(line) - 1] = 0; // Trim \n
-						kinc_file_reader_t reader;
-						if (!kinc_file_reader_open(&reader, line, KINC_FILE_TYPE_ASSET)) continue;
-						int reader_size = (int)kinc_file_reader_size(&reader);
-
-						Local<ArrayBuffer> buffer = ArrayBuffer::New(isolate_cold, reader_size);
-						std::shared_ptr<BackingStore> content = buffer->GetBackingStore();
-						kinc_file_reader_read(&reader, content->Data(), reader_size);
-						kinc_file_reader_close(&reader);
-
-						(void) context->Global()->Set(context, String::NewFromUtf8(isolate_cold, line).ToLocalChecked(), buffer);
-					}
-					fclose (fp);
+				// Collect files to embed by recursively scanning the data/ folder.
+				std::vector<std::string> embedded_files;
+				std::string datadir = assetsdir;
+				if (!datadir.empty() && (datadir.back() == '/' || datadir.back() == '\\')) datadir.pop_back();
+				datadir += "/data";
+				#ifdef KINC_WINDOWS
+				for (size_t i = 0; i < datadir.size(); ++i) {
+					if (datadir[i] == '/') datadir[i] = '\\';
+				}
+				#endif
+				collect_embedded_files(datadir, "data/", embedded_files);
+				if (embedded_files.empty()) {
+					snapshot_log(KINC_LOG_LEVEL_WARNING, "No files found under %s; the snapshot will not contain assets.", datadir.c_str());
 				}
 
-				ScriptOrigin origin(isolate_cache, String::NewFromUtf8(isolate_cold, "krom_cold").ToLocalChecked());
-				ScriptCompiler::Source source(String::NewFromUtf8(isolate_cold, code).ToLocalChecked(), origin, cache);
+				std::sort(embedded_files.begin(), embedded_files.end());
+				std::map<std::string, std::string> embedded;
+				for (size_t i = 0; i < embedded_files.size(); ++i) {
+					std::string key = normalize_embedded_key(embedded_files[i].c_str());
+					if (key.empty()) continue;
+					std::pair<std::map<std::string, std::string>::iterator, bool> inserted = embedded.insert(std::make_pair(key, embedded_files[i]));
+					if (!inserted.second) {
+						snapshot_log(KINC_LOG_LEVEL_WARNING, "Duplicate embedded key %s; skipping %s (already embedded %s).",
+						         key.c_str(), embedded_files[i].c_str(), inserted.first->second.c_str());
+					}
+				}
 
-				Local<Script> compiled_script = ScriptCompiler::Compile(context, &source, ScriptCompiler::kConsumeCodeCache).ToLocalChecked();
+				// The files go in one object stored privately in the snapshot, out of the game's global scope
+				Local<Object> files = Object::New(isolate_cold);
+				for (std::map<std::string, std::string>::const_iterator it = embedded.begin(); it != embedded.end(); ++it) {
+					kinc_file_reader_t embedded_reader;
+					if (!kinc_file_reader_open(&embedded_reader, it->second.c_str(), KINC_FILE_TYPE_ASSET)) {
+						snapshot_log(KINC_LOG_LEVEL_WARNING, "Could not read %s.", it->second.c_str());
+						continue;
+					}
+					int embedded_size = (int)kinc_file_reader_size(&embedded_reader);
+
+					Local<ArrayBuffer> buffer = ArrayBuffer::New(isolate_cold, embedded_size);
+					std::shared_ptr<BackingStore> content = buffer->GetBackingStore();
+					kinc_file_reader_read(&embedded_reader, content->Data(), embedded_size);
+					kinc_file_reader_close(&embedded_reader);
+
+					(void) files->Set(context, String::NewFromUtf8(isolate_cold, it->first.c_str()).ToLocalChecked(), buffer);
+				}
+
+				// Line offset -1: the kickstart() line comes first, so errors and stack traces give krom.js's own line numbers
+				ScriptOrigin origin(isolate_cold, String::NewFromUtf8(isolate_cold, "krom.js").ToLocalChecked(), -1);
+				ScriptCompiler::Source source(String::NewFromUtf8(isolate_cold, wrapped.c_str()).ToLocalChecked(), origin);
+
+				Local<Script> compiled_script = compile_or_exit(isolate_cold, context, &source, ScriptCompiler::kEagerCompile);
+				// Only defines kickstart(); the game starts when Krom calls it at launch
 				(void) compiled_script->Run(context);
 
 				creator_cold.SetDefaultContext(context);
+				// The context's first snapshot data, read back at startup in start_v8
+				creator_cold.AddData(context, files);
 			}
 		}
 		StartupData coldData = creator_cold.CreateBlob(SnapshotCreator::FunctionCodeHandling::kKeep);
 
-		// SnapshotCreator creator_warm(nullptr, &coldData);
-		// Isolate *isolate_warm = creator_warm.GetIsolate();
-		// {
-		// 	HandleScope handle_scope(isolate_warm);
-		// 	{
-		// 		Local<Context> context = Context::New(isolate_warm);
-		// 		Context::Scope context_scope(context);
-
-		// 		// std::string code_warm("Main.main();");
-		// 		ScriptOrigin origin(String::NewFromUtf8(isolate_warm, "krom_warm").ToLocalChecked());
-		// 		ScriptCompiler::Source source(String::NewFromUtf8(isolate_warm, code).ToLocalChecked(), origin);
-
-		// 		Local<Script> compiled_script = ScriptCompiler::Compile(context, &source, ScriptCompiler::kEagerCompile).ToLocalChecked();
-		// 		compiled_script->Run(context);
-		// 	}
-		// }
-		// {
-		//   HandleScope handle_scope(isolate_warm);
-		//   isolate_warm->ContextDisposedNotification(false);
-		//   Local<Context> context = Context::New(isolate_warm);
-		//   creator_warm.SetDefaultContext(context);
-		// }
-		// StartupData warmData = creator_warm.CreateBlob(SnapshotCreator::FunctionCodeHandling::kKeep);
-
-		std::string krombin = assetsdir + "/krom.bin";
-		FILE *file = fopen(&krombin[0u], "wb");
-		if (file != nullptr) {
-			// fwrite(warmData.data, 1, warmData.raw_size, file);
-			fwrite(coldData.data, 1, coldData.raw_size, file);
-			fclose(file);
+		if (coldData.data == nullptr || coldData.raw_size <= 0) {
+			snapshot_log(KINC_LOG_LEVEL_ERROR, "Snapshot data is empty.");
+			exit(1);
 		}
+
+		const std::string databin = assetsdir + "/data.bin";
+		FILE *file = open_snapshot_file(databin);
+		if (file == nullptr) {
+			snapshot_log(KINC_LOG_LEVEL_ERROR, "Could not create %s.", databin.c_str());
+			exit(1);
+		}
+
+		char header[snapshot_header_size];
+		write_snapshot_header(header);
+		size_t written = fwrite(header, 1, snapshot_header_size, file);
+		written += fwrite(coldData.data, 1, coldData.raw_size, file);
+		int closed = fclose(file);
+		if (written != (size_t)(snapshot_header_size + coldData.raw_size) || closed != 0) {
+			snapshot_log(KINC_LOG_LEVEL_ERROR, "Could not write %s.", databin.c_str());
+			remove_snapshot_file(databin);
+			exit(1);
+		}
+
 		exit(0);
 	}
 
 	kinc_threads_init();
 	kinc_display_init();
 
-	start_v8(snapshot_found ? code : NULL, snapshot_found ? reader_size : 0);
+	start_v8(snapshot_found ? snapshot_file + snapshot_header_size : NULL, snapshot_found ? snapshot_size - snapshot_header_size : 0);
+	// V8 has copied what it needs from the snapshot while creating the isolate and its context
+	free(snapshot_file);
 	#ifdef WITH_WORKER
 	bind_worker_class(isolate, global_context);
 	#endif
-	start_krom(snapshot_found ? NULL : code);
+	start_krom(code);
+	free(code);
 
 	kinc_start();
 
@@ -3493,8 +3765,6 @@ int kickstart(int argc, char **argv) {
 		kinc_a2_shutdown();
 	}
 	#endif
-
-	free(code);
 
 	return 0;
 }
